@@ -1,0 +1,33 @@
+About the Project
+=================
+
+Goal of the Project
+-------------------
+
+
+Experiment
+----------
+
+
+Data
+----
+
+
+Authors
+-------
+
+**Main Author**
+
+- Esther Poniatowski (esther.poniatowski@ens.psl.eu)
+
+**Contributors**
+
+- Yves Boubenec (yves.boubenec@ens.psl.eu)
+- Srdjan Ostojic (srdjan.ostojic@ens.psl.eu)
+- Diego Elguelda (delgueda@gmail.com)
+
+
+**Acknowledgments**
+
+- Shihab Shamma(shihab.shamma@ens.psl.eu)
+- Joao Barbosa (joao.moura.barbosa@ens.psl.eu)
