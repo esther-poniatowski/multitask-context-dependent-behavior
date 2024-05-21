@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Installation &mdash; Multi-Task Context-Dependent Behavior 0.1.0 documentation</title>
+  <title>Installation Guide &mdash; Multi-Task Context-Dependent Behavior 0.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../_static/assets/jsonview.bundle.css" />
@@ -64,9 +64,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../about/index.html">About the Project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../results/index.html">Results</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Code Guide &amp; Usage</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Installation Guide</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#requirements">Requirements</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#installation-steps">Installation Steps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-1-create-the-project-s-working-directory">Step 1 - Create the Project’s Working Directory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-2-create-a-virtual-environment">Step 2 - Create a Virtual Environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-3-verify-installation">Step 3 - Verify Installation</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html">Usage</a></li>
@@ -91,7 +93,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Code Guide &amp; Usage</a></li>
-      <li class="breadcrumb-item active">Installation</li>
+      <li class="breadcrumb-item active">Installation Guide</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/code/install.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -101,20 +103,75 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h1>
+  <section id="installation-guide">
+<span id="install"></span><h1>Installation Guide<a class="headerlink" href="#installation-guide" title="Permalink to this heading"></a></h1>
+<p>This installation workflow creates:</p>
+<ul class="simple">
+<li><p>A <em>working directory</em> containing all the project files: documentation (HTML), packages, scripts, notebooks…</p></li>
+<li><p>A new <em>virtual environment</em> dedicated to the project, which automatically handles the installation of the Python interpreter and the dependencies.</p></li>
+</ul>
+<p>Guide to use this framework <a class="reference internal" href="usage.html#usage"><span class="std std-ref">Usage</span></a>.</p>
 <section id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading"></a></h2>
+<p>The installation process resorts to the following tools:</p>
 <ul class="simple">
-<li><p>Python 3.x</p></li>
-<li><p>Other dependencies listed in <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code></p></li>
+<li><p><a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html">Conda</a></p></li>
+<li><p><a class="reference external" href="https://git-scm.com/downloads">Git</a> (optional)</p></li>
 </ul>
+<p>Please ensure that they are correctly installed and configured on the system before proceeding with the installation steps.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><strong>Conda</strong> is used as the primary package and environment management system (instead of other tools commonly used in Python environments such as <code class="docutils literal notranslate"><span class="pre">pip</span></code>, <code class="docutils literal notranslate"><span class="pre">setuptools</span></code>, <code class="docutils literal notranslate"><span class="pre">venv</span></code>).</p>
+</div>
 </section>
-<section id="installation-steps">
-<h2>Installation Steps<a class="headerlink" href="#installation-steps" title="Permalink to this heading"></a></h2>
-<p>Run the following commands:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
-$<span class="w"> </span>python<span class="w"> </span>setup.py<span class="w"> </span>install
+<section id="step-1-create-the-project-s-working-directory">
+<h2>Step 1 - Create the Project’s Working Directory<a class="headerlink" href="#step-1-create-the-project-s-working-directory" title="Permalink to this heading"></a></h2>
+<p><strong>Option 1: From a command line</strong> [requires <code class="docutils literal notranslate"><span class="pre">git</span></code>]</p>
+<ol class="arabic simple">
+<li><p>Navigate to the system location where the project working directory should reside.</p></li>
+<li><p>Run the following git command:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/esther-poniatowski/multitask-context-dependent-behavior.git
+</pre></div>
+</div>
+<p><strong>Option 2: From GitHub’s interface</strong> [does not require <code class="docutils literal notranslate"><span class="pre">git</span></code>]</p>
+<ol class="arabic simple">
+<li><p>Open a web browser and navigate to the GitHub page of the repository: <a class="reference external" href="https://github.com/esther-poniatowski/multitask-context-dependent-behavior.git">https://github.com/esther-poniatowski/multitask-context-dependent-behavior.git</a></p></li>
+<li><p>Click on the green <strong>Code</strong> button, Choose <strong>Download ZIP</strong> from the dropdown menu.</p></li>
+<li><p>Extract the ZIP file to the system location where the project working directory should reside.</p></li>
+</ol>
+<p>In both cases, the entire project directory named <code class="docutils literal notranslate"><span class="pre">multitask-context-dependent-behavior</span></code> is created into the desired location.</p>
+</section>
+<section id="step-2-create-a-virtual-environment">
+<h2>Step 2 - Create a Virtual Environment<a class="headerlink" href="#step-2-create-a-virtual-environment" title="Permalink to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment.yml
+</pre></div>
+</div>
+<p>A new conda environment is created under the name <code class="docutils literal notranslate"><span class="pre">mtcdb</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Dependencies are stored separately from the project directory, in the Conda directory designated for the system.</p>
+</div>
+</section>
+<section id="step-3-verify-installation">
+<h2>Step 3 - Verify Installation<a class="headerlink" href="#step-3-verify-installation" title="Permalink to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Activate the environment</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>mtcdb
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Check the version number</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import mtcdb; print(mtcdb.__version__)&quot;</span>
+</pre></div>
+</div>
+<p>Expected outcome in the terminal : Number of the downloaded version of the project.</p>
+<ol class="arabic simple" start="3">
+<li><p>Deactivate the environment to return to the base environment</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>deactivate
 </pre></div>
 </div>
 </section>

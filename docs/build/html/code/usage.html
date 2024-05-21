@@ -34,7 +34,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="API Documentation" href="api/index.html" />
-    <link rel="prev" title="Installation" href="install.html" /> 
+    <link rel="prev" title="Installation Guide" href="install.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -64,8 +64,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../about/index.html">About the Project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../results/index.html">Results</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Code Guide &amp; Usage</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="install.html">Installation</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html">Installation Guide</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#prerequisites-for-using-the-project">Prerequisites for Using the Project</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="api/index.html">API Documentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tests/results.html">Tests Results</a></li>
 </ul>
@@ -98,15 +101,45 @@
            <div itemprop="articleBody">
              
   <section id="usage">
-<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h1>
-<p>Run the Jupyter notebook.</p>
+<span id="id1"></span><h1>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h1>
+<section id="prerequisites-for-using-the-project">
+<h2>Prerequisites for Using the Project<a class="headerlink" href="#prerequisites-for-using-the-project" title="Permalink to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Navigate to the Project Directory named <code class="docutils literal notranslate"><span class="pre">multitask-context-dependent-behavior</span></code></p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>path/to/multitask-context-dependent-behavior
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Activate the Conda Environment</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>mtcdb
+</pre></div>
+</div>
+<p>Once the environment is activated, the project’s scripts and modules can be run safely.</p>
+<p>Example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/&lt;script_name&gt;.py
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>After the end of a session, deactivate the environment to return to the base environment</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>deactivate
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Operating <em>within</em> the project directory ensures that relative paths in codes and configuration files correctly point to other resources within the project.
+Activating the virtual environment dedicated to the project ensures that any Python execution use the Python interpreter and dependencies required for the project.</p>
+</div>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="install.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="install.html" class="btn btn-neutral float-left" title="Installation Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="api/index.html" class="btn btn-neutral float-right" title="API Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

@@ -27,5 +27,3 @@ Contributors
 
 - Ecole Normale Supérieure de Paris (`ENS-PSL <https://www.ens.psl.eu/>`_)
 
-.. image:: _static/test_logo.svg
-   :width: 200px
