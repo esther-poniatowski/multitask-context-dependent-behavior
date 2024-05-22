@@ -1,6 +1,0 @@
-Tests Results
-=============
-
-.. test-report:: Pytest Report
-   :id: REPORT
-   :file: tests/pytest_results.xml
