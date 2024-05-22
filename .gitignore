@@ -1,0 +1,23 @@
+### gitignore file 
+### Project multitask-context-dependent-behavior
+
+# Temporary files
+*.tmp
+*.temp
+
+# Data Directory
+data/
+
+# MacOS
+.DS_Store
+
+# Jupyter Notebook
+**/.ipynb_checkpoints/
+
+# Python
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Sphinx Builds
+docs/builds
