@@ -18,6 +18,7 @@ test:
 
 docs:
 	sphinx-build -b html docs/source/ docs/build/html
+	@open docs/build/html/index.html
 
 open-docs:
 	@open docs/build/html/index.html
