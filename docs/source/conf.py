@@ -14,12 +14,13 @@ import sys
 
 # Add source code directory to locations accessible for import
 sys.path.insert(0, os.path.abspath('../src')) 
+sys.path.insert(0, os.path.abspath('../tests'))
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'Multi-Task Context-Dependent Behavior'
-copyright = '202, Esther Poniatowski'
+copyright = '2025, Esther Poniatowski'
 author = 'Esther Poniatowski'
 release = '0.1.0'
 version = '0.1.0'
@@ -27,7 +28,6 @@ language = 'en'
 
 
 # -- General Configuration ---------------------------------------------------
-
 
 extensions = [
     'sphinx.ext.autodoc',
@@ -53,14 +53,34 @@ html_static_path = ['_static']
 
 # -- Extensions Settings -----------------------------------------------------
 
+# Display settings for API members
 autodoc_default_options = {
-    'member-order': 'bysource',
-    'special-members': '__init__',
-    'undoc-members': True,
+    'member-order': 'bysource', # ordering according to source code
+    'special-members': '__init__', # include __init__ method
+    'undoc-members': True, # include members without documentation
     'exclude-members': '__weakref__'
 }
-autodoc_typehints = "description" # document type hints
+# Document type hints
+autodoc_typehints = "description" 
 
-intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
+# External links to python libraries
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
+    'xarray': ('http://xarray.pydata.org/en/stable/', None),
+    'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None),
+    'sklearn': ('https://scikit-learn.org/stable/', None),
+    'matplotlib': ('https://matplotlib.org/stable/', None),
+    'pytest': ('https://docs.pytest.org/en/stable/', None),
+}
 
+# Location of the template for the test report
 tr_report_template = '_templates/test_report_template.txt'
+
+# Custom types for napoleon
+napoleon_use_param = True
+napoleon_type_aliases = {
+}
+# Custom sections for napoleon
+napoleon_custom_sections = [('Test Inputs', 'params_style'), # for test docs
+                            ] 
