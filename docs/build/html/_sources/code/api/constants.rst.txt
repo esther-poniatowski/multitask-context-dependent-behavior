@@ -1,7 +1,0 @@
-.. automodule:: mtcdb.constants
-   :members:
-   :undoc-members:
-
-.. automodule:: mtcdb.types
-   :members:
-   :undoc-members:

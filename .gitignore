@@ -20,4 +20,4 @@ data/
 .pytest_cache/
 
 # Sphinx Builds
-docs/builds
+docs/build

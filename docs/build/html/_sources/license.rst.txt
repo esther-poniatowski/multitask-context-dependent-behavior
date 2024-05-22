@@ -1,6 +1,0 @@
-License
-=======
-
-This project is released under the GLP License.
-
-.. literalinclude:: ./_static/LICENSE.txt
