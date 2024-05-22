@@ -1,7 +1,6 @@
 """
-preprocess
-==========
+:mod:`mtcdb.preprocess` [subpackage]
+====================================
 
-Functionalities for preprocessing the raw data (spiking times of single neurons).
-
+Preprocess the raw data (spiking times of single neurons).
 """

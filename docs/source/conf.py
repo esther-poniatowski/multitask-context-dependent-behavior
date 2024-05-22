@@ -45,13 +45,13 @@ exclude_patterns = [
 	'.pytest_cache', '_build']
 
 
-# -- Options for HTML output -------------------------------------------------
+# -- HTML output -------------------------------------------------------------
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 
 
-# -- Extensions Settings -----------------------------------------------------
+# -- Autodoc Settings --------------------------------------------------------
 
 # Display settings for API members
 autodoc_default_options = {
@@ -62,6 +62,21 @@ autodoc_default_options = {
 }
 # Document type hints
 autodoc_typehints = "description" 
+add_module_names = False
+
+# -- Napoleon Settings --------------------------------------------------------
+
+# Custom types for napoleon
+napoleon_use_param = True
+napoleon_type_aliases = {"ArrayLike": "mtcdb.types.ArrayLike",
+}
+# Custom sections for napoleon
+napoleon_custom_sections = [('Test Inputs', 'params_style'), # for test docs
+                            ('Expected Outputs', 'params_style'), # for test docs
+                            ] 
+
+
+# -- Intersphinx Settings ----------------------------------------------------
 
 # External links to python libraries
 intersphinx_mapping = {
@@ -74,13 +89,8 @@ intersphinx_mapping = {
     'pytest': ('https://docs.pytest.org/en/stable/', None),
 }
 
+
+# -- Test Reports Settings ---------------------------------------------------
+
 # Location of the template for the test report
 tr_report_template = '_templates/test_report_template.txt'
-
-# Custom types for napoleon
-napoleon_use_param = True
-napoleon_type_aliases = {
-}
-# Custom sections for napoleon
-napoleon_custom_sections = [('Test Inputs', 'params_style'), # for test docs
-                            ] 

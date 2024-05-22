@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-mtcdb
-=====
+:mod:`mtcdb` [package]
+======================
 
 Package for Multi-Task Context-Dependent Behavior PhD work (2022-2025).
 The whole package performs data analysis of neuronal recordings in ferret brains, 

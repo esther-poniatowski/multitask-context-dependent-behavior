@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>test_mtcdb.test_preprocess.test_firing_rates &mdash; Multi-Task Context-Dependent Behavior 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/assets/jsonview.bundle.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/libs/html/datatables.min.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/styles.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/modern.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/layouts.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-test-results/common.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/assets/jsonview.bundle.js"></script>
+        <script src="../../../_static/assets/jsonview_loader.js"></script>
+        <script src="../../../_static/sphinx-needs/libs/html/datatables.min.js"></script>
+        <script src="../../../_static/sphinx-needs/libs/html/datatables_loader.js"></script>
+        <script src="../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Multi-Task Context-Dependent Behavior
+          </a>
+              <div class="version">
+                0.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../about/index.html">About the Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../results/index.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../code/index.html">Code Guide &amp; Usage</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Multi-Task Context-Dependent Behavior</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">test_mtcdb.test_preprocess.test_firing_rates</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for test_mtcdb.test_preprocess.test_firing_rates</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">:mod:`test_mtcdb.test_preprocess.test_firing_rates` [module]</span>
+<span class="sd">============================================================</span>
+
+<span class="sd">Tests for the module :mod:`mtcdb.preprocess.firing_rates`.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pytest</span>
+
+<span class="kn">from</span> <span class="nn">mtcdb.preprocess.firing_rates</span> <span class="kn">import</span> <span class="n">spikes_to_rates</span>
+
+<div class="viewcode-block" id="test_bin_spikes"><a class="viewcode-back" href="../../../code/tests/test_preprocess.html#test_mtcdb.test_preprocess.test_firing_rates.test_bin_spikes">[docs]</a><span class="k">def</span> <span class="nf">test_bin_spikes</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test for :func:`mtcdb.preprocess.firing_rates.spikes_to_rates`.</span>
+<span class="sd">    </span>
+<span class="sd">    Test Inputs</span>
+<span class="sd">    -----------</span>
+<span class="sd">    tmax: float</span>
+<span class="sd">        Set to 1.0, for a recording period spanning [0, 1].</span>
+<span class="sd">    tbin: float</span>
+<span class="sd">        Set to 0.1, to divide the recording period into 10 bins.</span>
+<span class="sd">    spk: numpy.ndarray</span>
+<span class="sd">        20 spikes evenly distributed in the recoding period.</span>
+<span class="sd">    </span>
+<span class="sd">    Expected Outputs</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    expected: numpy.ndarray</span>
+<span class="sd">        10 values (10 bins) of 20 spikes/s.</span>
+<span class="sd">	</span>
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    numpy.allclose: </span>
+<span class="sd">        Assess element-wise equality between 2 arrays within a tolerance.</span>
+<span class="sd">        Used to ignore numerical errors due to floating point arithmetic.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+    <span class="n">tmax</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">tbin</span> <span class="o">=</span> <span class="mf">0.1</span>
+    <span class="n">spk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">tmax</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+    <span class="n">expected</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mf">20.0</span><span class="p">)</span>
+    <span class="n">frates</span> <span class="o">=</span> <span class="n">spikes_to_rates</span><span class="p">(</span><span class="n">spk</span><span class="p">,</span> <span class="n">tbin</span><span class="p">,</span> <span class="n">tmax</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">frates</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">expected</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="s2">&quot;Wrong shape&quot;</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">frates</span><span class="p">,</span> <span class="n">expected</span><span class="p">),</span> <span class="s2">&quot;Wrong values&quot;</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Esther Poniatowski.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
