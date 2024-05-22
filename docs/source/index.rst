@@ -1,6 +1,5 @@
 .. Multi-Task Context-Dependent Behavior - Documentation Master File
 
-
 Multi-Task Context-Dependent Behavior - Documentation
 =====================================================  
 
