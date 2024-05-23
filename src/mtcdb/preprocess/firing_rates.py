@@ -43,29 +43,28 @@ def extract_trial(trial:int, data:NumpyArray) -> NumpyArray:
     return data[1][data[0]==trial]
 
 
-def slice_epoch(t0: float, t1: float, spk: NumpyArray) -> NumpyArray:
+def slice_epoch(tstart: float, tend: float, 
+                spk: NumpyArray) -> NumpyArray:
     """
     Extract spiking times within one epoch of one trial.
 
     Important
     ---------
-    Spiking times are *relative* to the start of the epoch.
+    Spiking times are *relative* to the beginning of the epoch.
 
     Parameters
     ----------
-    t0: float
-        Start time of the epoch (in seconds).
-    t1: float
-        End time of the epoch (in seconds).
+    tstart, tend: float
+        Times boundaries of the epoch (in seconds).
     spk: NumpyArray
         Spiking times during a *whole trial* (in seconds).
         Shape: ``(nspikes,)``.
     
     Returns
     -------
-    spk_times_epoch: NumpyArray
-        Spiking times with the epoch comprised between t0 and t1,
-        relative to the start of the epoch.
+    spk_epoch: NumpyArray
+        Spiking times in the epoch comprised between ``tstart`` and ``tend``,
+        reset to be relative to the beginning of the epoch.
         Shape: ``(nspikes_epoch, 1)``.
     
     Implementation
@@ -73,12 +72,59 @@ def slice_epoch(t0: float, t1: float, spk: NumpyArray) -> NumpyArray:
     - Select the spiking times within the epoch with a boolean mask.
     - Subtract the starting time of the epoch to reset the time.
     """
-    return spk[(spk>=t0)&(spk<t1)] - t0
+    return spk[(spk>=tstart)&(spk<tend)] - tstart
 
 
+def join_epochs(tstart1: float, tend1: float, 
+                   tstart2: float, tend2: float, 
+                   spk: NumpyArray) -> NumpyArray:
+    """
+    Join spiking times from two distinct epochs as if they were continuous.
 
-def align_spikes(spikes: Any) -> Any:
-    pass
+    Parameters
+    ----------
+    tstart1, tend1, tstart2, tend2: float
+        Times boundaries of both epochs to connect (in seconds).
+    spk_trial: NumpyArray
+        Spiking times during a *whole trial* (in seconds).
+        Shape: ``(nspikes,)``.
+    
+    Returns
+    -------
+    spk_joined: NumpyArray
+        Spiking times comprised in ``[tstart1, tend2]`` and ``[tstart2, tend2]``,
+        realigned as if both epochs were continuous.
+        Shape: ``(nspikes1 + nspikes2,)``.
+    
+    Notes
+    -----
+    This function is used to recompose homogeneous trials, 
+    whatever the task, session, experimental parameters.
+    Specifically, it allows to align the spiking times across trials.
+
+    Examples
+    --------
+    - To align stimulus 'offset' across trials, the longest trials should be cropped
+      by joining the periods before and after this extra-lagging window.
+    - In task CLK, to keep only Clicks as stimuli, the warning TORC should be excised,
+      by joining the pre-stimulus epoch and the full epoch after the warning TORC.
+    - In task CLK, to keep only the warning TORCs as stimuli, the Clicks should be excised,
+      by joining the epoch extenting up to the Click onset and the post-stimulus epoch.
+
+    Implementation
+    --------------
+    - Extract the spiking times in both periods.
+    - Shift the times in the second period by the duration of the first period.
+    - Concatenate the two sets of spiking times.
+
+    See Also
+    --------
+    slice_epoch: Extract spiking times within one epoch of one trial.
+    """
+    spk1 = slice_epoch(tstart1, tend1, spk)
+    spk2 = slice_epoch(tstart2, tend2, spk) + (tend1 - tstart1)
+    spk_joined = np.concatenate([spk1, spk2])
+    return spk_joined
 
 
 def spikes_to_rates(spk: ArrayLike,
