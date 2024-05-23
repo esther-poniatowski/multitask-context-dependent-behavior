@@ -20,6 +20,63 @@ from mtcdb.constants import TBIN
 from mtcdb.types import ArrayLike, NumpyArray
 
 
+def extract_trial(trial:int, data:NumpyArray) -> NumpyArray:
+    """
+    Extract the spiking times in one specific trial.
+
+    Parameters
+    ----------
+    trial: int
+        Number of the trial of interest.
+    data: NumpyArray
+        Raw data corresponding to a *whole session*, for one unit.
+        Shape: ``(2, nspikes)``.
+        ``data[1]``: Spiking times in seconds (starting from 0 in each trial).
+        ``data[0]``: Trial in which each spike occurred.
+    
+    Returns
+    -------
+    spk: NumpyArray
+        Spiking times occurring in the selected trial.
+        Shape: ``(nspikes_trial,)``.
+    """
+    return data[1][data[0]==trial]
+
+
+def slice_epoch(t0: float, t1: float, spk: NumpyArray) -> NumpyArray:
+    """
+    Extract spiking times within one epoch of one trial.
+
+    Important
+    ---------
+    Spiking times are *relative* to the start of the epoch.
+
+    Parameters
+    ----------
+    t0: float
+        Start time of the epoch (in seconds).
+    t1: float
+        End time of the epoch (in seconds).
+    spk: NumpyArray
+        Spiking times during a *whole trial* (in seconds).
+        Shape: ``(nspikes,)``.
+    
+    Returns
+    -------
+    spk_times_epoch: NumpyArray
+        Spiking times with the epoch comprised between t0 and t1,
+        relative to the start of the epoch.
+        Shape: ``(nspikes_epoch, 1)``.
+    
+    Implementation
+    --------------
+    - Select the spiking times within the epoch with a boolean mask.
+    - Subtract the starting time of the epoch to reset the time.
+    """
+    return spk[(spk>=t0)&(spk<t1)] - t0
+
+
+
 def align_spikes(spikes: Any) -> Any:
     pass
 

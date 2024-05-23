@@ -5,12 +5,76 @@
 ============================================================
 
 Tests for the module :mod:`mtcdb.preprocess.firing_rates`.
+
+See Also
+--------
+np.testing.assert_array_almost_equal: 
+    Assess element-wise equality between 2 arrays within a tolerance.
+    Used to ignore numerical errors due to floating point arithmetic.
+    Designed specifically for testing purposes (detailed error messages).
+    Default tolerance: 1e-5.
 """
 
 import numpy as np
+from numpy.testing import assert_array_almost_equal as assert_array_eq
 import pytest
 
-from mtcdb.preprocess.firing_rates import spikes_to_rates, smooth
+from mtcdb.preprocess.firing_rates import extract_trial
+from mtcdb.preprocess.firing_rates import slice_epoch
+from mtcdb.preprocess.firing_rates import spikes_to_rates
+from mtcdb.preprocess.firing_rates import smooth
+
+
+def test_extract_trial():
+    """
+    Test for :func:`mtcdb.preprocess.firing_rates.extract_trial`.
+    
+    Test Inputs
+    -----------
+    trial: int
+        Set to 2, to extract the spiking times of the second trial.
+    data: NumpyArray
+        3 trials with 2 spikes each.
+    """
+    data = np.array([
+        [1, 1, 2, 2, 3, 3],
+        [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+    ])
+    expected = np.array([0.3, 0.4])
+    spk = extract_trial(trial=2, data=data)
+    assert spk.shape == expected.shape, "Wrong shape"
+    assert_array_eq(spk, expected), "Wrong values"
+
+
+def test_slice_epoch():
+    """
+    Test for :func:`mtcdb.preprocess.firing_rates.slice_epoch`.
+    
+    Test Inputs
+    -----------
+    t0: float
+        Set to 0.2, as the start time of the epoch.
+    t1: float
+        Set to 0.5, as the end time of the epoch.
+    spk: numpy.ndarray
+        10 spikes evenly distributed in [0, 1], i.e. 1 spike every 0.1 s.
+        [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    
+    Expected Outputs
+    ----------------
+    expected: NumpyArray
+        ``[0.0, 0.1, 0.2]``
+        The retained 3 spikes originally occur at ``[0.2, 0.3, 0.4]``, 
+        since the starting time is included but not the ending time.
+        Then, the times are shifted by the start time of the epoch, i.e. 0.2.
+    """
+    t0 = 0.2
+    t1 = 0.5
+    spk = np.arange(0, 1, 0.1)
+    expected = np.array([0.0, 0.1, 0.2])
+    sliced = slice_epoch(t0, t1, spk)
+    assert sliced.shape == expected.shape, "Wrong shape"
+    assert_array_eq(sliced, expected), "Wrong values"
 
 
 def test_bin_spikes():
@@ -31,12 +95,6 @@ def test_bin_spikes():
     expected: NumpyArray
         10 values (10 bins) of 20 spikes/s.
         Shape: ``(1, 10)`` (1 trial, 10 bins).
-	
-    See Also
-    --------
-    numpy.allclose: 
-        Assess element-wise equality between 2 arrays within a tolerance.
-        Used to ignore numerical errors due to floating point arithmetic.
 	"""
     tmax = 1.0
     tbin = 0.1
@@ -44,7 +102,7 @@ def test_bin_spikes():
     expected = np.full(shape=(10, 1), fill_value=20.0)
     frates = spikes_to_rates(spk, tbin, tmax)
     assert frates.shape == expected.shape, "Wrong shape"
-    assert np.allclose(frates, expected), "Wrong values"
+    assert_array_eq(frates, expected), "Wrong values"
 
 
 def test_smooth():
@@ -79,7 +137,6 @@ def test_smooth():
     
     See Also
     --------
-    numpy.allclose
     numpy.tile
     """
     frates = np.tile(np.array([[0, 0.25], [1, 0.75]]), (5, 1)) # shape: (10, 2)
@@ -89,4 +146,4 @@ def test_smooth():
     expected = np.full(shape=(9, 2), fill_value=0.5)
     smoothed = smooth(frates, window, tbin, mode)
     assert smoothed.shape == expected.shape, "Wrong shape"
-    assert np.allclose(smoothed, expected), "Wrong values"
+    assert_array_eq(smoothed, expected), "Wrong values"
