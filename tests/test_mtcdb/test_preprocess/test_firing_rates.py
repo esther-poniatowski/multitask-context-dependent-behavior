@@ -56,8 +56,9 @@ def test_smooth():
     -----------
     frates: NumpyArray
         Shape: ``(10, 2)`` (10 bins, 2 trials).
-        Values: Two alternating patterns of 0 and 1, repeated 5 times (10 values).
-        Both patterns are similar but inverted (0, 1 vs. 1, 0).
+        Values: Two alternating patterns of two values, repeated 5 times (10 values).
+        Trial 1 : 0, 1. Trial 2 : 0.25, 0.75.
+        Trials are different to ensure that convolution is performed along the time axis.
     tbin: float
         Set to 0.1, for a recording period of ``10 * 0.1 = 1`` s.
     window: int
@@ -65,7 +66,7 @@ def test_smooth():
     mode: str
         Set to ``'valid'``, to keep only the values which are not
         influenced by zero-padding.
-
+    
     Expected Outputs
     ----------------
     expected: NumpyArray
@@ -74,15 +75,15 @@ def test_smooth():
         ``ntpts_out = ntpts - window/tbin + 1``.
         Here: ``window/tbin = 2`` bins, so ``ntpts_out = 10 - 2 + 1 = 9``.
         Output values: All equal to 0.5, 
-        which is the average of two consecutive values in the input (0 and 1),
-        whatever their order in the patterns.
+        which is the average of two consecutive values in both input trials
+        (0 + 1)/2 = (0.25 + 0.75)/2 = 0.5.
     
     See Also
     --------
     numpy.allclose
     numpy.tile
     """
-    frates = np.tile(np.array([[0, 1], [1, 0]]), (5, 1)) # shape: (10, 2)
+    frates = np.tile(np.array([[0, 0.25], [1, 0.75]]), (5, 1)) # shape: (10, 2)
     tbin = 0.1
     window = 0.2
     mode = 'valid'
