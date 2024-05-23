@@ -47,7 +47,6 @@ def test_bin_spikes():
     assert np.allclose(frates, expected), "Wrong values"
 
 
-
 def test_smooth():
     """
     Test for :func:`mtcdb.preprocess.firing_rates.smooth`.
