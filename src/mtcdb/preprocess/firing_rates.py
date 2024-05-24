@@ -28,7 +28,7 @@ def extract_trial(trial:int, data:NumpyArray) -> NumpyArray:
     ----------
     trial: int
         Number of the trial of interest.
-    data: NumpyArray
+    data: :obj:`mtcdb.types.NumpyArray`
         Raw data corresponding to a *whole session*, for one unit.
         Shape: ``(2, nspikes)``.
         ``data[1]``: Spiking times in seconds (starting from 0 in each trial).
@@ -36,7 +36,7 @@ def extract_trial(trial:int, data:NumpyArray) -> NumpyArray:
     
     Returns
     -------
-    spk: NumpyArray
+    spk: :obj:`mtcdb.types.NumpyArray`
         Spiking times occurring in the selected trial.
         Shape: ``(nspikes_trial,)``.
     """
@@ -56,13 +56,13 @@ def slice_epoch(tstart: float, tend: float,
     ----------
     tstart, tend: float
         Times boundaries of the epoch (in seconds).
-    spk: NumpyArray
+    spk: :obj:`mtcdb.types.NumpyArray`
         Spiking times during a *whole trial* (in seconds).
         Shape: ``(nspikes,)``.
     
     Returns
     -------
-    spk_epoch: NumpyArray
+    spk_epoch: :obj:`mtcdb.types.NumpyArray`
         Spiking times in the epoch comprised between ``tstart`` and ``tend``,
         reset to be relative to the beginning of the epoch.
         Shape: ``(nspikes_epoch, 1)``.
@@ -76,8 +76,8 @@ def slice_epoch(tstart: float, tend: float,
 
 
 def join_epochs(tstart1: float, tend1: float, 
-                   tstart2: float, tend2: float, 
-                   spk: NumpyArray) -> NumpyArray:
+                tstart2: float, tend2: float, 
+                spk: NumpyArray) -> NumpyArray:
     """
     Join spiking times from two distinct epochs as if they were continuous.
 
@@ -85,13 +85,13 @@ def join_epochs(tstart1: float, tend1: float,
     ----------
     tstart1, tend1, tstart2, tend2: float
         Times boundaries of both epochs to connect (in seconds).
-    spk_trial: NumpyArray
+    spk: :obj:`mtcdb.types.NumpyArray`
         Spiking times during a *whole trial* (in seconds).
         Shape: ``(nspikes,)``.
     
     Returns
     -------
-    spk_joined: NumpyArray
+    spk_joined: :obj:`mtcdb.types.NumpyArray`
         Spiking times comprised in ``[tstart1, tend2]`` and ``[tstart2, tend2]``,
         realigned as if both epochs were continuous.
         Shape: ``(nspikes1 + nspikes2,)``.

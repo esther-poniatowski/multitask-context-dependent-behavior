@@ -26,110 +26,146 @@ from mtcdb.preprocess.firing_rates import spikes_to_rates
 from mtcdb.preprocess.firing_rates import smooth
 
 
-def test_extract_trial():
-    """
-    Test for :func:`mtcdb.preprocess.firing_rates.extract_trial`.
-    
-    Test Inputs
-    -----------
-    trial: int
-        Set to 2, to extract the spiking times of the second trial.
-    data: NumpyArray
-        3 trials with 2 spikes each.
-    """
-    data = np.array([
+data = np.array([
         [1, 1, 2, 2, 3, 3],
         [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
     ])
-    expected = np.array([0.3, 0.4])
+@pytest.mark.parametrize("data, expected", [
+    (data, np.array([0.3, 0.4])),
+    (np.array([[], []]), np.array([]))
+])
+def test_extract_trial(data, expected):
+    """
+    Tests for :func:`mtcdb.preprocess.firing_rates.extract_trial`.
+
+    Parametrized for the argument ``data``.
+    
+    Test Inputs
+    -----------
+    data [test 1]: :obj:`mtcdb.types.NumpyArray`
+        3 trials with 2 spikes each.
+    data [test 2]: :obj:`mtcdb.types.NumpyArray`
+        No spikes (empty array). 
+    trial: int
+        Set to 2, to extract the spiking times of the second trial.
+    """
     spk = extract_trial(trial=2, data=data)
+    assert isinstance(spk, np.ndarray), "Wrong type"
     assert spk.shape == expected.shape, "Wrong shape"
     assert_array_eq(spk, expected), "Wrong values"
 
 
-def test_slice_epoch():
+@pytest.mark.parametrize("spk, expected", [
+    (np.arange(0, 1, 0.1), np.array([0.0, 0.1, 0.2])),
+    (np.array([]), np.array([])) 
+])
+def test_slice_epoch(spk, expected):
     """
     Test for :func:`mtcdb.preprocess.firing_rates.slice_epoch`.
+
+    Parametrized for the argument ``spk``.
     
     Test Inputs
     -----------
-    tstart, tend: float
-        Set to 0.2 and 0.5 as the start and end time of the epoch.
-    spk: numpy.ndarray
+    spk [test 1] : :obj:`mtcdb.types.NumpyArray`
         Spikes evenly distributed in ``[0, 1]`` every 0.1 s (10 spikes).
         ``[0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]``
+    spk [test 2] : :obj:`mtcdb.types.NumpyArray`
+        No spikes (empty array).
+    tstart, tend: float
+        Set to 0.2 and 0.5 as the start and end time of the epoch.
     
     Expected Outputs
     ----------------
-    expected: NumpyArray
+    expected [test 1]: :obj:`mtcdb.types.NumpyArray`
         ``[0.0, 0.1, 0.2]``
         3 spikes are retained in the epoch, originally at ``[0.2, 0.3, 0.4]`` s 
         (since the starting time is included but not the ending time).
         Then, spiking times are shifted by the start time of the epoch,
         which requires to subtract 0.2 to each value.
     """
-    spk = np.arange(0, 1, 0.1)
     tstart, tend = 0.2, 0.5
-    expected = np.array([0.0, 0.1, 0.2])
     sliced = slice_epoch(tstart, tend, spk)
     assert sliced.shape == expected.shape, "Wrong shape"
     assert_array_eq(sliced, expected), "Wrong values"
 
 
-def test_join_epochs():
+@pytest.mark.parametrize("spk, expected", [
+    (np.arange(0, 2, 0.1), np.array([0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7])),
+    (np.arange(1, 2, 0.1), np.array([0.4, 0.5, 0.6, 0.7])),
+    (np.array([]), np.array([]))
+])
+def test_join_epochs(spk, expected):
     """
     Test for :func:`mtcdb.preprocess.firing_rates.join_epochs`.
+
+    Parametrized for the argument ``spk``.
     
     Test Inputs
     -----------
-    spk: NumpyArray
+    spk [test 1]: :obj:`mtcdb.types.NumpyArray`
         Spikes evenly distributed in ``[0, 2]`` every 0.1 s (20 spikes).
+    spk [test 2]: :obj:`mtcdb.types.NumpyArray`
+        Spikes only after 1 s, so that there is no spike in the first epoch.
+    spk [test 3]: :obj:`mtcdb.types.NumpyArray`    
+        No spikes at all (empty array).
     tstart1, tend1, tstart2, tend2: float
-        Set to 0.3, 0.7, and 1.3, 1.7 respectively.
+        Two epochs of 0.4 s duration : [0.3, 0.7] and [1.3, 1.7].
 
     Expected Outputs
     ----------------
-    expected: NumpyArray
+    expected [test 1]: :obj:`mtcdb.types.NumpyArray`
+        ``[0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]``
         3 spikes are retained in each epoch, originally at
         ``[0.3, 0.4, 0.5, 0.6]`` and ``[1.3, 1.4, 1.5, 1.6]``
-        Then, the spiking times of both epoch are shifted by 0.3 and 1.3 respectively.
+        Then, the spiking times of both epoch are shifted by 0.3 and 1.3 respectively:
         ``[0.0, 0.1, 0.2, 0.3]`` and ``[0.0, 0.1, 0.2, 0.3]``
-        Finally, the second epoch is shifted to be contiguous with the first one,
-        which requires to add the duration of the first epoch (0.4) to each value:
-        ``[0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]``
+        Finally, the second epoch is shifted  the duration of the first epoch
+        (0.4 s) to be contiguous with the first epoch, hence the result.
+    expected [test 2]: :obj:`mtcdb.types.NumpyArray`
+        Spikes in the second epoch should still be retained
+        and shifted at ``[0.4, 0.5, 0.6, 0.7]``.
+    expected [test 3]: :obj:`mtcdb.types.NumpyArray`
+        No spike should be retained.
     """
-    spk = np.arange(0, 2, 0.1)
     tstart1, tend1 = 0.3, 0.7
     tstart2, tend2 = 1.3, 1.7
-    expected = np.array([0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7])
     spk_joined = join_epochs(tstart1, tend1, tstart2, tend2, spk)
     assert spk_joined.shape == expected.shape, "Wrong shape"
     assert_array_eq(spk_joined, expected), "Wrong values"
 
 
-def test_bin_spikes():
+@pytest.mark.parametrize("spk, expected", [
+    (np.linspace(0, 1.0, num=20), np.full((10, 1), 20.0)),
+    (np.array([]), np.full((10, 1), 0.0))
+])
+def test_spikes_to_rates(spk, expected):
     """
     Test for :func:`mtcdb.preprocess.firing_rates.spikes_to_rates`.
+
+    Parametrized for the argument ``spk``.
     
     Test Inputs
     -----------
+    spk [test 1]: :obj:`mtcdb.types.NumpyArray`
+        20 spikes evenly distributed in the recoding period.
+    spk [test 2]: :obj:`mtcdb.types.NumpyArray`
+        No spikes at all (empty array).
     tmax: float
         Set to 1.0, for a recording period spanning ``[0, 1]``.
     tbin: float
-        Set to 0.1, to divide the recording period into 10 bins.
-    spk: numpy.ndarray
-        20 spikes evenly distributed in the recoding period.
+        Set to 0.1, to divide the recording period into 10 time bins.
     
     Expected Outputs
     ----------------
-    expected: NumpyArray
-        10 values (10 bins) of 20 spikes/s.
-        Shape: ``(1, 10)`` (1 trial, 10 bins).
+    expected [test 1]: :obj:`mtcdb.types.NumpyArray`
+        10 values (10 time bins) of 20 spikes/s.
+        Shape: ``(10, 1)`` (10 time bins, 1 trial).
+    expected [test 2]: :obj:`mtcdb.types.NumpyArray`
+        Idem with 0 spikes/s.
 	"""
     tmax = 1.0
     tbin = 0.1
-    spk = np.linspace(0, tmax, num=20)
-    expected = np.full(shape=(10, 1), fill_value=20.0)
     frates = spikes_to_rates(spk, tbin, tmax)
     assert frates.shape == expected.shape, "Wrong shape"
     assert_array_eq(frates, expected), "Wrong values"
@@ -141,7 +177,7 @@ def test_smooth():
 
     Test Inputs
     -----------
-    frates: NumpyArray
+    frates: :obj:`mtcdb.types.NumpyArray`
         Shape: ``(10, 2)`` (10 bins, 2 trials).
         Values: Two alternating patterns of two values, repeated 5 times (10 values).
         Trial 1 : 0, 1. Trial 2 : 0.25, 0.75.
@@ -156,7 +192,7 @@ def test_smooth():
     
     Expected Outputs
     ----------------
-    expected: NumpyArray
+    expected: :obj:`mtcdb.types.NumpyArray`
         Shape: ``(7, 2)`` (7 time bins, 2 trials).
         In the ``'valid'`` mode, the output time dimension is given by:
         ``ntpts_out = ntpts - window/tbin + 1``.
@@ -165,6 +201,12 @@ def test_smooth():
         which is the average of two consecutive values in both input trials
         (0 + 1)/2 = (0.25 + 0.75)/2 = 0.5.
     
+    Notes
+    -----
+    No need to parametrize this test for an empty input array: 
+    the firing rate time courses will be of fixed duration, 
+    hence non-empty (even if all values are 0.0).
+
     See Also
     --------
     numpy.tile
