@@ -37,6 +37,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx_needs',
     'sphinxcontrib.test_reports',
+    'sphinx_rtd_theme',
 ]
 
 exclude_patterns = [
@@ -50,6 +51,7 @@ exclude_patterns = [
 html_theme = 'sphinx_rtd_theme'
 #html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
+html_css_files = ["custom.css"]
 
 
 # -- Autodoc Settings --------------------------------------------------------
@@ -64,6 +66,7 @@ autodoc_default_options = {
 # Document type hints
 autodoc_typehints = "description" 
 add_module_names = False
+
 
 # -- Napoleon Settings --------------------------------------------------------
 
