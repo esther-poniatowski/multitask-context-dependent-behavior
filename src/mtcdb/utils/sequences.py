@@ -2,9 +2,14 @@
 # -*- coding: utf-8 -*-
 """
 :mod:`mtcdb.utils.sequences` [module]
-=====================================
 
-Utility functions for sequences.
+Utilities for sequences or iterables.
+
+It handles objects such as lists, dictionaries, tuples, array-like...
+
+See Also
+--------
+test_sequences: Unit tests for this module.
 """
 
 import numpy as np

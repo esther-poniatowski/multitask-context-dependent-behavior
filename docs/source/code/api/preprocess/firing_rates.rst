@@ -1,6 +1,5 @@
-.. automodule:: mtcdb.preprocess
-   :members:
-   :undoc-members:
+Firing Rates
+============
 
 .. automodule:: mtcdb.preprocess.firing_rates
    :members:

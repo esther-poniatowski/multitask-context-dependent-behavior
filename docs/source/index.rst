@@ -23,11 +23,10 @@ Multi-Task Context-Dependent Behavior - Documentation
    :maxdepth: 1
    :caption: Code Guide & Usage
 
-   code/install
+   code/prerequisites
    code/usage
-   code/api/index
-   code/tests/index
-   code/tests/report
+   code/index
+   code/test_report
 
 
 Indices and Tables

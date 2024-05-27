@@ -52,6 +52,7 @@ html_theme = 'sphinx_rtd_theme'
 #html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
 html_css_files = ["custom.css"]
+html_logo = "_static/logo.svg"
 
 
 # -- Autodoc Settings --------------------------------------------------------
@@ -78,6 +79,9 @@ napoleon_type_aliases = {"ArrayLike": ":obj:`mtcdb.types.ArrayLike`",
 # Custom sections for napoleon
 napoleon_custom_sections = [('Test Inputs', 'params_style'), # for test docs
                             ('Expected Outputs', 'params_style'), # for test docs
+                            ('Sub-Packages', 'params_style'), # for package docs
+                            ('Modules', 'params_style'), # for module docs
+                            ('Files', 'params_style'), # for module docs
                             'Algorithm', 
                             'Implementation'
                             ] 

@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 :mod:`test_mtcdb.test_preprocess.test_firing_rates` [module]
-============================================================
 
 Tests for the module :mod:`mtcdb.preprocess.firing_rates`.
 

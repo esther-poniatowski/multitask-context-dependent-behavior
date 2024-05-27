@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 :mod:`test_mtcdb.test_utils.test_sequences` [module]
-====================================================
 
 Tests for the module :mod:`mtcdb.utils.sequences`.
 """

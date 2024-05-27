@@ -2,13 +2,36 @@
 # -*- coding: utf-8 -*-
 """
 :mod:`mtcdb` [package]
-======================
 
 Package for Multi-Task Context-Dependent Behavior PhD work (2022-2025).
 The whole package performs data analysis of neuronal recordings in ferret brains, 
 collected in two context-dependent decision making tasks.
 
 Full package documentation at [URL].
+
+Modules
+-------
+constants:
+    Constants used in the whole package.
+types:
+    Custom types used in the whole package.
+
+Sub-Packages
+------------
+datasets: 
+    Classes representing data structures used in the whole package.
+objects:
+    Classes representing objects manipulated in the package (neurons, populations...).
+utils:
+    Utility functions used in the whole package.
+preprocess:
+    Functions to preprocess the raw data.
+visualize:
+    Functions to visualize the data.
+
+See Also
+--------
+test_mtcdb: Tests for the whole package.
 """
 __author__ = "Esther Poniatowski"
 __maintainer__ = "Esther Poniatowski"

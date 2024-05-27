@@ -1,6 +1,5 @@
-.. automodule:: test_mtcdb.test_utils
-   :members:
-   :undoc-members:
+Tests for Utilities - Sequences
+===============================
 
 .. automodule:: test_mtcdb.test_utils.test_sequences
    :members:

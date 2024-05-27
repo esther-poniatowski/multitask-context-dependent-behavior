@@ -1,32 +1,33 @@
+Prerequisites for Usage
+=======================
+
+Preliminary instructions *before* using the project framework in the :ref:`usage` section.
+
+
 .. _install: 
 
-Installation Guide
-==================
-
-This installation workflow creates:
-
-- A *working directory* containing all the project files: documentation (HTML), packages, scripts, notebooks...
-- A new *virtual environment* dedicated to the project, which automatically handles the installation of the Python interpreter and the dependencies. 
-
-Guide to use this framework :ref:`usage`.
-
-
-Requirements
+Installation
 ------------
 
-The installation process resorts to the following tools:
+Prerequisites
+^^^^^^^^^^^^^
+
+The installation process consists in creating :
+
+- A *working directory* containing all the project files (documentation, packages, scripts, notebooks...)
+- A *virtual environment* dedicated to the project, which automatically handles the required Python interpreter and dependencies. 
+
+Before proceeding with the installation steps, please ensure that the following tools are installed on the system :
 
 - `Conda <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`_ 
-- `Git <https://git-scm.com/downloads>`_ (optional)
-
-Please ensure that they are correctly installed and configured on the system before proceeding with the installation steps.
+- `Git <https://git-scm.com/downloads>`_ (optional, for Option 1 in Step 1).
 
 .. warning::
    **Conda** is used as the primary package and environment management system (instead of other tools commonly used in Python environments such as ``pip``, ``setuptools``, ``venv``).
 
 
 Step 1 - Create the Project's Working Directory
------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Option 1: From a command line** [requires ``git``]
 
@@ -47,7 +48,7 @@ In both cases, the entire project directory named ``multitask-context-dependent-
 
 
 Step 2 - Create a Virtual Environment
--------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
@@ -60,7 +61,7 @@ A new conda environment is created under the name ``mtcdb``.
 
 
 Step 3 - Verify Installation
-----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1. Activate the environment
 
@@ -81,3 +82,52 @@ Expected outcome in the terminal : Number of the downloaded version of the proje
 .. code-block:: bash
 
     conda deactivate
+
+
+
+
+.. _setup: 
+
+Set Up for Usage
+----------------
+
+.. note::
+   Before project's framework can be run safely, it is necessary to operate :
+
+   - Within the *project directory*, to ensure that relative paths in codes and configuration files correctly point to other resources within the project.
+   - Within the *virtual environment* dedicated to the project, to use the required Python dependencies.
+
+
+Set up a Session
+^^^^^^^^^^^^^^^^
+
+1. Navigate to the Project Directory named ``multitask-context-dependent-behavior``
+
+.. code-block:: bash
+
+    cd path/to/multitask-context-dependent-behavior
+
+
+2. Activate the virtual environment dedicated to the project
+
+.. code-block:: bash
+
+    conda activate mtcdb
+
+
+End a Session
+^^^^^^^^^^^^^
+
+After using the code, deactivate the environment to return to the base environment.
+
+.. code-block:: bash
+
+    conda deactivate
+
+
+
+
+
+
+
+

@@ -1,45 +1,19 @@
-.. _usage: 
+.. _usage:
 
-Usage
-=====
+Usage Guide
+===========
 
-Prerequisites for Using the Project
------------------------------------
-
-1. Navigate to the Project Directory named ``multitask-context-dependent-behavior``
-
-.. code-block:: bash
-
-    cd path/to/multitask-context-dependent-behavior
+.. warning::
+   Before using the project, ensure that the project is installed (:ref:`install`) and that a session is correctly set up (:ref:`setup`).
 
 
-2. Activate the Conda Environment
-
-.. code-block:: bash
-
-    conda activate mtcdb
+Generate Data
+-------------
 
 
-Once the environment is activated, the project's scripts and modules can be run safely. |
-Example:
-
-.. code-block:: bash
-
-    python scripts/<script_name>.py
-
-3. After the end of a session, deactivate the environment to return to the base environment
-
-.. code-block:: bash
-
-    conda deactivate
-
-.. note::
-   Operating *within* the project directory ensures that relative paths in codes and configuration files correctly point to other resources within the project.
-
-   Activating the virtual environment dedicated to the project ensures that any Python execution use the interpreter and dependencies required for the project.
+Reproduce Figures
+-----------------
 
 
-
-
-
-
+Explore
+-------

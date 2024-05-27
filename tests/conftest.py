@@ -16,5 +16,5 @@ import pytest
 
 def pytest_configure(config):
 	if config.option.xmlpath is None:
-		config.option.xmlpath = "docs/source/code/tests/pytest_results.xml"
+		config.option.xmlpath = "docs/source/code/test_results.xml"
 

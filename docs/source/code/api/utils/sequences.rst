@@ -1,6 +1,5 @@
-.. automodule:: mtcdb.utils
-   :members:
-   :undoc-members:
+Utilities for Sequences
+=======================
 
 .. automodule:: mtcdb.utils.sequences
    :members:

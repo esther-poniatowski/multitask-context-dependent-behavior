@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 :mod:`mtcdb.types` [module]
-===========================
 
 Define custom types for the whole package.
 """

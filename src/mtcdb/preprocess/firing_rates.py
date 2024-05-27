@@ -1,15 +1,12 @@
 """
 :mod:`mtcdb.preprocess.firing_rates` [module]
-=============================================
 
 Convert raw spike times to firing rates.
 
-* SPIKES (dict) 
-    Spiking times of all units in all sessions. Nested dictionary.
-        Keys 1 : Units.
-        Keys 2 : Sessions.
-        Values : Spiking times in all the trials of the session 
-        (array of the form [[trial numbers], [spike indices]])
+See Also
+--------
+test_mtcdb.test_preprocess.test_firing_rates:
+    Unit tests for this module.
 """
 
 import numpy as np
@@ -30,15 +27,19 @@ def extract_trial(trial:int, data:NumpyArray) -> NumpyArray:
         Number of the trial of interest.
     data: :obj:`mtcdb.types.NumpyArray`
         Raw data corresponding to a *whole session*, for one unit.
-        Shape: ``(2, nspikes)``.
-        ``data[1]``: Spiking times in seconds (starting from 0 in each trial).
-        ``data[0]``: Trial in which each spike occurred.
+        Shape: ``(2, nspikes)`` (see Implementation section).
     
     Returns
     -------
     spk: :obj:`mtcdb.types.NumpyArray`
         Spiking times occurring in the selected trial.
         Shape: ``(nspikes_trial,)``.
+    
+    Implementation
+    --------------
+    ``data[1]``: Spiking times in seconds (starting from 0 in each trial).
+    ``data[0]``: Trial in which each spike occurred.
+    To extract the spiking times of one trial, use a boolean mask on the trial number.
     """
     return data[1][data[0]==trial]
 
@@ -229,3 +230,29 @@ def smooth(frates: NumpyArray,
     smoothed = fftconvolve(frates, kernel, mode=mode, axes=0)/len(kernel)
     return smoothed
     
+
+def align_trials(spk: NumpyArray) -> NumpyArray:
+    """
+    Align the spiking times across trials within one session.
+
+    Parameters
+    ----------
+    spk: :obj:`mtcdb.types.NumpyArray`
+    
+    Returns
+    -------
+    frates: :obj:`mtcdb.types.NumpyArray`
+    
+    Implementation
+    --------------
+    - 
+    """
+    frates = np.array([])
+    return frates
+
+
+def main():
+    """
+    Main function for the module.
+    """
+    pass
