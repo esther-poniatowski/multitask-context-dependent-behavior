@@ -15,6 +15,7 @@ np.testing.assert_array_almost_equal:
 """
 
 import numpy as np
+from numpy.typing import NDArray
 from numpy.testing import assert_array_almost_equal as assert_array_eq
 import pytest
 
@@ -25,15 +26,14 @@ from mtcdb.preprocess.firing_rates import spikes_to_rates
 from mtcdb.preprocess.firing_rates import smooth
 
 
-data = np.array([
-        [1, 1, 2, 2, 3, 3],
-        [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
-    ])
-@pytest.mark.parametrize("data, expected", [
-    (data, np.array([0.3, 0.4])),
-    (np.array([[], []]), np.array([]))
+spikes: NDArray[np.float64] = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6])
+trials: NDArray[np.int64] = np.array([1, 1, 2, 2, 3, 3])
+expected: NDArray[np.float64] = np.array([0.3, 0.4])
+@pytest.mark.parametrize("spikes, trials, expected", [
+    (spikes, trials, expected),
+    (np.array([]), np.array([]), np.array([]))
 ])
-def test_extract_trial(data, expected):
+def test_extract_trial(spikes, trials, expected):
     """
     Tests for :func:`mtcdb.preprocess.firing_rates.extract_trial`.
 
@@ -41,14 +41,16 @@ def test_extract_trial(data, expected):
     
     Test Inputs
     -----------
-    data [test 1]: :obj:`mtcdb.types.NumpyArray`
-        3 trials with 2 spikes each.
-    data [test 2]: :obj:`mtcdb.types.NumpyArray`
+    trials [test 1]: :obj:`mtcdb.types.NumpyArray` of int
+        3 trials.
+    spikes [test 1]: :obj:`mtcdb.types.NumpyArray` of float
+        2 spikes per trial.
+    trials, spikes [test 2]: :obj:`mtcdb.types.NumpyArray`
         No spikes (empty array). 
     trial: int
         Set to 2, to extract the spiking times of the second trial.
     """
-    spk = extract_trial(trial=2, data=data)
+    spk = extract_trial(trial=2, spikes=spikes, trials=trials)
     assert isinstance(spk, np.ndarray), "Wrong type"
     assert spk.shape == expected.shape, "Wrong shape"
     assert_array_eq(spk, expected), "Wrong values"
@@ -218,3 +220,4 @@ def test_smooth():
     smoothed = smooth(frates, window, tbin, mode)
     assert smoothed.shape == expected.shape, "Wrong shape"
     assert_array_eq(smoothed, expected), "Wrong values"
+

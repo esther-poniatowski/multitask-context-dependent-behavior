@@ -7,7 +7,7 @@ See Also
 --------
 test_mtcdb.test_preprocess.test_firing_rates:
     Unit tests for this module.
-mtcdb.datasets.RawData:
+mtcdb.datasets.RawSpikes:
     Data structure for raw spike times.
 
 """
@@ -18,7 +18,6 @@ from scipy.signal import fftconvolve
 from typing import Literal, TypeAlias
 
 from mtcdb.constants import TBIN
-from mtcdb.datasets import RawData
 from mtcdb.types import ArrayLike, NumpyArray
 
 
@@ -27,32 +26,45 @@ Task: TypeAlias = Literal['PTD', 'CLK']
 NumpyArray: TypeAlias = NDArray[np.float64]
 
 
-def extract_trial(trial:int, data:RawData) -> NumpyArray:
+def extract_trial(trial:int, 
+                  spikes: NDArray[np.float64], 
+                  trials: NDArray[np.int64]
+                  ) -> NDArray[np.float64]:
     """
     Extract the spiking times in one specific trial.
 
     Parameters
     ----------
-    trial: int
-        Number of the trial of interest.
-    data: :obj:`mtcdb.datasets.RawData`
-        Raw data for one unit in a *whole session*.
-        Shape: ``(2, nspikes)`` (see Implementation section).
+    trial:
+        Index of the trial of interest, *starting from 1*.
+    spikes:
+        Raw spiking times (in seconds) for one unit in a *whole session*.
+        Shape: ``(nspikes,)``.
+    trials:
+        Trial indexes corresponding to spiking times.
+        Shape: ``(nspikes,)``.
     
     Returns
     -------
-    spk: :obj:`mtcdb.types.NumpyArray`
+    spk:
         Spiking times occurring in the selected trial.
         Shape: ``(nspikes_trial,)``.
     
     Implementation
     --------------
-    ``data[1]``: Spiking times in seconds (starting from 0 in each trial).
-    ``data[0]``: Trial in which each spike occurred.
-    To extract the spiking times of one trial, use a boolean mask on the trial 
-    number.
+    To extract the spiking times of one trial, 
+    use a boolean mask on the trial number.
+
+    Raises
+    ------
+    ValueError
+        If the number of spikes and trials do not match.
+    
+    See Also
+    --------
+    :class:`mtcdb.datasets.RawSpikes`: Data structure for raw spike times.
     """
-    return data[1][data[0]==trial]
+    return spikes[trials==trial]
 
 
 def slice_epoch(tstart: float, tend: float, 
@@ -134,7 +146,7 @@ def align_timings(task: Task, stim: Stim,
                   d_pre: float,
                   d_stim: float,
                   d_post: float,
-                  d_torc: float,
+                  d_warn: float,
                   t_on: float,
                   t_off: float
                   ) -> tuple[float, float, float, float]:
@@ -153,16 +165,16 @@ def align_timings(task: Task, stim: Stim,
         Durations of the pre-stimulus, stimulus, 
         and post-stimulus periods (in seconds),
         common to *all* trials in the final dataset.
-    d_torc: float
+    d_warn: float
         Duration of the TORC stimulus (in seconds),
-        within the total trial duration in task ``'CLK'``.
+        within the total trial duration in task CLK.
     t_on, t_off: float
         Times of stimulus onset and offset (in seconds)
         during the *specific* trial.
     
     Returns
     -------
-    tstart1, tend1, tstart2, tend2: float
+    tstart1, tend1, tstart2, tend2: tuple[float, float, float, float]
         Time boundaries of the first and second epochs to extract
         in the specific trial.
     
@@ -183,17 +195,17 @@ def align_timings(task: Task, stim: Stim,
       which may vary across sessions and trials (experimental variability).
     - The type of task and stimulus to align.
       
-    In task ``'PTD'``, one single stimulus occurs in one trial
+    In task PTD, one single stimulus occurs in one trial
     (TORC 'R' or Tone 'T').
-    In task ``'CLK'``, two stimuli follow each other in one trial
+    In task CLK, two stimuli follow each other in one trial
     (TORC 'N' and Click train 'R'/'T'). 
     Both should constitute independent trials in the final dataset. 
     To do so, the other stimulus should be excised from the epoch.
     
     Implementation
     --------------
-    Task ``'PTD'`` or Task ``'CLK'`` with TORC
-    ..........................................
+    Task PTD or Task CLK with TORC
+    ..............................
     The first retained epoch encompasses pre-stimulus *and* stimulus periods.
     To align all the stimuli's onsets across trials, this epoch should start
     a duration ``d_pre`` before the stimulus onset, 
@@ -207,14 +219,14 @@ def align_timings(task: Task, stim: Stim,
     at a duration ``d_post`` after the stimulus offset,
     i.e. at time ``t_off + d_post``.
 
-    Task ``'CLK'`` with Click
-    .........................
+    Task CLK with Click
+    ...................
     The first retained epoch encompasses only the pre-stimulus period.
     It should start as for the PTD case.
     It should end before the TORC, i.e. at time ``t_on``.
     The second retained epoch encompasses both the stimulus and post-stimulus periods.
     It should start at the beginning of the Click, i.e. at the offset of the TORC,
-    i.e. at time ``t_on + d_torc``.
+    i.e. at time ``t_on + d_warn``.
     It should last the duration of the stimulus AND post-stimulus periods,
     i.e. end at ``tstart2 + d_stim + d_post``.
 
@@ -238,7 +250,7 @@ def align_timings(task: Task, stim: Stim,
         tend2 = t_off + d_post
     elif task == 'CLK' and (stim == 'T' or stim == 'R'): # excise TORC
         tend1 = t_on
-        tstart2 = t_on + d_torc
+        tstart2 = t_on + d_warn
         tend2 = tstart2 + d_stim + d_post  
     else:
         raise ValueError("Unknown task or stimulus")
@@ -273,7 +285,7 @@ def spikes_to_rates(spk: ArrayLike,
     
     Algorithm
     ---------
-    - Divide the recording period  ``[0, tmax]`` into bins of size ``tbin``.
+    - Divide the recording period ``[0, tmax]`` into bins of size ``tbin``.
     - Count the number of spikes in each bin.
     - Divide the spikes count in each bin by the bin size ``tbin``.
 
