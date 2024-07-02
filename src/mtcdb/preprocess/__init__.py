@@ -4,7 +4,7 @@
 Preprocess the raw data up to obtain a format suitable for analysis.
 
 Raw data consists in spiking times of single neurons in different recording sessions.
-Final data consists in pseudo-population zscored firing rates.
+Final data consists in pseudo-population z-scored firing rates.
 Each module is dedicated to one processing step.
 
 Files

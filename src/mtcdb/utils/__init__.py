@@ -3,15 +3,14 @@
 """
 :mod:`mtcdb.utils` [subpackage]
 
-Utility functions for all the modules.
+Utility functions used in the whole package.
 
 Modules
 -------
-sequences:
-    Utilities to handle sequences or iterables 
-    (lists, dictionaries, tuples, array-like...).
+:mod:`sequences`
+:mod:`functions`
 
 See Also
 --------
-test_mtcdb.test_utils: Unit tests for this package.
+:mod:`test_mtcdb.test_utils`: Unit tests for this sub-package.
 """

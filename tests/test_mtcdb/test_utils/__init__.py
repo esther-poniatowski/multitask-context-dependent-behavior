@@ -3,12 +3,12 @@
 """
 :mod:`test_mtcdb.test_utils` [subpackage]
 
-Tests for the subpackage :mod:`mtcdb.utils`.
-
 Modules
 -------
-test_sequences: Unit tests for :mod:`mtcdb.utils.sequences`.
+:mod:`test_sequences`
+:mod:`test_functions`
+
+See Also
+--------
+:mod:`mtcdb.utils`: Tested subpackage.
 """
-
-
-

@@ -7,21 +7,21 @@ Tests for the module :mod:`mtcdb.datasets.utils`.
 """
 
 import numpy as np
-from numpy.typing import NDArray
+import numpy.typing as npt
 import os
 import pytest 
 
-from mtcdb.datasets.utils import DataHandler
+from mtcdb.utils.convert_xarray import DataHandler
 
 
 @pytest.fixture
-def setup_test_data(tmp_path) -> tuple[NDArray, str]:
+def setup_test_data(tmp_path) -> tuple[npt.NDArray, str]:
     """
     Create test data and a corresponding temporary .npy file path.
 
     Returns
     -------
-    test_data: NDArray
+    test_data: npt.NDArray
         Numpy array to be saved and/or loaded.
     test_file: str
         Temporary path.
@@ -31,7 +31,7 @@ def setup_test_data(tmp_path) -> tuple[NDArray, str]:
     This fixture uses itself pytest's fixture :obj:`tmp_path`.
     The test file is automatically deleted by pytest after the test is run.
     """
-    test_data: NDArray = np.array([1, 2, 3])
+    test_data: npt.NDArray = np.array([1, 2, 3])
     test_file = tmp_path / "test.npy"
     return test_data, str(test_file)
 
@@ -45,7 +45,7 @@ def test_load_data_success(setup_test_data):
     
     Test Inputs
     -----------
-    test_data: NDArray
+    test_data: npt.NDArray
         Numpy array to be loaded.
     TestNpyDataHandler: 
         Valid subclass.
@@ -81,7 +81,7 @@ def test_load_data_file_not_found():
     
     Expected Outputs
     ----------------
-    data: NDArray
+    data: npt.NDArray
         Empty data of shape ``empty_shape``.
     """
     class TestNpyDataHandler(DataHandler):
@@ -138,7 +138,7 @@ def test_save_data_success(setup_test_data):
     
     Test Inputs
     -----------
-    test_data: NDArray
+    test_data: npt.NDArray
         Numpy array to be saved.
     TestNpyDataHandler:
         Valid subclass with required attributes for saving data.
@@ -168,7 +168,7 @@ def test_save_data_directory_not_found(setup_test_data):
 
     Test Inputs
     -----------
-    test_data: ndarray
+    test_data: npt.NDArray
         Numpy array to attempt to save in a non-existent directory.
     TestNpyDataHandler:
         Subclass with a non-existent directory path.

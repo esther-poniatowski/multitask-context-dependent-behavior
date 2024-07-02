@@ -83,7 +83,8 @@ napoleon_custom_sections = [('Test Inputs', 'params_style'), # for test docs
                             ('Modules', 'params_style'), # for module docs
                             ('Files', 'params_style'), # for module docs
                             'Algorithm', 
-                            'Implementation'
+                            'Implementation',
+                            'Exceptions'
                             ] 
 
 

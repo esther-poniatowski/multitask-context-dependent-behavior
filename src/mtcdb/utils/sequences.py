@@ -3,19 +3,24 @@
 """
 :mod:`mtcdb.utils.sequences` [module]
 
-Utilities for sequences or iterables.
+Utilities for sequences or iterables (lists, dictionaries, tuples, array-like...).
 
-It handles objects such as lists, dictionaries, tuples, array-like...
+Functions
+---------
+:func:`unique`
 
 See Also
 --------
-test_sequences: Unit tests for this module.
+:mod:`tests_mtcdb.test_utils.test_sequences`: Unit tests for this module.
 """
 
-import numpy as np
-from typing import Iterable, TypeVar
+from typing import TypeVar, List, Tuple
 
-I = TypeVar('I', bound='Iterable')
+import numpy as np
+import numpy.typing as npt
+
+
+I = TypeVar('I', npt.NDArray, List, Tuple)
 
 
 def unique(sequence: I) -> I:
@@ -39,7 +44,7 @@ def unique(sequence: I) -> I:
     
     See Also
     --------
-    numpy.unique: Keep unique elements in numpy arrays, in *ascending* order.
+    :func:`numpy.unique`: Keep unique elements in numpy arrays, in *ascending* order.
 
     Implementation
     --------------

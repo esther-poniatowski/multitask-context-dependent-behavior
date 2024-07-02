@@ -1,1 +1,24 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="13" time="1.074" timestamp="2024-05-24T08:53:46.921505" hostname="esthers-macbook-pro.home"><testcase classname="tests.test_mtcdb.test_preprocess.test_firing_rates" name="test_extract_trial[data0-expected0]" time="0.001" /><testcase classname="tests.test_mtcdb.test_preprocess.test_firing_rates" name="test_extract_trial[data1-expected1]" time="0.000" /><testcase classname="tests.test_mtcdb.test_preprocess.test_firing_rates" name="test_slice_epoch[spk0-expected0]" time="0.000" /><testcase classname="tests.test_mtcdb.test_preprocess.test_firing_rates" name="test_slice_epoch[spk1-expected1]" time="0.000" /><testcase classname="tests.test_mtcdb.test_preprocess.test_firing_rates" name="test_join_epochs[spk0-expected0]" time="0.000" /><testcase classname="tests.test_mtcdb.test_preprocess.test_firing_rates" name="test_join_epochs[spk1-expected1]" time="0.000" /><testcase classname="tests.test_mtcdb.test_preprocess.test_firing_rates" name="test_join_epochs[spk2-expected2]" time="0.000" /><testcase classname="tests.test_mtcdb.test_preprocess.test_firing_rates" name="test_spikes_to_rates[spk0-expected0]" time="0.000" /><testcase classname="tests.test_mtcdb.test_preprocess.test_firing_rates" name="test_spikes_to_rates[spk1-expected1]" time="0.000" /><testcase classname="tests.test_mtcdb.test_preprocess.test_firing_rates" name="test_smooth" time="0.000" /><testcase classname="tests.test_mtcdb.test_utils.test_sequences" name="test_unique[list]" time="0.000" /><testcase classname="tests.test_mtcdb.test_utils.test_sequences" name="test_unique[tuple]" time="0.000" /><testcase classname="tests.test_mtcdb.test_utils.test_sequences" name="test_unique[np.array]" time="0.000" /></testsuite></testsuites>
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="3" failures="0" skipped="0" tests="3" time="0.989" timestamp="2024-07-02T09:50:24.880588" hostname="esthers-mbp.home"><testcase classname="" name="tests.test_mtcdb.test_coordinates.test_coordinates" time="0.000"><error message="collection failure">ImportError while importing test module '/Users/eresther/Documents/Work/multitask-context-dependent-behavior/tests/test_mtcdb/test_coordinates/test_coordinates.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../../miniconda3/envs/mtcdb/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests/test_mtcdb/test_coordinates/test_coordinates.py:12: in &lt;module&gt;
+    from mtcdb.core_objects.coordinates import CoordTime
+E   ModuleNotFoundError: No module named 'mtcdb.core_objects.coordinates'</error></testcase><testcase classname="" name="tests.test_mtcdb.test_data_structures.test_utils" time="0.000"><error message="collection failure">ImportError while importing test module '/Users/eresther/Documents/Work/multitask-context-dependent-behavior/tests/test_mtcdb/test_data_structures/test_utils.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../../miniconda3/envs/mtcdb/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+/Users/eresther/Documents/Work/multitask-context-dependent-behavior/tests/test_mtcdb/test_datasets/test_utils.py:14: in &lt;module&gt;
+    ???
+E   ModuleNotFoundError: No module named 'mtcdb.utils.convert_xarray'</error></testcase><testcase classname="" name="tests.test_mtcdb.test_preprocess.test_firing_rates" time="0.000"><error message="collection failure">ImportError while importing test module '/Users/eresther/Documents/Work/multitask-context-dependent-behavior/tests/test_mtcdb/test_preprocess/test_firing_rates.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../../miniconda3/envs/mtcdb/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests/test_mtcdb/test_preprocess/test_firing_rates.py:22: in &lt;module&gt;
+    from mtcdb.preprocess.firing_rates import extract_trial
+src/mtcdb/preprocess/firing_rates.py:21: in &lt;module&gt;
+    from mtcdb.types import ArrayLike, NumpyArray
+E   ModuleNotFoundError: No module named 'mtcdb.types'</error></testcase></testsuite></testsuites>

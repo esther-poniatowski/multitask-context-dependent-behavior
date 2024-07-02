@@ -7,13 +7,13 @@ See Also
 --------
 test_mtcdb.test_preprocess.test_firing_rates:
     Unit tests for this module.
-mtcdb.datasets.RawSpikes:
+mtcdb.datasets.RawSpkTimes:
     Data structure for raw spike times.
 
 """
 
 import numpy as np
-from numpy.typing import NDArray
+import numpy.typing as npt
 from scipy.signal import fftconvolve
 from typing import Literal, TypeAlias
 
@@ -23,13 +23,13 @@ from mtcdb.types import ArrayLike, NumpyArray
 
 Stim: TypeAlias = Literal['R', 'T', 'N']
 Task: TypeAlias = Literal['PTD', 'CLK']
-NumpyArray: TypeAlias = NDArray[np.float64]
+NumpyArray: TypeAlias = npt.NDArray[np.float64]
 
 
 def extract_trial(trial:int, 
-                  spikes: NDArray[np.float64], 
-                  trials: NDArray[np.int64]
-                  ) -> NDArray[np.float64]:
+                  spikes: npt.NDArray[np.float64], 
+                  trials: npt.NDArray[np.int64]
+                  ) -> npt.NDArray[np.float64]:
     """
     Extract the spiking times in one specific trial.
 
@@ -62,7 +62,7 @@ def extract_trial(trial:int,
     
     See Also
     --------
-    :class:`mtcdb.datasets.RawSpikes`: Data structure for raw spike times.
+    :class:`mtcdb.datasets.RawSpkTimes`: Data structure for raw spike times.
     """
     return spikes[trials==trial]
 
@@ -204,13 +204,13 @@ def align_timings(task: Task, stim: Stim,
     
     Implementation
     --------------
-    Task PTD or Task CLK with TORC
-    ..............................
+    **Task PTD or Task CLK with TORC**
+
     The first retained epoch encompasses pre-stimulus *and* stimulus periods.
     To align all the stimuli's onsets across trials, this epoch should start
     a duration ``d_pre`` before the stimulus onset, 
     i.e. at time ``t_on - d_pre``.
-    To keep a common stimulus diration across trials, this epoch should end 
+    To keep a common stimulus duration across trials, this epoch should end 
     a duration ``d_stim`` after the stimulus onset,
     i.e. at time ``t_on + d_stim``.
     The second retained epoch encompasses only the post-stimulus period.
@@ -219,8 +219,8 @@ def align_timings(task: Task, stim: Stim,
     at a duration ``d_post`` after the stimulus offset,
     i.e. at time ``t_off + d_post``.
 
-    Task CLK with Click
-    ...................
+    **Task CLK with Click**
+
     The first retained epoch encompasses only the pre-stimulus period.
     It should start as for the PTD case.
     It should end before the TORC, i.e. at time ``t_on``.
@@ -259,7 +259,7 @@ def align_timings(task: Task, stim: Stim,
 
 def spikes_to_rates(spk: ArrayLike,
                     tbin: float,
-                    tmax: float,
+                    t_max: float,
                     ) -> NumpyArray:
     """
     Convert a spike train into a firing rate time course.
@@ -270,14 +270,14 @@ def spikes_to_rates(spk: ArrayLike,
         Spiking times.
     tbin: float
         Time bin (in seconds).
-    tmax: float
+    t_max: float
         Duration of the recording period (in seconds).
     
     Returns
     -------
     frates: :obj:`mtcdb.types.NumpyArray`
         Firing rate time course (in spikes/s).
-        Shape: ``(ntpts, 1)`` with ``ntpts = tmax/tbin`` (number of bins).
+        Shape: ``(ntpts, 1)`` with ``ntpts = t_max/tbin`` (number of bins).
     
     See Also
     --------
@@ -285,7 +285,7 @@ def spikes_to_rates(spk: ArrayLike,
     
     Algorithm
     ---------
-    - Divide the recording period ``[0, tmax]`` into bins of size ``tbin``.
+    - Divide the recording period ``[0, t_max]`` into bins of size ``tbin``.
     - Count the number of spikes in each bin.
     - Divide the spikes count in each bin by the bin size ``tbin``.
 
@@ -294,7 +294,7 @@ def spikes_to_rates(spk: ArrayLike,
     :func:`np.histogram` takes an argument `bins` for bin edges,
     which should include the *rightmost edge*.
     Bin edges are obtained with :func:`numpy.arange`, 
-    with the last bin edge at ``tmax + tbin`` to include the last bin.
+    with the last bin edge at ``t_max + tbin`` to include the last bin.
     :func:`np.histogram` returns two outputs: 
     ``hist`` (number of spikes in each bin), ``edges`` (useless).
     
@@ -303,7 +303,7 @@ def spikes_to_rates(spk: ArrayLike,
     trials (length ``1``, single trial).
     It ensures compatibility and consistence in the full process.
     """
-    frates = np.histogram(spk, bins=np.arange(0, tmax+tbin, tbin))[0]/tbin
+    frates = np.histogram(spk, bins=np.arange(0, t_max+tbin, tbin))[0]/tbin
     frates = frates[:,np.newaxis] # add one dimension for trials
     return frates
 

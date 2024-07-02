@@ -4,18 +4,22 @@
 :mod:`tests_mtcdb` [package]
 
 Tests for the Multi-Task Context-Dependent Behavior package.
-Imported by Sphinx to extract docstrings for tests documentation.
 
 Sub-Packages
 ------------
-test_mtcdb.test_utils: Tests :mod:`mtcdb.utils`.
-test_mtcdb.test_preprocess: Tests :mod:`mtcdb.preprocess`.
+:mod:`test_mtcdb.test_core_objects`
+:mod:`test_mtcdb.test_coordinates`
+:mod:`test_mtcdb.test_data_structures`
+:mod:`test_mtcdb.test_io_handlers`
+:mod:`test_mtcdb.test_utils`
 
 See Also
 --------
-mtcdb
+:mod:`mtcdb`: Main package.
+
+Notes
+-----
+This test package is imported by Sphinx to extract docstrings 
+for documenting tests. This documentation provides additional
+examples and explanations for the tested modules and functions.
 """
-
-
-
-

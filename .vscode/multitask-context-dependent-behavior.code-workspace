@@ -1,0 +1,54 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"cSpell.words": [
+			"allclose",
+			"arange",
+			"argvalues",
+			"astype",
+			"BAGUR",
+			"Cognitives",
+			"Computationnelles",
+			"dataframe",
+			"DCLK",
+			"docformat",
+			"docstrings",
+			"DPEG",
+			"DPOST",
+			"DPRE",
+			"DPRESHOCK",
+			"DSHOCK",
+			"DSTIM",
+			"dtype",
+			"DWARN",
+			"firingrates",
+			"issubdtype",
+			"Laboratoire",
+			"loadtxt",
+			"Morbier",
+			"mtcdb",
+			"Multiton",
+			"ndarray",
+			"npt.NDArray",
+			"numpydoc",
+			"Perceptifs",
+			"Perigenual",
+			"Poniatowski",
+			"Prelimbic",
+			"rawspktimes",
+			"SAMPL",
+			"savetxt",
+			"smpl",
+			"Stim",
+			"Systemes",
+			"tbin",
+			"Telesto",
+			"TSHOCK",
+			"xarray"
+		]
+	}
+}
