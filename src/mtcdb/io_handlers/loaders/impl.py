@@ -18,6 +18,18 @@ See Also
 :class:`mtcdb.io_handlers.formats.FileExt`
 :class:`mtcdb.io_handlers.formats.TargetType`
 :class:`mtcdb.io_handlers.loaders.base.Loader`
+
+Implementation
+--------------
+When a single target type is supported by a specific loader,
+it is defined as a class attribute in the loader class and set as
+the default value for the :attr:`tpe` parameter in the constructor.
+It should match the id of the only key in the dictionary :attr:`load_methods`.
+
+This solution is chosen instead of overriding the constructor of the subclass
+and removing the :attr:`tpe` parameter from the signature.
+Indeed, this would not respect the Liskov Substitution Principle, 
+which is problematic especially in the abstract :class:`Data` class.
 """
 
 import pickle
@@ -34,15 +46,14 @@ from mtcdb.io_handlers.loaders.base import Loader
 
 
 class LoaderPKL(Loader):
-    """
-    Load data from a Pickle file.
-    """
+    """Load data from a Pickle file."""
     ext = FileExt.PKL
-    load_methods = {TargetType.OBJECT: "_load"}
+    tpe = TargetType('object')
+    load_methods = {tpe: "_load"}
 
-    def __init__(self, path: str) -> None:
+    def __init__(self, path, tpe=tpe):
         """Override the base class method since the type does not need to be specified."""
-        super().__init__(path, tpe='object')
+        super().__init__(path, tpe=tpe)
 
     def _load(self) -> Any:
         """
@@ -60,16 +71,15 @@ class LoaderPKL(Loader):
             return pickle.load(file)
 
 class LoaderNPY(Loader):
-    """
-    Load data from a NPY file.
-    """
+    """Load data from a NPY file."""
     ext = FileExt.NPY
-    load_methods = MappingProxyType({TargetType.NDARRAY: "_load_numpy"})
+    tpe = TargetType('ndarray')
+    load_methods = MappingProxyType({tpe: "_load_numpy"})
 
-    def __init__(self, path: str) -> None:
+    def __init__(self, path, tpe=tpe) -> None:
         """Override the base class method since the type is fixed."""
-        super().__init__(path, tpe='ndarray')
-    
+        super().__init__(path, tpe=tpe)
+
     def _load_numpy(self) -> npt.NDArray:
         """Load a NPY file into a numpy array.
         
@@ -81,9 +91,7 @@ class LoaderNPY(Loader):
 
 
 class LoaderCSV(Loader):
-    """
-    Load data from a CSV file.
-    """
+    """Load data from a CSV file."""
     ext = FileExt.CSV
     load_methods = MappingProxyType({
         TargetType.LIST: "_load_list",

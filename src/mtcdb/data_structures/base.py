@@ -11,12 +11,13 @@ from abc import ABC, abstractmethod
 import copy
 from pathlib import Path
 from types import MappingProxyType
-from typing import Tuple, Dict, Type, TypeVar, Generic
+from typing import Tuple, Dict, Mapping, Type, TypeVar, Generic
 
 import numpy as np
 import numpy.typing as npt
 
 from mtcdb.io_handlers.path_managers.base import PathManager
+from mtcdb.io_handlers.formats import TargetType
 from mtcdb.io_handlers.loaders.base import Loader
 from mtcdb.io_handlers.loaders.impl import LoaderPKL
 from mtcdb.io_handlers.savers.base import Saver
@@ -25,6 +26,7 @@ from mtcdb.io_handlers.savers.impl import SaverPKL
 
 T = TypeVar('T')
 """Type variable representing the type of data in the generic Data class."""
+
 
 class Data(ABC, Generic[T]):
     """
@@ -48,7 +50,7 @@ class Data(ABC, Generic[T]):
         Saver class to save the data to files in a specific format.
     loader: Type[Loader], default=LoaderPKL
         Loader class to load the data from files.
-    raw_type : Type, default='Data'
+    tpe : TargetType, default='object'
         Type of the loaded data (parameter for the loader).
     
     Attributes
@@ -61,6 +63,10 @@ class Data(ABC, Generic[T]):
         Number of elements along each dimension.
         Keys: Dimension names.
         Values: Number of elements.
+    coord2dim: Mapping[str, str]
+        Mapping of the coordinates to the dimensions of the data.
+        Keys: Coordinate names.
+        Values: Dimension names.
         
     Methods
     -------
@@ -71,9 +77,7 @@ class Data(ABC, Generic[T]):
     :meth:`load`
     :meth:`save`
     :meth:`coord2dim`
-        Mapping of the coordinates to the dimensions of the data.
-        This is a method rather than an immutable attribute
-        because it should be specific to each subclass.
+        
     
     Examples
     --------
@@ -85,6 +89,9 @@ class Data(ABC, Generic[T]):
     Several attributes are read-only and/or immutable to ensure the integrity of the data structure.
     :attr:`data`
     :attr:`dims`
+    :attr:`coords`
+    :attr:`shape`
+    :attr:`n`
 
     Warning
     -------
@@ -108,28 +115,36 @@ class Data(ABC, Generic[T]):
     path_manager: Type[PathManager]
     saver: Type[Saver] = SaverPKL
     loader: Type[Loader] = LoaderPKL
-    raw_type : Type[T] = 'Data'
+    tpe: TargetType = TargetType('object')
 
     def __init__(self, data: npt.NDArray) -> None:
-        self._data = data
-        self._data.setflags(write=False)
-        self.coord2dim = MappingProxyType({coord: dim for dim, coord in self.coords.items()})
+        self.data = data
+        self.data.setflags(write=False) # make immutable
         self.shape = self.data.shape
         self.n = MappingProxyType({dim: shape for dim, shape in zip(self.dims, self.shape)})
 
-    @property
-    def data(self) -> npt.NDArray:
+    def __repr__(self) -> str:
+        coord_names = list(self.coords.values())
+        return f"<{self.__class__.__name__}> Dims: {self.dims}, Coords: {coord_names}"
+
+    @classmethod
+    def coord2dim(cls) -> Mapping[str, str]:
         """
-        Read-only access to the actual data values to analyze.
+        Map coordinates to dimensions.
         
         Returns
         -------
-        npt.NDArray
-        """
-        return self._data
+        Mapping[str, str]
+            Mapping of the coordinates to the dimensions of the data.
+            Keys: Coordinate names.
+            Values: Dimension names.
 
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}> Dims: {self.dims}\n Coords: {list(self.coords.values())}"
+        Notes
+        -----
+        This is a method rather than an immutable attribute
+        because it should be specific to each subclass.
+        """
+        return MappingProxyType({coord: dim for dim, coord in cls.coords.items()})
 
     def copy(self) -> 'Data':
         """
@@ -145,8 +160,8 @@ class Data(ABC, Generic[T]):
         """
         return copy.deepcopy(self)
 
-    @abstractmethod
     @property
+    @abstractmethod
     def path(self) -> Path:
         """
         Build the path to the file containing the data.
@@ -158,7 +173,7 @@ class Data(ABC, Generic[T]):
         -------
         Path
         """
-        return self.path_manager.get_path()
+        return self.path_manager().get_path()
 
     def load(self) -> 'Data':
         """
@@ -166,7 +181,7 @@ class Data(ABC, Generic[T]):
 
         Notes
         -----
-        The raw data is recovered in the type specified by :obj:`raw_type`.
+        The raw data is recovered in the type specified by :obj:`tpe`.
         If needed, transform it in an instance of the data structure.
         By default, with pickle, the data is directly recovered 
         as an object corresponding to the data structure.
@@ -175,7 +190,7 @@ class Data(ABC, Generic[T]):
         -------
         Data
         """
-        data = self.loader(self.path, self.raw_type).load() # chain loader methods
+        data = self.loader(path=self.path, tpe=self.tpe).load()
         data = self.__class__(data) # call constructor
         return data
 
@@ -191,6 +206,11 @@ class Data(ABC, Generic[T]):
         without any transformation.
         """
         self.saver(self.path, self.data).save()
+
+    @property
+    def coord_attrs(self) -> Tuple[str]:
+        """TODO"""
+        raise NotImplementedError("Method not implemented yet.")
 
     def sel(self, **kwargs) -> 'Data':
         """
@@ -221,13 +241,14 @@ class Data(ABC, Generic[T]):
         >>> data.sel(time=slice(0, 1), task='PTD', stim=['R', 'T'])
         """
         # Unpack the names of the coordinates present in the data structure
-        coord_attrs = list(self.coord2dim.keys())
+        coord2dim = self.coord2dim()
+        coord_attrs = list(coord2dim.keys())
         # Initialize True masks for each dimensions to select all elements by default
         masks = {dim: np.ones(shape, dtype=bool) for dim, shape in zip(self.dims, self.shape)}
         # Update masks with the selection criteria on each coordinate
         for name, label in kwargs.items():
             if name in self.coord_attrs:
-                dim = self.coord2dim[name] # dimension to which the coordinate applies
+                dim = coord2dim[name] # dimension to which the coordinate applies
                 coord = getattr(self, name) # coordinate object
                 # Create a boolean mask depending on the target label type
                 if isinstance(label, list):
@@ -236,7 +257,7 @@ class Data(ABC, Generic[T]):
                     mask = np.zeros(coord.values.size, dtype=bool)
                     mask[label] = True
                 elif isinstance(label, (int, str, bool)):
-                    mask = (coord.values == label)
+                    mask = (coord.values == label) # pylint: disable=superfluous-parens
                 else:
                     raise TypeError(f"Invalid type for label '{label}'.")
                 # Apply this mask to the corresponding axis
@@ -249,9 +270,9 @@ class Data(ABC, Generic[T]):
         new_data = self.data[mesh]
         # Select the coordinates
         new_coords = {name: getattr(self, name) for name in coord_attrs}
-        for name, _ in kwargs:
+        for name, _ in kwargs.items():
             if name in self.coord_attrs:
-                new_coords[name] = coord[indices[self.coord2dim[name]]]
+                new_coords[name] = coord[indices[coord2dim[name]]]
         # Instantiate a new data structure with the selected data,
         # by unpacking the new coordinates dictionary
         raise NotImplementedError("Method not implemented yet.")

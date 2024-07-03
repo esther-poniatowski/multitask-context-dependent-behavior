@@ -20,7 +20,7 @@ Subclasses can include additional arguments for their specific operations.
 
 from abc import ABC
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Union
 
 from mtcdb.io_handlers.formats import FileExt
 
@@ -61,8 +61,10 @@ class Saver(ABC):
     ext: FileExt
     save_methods: Mapping[type, str]
 
-    def __init__(self, path: str, data: Any) -> None:
-        self.path = Path(path)
+    def __init__(self, path: Union[str, Path], data: Any) -> None:
+        if isinstance(path, str):
+            path = Path(path)
+        self.path = path
         self.data = data
 
     def save(self):

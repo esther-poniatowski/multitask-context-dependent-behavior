@@ -12,15 +12,13 @@ Classes
 
 from abc import ABC
 from pathlib import Path
-from typing import Mapping, TypeVar, Generic
+from typing import Mapping, Union, TypeVar, Generic
 
 from mtcdb.io_handlers.formats import FileExt, TargetType
 
 
 T = TypeVar('T')
-"""
-Type variable representing the arbitrary type of data handled by the Loader.
-"""
+"""Type variable representing the arbitrary type of data handled by the Loader."""
 
 
 class Loader(ABC, Generic[T]):
@@ -38,9 +36,9 @@ class Loader(ABC, Generic[T]):
 
     Attributes
     ----------
-    path : Path
+    path: Path
         Path to the file containing the data to load.
-    tpe : TargetType
+    tpe: TargetType
         Target type for the retrieved data.
         It determines the method used to load the data and the type 
         of the returned object.
@@ -77,9 +75,13 @@ class Loader(ABC, Generic[T]):
     ext: FileExt
     load_methods: Mapping[TargetType, str]
 
-    def __init__(self, path: str, tpe: str) -> None:
-        self.path = Path(path)
-        self.tpe = TargetType(tpe)
+    def __init__(self, path: Union[str, Path], tpe: Union[str, TargetType]):
+        if isinstance(path, str):
+            path = Path(path)
+        if isinstance(tpe, str):
+            tpe = TargetType(tpe)
+        self.path = path
+        self.tpe = tpe
 
     def load(self) -> T:
         """

@@ -42,7 +42,7 @@ class Data(ABC, Generic[T]):
         Saver class to save the data to files in a specific format.
     loader: Type[Loader], default=LoaderPKL
         Loader class to load the data from files.
-    raw_type : Type, default='Data'
+    tpe : Type, default='Data'
         Type of the loaded data (parameter of the loader).
     
     Attributes
@@ -108,7 +108,7 @@ class Data(ABC, Generic[T]):
     path_manager: Type[PathManager]
     saver: Type[Saver] = SaverPKL
     loader: Type[Loader] = LoaderPKL
-    raw_type : Type[T] = 'Data'
+    tpe : Type[T] = 'Data'
     
     def __init__(self, data: npt.NDArray) -> None:
         self._data = data
@@ -166,7 +166,7 @@ class Data(ABC, Generic[T]):
 
         Notes
         -----
-        The raw data is recovered in the type specified by :obj:`raw_type`.
+        The raw data is recovered in the type specified by :obj:`tpe`.
         If needed, transform it in an instance of the data structure.
         By default, with pickle, the data is directly recovered 
         as an object corresponding to the data structure.
@@ -175,7 +175,7 @@ class Data(ABC, Generic[T]):
         -------
         Data
         """
-        data = self.loader(self.path, self.raw_type).load() # chain loader methods
+        data = self.loader(self.path, self.tpe).load() # chain loader methods
         data = self.__class__(data) # call constructor
         return data
     
@@ -294,7 +294,7 @@ class RawSpkTimes(Data):
     coords: Dict[str, str] = {"time": "block"}
     path_manager: Type[PathManager] = RawSpkTimesPath
     loader: Type[Loader] = LoaderNPY
-    raw_type : Type[T] = npt.NDArray[np.float64]
+    tpe : Type[T] = npt.NDArray[np.float64]
 
     def __init__(self,
                  data: npt.NDArray[np.float64],
@@ -433,7 +433,7 @@ class SpikesTrains(Data):
     coords: Dict[str, str] = {"trial": ["rec", "block", "slot", "task", "ctx", "stim", "error"],}
     path_manager: Type[PathManager] = SpikesTrainsPath
     loader: Type[Loader] = LoaderPKL
-    raw_type : Type[T] = 'Data'
+    tpe : Type[T] = 'Data'
     saver: Type[Saver] = SaverPKL
 
     def __init__(self,
