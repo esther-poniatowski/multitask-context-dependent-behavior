@@ -75,7 +75,8 @@ class CoordPosition(Coordinate, Generic[P]):
 
     def __repr__(self) -> str:
         counts = self.count_by_lab()
-        return f"<{self.__class__.__name__}> : {len(self)} samples, {counts}."
+        format_counts = ', '.join([f"{pos!r}: {n}" for pos, n in counts.items()])
+        return f"<{self.__class__.__name__}>: {len(self)} samples, {format_counts}."
 
     def count_by_lab(self) -> Dict[P, int]:
         """
@@ -94,7 +95,7 @@ class CoordPosition(Coordinate, Generic[P]):
         return {pos: np.sum(self.values == pos) for pos in np.unique(self.values)}
 
     @staticmethod
-    def build_labels(n_smpl: int, pos: P) -> npt.NDArray[np.int64]:
+    def build_labels(n_smpl: int, pos: P) -> npt.NDArray[np.int64]: # pylint: disable=arguments-differ
         """
         Build a position coordinate filled with a *single* label.
         

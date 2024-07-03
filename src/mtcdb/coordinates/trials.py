@@ -42,10 +42,11 @@ class CoordError(Coordinate):
 
     def __repr__(self) -> str:
         counts = self.count_by_lab()
-        return f"<{self.__class__.__name__}> : {len(self)} samples\n {counts}."
+        format_counts = f"Correct: {counts[False]}, Error: {counts[True]}"
+        return f"<{self.__class__.__name__}>: {len(self)} samples, {format_counts}."
 
     @staticmethod
-    def build_labels(n_smpl: int) -> npt.NDArray[np.unicode_]: # pylint: disable=arguments-differ
+    def build_labels(n_smpl: int) -> npt.NDArray[np.str_]: # pylint: disable=arguments-differ
         """
         Build coordinate filled with correct trials.
         
@@ -102,7 +103,8 @@ class CoordFold(Coordinate):
 
     def __repr__(self) -> str:
         counts = self.count_by_lab()
-        return f"<{self.__class__.__name__}> : {len(self)} samples, {counts}."
+        format_counts = ', '.join([f"Fold {fold}: {n}" for fold, n in enumerate(counts)])
+        return f"<{self.__class__.__name__}>: {len(self)} samples, {format_counts}."
 
     @staticmethod
     def build_labels(n_smpl: int) -> npt.NDArray[np.int64]: # pylint: disable=arguments-differ

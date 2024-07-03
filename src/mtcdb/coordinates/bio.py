@@ -38,7 +38,7 @@ class CoordPopulation(Coordinate, Generic[T]):
 
     Attributes
     ----------
-    values: npt.NDArray[np.unicode_]
+    values: npt.NDArray[np.str_]
         Feature labels for the population.
         It contains the string values of the features.
 
@@ -48,7 +48,7 @@ class CoordPopulation(Coordinate, Generic[T]):
     :class:`mtcdb.core_objects.bio.CorticalDepth`
     :class:`mtcdb.coordinates.base.Coordinate`
     """
-    def __init__(self, values: npt.NDArray[np.unicode_]):
+    def __init__(self, values: npt.NDArray[np.str_]):
         super().__init__(values=values)
 
     @staticmethod
@@ -76,7 +76,7 @@ class CoordUnit(CoordPopulation[Unit]):
 
     Attributes
     ----------
-    values: npt.NDArray[np.unicode_]
+    values: npt.NDArray[np.str_]
         Units identifiers (attribute ``id`` of the unit objects).
 
     See Also
@@ -84,11 +84,11 @@ class CoordUnit(CoordPopulation[Unit]):
     :class:`mtcdb.core_objects.composites.Unit`
     :class:`mtcdb.coordinates.base.CoordPopulation`
     """
-    def __init__(self, values: npt.NDArray[np.unicode_]):
+    def __init__(self, values: npt.NDArray[np.str_]):
         super().__init__(values=values)
 
     @classmethod
-    def build_labels(cls, units: Iterable[Unit]) -> npt.NDArray[np.unicode_]: # pylint: disable=arguments-differ
+    def build_labels(cls, units: Iterable[Unit]) -> npt.NDArray[np.str_]: # pylint: disable=arguments-differ
         """
         Build coordinate labels from a list of units.
 
@@ -99,7 +99,7 @@ class CoordUnit(CoordPopulation[Unit]):
         
         Returns
         -------
-        values: npt.NDArray[np.unicode_]
+        values: npt.NDArray[np.str_]
             Coordinate for the id for each unit.
         
         Raises
@@ -108,7 +108,7 @@ class CoordUnit(CoordPopulation[Unit]):
             If the input is not a list of units.
         """
         cls._check_population(units)
-        return np.array([unit.id for unit in units], dtype=np.unicode_)
+        return np.array([unit.id for unit in units], dtype=np.str_)
 
 
 class CoordDepth(CoordPopulation[CorticalDepth]):
@@ -117,7 +117,7 @@ class CoordDepth(CoordPopulation[CorticalDepth]):
 
     Attributes
     ----------
-    values: npt.NDArray[np.unicode_]
+    values: npt.NDArray[np.str_]
         Depth in the cortex (attribute ``depth`` of the unit objects).
 
     Methods
@@ -130,11 +130,11 @@ class CoordDepth(CoordPopulation[CorticalDepth]):
     :class:`mtcdb.core_objects.bio.CorticalDepth`
     :class:`mtcdb.coordinates.coord_base.Coordinate`
     """
-    def __init__(self, values: npt.NDArray[np.unicode_]):
+    def __init__(self, values: npt.NDArray[np.str_]):
         super().__init__(values=values)
 
     @classmethod
-    def build_labels(cls, units: Iterable[Unit]) -> npt.NDArray[np.unicode_]: # pylint: disable=arguments-differ
+    def build_labels(cls, units: Iterable[Unit]) -> npt.NDArray[np.str_]: # pylint: disable=arguments-differ
         """
         Build coordinate labels from a list of units.
 
@@ -145,7 +145,7 @@ class CoordDepth(CoordPopulation[CorticalDepth]):
         
         Returns
         -------
-        values: npt.NDArray[np.unicode_]
+        values: npt.NDArray[np.str_]
             Coordinate for the cortical depth for each unit.
 
         Raises
@@ -154,7 +154,7 @@ class CoordDepth(CoordPopulation[CorticalDepth]):
             If the input is not a list of units.
         """
         cls._check_population(units)
-        return np.array([unit.depth.value for unit in units], dtype=np.unicode_)
+        return np.array([unit.depth.value for unit in units], dtype=np.str_)
 
     def get_layer(self, depth: CorticalDepth) -> npt.NDArray[np.bool_]:
         """

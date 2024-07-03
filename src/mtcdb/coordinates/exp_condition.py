@@ -38,7 +38,7 @@ class CoordExpCond(Coordinate, Generic[C]):
     
     Attributes
     ----------
-    values: npt.NDArray[np.unicode_]
+    values: npt.NDArray[np.str_]
         Labels for the condition associated with each measurement.
         It contains the string values of the conditions 
         stored in the attribute ``value`` of the condition objects.
@@ -65,15 +65,16 @@ class CoordExpCond(Coordinate, Generic[C]):
     """
     condition: Type[C]
 
-    def __init__(self, values: npt.NDArray[np.unicode_]):
+    def __init__(self, values: npt.NDArray[np.str_]):
         super().__init__(values=values)
 
     def __repr__(self):
         counts = self.count_by_lab()
-        return f"<{self.__class__.__name__}> : {len(self)} samples, {counts}."
+        format_counts = ', '.join([f"{cnd!r}: {n}" for cnd, n in counts.items()]) # type: ignore
+        return f"<{self.__class__.__name__}>: {len(self)} samples, {format_counts}."
 
     @staticmethod
-    def build_labels(n_smpl: int, cnd: C) -> npt.NDArray[np.unicode_]:
+    def build_labels(n_smpl: int, cnd: C) -> npt.NDArray[np.str_]: # pylint: disable=arguments-differ
         """
         Build a condition coordinate filled with a *single* label.
         
@@ -86,10 +87,10 @@ class CoordExpCond(Coordinate, Generic[C]):
         
         Returns
         -------
-        values: npt.NDArray[np.unicode_]
+        values: npt.NDArray[np.str_]
             Condition coordinate filled with the label of the condition.
         """
-        return np.full(n_smpl, cnd.value, dtype=np.unicode_)
+        return np.full(n_smpl, cnd.value)
 
     def replace_label(self, old: C, new: C) -> 'CoordExpCond':
         """
@@ -102,7 +103,7 @@ class CoordExpCond(Coordinate, Generic[C]):
 
         Returns
         -------
-        values: npt.NDArray[np.unicode_]
+        values: npt.NDArray[np.str_]
             Coordinate with updated condition labels.
         """
         new_coord = self.copy()
@@ -151,7 +152,7 @@ class CoordTask(CoordExpCond[Task]):
     """
     condition: Type[Task] = Task
 
-    def __init__(self, values: npt.NDArray[np.unicode_]):
+    def __init__(self, values: npt.NDArray[np.str_]):
         super().__init__(values=values)
 
 
@@ -166,7 +167,7 @@ class CoordContext(CoordExpCond[Context]):
     """
     condition: Type[Context] = Context
 
-    def __init__(self, values: npt.NDArray[np.unicode_]):
+    def __init__(self, values: npt.NDArray[np.str_]):
         super().__init__(values=values)
 
 
@@ -181,5 +182,5 @@ class CoordStim(CoordExpCond[Stimulus]):
     """
     condition: Type[Stimulus] = Stimulus
 
-    def __init__(self, values: npt.NDArray[np.unicode_]):
+    def __init__(self, values: npt.NDArray[np.str_]):
         super().__init__(values=values)

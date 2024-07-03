@@ -17,11 +17,13 @@ but apply for all subclasses of :class:`CoordPosition`.
 """
 
 import numpy as np
-import pytest
+import pytest # pylint: disable=unused-import
 
 from mtcdb.coordinates.exp_structure import CoordRecNum
 from mtcdb.core_objects.exp_structure import Recording
 
+
+N_SMPL = 10
 
 def test_coord_recnum_build_labels():
     """
@@ -56,8 +58,8 @@ def test_coord_recnum_count_by_lab():
     count : Dict[Recording, int]
         {Recording(1): 5, Recording(2): 5}
     """
-    values = np.array(5*[1] + 5*[2], dtype=np.int64)
+    values = np.array(5*[1] + 5*[2])
     coord = CoordRecNum(values=values)
     count = coord.count_by_lab()
-    expected_count = {Recording(1): 5, Recording(2): 5}
+    expected_count = {1: 5, 2: 5}
     assert count == expected_count

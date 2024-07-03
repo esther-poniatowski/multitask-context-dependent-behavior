@@ -41,6 +41,7 @@ class Position(ABC):
     :meth:`__le__` : Less than or equal to.
     :meth:`__ge__` : Greater than or equal to.
     :meth:`__gt__` : Greater than.
+    :meth:`__hash__` : Hash, based on the value.
 
     Notes
     -----
@@ -87,6 +88,9 @@ class Position(ABC):
     def __gt__(self, other) -> bool:
         return self.value > other.value
 
+    def __hash__(self) -> int:
+        return self.value
+
 
 class Recording(Position):
     """
@@ -110,7 +114,7 @@ class Recording(Position):
     # No need to override __init__ method.
 
     def __repr__(self) -> str:
-        return f"Recording {self.value}"
+        return f"Recording {self.value} in experiment."
 
 
 class Block(Position):

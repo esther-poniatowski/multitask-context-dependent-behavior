@@ -113,7 +113,7 @@ class LoaderCSV(Loader):
         but also the precise *data type* of the array contents.
         - For float data : npt.NDArray[np.float64]
         - For integer data : npt.NDArray[np.int64]
-        - For string data : npt.NDArray[np.unicode_]
+        - For string data : npt.NDArray[np.str_]
         If the data type is not specified, the default type is ``float``:
         - Integer data is converted to ``float`` (default type).
         - String data raise a ValueError.

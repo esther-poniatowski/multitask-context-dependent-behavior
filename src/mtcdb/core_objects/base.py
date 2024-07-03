@@ -58,6 +58,7 @@ class CoreObject(ABC, Generic[T]):
     :meth:`get_labels`
     :meth:`__eq__`
     :meth:`__hash__`
+    :meth:`__repr__`
 
     Examples
     --------
@@ -126,3 +127,6 @@ class CoreObject(ABC, Generic[T]):
         Therefore, the hash value should be based on the value of the object.
         """
         return hash(self.value)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.value!r})"

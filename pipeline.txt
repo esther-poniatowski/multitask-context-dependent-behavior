@@ -1,0 +1,8 @@
+Garder la trace des pipelines utilisées pour générer des données 
+
+Option 1 : Fichier YAML dans le dossier de sortie.
+Option 2 : Attribut dans les données elles-mêmes.
+
+Scripts : Utiliser pour reproduire les données du papier ou soumissions.
+
+Notebooks : Pour les tutoriels généralement.

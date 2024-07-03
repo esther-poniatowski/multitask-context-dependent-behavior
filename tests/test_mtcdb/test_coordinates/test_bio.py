@@ -37,7 +37,7 @@ def test_coord_unit_build_labels_valid():
     values : Array containing the string labels of the units.
     """
     values = CoordUnit.build_labels(units=POP)
-    expected_values = np.array(UNITS_IDS, dtype=np.unicode_)
+    expected_values = np.array(UNITS_IDS, dtype=np.str_)
     assert np.array_equal(values, expected_values)
 
 
@@ -69,12 +69,12 @@ def test_coord_depth_build_labels():
     values : Array containing the depths of the units.
     """
     values = CoordDepth.build_labels(units=POP)
-    expected_values = np.array(DEPTHS, dtype=np.unicode_)
+    expected_values = np.array(DEPTHS, dtype=np.str_)
     assert np.array_equal(values, expected_values)
 
 
 # Test values for CoordDepth
-VALUES = np.array(['a', 'a', 'b', 'b'], dtype=np.unicode_)
+VALUES = np.array(['a', 'a', 'b', 'b'], dtype=np.str_)
 
 def test_coord_depth_get_layer():
     """

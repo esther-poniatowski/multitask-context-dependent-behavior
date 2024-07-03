@@ -61,7 +61,7 @@ class CoordTime(Coordinate):
         self.t_shock = t_shock
 
     def __repr__(self):
-        return f"<{self.__class__.__name__}> : {len(self)} time points at {self.t_bin} s bin."
+        return f"<{self.__class__.__name__}>: {len(self)} time points, bin = {self.t_bin} sec"
 
     def set_t_bin(self):
         """
@@ -81,7 +81,7 @@ class CoordTime(Coordinate):
             self.t_bin = None
 
     @staticmethod
-    def build_labels(n_smpl: Optional[int] = None,
+    def build_labels(n_smpl: Optional[int] = None, # pylint: disable=arguments-differ
                      t_bin: Optional[float] = None,
                      t_min: float = 0,
                      t_max: Optional[float] = None

@@ -174,7 +174,7 @@ class Site(metaclass=Multiton):
         self.sessions: List['Session'] = []
 
     def __repr__(self) -> str:
-        return f"Site {self.id}, {len(self.units)} units, {len(self.sessions)} sessions."
+        return f"Site {self.id}: {len(self.units)} units, {len(self.sessions)} sessions."
 
     def recover_units(self, units_metadata) -> List['Unit']:
         """Recover the units recorded at the site."""
@@ -284,8 +284,7 @@ class Unit(metaclass=Multiton):
         self.sessions: List[Session] = []
 
     def __repr__(self):
-        """Representation of the unit."""
-        return f"Unit {self.id}, Area {self.area}, Training {self.training}"
+        return f"Unit {self.id}: Area {self.area}, Training {self.training}"
 
     def split_id(self) -> Tuple[str, str, str]:
         """
@@ -387,8 +386,7 @@ class Session(metaclass=Multiton):
         self.rec = Recording(rec)
 
     def __repr__(self) -> str:
-        """Representation of the session."""
-        return f"Session {self.id}, Task {self.task}, Context {self.ctx}"
+        return f"Session {self.id}: Task {self.task}, Context {self.ctx}"
 
     def split_id(self) -> Tuple[str, int, str, str]:
         """
@@ -511,7 +509,7 @@ class Trial:
         self.error: Optional[bool] = None
 
     def __repr__(self) -> str:
-        return f"Slot {self.slot}, Block {self.block}, Session {self.session}, Stimulus {self.stim}"
+        return f"Trial: Slot {self.slot}, Block {self.block}, Session {self.session}, Stimulus {self.stim}"
 
     def recover_properties(self, events_metadata):
         """Recover the properties of the trial from the metadata."""

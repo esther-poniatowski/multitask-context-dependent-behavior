@@ -43,7 +43,7 @@ class MyClass:
     def __init__(self,
                  data: npt.NDArray[np.float64],
                  time: npt.NDArray[np.float64],
-                 labels: npt.NDArray[np.unicode_],
+                 labels: npt.NDArray[np.str_],
                  errors: npt.NDArray[np.bool_],
                  meta1: str,
                  meta2: List[str]

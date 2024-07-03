@@ -41,7 +41,7 @@ def test_coord_task_build_labels():
         10 samples of 'PTD'.
     """
     values = CoordTask.build_labels(n_smpl=N_SMPL, cnd=Task('PTD'))
-    expected_values = np.full(N_SMPL, 'PTD', dtype=np.unicode_)
+    expected_values = np.full(N_SMPL, 'PTD')
     assert np.array_equal(values, expected_values)
 
 
@@ -51,22 +51,18 @@ def test_coord_task_replace_label():
 
     Test Inputs
     -----------
-    initial_values : np.ndarray
-        10 samples of 'PTD'.
+    initial_values : 10 samples of 'CCH'.
     old : Task('CCH')
     new : Task('PTD')
 
     Expected Output
     ---------------
-    updated_values : np.ndarray
-        10 samples of 'PTD'.
+    updated_values : 10 samples of 'PTD'.
     """
-    old = Task('CCH')
-    new = Task('PTD')
-    old_values = np.full(N_SMPL, 'CCH', dtype=np.unicode_)
-    new_values = np.full(N_SMPL, 'PTD', dtype=np.unicode_)
+    old_values = np.full(N_SMPL, 'CCH')
+    new_values = np.full(N_SMPL, 'PTD')
     old_coord = CoordTask(values=old_values)
-    new_coord = old_coord.replace_label(old, new)
+    new_coord = old_coord.replace_label(old=Task('CCH'), new=Task('PTD'))
     assert np.array_equal(new_coord.values, new_values)
 
 
@@ -84,8 +80,8 @@ def test_task_count_by_lab():
     count : Dict[Task, int]
         {Task('PTD'): 5, Task('CLK'): 5}
     """
-    values = np.array(5*['PTD'] + 5*['CLK'], dtype=np.unicode_)
+    values = np.array(5*['PTD'] + 5*['CLK'])
     coord = CoordTask(values=values)
     count = coord.count_by_lab()
-    expected_count = {Task('PTD'): 5, Task('CLK'): 5}
+    expected_count = {Task('PTD'): 5, Task('CLK'): 5, Task('CCH'): 0}
     assert count == expected_count
