@@ -1,22 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.core_objects.datasets` [module]
+:mod:`mtcdb.data_structures.datasets` [module]
 """
 from abc import ABC, abstractmethod
 import copy
 import numpy as np
 import numpy.typing as npt
-from pathlib import Path
 from types import MappingProxyType
-from typing import List, Tuple, Dict, Union, Optional, Any, Callable
+from typing import Tuple, Dict
 from typing import Type, TypeVar, Generic
-import xarray as xr
 
-from mtcdb.constants import SMPL_RATE, T_BIN, DPRE, DPOST, DSTIM, DPRESHOCK, DSHOCK, SMOOTH_WINDOW
-from mtcdb.io_handlers.path_managers import PathManager, RawSpkTimesPath, SpikesTrainsPath
-from mtcdb.utils.handle_files import Loader, LoaderPKL, LoaderNPY
-from mtcdb.utils.handle_files import Saver, SaverPKL
+from mtcdb.constants import SMPL_RATE, T_BIN, D_PRE, D_POST, D_STIM, D_PRESHOCK, D_SHOCK, SMOOTH_WINDOW
+from mtcdb.io_handlers.path_managers.impl import PathManager, RawSpkTimesPath, SpikesTrainsPath
+from mtcdb.io_handlers.loaders.impl import LoaderPKL, LoaderNPY
+from mtcdb.io_handlers.savers.impl import SaverPKL
 
 
 T = TypeVar('T')
@@ -472,11 +470,11 @@ class FiringRatesUnit(Data):
     def __init__(self, 
                  unit_id:str, 
                  t_bin:float = T_BIN, 
-                 d_pre:float = DPRE, 
-                 d_post:float = DPOST,
-                 d_stim:float = DSTIM, 
-                 d_pre_shock:float = DPRESHOCK,
-                 d_shock:float = DSHOCK, 
+                 d_pre:float = D_PRE, 
+                 d_post:float = D_POST,
+                 d_stim:float = D_STIM, 
+                 d_pre_shock:float = D_PRESHOCK,
+                 d_shock:float = D_SHOCK, 
                  smooth_window:float = SMOOTH_WINDOW):
         super().__init__(self.loader, self.saver, self.empty_shape)
         self.unit_id = unit_id

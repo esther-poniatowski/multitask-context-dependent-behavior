@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.test_utils.test_path_managers` [module]
+:mod:`test_mtcdb.test_utils.test_path_managers_impl` [module]
 
 See Also
 --------
-:mod:`mtcdb.utils.manage_paths`: Tested module.
+:mod:`mtcdb.io_handlers.path_managers.impl`: Tested module.
 """
 
 import pytest # pylint: disable=unused-import
 
-from mtcdb.io_handlers.path_managers import RawSpkTimesPath, FiringRatesPath
+from mtcdb.io_handlers.path_managers.impl import RawSpkTimesPath, FiringRatesPath
 
 
 def test_rawspktimes_path(tmp_path):

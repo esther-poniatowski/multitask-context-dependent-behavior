@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.io_handlers.test_loader_base` [module]
+:mod:`test_mtcdb.io_handlers.test_savers_loaders_impl` [module]
 
 Notes
 -----
@@ -19,9 +19,8 @@ in order to recover the data manually without redefining the path.
 
 See Also
 --------
-:mod:`mtcdb.io_handlers.savers`: Tested module.
-:mod:`mtcdb.io_handlers.loaders`: Tested module.
-`tmp_path`: Fixture in pytest for temporary directories.
+:mod:`mtcdb.io_handlers.savers.impl`: Tested module.
+:mod:`mtcdb.io_handlers.loaders.impl`: Tested module.
 """
 
 import numpy as np
@@ -38,8 +37,8 @@ from test_mtcdb.test_io_handlers.test_data import ( # dummy data
     data_obj,
     expected_from_list,
 )
-from mtcdb.io_handlers.loaders import LoaderCSV, LoaderNPY, LoaderPKL
-from mtcdb.io_handlers.savers import SaverCSV, SaverNPY, SaverPKL
+from mtcdb.io_handlers.loaders.impl import LoaderCSV, LoaderNPY, LoaderPKL
+from mtcdb.io_handlers.savers.impl import SaverCSV, SaverNPY, SaverPKL
 
 @pytest.mark.parametrize("data, expected, tpe",
                          argvalues=[

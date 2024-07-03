@@ -5,37 +5,12 @@
 
 Classes to handle input/output files manipulations.
 
-Modules
--------
-:mod:`path_manager_base`
+Sub-Packages
+-----------
+:mod:`formats`
 :mod:`path_managers`
-:mod:`saver_base`
 :mod:`savers`
-:mod:`loader_base`
 :mod:`loaders`
-:mod:`extensions`
-
-Examples
---------
-Save DataFrame to CSV
-.. code-block:: python
-    data = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]})
-    saver = SaverCSV(path='path/to/data', data)
-    saver.save()
-Load Dictionary from Pickle
-.. code-block:: python
-    loader = LoaderPKL(path='path/to/data', tpe=dict)
-    data = loader.load()
-    print(data) # Output: {'A': [1, 2, 3], 'B': [4, 5, 6]}
-Define a File Path
-.. code-block:: python
-    path_root = '/path/to/data/directory'
-    unit = 'avo052a-d1'
-    session = 'avo052a04_p_PTD'
-    pm = RawSpkTimesPath(path_root)
-    path = pm.get_path(unit, session)
-    print(path)  
-    # Output: /path/to/data/directory/raw/avo052a-d1/avo052a04_p_PTD
 
 Notes
 -----

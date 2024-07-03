@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.test_io_handlers.test_saver_base` [module]
+:mod:`test_mtcdb.test_io_handlers.test_savers_base` [module]
 
 Notes
 -----
@@ -13,9 +13,8 @@ but rather for the correct handling of the file paths and formats.
 
 See Also
 --------
-:mod:`mtcdb.io_handlers.saver_base`: Tested module.
-:mod:`mtcdb.io_handlers.savers`: Concrete implementations.
-`tmp_path`: Fixture in pytest for temporary directories.
+:mod:`mtcdb.io_handlers.savers.base`: Tested module.
+:mod:`mtcdb.io_handlers.savers.impl`: Concrete implementations.
 """
 
 import pytest
@@ -26,8 +25,8 @@ from test_mtcdb.test_io_handlers.test_data import ( # dummy data
     data_array,
     data_df,
 )
-from mtcdb.io_handlers.saver_base import Saver
-from mtcdb.io_handlers.savers import SaverCSV
+from mtcdb.io_handlers.savers.base import Saver
+from mtcdb.io_handlers.savers.impl import SaverCSV
 
 
 def test_saver_check_dir_invalid():

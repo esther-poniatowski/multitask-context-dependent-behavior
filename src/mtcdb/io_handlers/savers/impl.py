@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.io_handlers.savers` [module]
+:mod:`mtcdb.io_handlers.savers.impl` [module]
 
 Save data from files in specific formats.
 
@@ -16,7 +16,7 @@ Classes
 See Also
 --------
 :class:`mtcdb.io_handlers.formats.FileExt`: File extensions.
-:class:`mtcdb.io_handlers.saver_base.Saver`: Base class for savers.
+:class:`mtcdb.io_handlers.savers.base.Saver`: Base class for savers.
 """
 
 import pickle
@@ -28,7 +28,7 @@ import numpy as np
 import pandas as pd
 
 from mtcdb.io_handlers.formats import FileExt
-from mtcdb.io_handlers.saver_base import Saver
+from mtcdb.io_handlers.savers.base import Saver
 
 
 class SaverPKL(Saver):

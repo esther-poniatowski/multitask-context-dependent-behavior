@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.data_structures.base_data` [module]
+:mod:`mtcdb.data_structures.base` [module]
 
 Classes
 -------
@@ -16,10 +16,11 @@ from typing import Tuple, Dict, Type, TypeVar, Generic
 import numpy as np
 import numpy.typing as npt
 
-from mtcdb.constants import SMPL_RATE, T_BIN, DPRE, DPOST, DSTIM, DPRESHOCK, DSHOCK, SMOOTH_WINDOW
-from mtcdb.io_handlers.path_managers import PathManager
-from mtcdb.io_handlers.loaders import LoaderPKL
-from mtcdb.io_handlers.savers import SaverPKL
+from mtcdb.io_handlers.path_managers.base import PathManager
+from mtcdb.io_handlers.loaders.base import Loader
+from mtcdb.io_handlers.loaders.impl import LoaderPKL
+from mtcdb.io_handlers.savers.base import Saver
+from mtcdb.io_handlers.savers.impl import SaverPKL
 
 
 T = TypeVar('T')
@@ -54,11 +55,6 @@ class Data(ABC, Generic[T]):
     ----------
     data: npt.NDArray
         Actual data values to analyze.        
-    coord2dim: MappingProxyType[str, str]
-        Mapping of the coordinates to the dimensions of the data.
-        Keys: Coordinate names.
-        Values: Dimension names.
-        This attribute is immutable to ensure that the structure remains consistent.
     shape: Tuple[int]
         Shape of the data array (delegated to the numpy array).
     n: MappingProxyType[str, int]
@@ -74,18 +70,26 @@ class Data(ABC, Generic[T]):
     :meth:`path`
     :meth:`load`
     :meth:`save`
+    :meth:`coord2dim`
+        Mapping of the coordinates to the dimensions of the data.
+        This is a method rather than an immutable attribute
+        because it should be specific to each subclass.
     
+    Examples
+    --------
+    Access the number of time points in data with a time dimension:
+    >>> data.n['time']
+
     Notes
     -----
-    Several attributes are read-only (immutable) to ensure the integrity of the data structure.
-    - data
-    - dims
-    - coord2dim
+    Several attributes are read-only and/or immutable to ensure the integrity of the data structure.
+    :attr:`data`
+    :attr:`dims`
 
     Warning
     -------
-    Any transformation of the data which affect the dimensions should be prevented.
-    Namely : transpositions (dimension permutation) or reshaping (dimension fusion).
+    Any transformation of the data which affects the dimensions should be prevented.
+    Namely : transpositions (dimension permutation), reshaping (dimension fusion).
 
     Implementation
     --------------
@@ -93,22 +97,17 @@ class Data(ABC, Generic[T]):
     whose keys are dimensions names (instead of tuples in which the order matters).
     This is relevant to to abstract away from the order of the dimensions
     which might change in data transformations.
-
-    Examples
-    --------
-    Access the number of time points in data with a time dimension:
-    >>> data.n['time']
     
     See Also
     --------
     :meth:`npt.NDArray.setflags`
-        Set the flags of the numpy array to make it read-only.
+        Used to make a numpy array read-only.
     """
     dims: Tuple[str]
     coords: Dict[str, str]
     path_manager: Type[PathManager]
-    saver = SaverPKL
-    loader = LoaderPKL
+    saver: Type[Saver] = SaverPKL
+    loader: Type[Loader] = LoaderPKL
     raw_type : Type[T] = 'Data'
 
     def __init__(self, data: npt.NDArray) -> None:

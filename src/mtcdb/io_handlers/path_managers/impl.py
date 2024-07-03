@@ -19,7 +19,7 @@ See Also
 from pathlib import Path
 from typing import Union
 
-from mtcdb.io_handlers.path_manager_base import PathManager
+from mtcdb.io_handlers.path_managers.base import PathManager
 
 
 class RawSpkTimesPath(PathManager):

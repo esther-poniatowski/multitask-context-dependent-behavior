@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.io_handlers.loader_base` [module]
+:mod:`mtcdb.io_handlers.loaders.base` [module]
 
 Common interface to load data from files.
 

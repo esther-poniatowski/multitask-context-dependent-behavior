@@ -18,6 +18,7 @@ Sub-Packages
 :mod:`coordinates`
 :mod:`core_objects`
 :mod:`data_structures`
+:mod:`io_handlers`
 :mod:`utils`
 
 See Also

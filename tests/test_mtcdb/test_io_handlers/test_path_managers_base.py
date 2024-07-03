@@ -1,20 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.test_utils.test_path_manager_base` [module]
+:mod:`test_mtcdb.test_utils.test_path_managers_base` [module]
 
 See Also
 --------
-:mod:`mtcdb.utils.manage_paths`
-    Tested module.
-`tmp_path` fixture in pytest: https://docs.pytest.org/en/stable/tmpdir.html
-    Create and delete temporary directories for each test function.
-    Path format : `pathlib.Path` object.
+:mod:`mtcdb.io_handlers.path_managers.base`: Tested module.
 """
 
 import pytest # pylint: disable=unused-import
 
-from mtcdb.io_handlers.path_manager_base import PathManager
+from mtcdb.io_handlers.path_managers.base import PathManager
 
 
 def test_check_dir_existing(tmp_path):

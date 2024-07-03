@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.test_io_handlers.test_loader_base` [module]
+:mod:`test_mtcdb.test_io_handlers.test_loaders_base` [module]
 
 Notes
 -----
@@ -13,15 +13,14 @@ but rather for the correct handling of the file paths and formats.
 
 See Also
 --------
-:mod:`mtcdb.io_handlers.loader_base`: Tested module.
-:mod:`mtcdb.io_handlers.loaders`: Concrete implementations.
-`tmp_path`: Fixture in pytest for temporary directories.
+:mod:`mtcdb.io_handlers.loaders.base`: Tested module.
+:mod:`mtcdb.io_handlers.loaders.impl`: Concrete implementations.
 """
 
 import pytest
 
-from mtcdb.io_handlers.loader_base import Loader
-from mtcdb.io_handlers.loaders import LoaderCSV
+from mtcdb.io_handlers.loaders.base import Loader
+from mtcdb.io_handlers.loaders.impl import LoaderCSV
 
 
 def test_loader_check_file_invalid():

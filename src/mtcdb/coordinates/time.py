@@ -17,7 +17,7 @@ import numpy as np
 import numpy.typing as npt
 
 from mtcdb.coordinates.base import Coordinate
-from mtcdb.constants import TON, TOFF, TSHOCK
+from mtcdb.constants import T_ON, T_OFF, T_SHOCK
 
 
 class CoordTime(Coordinate):
@@ -51,9 +51,9 @@ class CoordTime(Coordinate):
     """
     def __init__(self,
                  values: npt.NDArray[np.float64],
-                 t_on: float = TON,
-                 t_off: float = TOFF,
-                 t_shock: float = TSHOCK):
+                 t_on: float = T_ON,
+                 t_off: float = T_OFF,
+                 t_shock: float = T_SHOCK):
         super().__init__(values=values)
         self.set_t_bin()
         self.t_on = t_on
