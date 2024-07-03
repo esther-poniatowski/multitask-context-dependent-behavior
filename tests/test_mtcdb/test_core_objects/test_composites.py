@@ -40,3 +40,30 @@ def test_bidirectional_association():
     unit = Unit("avo052a-d1")
     assert unit.site == site
     assert unit in site.units
+
+
+def test_site_init():
+    """
+    Test :meth:`Site.__init__`.
+    """
+    site = Site("avo052a")
+    assert site.id == "avo052a"
+
+def test_unit_init():
+    """
+    Test :meth:`Unit.__init__`.
+    """
+    unit = Unit("avo052a-d1")
+    assert unit.id == "avo052a-d1"
+    assert unit.site.id == "avo052a"
+
+def test_session_init():
+    """
+    Test :meth:`Session.__init__`.
+    """
+    session = Session("avo052a04_p_PTD")
+    a = 0
+    assert session.id == "avo052a04_p_PTD"
+    assert session.site.id == "avo052a"
+    assert session.task.value == "PTD"
+    assert session.ctx.value == "p"

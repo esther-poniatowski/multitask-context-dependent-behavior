@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.core_objects.exp_struct` [module]
+:mod:`mtcdb.core_objects.exp_structure` [module]
 
 Classes representing the sequential structure of an experiment ('positional' information).
 

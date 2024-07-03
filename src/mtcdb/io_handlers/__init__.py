@@ -77,22 +77,27 @@ Memory Performance
 
 Implementation
 --------------
-- Abstract Base Classes and Concrete Implementations
-  PathManager/Saver/Loader are abstract base classes, which define the interfaces
-  used uniformly across the whole package to generate paths and save/load data.
-  Each subclass of PathManager implements the version for one specific data set (``get_path()``).
-  Each subclass of Saver/Loader implements the version for one specific file format.
-- Strategy Design Pattern and Composition
-  Each object which needs to use those functionalities can select the appropriate 
-  subclass of PathManager/Saver/Loader which implements the desired version.
-  It stores an instance of it and delegate to it the responsibility of path generation.
-  This design is more extensible than a single class with multiple methods 
-  and a large conditional statement to select one method via an argument.
-- Arguments and Decoupling
-  Any object using a PathManager/Saver/Loader has to provide arguments taken from their attributes.
-  PathManager/Saver/Loader do not accept custom objects as a whole from which 
-  they would extract the necessary information. 
-  Thereby, it remains agnostic about the internal details of the classes which use them.
+**Abstract Base Classes and Concrete Implementations**
+
+PathManager/Saver/Loader are abstract base classes, which define the interfaces
+used uniformly across the whole package to generate paths and save/load data.
+Each subclass of PathManager implements the version for one specific data set (:meth:`get_path`).
+Each subclass of Saver/Loader implements the version for one specific file format.
+
+**Strategy Design Pattern and Composition**
+
+Each object which needs to use those functionalities can select the appropriate 
+subclass of PathManager/Saver/Loader which implements the desired version.
+It stores an instance of it and delegate to it the responsibility of path generation.
+This design is more extensible than a single class with multiple methods 
+and a large conditional statement to select one method via an argument.
+
+**Arguments and Decoupling**
+
+Any object using a PathManager/Saver/Loader has to provide arguments taken from their attributes.
+PathManager/Saver/Loader do not accept custom objects as a whole from which 
+they would extract the necessary information. 
+Thereby, it remains agnostic about the internal details of the classes which use them.
 
 See Also
 --------

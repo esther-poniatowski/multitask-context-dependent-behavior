@@ -17,7 +17,7 @@ import numpy.typing as npt
 from scipy.signal import fftconvolve
 from typing import Literal, TypeAlias
 
-from mtcdb.constants import TBIN
+from mtcdb.constants import T_BIN
 from mtcdb.types import ArrayLike, NumpyArray
 
 
@@ -258,7 +258,7 @@ def align_timings(task: Task, stim: Stim,
 
 
 def spikes_to_rates(spk: ArrayLike,
-                    tbin: float,
+                    t_bin: float,
                     t_max: float,
                     ) -> NumpyArray:
     """
@@ -268,7 +268,7 @@ def spikes_to_rates(spk: ArrayLike,
     ----------
     spk: :obj:`mtcdb.types.ArrayLike`
         Spiking times.
-    tbin: float
+    t_bin: float
         Time bin (in seconds).
     t_max: float
         Duration of the recording period (in seconds).
@@ -277,7 +277,7 @@ def spikes_to_rates(spk: ArrayLike,
     -------
     frates: :obj:`mtcdb.types.NumpyArray`
         Firing rate time course (in spikes/s).
-        Shape: ``(ntpts, 1)`` with ``ntpts = t_max/tbin`` (number of bins).
+        Shape: ``(ntpts, 1)`` with ``ntpts = t_max/t_bin`` (number of bins).
     
     See Also
     --------
@@ -285,16 +285,16 @@ def spikes_to_rates(spk: ArrayLike,
     
     Algorithm
     ---------
-    - Divide the recording period ``[0, t_max]`` into bins of size ``tbin``.
+    - Divide the recording period ``[0, t_max]`` into bins of size ``t_bin``.
     - Count the number of spikes in each bin.
-    - Divide the spikes count in each bin by the bin size ``tbin``.
+    - Divide the spikes count in each bin by the bin size ``t_bin``.
 
     Implementation
     --------------
     :func:`np.histogram` takes an argument `bins` for bin edges,
     which should include the *rightmost edge*.
     Bin edges are obtained with :func:`numpy.arange`, 
-    with the last bin edge at ``t_max + tbin`` to include the last bin.
+    with the last bin edge at ``t_max + t_bin`` to include the last bin.
     :func:`np.histogram` returns two outputs: 
     ``hist`` (number of spikes in each bin), ``edges`` (useless).
     
@@ -303,14 +303,14 @@ def spikes_to_rates(spk: ArrayLike,
     trials (length ``1``, single trial).
     It ensures compatibility and consistence in the full process.
     """
-    frates = np.histogram(spk, bins=np.arange(0, t_max+tbin, tbin))[0]/tbin
+    frates = np.histogram(spk, bins=np.arange(0, t_max+t_bin, t_bin))[0]/t_bin
     frates = frates[:,np.newaxis] # add one dimension for trials
     return frates
 
 
 def smooth(frates: NumpyArray,
            window: float,
-           tbin: float,
+           t_bin: float,
            mode: str = 'valid',
            ) -> NumpyArray:
     """
@@ -323,7 +323,7 @@ def smooth(frates: NumpyArray,
         Shape: ``(ntpts, ntrials)``,
     window: float
         Smoothing window size (in seconds).
-    tbin: float
+    t_bin: float
         Time bin (in seconds).
     
     Returns
@@ -331,7 +331,7 @@ def smooth(frates: NumpyArray,
     smoothed: :obj:`mtcdb.types.NumpyArray`
         Smoothed firing rate time course (in spikes/s).
         Shape: ``(ntpts_out, ntrials)``, ``ntpts_out`` depend on ``mode``.
-        With ``"valid"``:  ``ntpts_out = ntpts - window/tbin + 1``.
+        With ``"valid"``:  ``ntpts_out = ntpts - window/t_bin + 1``.
         With ``"same"``:  ``ntpts_out = ntpts``.
     
     See Also
@@ -343,7 +343,7 @@ def smooth(frates: NumpyArray,
     Smoothing consists in averaging consecutive values in a sliding window.
 
     - Convolve the firing rate time course with a boxcar kernel (FFT method).
-      Size of the window: ``window/tbin``.
+      Size of the window: ``window/t_bin``.
     - Divide the output by the window size to get the average.
 
     Convolution Modes
@@ -351,7 +351,7 @@ def smooth(frates: NumpyArray,
     - ``'same'``: Keep the output shape as the input sequence.
     - ``'valid'``: Keep only the values which are not influenced by zero-padding.
     """
-    kernel = np.ones((int(window/tbin), 1)) # add one dimension for shape compatibility
+    kernel = np.ones((int(window/t_bin), 1)) # add one dimension for shape compatibility
     smoothed = fftconvolve(frates, kernel, mode=mode, axes=0)/len(kernel)
     return smoothed
 

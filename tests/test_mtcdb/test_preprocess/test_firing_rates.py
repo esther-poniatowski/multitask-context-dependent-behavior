@@ -155,7 +155,7 @@ spk = np.linspace(0, 1.0, num=20)
 expected = np.full((10, 1), 20.0)
 expected_empty = np.full((10, 1), 0.0)
 t_max = 1.0
-tbin = 0.1
+t_bin = 0.1
 
 @pytest.mark.parametrize("spk, expected", 
                           argvalues = [
@@ -177,7 +177,7 @@ def test_spikes_to_rates(spk, expected):
         No spikes at all (empty array).
     t_max: float
         Set to 1.0, for a recording period spanning ``[0, 1]``.
-    tbin: float
+    t_bin: float
         Set to 0.1, to divide the recording period into 10 time bins.
     
     Expected Outputs
@@ -188,13 +188,13 @@ def test_spikes_to_rates(spk, expected):
     expected [empty]: :obj:`mtcdb.types.NumpyArray`
         Idem with 0 spikes/s.
 	"""
-    frates = spikes_to_rates(spk, tbin, t_max)
+    frates = spikes_to_rates(spk, t_bin, t_max)
     assert frates.shape == expected.shape, "Wrong shape"
     assert_array_eq(frates, expected), "Wrong values"
 
 
 frates = np.tile(np.array([[0, 0.25], [1, 0.75]]), (5, 1)) # shape: (10, 2)
-tbin = 0.1
+t_bin = 0.1
 window = 0.2
 mode = 'valid'
 expected = np.full(shape=(9, 2), fill_value=0.5)
@@ -210,7 +210,7 @@ def test_smooth():
         Values: Two alternating patterns of two values, repeated 5 times (10 values).
         Trial 1 : 0, 1. Trial 2 : 0.25, 0.75.
         Trials are different to ensure that convolution is performed along the time axis.
-    tbin: float
+    t_bin: float
         Set to 0.1, for a recording period of ``10 * 0.1 = 1`` s.
     window: int
         Set to 0.2, for a boxcar kernel of 2 bins width.
@@ -223,8 +223,8 @@ def test_smooth():
     expected: :obj:`mtcdb.types.NumpyArray`
         Shape: ``(7, 2)`` (7 time bins, 2 trials).
         In the ``'valid'`` mode, the output time dimension is given by:
-        ``ntpts_out = ntpts - window/tbin + 1``.
-        Here: ``window/tbin = 2`` bins, so ``ntpts_out = 10 - 2 + 1 = 9``.
+        ``ntpts_out = ntpts - window/t_bin + 1``.
+        Here: ``window/t_bin = 2`` bins, so ``ntpts_out = 10 - 2 + 1 = 9``.
         Output values: All equal to 0.5, 
         which is the average of two consecutive values in both input trials
         (0 + 1)/2 = (0.25 + 0.75)/2 = 0.5.
@@ -239,7 +239,7 @@ def test_smooth():
     --------
     numpy.tile
     """
-    smoothed = smooth(frates, window, tbin, mode)
+    smoothed = smooth(frates, window, t_bin, mode)
     assert smoothed.shape == expected.shape, "Wrong shape"
     assert_array_eq(smoothed, expected), "Wrong values"
 

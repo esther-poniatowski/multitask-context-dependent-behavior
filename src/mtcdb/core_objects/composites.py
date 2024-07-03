@@ -20,8 +20,8 @@ Classes
 from typing import List, Dict, Tuple, Optional, Any, Type
 
 from mtcdb.core_objects.bio import Animal, Area, CorticalDepth, Training
-from mtcdb.core_objects.exp_cond import Context, Task, Stimulus
-from mtcdb.core_objects.exp_struct import Block, Slot, Recording
+from mtcdb.core_objects.exp_condition import Context, Task, Stimulus
+from mtcdb.core_objects.exp_structure import Block, Slot, Recording
 
 
 class Multiton(type):
@@ -373,9 +373,9 @@ class Session(metaclass=Multiton):
     --------
     :class:`Multiton`
     :class:`Site`
-    :class:`mtcdb.core_objects.exp_struct.Recording`
-    :class:`mtcdb.core_objects.exp_cond.Task`
-    :class:`mtcdb.core_objects.exp_cond.Context`
+    :class:`mtcdb.core_objects.exp_structure.Recording`
+    :class:`mtcdb.core_objects.exp_condition.Task`
+    :class:`mtcdb.core_objects.exp_condition.Context`
     """
     def __init__(self, id_:str):
         self.id = id_
@@ -489,9 +489,9 @@ class Trial:
     See Also
     --------
     :class:`Session`
-    :class:`mtcdb.core_objects.exp_struct.Block`
-    :class:`mtcdb.core_objects.exp_struct.Slot`
-    :class:`mtcdb.core_objects.exp_cond.Stimulus`
+    :class:`mtcdb.core_objects.exp_structure.Block`
+    :class:`mtcdb.core_objects.exp_structure.Slot`
+    :class:`mtcdb.core_objects.exp_condition.Stimulus`
     """
     def __init__(self,
                 session:str,

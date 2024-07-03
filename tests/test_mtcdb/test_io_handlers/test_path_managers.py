@@ -5,8 +5,7 @@
 
 See Also
 --------
-:mod:`mtcdb.utils.manage_paths`
-    Tested module.
+:mod:`mtcdb.utils.manage_paths`: Tested module.
 """
 
 import pytest # pylint: disable=unused-import

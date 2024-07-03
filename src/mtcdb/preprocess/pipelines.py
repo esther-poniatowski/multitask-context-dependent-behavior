@@ -14,7 +14,7 @@ import numpy.typing as npt
 from scipy.signal import fftconvolve
 from typing import Literal, TypeAlias
 
-from mtcdb.constants import TBIN
+from mtcdb.constants import T_BIN
 from mtcdb.types import ArrayLike, NumpyArray
 
 

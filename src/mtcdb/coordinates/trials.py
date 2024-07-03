@@ -16,7 +16,7 @@ from typing import Optional, Dict, List
 import numpy as np
 import numpy.typing as npt
 
-from mtcdb.coordinates.base_coord import Coordinate
+from mtcdb.coordinates.base import Coordinate
 
 
 class CoordError(Coordinate):
@@ -35,7 +35,7 @@ class CoordError(Coordinate):
 
     See Also
     --------
-    :class:`mtcdb.coordinates.base_coord.Coordinate`
+    :class:`mtcdb.coordinates.base.Coordinate`
     """
     def __init__(self, values: npt.NDArray[np.bool_]):
         super().__init__(values=values)
@@ -45,7 +45,7 @@ class CoordError(Coordinate):
         return f"<{self.__class__.__name__}> : {len(self)} samples\n {counts}."
 
     @staticmethod
-    def build_labels(n_smpl: int) -> npt.NDArray[np.str_]:
+    def build_labels(n_smpl: int) -> npt.NDArray[np.unicode_]: # pylint: disable=arguments-differ
         """
         Build coordinate filled with correct trials.
         
@@ -105,7 +105,7 @@ class CoordFold(Coordinate):
         return f"<{self.__class__.__name__}> : {len(self)} samples, {counts}."
 
     @staticmethod
-    def build_labels(n_smpl: int) -> npt.NDArray[np.int64]:
+    def build_labels(n_smpl: int) -> npt.NDArray[np.int64]: # pylint: disable=arguments-differ
         """
         Build a coordinate which gathers all the samples in a single fold. 
 

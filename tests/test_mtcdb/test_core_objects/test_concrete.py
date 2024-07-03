@@ -6,7 +6,7 @@
 See Also
 --------
 :mod:`mtcdb.core_objects.bio`
-:mod:`mtcdb.core_objects.exp_struct`
+:mod:`mtcdb.core_objects.exp_structure`
 """
 
 from typing import FrozenSet
@@ -14,7 +14,7 @@ from typing import FrozenSet
 import pytest
 
 from mtcdb.core_objects.bio import Animal
-from mtcdb.core_objects.exp_struct import Recording
+from mtcdb.core_objects.exp_structure import Recording
 
 
 NAIVE_ANIMALS: FrozenSet = frozenset([Animal("mor"), Animal("tan")])

@@ -3,16 +3,17 @@
 """
 :mod:`mtcdb.datasets` [subpackage]
 
-Define classes to represent the data structures used in the analysis.
+Classes representing the data structures used in the analysis.
 
-Each custom data structure stands as a type in itself (sub-class of ``Data``).
+Each custom data structure stands as a type in itself.
 It encapsulates the data, constraints and properties inherent to the specific data,
 and the relevant methods to manipulate it.
-Each data structure type can be used in docstrings and type hints of other objects.
+Each data type can be used in docstrings and type hints of other objects.
 It is documented here once for all, as a central reference.
 
 Modules
 -------
+:mod:`mtcdb.data_structures.base`
 
 Implementation
 --------------
@@ -51,18 +52,10 @@ See Also
 --------
 :mod:`mtcdb.core_objects.coordinates`
     Coordinate classes representing the dimensions of the data structures.
-:class:`mtcdb.coordinates.base_coord.Coordinate`
-    Base class for coordinate objects.
 :mod:`mtcdb.io_handlers.path_managers` 
-    PathManager classes for data files.
-:meth:`mtcdb.io_handlers.path_managers.PathManager.get_path`
-    Build the path to the file containing the data.
-:mod:`mtcdb.utils.handle_files` 
-    Loader and Saver classes for files in various formats.
-:meth:`mtcdb.utils.handle_files.Loader.load`
-    Load the data from a file in a format determined by a parameter.
-:meth:`mtcdb.utils.handle_files.Saver.save`
-    Save the data to a file in a format determined by the data type itself.
+    PathManager classes implementing path generation rules for each data class.
+:meth:`mtcdb.io_handlers.loaders`
+    Loader classes used to load data from files in various formats.
+:meth:`mtcdb.io_handlers.saver`
+    Saver classes used to save data to files in a format determined by the data type itself.
 """
-
-

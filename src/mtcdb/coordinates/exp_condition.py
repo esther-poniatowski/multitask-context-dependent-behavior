@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.coordinates.exp_cond` [module]
+:mod:`mtcdb.coordinates.exp_condition` [module]
 
 Coordinates for labelling experimental conditions.
 
@@ -18,8 +18,8 @@ from typing import TypeVar, Type, Generic, Optional, Union, Dict
 import numpy as np
 import numpy.typing as npt
 
-from mtcdb.coordinates.base_coord import Coordinate
-from mtcdb.core_objects.exp_cond import Task, Context, Stimulus
+from mtcdb.coordinates.base import Coordinate
+from mtcdb.core_objects.exp_condition import Task, Context, Stimulus
 
 
 C = TypeVar('C', Task, Context, Stimulus)
@@ -38,7 +38,7 @@ class CoordExpCond(Coordinate, Generic[C]):
     
     Attributes
     ----------
-    values: npt.NDArray[np.str_]
+    values: npt.NDArray[np.unicode_]
         Labels for the condition associated with each measurement.
         It contains the string values of the conditions 
         stored in the attribute ``value`` of the condition objects.
@@ -55,17 +55,17 @@ class CoordExpCond(Coordinate, Generic[C]):
     However, any interaction with the coordinate values should be done
     through condition objects (instead of strings themselves),
     to ensure the consistency of the data and types.
-    In subclasses, the class attribute ``condition`` has to be overridden
+    In subclasses, the class attribute :attr:`condition` has to be overridden
     to match the specific condition type.
 
     See Also
     --------
-    :class:`mtcdb.coordinates.base_coord.Coordinate`
-    :mod:`mtcdb.core_objects.exp_cond`
+    :class:`mtcdb.coordinates.base.Coordinate`
+    :mod:`mtcdb.core_objects.exp_condition`
     """
     condition: Type[C]
 
-    def __init__(self, values: npt.NDArray[np.str_]):
+    def __init__(self, values: npt.NDArray[np.unicode_]):
         super().__init__(values=values)
 
     def __repr__(self):
@@ -73,7 +73,7 @@ class CoordExpCond(Coordinate, Generic[C]):
         return f"<{self.__class__.__name__}> : {len(self)} samples, {counts}."
 
     @staticmethod
-    def build_labels(n_smpl: int, cnd: C) -> npt.NDArray[np.str_]:
+    def build_labels(n_smpl: int, cnd: C) -> npt.NDArray[np.unicode_]:
         """
         Build a condition coordinate filled with a *single* label.
         
@@ -86,12 +86,12 @@ class CoordExpCond(Coordinate, Generic[C]):
         
         Returns
         -------
-        values: npt.NDArray[np.str_]
+        values: npt.NDArray[np.unicode_]
             Condition coordinate filled with the label of the condition.
         """
-        return np.full(n_smpl, cnd.value, dtype=np.str_)
+        return np.full(n_smpl, cnd.value, dtype=np.unicode_)
 
-    def replace_label(self, old: C, new: C) -> npt.NDArray[np.str_]:
+    def replace_label(self, old: C, new: C) -> 'CoordExpCond':
         """
         Replace one label by another one in the condition coordinate.
         
@@ -102,12 +102,14 @@ class CoordExpCond(Coordinate, Generic[C]):
 
         Returns
         -------
-        values: npt.NDArray[np.str_]
+        values: npt.NDArray[np.unicode_]
             Coordinate with updated condition labels.
         """
-        values = self.values.copy()
+        new_coord = self.copy()
+        values = new_coord.values
         values[values == old.value] = new.value
-        return values
+        new_coord.values = values
+        return new_coord
 
     def count_by_lab(self, cnd: Optional[C] = None
                      ) -> Union[int, Dict[C, int]]:
@@ -134,7 +136,8 @@ class CoordExpCond(Coordinate, Generic[C]):
         if cnd is not None:
             return np.sum(self.values == cnd.value)
         else:
-            return {cnd: np.sum(self.values == cnd.value) for cnd in self.condition.get_options()}
+            options = self.condition.get_options()
+            return {self.condition(cnd): np.sum(self.values == cnd) for cnd in options}
 
 
 class CoordTask(CoordExpCond[Task]):
@@ -143,12 +146,12 @@ class CoordTask(CoordExpCond[Task]):
 
     See Also
     --------
-    :class:`mtcdb.core_objects.exp_cond.Task`
+    :class:`mtcdb.core_objects.exp_condition.Task`
     :class:`mtcdb.coordinates.CoordExpCond`
     """
     condition: Type[Task] = Task
 
-    def __init__(self, values: npt.NDArray[np.str_]):
+    def __init__(self, values: npt.NDArray[np.unicode_]):
         super().__init__(values=values)
 
 
@@ -158,12 +161,12 @@ class CoordContext(CoordExpCond[Context]):
 
     See Also
     --------
-    :class:`mtcdb.core_objects.exp_cond.Context`
+    :class:`mtcdb.core_objects.exp_condition.Context`
     :class:`mtcdb.coordinates.CoordExpCond`
     """
     condition: Type[Context] = Context
 
-    def __init__(self, values: npt.NDArray[np.str_]):
+    def __init__(self, values: npt.NDArray[np.unicode_]):
         super().__init__(values=values)
 
 
@@ -173,10 +176,10 @@ class CoordStim(CoordExpCond[Stimulus]):
 
     See Also
     --------
-    :class:`mtcdb.core_objects.exp_cond.Stimulus`
+    :class:`mtcdb.core_objects.exp_condition.Stimulus`
     :class:`mtcdb.coordinates.CoordExpCond`
     """
     condition: Type[Stimulus] = Stimulus
 
-    def __init__(self, values: npt.NDArray[np.str_]):
+    def __init__(self, values: npt.NDArray[np.unicode_]):
         super().__init__(values=values)

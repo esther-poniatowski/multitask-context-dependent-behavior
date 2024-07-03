@@ -16,7 +16,7 @@ import warnings
 import numpy as np
 import numpy.typing as npt
 
-from mtcdb.coordinates.base_coord import Coordinate
+from mtcdb.coordinates.base import Coordinate
 from mtcdb.constants import TON, TOFF, TSHOCK
 
 
@@ -31,7 +31,7 @@ class CoordTime(Coordinate):
         Homogeneous sequence of time points (in seconds),
         starting from 0 and incremented by the time bin.
         Shape : ``(n_smpl,)`` with ``n_smpl`` the number of time points.
-    tbin: Optional[float]
+    t_bin: Optional[float]
         Time bin of the coordinate (in seconds).
         None if the time points are not uniformly spaced.
     t_on: float
@@ -43,11 +43,11 @@ class CoordTime(Coordinate):
 
     Methods
     -------
-    :meth:`set_tbin`
+    :meth:`set_t_bin`
 
     See Also
     --------
-    :class:`mtcdb.coordinates.base_coord.Coordinate`
+    :class:`mtcdb.coordinates.base.Coordinate`
     """
     def __init__(self,
                  values: npt.NDArray[np.float64],
@@ -55,15 +55,15 @@ class CoordTime(Coordinate):
                  t_off: float = TOFF,
                  t_shock: float = TSHOCK):
         super().__init__(values=values)
-        self.set_tbin()
+        self.set_t_bin()
         self.t_on = t_on
         self.t_off = t_off
         self.t_shock = t_shock
 
     def __repr__(self):
-        return f"<{self.__class__.__name__}> : {len(self)} time points at {self.tbin} s bin."
+        return f"<{self.__class__.__name__}> : {len(self)} time points at {self.t_bin} s bin."
 
-    def set_tbin(self):
+    def set_t_bin(self):
         """
         Recover the time bin from the coordinate values.
         
@@ -75,14 +75,14 @@ class CoordTime(Coordinate):
         """
         diffs = np.diff(self.values) # shape : (n_smpl - 1,)
         if np.allclose(diffs, diffs[0]):
-            self.tbin = diffs[0]
+            self.t_bin = diffs[0]
         else:
             warnings.warn("Time points not uniformly spaced.")
-            self.tbin = None
+            self.t_bin = None
 
     @staticmethod
     def build_labels(n_smpl: Optional[int] = None,
-                     tbin: Optional[float] = None,
+                     t_bin: Optional[float] = None,
                      t_min: float = 0,
                      t_max: Optional[float] = None
                      ) -> npt.NDArray[np.float64]:
@@ -93,7 +93,7 @@ class CoordTime(Coordinate):
         ----------
         n_smpl: int, optional
             Number of time points to generate.
-        tbin: float, optional
+        t_bin: float, optional
             Time bin of the coordinate (in seconds).
         t_min, t_max: float, optional
             Time boundaries of the coordinate (in seconds).
@@ -109,29 +109,29 @@ class CoordTime(Coordinate):
         is always uniformly spaced and starts at ``t_min``. 
         Different combinations of parameters allow to specify various creation constraints :
 
-        - ``n_smpl``, ``tbin``, (``t_min``) : 
-           -> ``n_smpl`` time points incremented by ``tbin``.
+        - ``n_smpl``, ``t_bin``, (``t_min``) : 
+           -> ``n_smpl`` time points incremented by ``t_bin``.
         - ``n_smpl``, ``t_max``, (``t_min``) :
            -> ``n_smpl`` time points between ``t_min`` and ``t_max``.
-        - ``tbin``, ``t_max``, (``t_min``) :
-           -> ``(t_max - t_min)/tbin`` time points between ``t_min`` and ``t_max``.
+        - ``t_bin``, ``t_max``, (``t_min``) :
+           -> ``(t_max - t_min)/t_bin`` time points between ``t_min`` and ``t_max``.
         
         Implementation
         --------------
         To ensure the consistency of the time coordinate across methods,
         it is always build from the number of time points and the time bin.
         If ``n_smpl`` is not provided, it is computed as :
-        ``n_smpl = int((t_max - t_min) / tbin)``
-        If ``tbin`` does not divide the interval, ``int()`` truncates the division,
+        ``n_smpl = int((t_max - t_min) / t_bin)``
+        If ``t_bin`` does not divide the interval, ``int()`` truncates the division,
         thus the last time point is not exactly ``t_max``,
-        but the closest multiple of ``tbin`` below ``t_max``.
+        but the closest multiple of ``t_bin`` below ``t_max``.
         """
-        if n_smpl is not None and tbin is not None and t_max is None:
-            pass
-        elif n_smpl is not None and t_max is not None and tbin is None:
-            tbin = (t_max - t_min) / n_smpl
-        elif tbin is not None and t_max is not None and n_smpl is None:
-            n_smpl = int((t_max - t_min) / tbin)
+        if n_smpl is not None and t_bin is not None and t_max is None:
+            pass # no need to adjust the parameters
+        elif n_smpl is not None and t_max is not None and t_bin is None:
+            t_bin = (t_max - t_min) / n_smpl
+        elif t_bin is not None and t_max is not None and n_smpl is None:
+            n_smpl = int((t_max - t_min) / t_bin)
         else:
-            raise ValueError("Unexpected parameter combination.")
-        return np.arange(n_smpl) * tbin + t_min
+            raise ValueError("Invalid parameter combination.")
+        return np.arange(n_smpl) * t_bin + t_min

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.test_objects.test_base_objects` [module]
+:mod:`test_mtcdb.test_objects.test_bases` [module]
 
 See Also
 --------
-:mod:`mtcdb.core_objects.base_object`: Tested module.
+:mod:`mtcdb.core_objects.base`: Tested module.
 """
 
 from types import MappingProxyType
@@ -13,7 +13,7 @@ from typing import FrozenSet, Mapping
 
 import pytest
 
-from mtcdb.core_objects.base_object import CoreObject
+from mtcdb.core_objects.base import CoreObject
 
 
 # Test Inputs

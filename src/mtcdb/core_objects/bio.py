@@ -16,7 +16,7 @@ Classes
 from types import MappingProxyType
 from typing import FrozenSet, Mapping
 
-from mtcdb.core_objects.base_object import CoreObject
+from mtcdb.core_objects.base import CoreObject
 
 
 class Animal(CoreObject[str]):

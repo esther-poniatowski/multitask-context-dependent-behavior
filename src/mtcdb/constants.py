@@ -23,7 +23,7 @@ PATH_DATA_ROOT: str = ".../data/"
 
 # --- Time and Durations ---
 
-TBIN: float = 50e-3
+T_BIN: float = 50e-3
 """Time bin (in seconds)."""
 
 TMAX: float = 1.0

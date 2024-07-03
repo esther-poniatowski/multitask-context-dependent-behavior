@@ -5,7 +5,7 @@
 
 Modules
 -------
-:mod:`test_mtcdb.test_core_objects.test_base_object`
+:mod:`test_mtcdb.test_core_objects.test_base`
 :mod:`test_mtcdb.test_core_objects.test_concrete`
 :mod:`test_mtcdb.test_core_objects.test_composites`
 

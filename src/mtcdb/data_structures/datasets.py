@@ -13,7 +13,7 @@ from typing import List, Tuple, Dict, Union, Optional, Any, Callable
 from typing import Type, TypeVar, Generic
 import xarray as xr
 
-from mtcdb.constants import SMPL_RATE, TBIN, DPRE, DPOST, DSTIM, DPRESHOCK, DSHOCK, SMOOTH_WINDOW
+from mtcdb.constants import SMPL_RATE, T_BIN, DPRE, DPOST, DSTIM, DPRESHOCK, DSHOCK, SMOOTH_WINDOW
 from mtcdb.io_handlers.path_managers import PathManager, RawSpkTimesPath, SpikesTrainsPath
 from mtcdb.utils.handle_files import Loader, LoaderPKL, LoaderNPY
 from mtcdb.utils.handle_files import Saver, SaverPKL
@@ -464,14 +464,14 @@ class FiringRatesUnit(Data):
         Total duration the firing rate time course.
     t_on, t_off: float
         Times of the stimulus onset and offset.
-    tbin: float
+    t_bin: float
         Time bin for the firing rate time course.
     smooth_window: float
         Smoothing window size (in seconds).
     """
     def __init__(self, 
                  unit_id:str, 
-                 tbin:float = TBIN, 
+                 t_bin:float = T_BIN, 
                  d_pre:float = DPRE, 
                  d_post:float = DPOST,
                  d_stim:float = DSTIM, 
@@ -490,8 +490,8 @@ class FiringRatesUnit(Data):
         self.d_shock = d_shock
         self.t_on = 0
         self.t_off = self.t_on + d_stim
-        self.tbin = tbin
-        self.t_max = self.n_tpts*tbin
+        self.t_bin = t_bin
+        self.t_max = self.n_tpts*t_bin
         self.smooth_window = smooth_window
     
 
@@ -514,7 +514,7 @@ class FiringRatesPop(Data):
         Total duration the firing rate time course.
     t_on, t_off: float
         Times of the stimulus onset and offset.
-    tbin: float
+    t_bin: float
         Time bin for the firing rate time course.
     smooth_window: float
         Smoothing window size (in seconds).

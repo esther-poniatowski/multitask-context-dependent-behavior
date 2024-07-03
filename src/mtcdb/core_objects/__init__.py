@@ -10,8 +10,8 @@ It constitutes a type in itself, with its own attributes, methods and properties
 
 Modules
 -------
-:mod:`exp_cond`
-:mod:`exp_struct`
+:mod:`exp_condition`
+:mod:`exp_structure`
 :mod:`bio`
 :mod:`composites`
 
@@ -27,17 +27,25 @@ Here, an enum class may define :
 
 Examples
 --------
-Get the labels authorized for Context objects :
->>> print(list(Context._value2member_map_.values()))
-Output : ['a', 'p', 'p-pre', 'p-post']
-Get the contexts for naive animals : use the class method.
->>> print(Context.naive())
-Output : ['p']
-Get the full label for the context 'a' : use the property.
->>> print(Context.A.full_label)
-Output : 'Active'
+Get the valid labels for Context objects :
+.. code-block:: python
 
-See Also
---------
-- `Enum <https://docs.python.org/3/library/enum.html>`_
+    from mtcdb.core_obj import Context
+    print(list(Context.get_options()))
+    # Output: ('a', 'p', 'p-pre', 'p-post')
+
+Get the contexts for naive animals :
+
+.. code-block:: python
+
+    print(Context.naive())
+    # Output: ('p')
+
+Get the full label for the context 'a' :
+
+.. code-block:: python
+    
+        ctx = Context('a')
+        print(ctx.full_label)
+        # Output: 'Active'
 """

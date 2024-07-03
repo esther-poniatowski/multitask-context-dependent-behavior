@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.coordinates.exp_struct` [module]
+:mod:`mtcdb.coordinates.exp_structure` [module]
 
 Coordinates for labelling the sequential structure of the experiment (positional information).
 
@@ -18,8 +18,8 @@ from typing import TypeVar, Type, Generic, Dict
 import numpy as np
 import numpy.typing as npt
 
-from mtcdb.coordinates.base_coord import Coordinate
-from mtcdb.core_objects.exp_struct import Recording, Block, Slot
+from mtcdb.coordinates.base import Coordinate
+from mtcdb.core_objects.exp_structure import Recording, Block, Slot
 
 
 P = TypeVar('P', Recording, Block, Slot)
@@ -65,8 +65,8 @@ class CoordPosition(Coordinate, Generic[P]):
     
     See Also
     --------
-    :class:`mtcdb.coordinates.base_coord.Coordinate`
-    :mod:`mtcdb.core_objects.exp_struct`
+    :class:`mtcdb.coordinates.base.Coordinate`
+    :mod:`mtcdb.core_objects.exp_structure`
     """
     position: Type[P]
 

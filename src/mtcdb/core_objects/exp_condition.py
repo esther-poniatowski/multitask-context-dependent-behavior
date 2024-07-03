@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.core_objects.exp_cond` [module]
+:mod:`mtcdb.core_objects.exp_condition` [module]
 
 Classes representing the experimental conditions of the behavioral paradigm.
 
@@ -15,7 +15,7 @@ Classes
 from types import MappingProxyType
 from typing import FrozenSet, Mapping
 
-from mtcdb.core_objects.base_object import CoreObject
+from mtcdb.core_objects.base import CoreObject
 
 
 class Task(CoreObject[str]):

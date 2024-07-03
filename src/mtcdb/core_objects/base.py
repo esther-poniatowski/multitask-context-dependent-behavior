@@ -114,13 +114,13 @@ class CoreObject(ABC, Generic[T]):
         """Provide a hash based on the value.
         
         Usages :
-        - To use the object as a key in a dictionary.
-        - To include the object in a set.
-        - To check containment: 
+        - Set the object as a key in a dictionary.
+        - Include the object in a set.
+        - Check containment: 
           The hash value is used to quickly locate the possible match in the collection, 
-          and then the ``__eq__`` method is used to verify equality.
+          and then the method :meth:`__eq__` is used to verify equality.
         
-        If two objects are considered equal (via the :meth:`__eq__` method), 
+        If two objects are considered equal (via :meth:`__eq__`), 
         they must have the same hash value to ensures that they will be treated
         as the same object in hash-based collections.
         Therefore, the hash value should be based on the value of the object.

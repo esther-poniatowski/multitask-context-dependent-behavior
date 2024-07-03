@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.coordinates.base_coord` [module]
+:mod:`mtcdb.coordinates.base` [module]
 
 Abstract base class for data coordinates.
 
@@ -22,10 +22,8 @@ from mtcdb.utils.functions import filter_kwargs
 
 def display_counts():
     """TODO: Implement display_counts function."""
-    pass
 
-
-T = TypeVar('T', bound='Coordinate')
+C = TypeVar('C', bound='Coordinate')
 """Generic type variable for Coordinate subclasses."""
 
 
@@ -48,6 +46,7 @@ class Coordinate(ABC):
     :meth:`__init__`
     :meth:`__repr__`
     :meth:` __len__`
+    :meth:`__eq__`
     :meth:`copy`
     :meth:`__getitem__`
     :meth:`build_labels` (classmethod, abstract)
@@ -76,7 +75,25 @@ class Coordinate(ABC):
         """
         return self.values.size
 
-    def copy(self: T) -> T:
+    def __eq__(self, other: Any) -> bool:
+        """
+        Check equality between two coordinates based on their values.
+
+        Parameters
+        ----------
+        other: Any
+            Object to compare with the coordinate.
+
+        Returns
+        -------
+        bool
+            True if the objects are equal, False otherwise.
+        """
+        if not isinstance(other, Coordinate):
+            return False
+        return np.array_equal(self.values, other.values)
+
+    def copy(self: C) -> C:
         """
         Copy the coordinate object.
 
@@ -90,7 +107,9 @@ class Coordinate(ABC):
         """
         return copy.deepcopy(self)
 
-    def __getitem__(self, idx: Union[int, slice, npt.NDArray[np.bool_]]) -> 'Coordinate':
+    def __getitem__(self,
+                    idx: Union[int, slice, npt.NDArray[np.bool_]]
+                    ) -> Union['Coordinate', Any]:
         """
         Delegate the indexing to the coordinate values.
 
@@ -110,6 +129,8 @@ class Coordinate(ABC):
         The output is a new Coordinate object, not a simple array.
         All the other attributes of the original coordinate are preserved in the new one.
         """
+        if isinstance(idx, int):
+            return self.values[idx]
         cpy = self.copy()
         cpy.values = self.values[idx]
         return cpy
@@ -143,10 +164,9 @@ class Coordinate(ABC):
         the arguments of :meth:`build_labels`. This only retains the arguments
         which are explicit parameters of the method's signature.
         """
-        pass
 
     @classmethod
-    def create(cls: Type[T], **kwargs: Any) -> T:
+    def create(cls: Type[C], **kwargs: Any) -> C:
         """
         Create an instance of a subclass of Coordinate from scratch.
 
