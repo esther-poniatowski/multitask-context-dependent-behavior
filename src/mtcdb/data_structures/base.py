@@ -5,13 +5,60 @@
 
 Classes
 -------
+:class:`MetaData` (metaclass)
 :class:`Data` (abstract base class, generic)
+
+Implementation
+--------------
+Each subclass representing a data structure is build from a combination of
+an metaclass and an abstract base class, with different responsibilities.
+
+**MetaClass**
+
+:class:`MetaData` serves to set *class-level* attributes for dimensions and coordinates.
+In each subclass, only one attribute has to be defined: :attr:`dim2coord`.
+Other class-level attributes are constructed from the latter by the metaclass:
+:attr:`dims`, :attr:`coords` and :attr:`coord2dim`.
+
+**Abstract Base Class**
+
+:class:`Data` serves to define common methods and attributes for data structures.
+Each subclass has to :
+- Define its own dimensions and coordinates.
+- Select its path manager, loader and saver subclasses (if needed).
+- Implement its own constructor to define metadata required to build the path.
+  In subclasses, the base class constructor should be called only when data is created, 
+  not when it is loaded from a file.    
+- Implement the abstract property :meth:`get_path` to provide the right arguments
+  to its own path manager from its attributes.
+- Override the abstract methods :meth:`load` and :meth:`save` (if needed) 
+  to handle the specific data format. It should transform the data structure
+  to the format expected by the loader or saver.
+  By default, the data is loaded and saved with pickle.
+  Thus, it is recovered directly as an instance of :class:`Data` 
+  and can be saved directly without any transformation.
+
+Warning
+-------
+Any transformation of the data which affects the dimensions should be prevented.
+Namely: transpositions (dimension permutation), reshaping (dimension fusion)...
+Several attributes are read-only and/or immutable to ensure the integrity of the data structure.
+:attr:`data`
+:attr:`dims`
+:attr:`coords`
+:attr:`shape`
+:attr:`n`
+
+Notes
+-----
+Since :class:`MetaData` is a subclass of :class:`abc.ABCMeta`,
+it is not necessary to make :class:`Data` inherit from :class:`abc.ABC`.
 """
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 import copy
 from pathlib import Path
 from types import MappingProxyType
-from typing import Tuple, Dict, Mapping, Type, TypeVar, Generic
+from typing import Tuple, List, Dict, FrozenSet, Mapping, Type, TypeVar, Generic
 
 import numpy as np
 import numpy.typing as npt
@@ -22,30 +69,91 @@ from mtcdb.io_handlers.loaders.base import Loader
 from mtcdb.io_handlers.loaders.impl import LoaderPKL
 from mtcdb.io_handlers.savers.base import Saver
 from mtcdb.io_handlers.savers.impl import SaverPKL
+from mtcdb.utils.sequences import reverse_dict_container
 
 
 T = TypeVar('T')
 """Type variable representing the type of data in the generic Data class."""
 
-
-class Data(ABC, Generic[T]):
+class MetaData(ABCMeta):
     """
-    Base class for data structures.
+    Metaclass for data structures. Define class-level attributes.
+
+    Attributes
+    ----------
+    coords: Dict[str, FrozenSet[str]]
+        Repertoire of coordinates associated to each dimension.
+        Keys: Dimension name.
+        Values: Coordinate names associated to this dimension.
+                Each element of the container is one attribute under which 
+                one coordinate is stored in the data structure.
+    coord2dim: Mapping[str, str]
+        Mapping of the coordinates to the dimensions of the data.
+        Keys: Coordinate names.
+        Values: Dimension names.
+    
+    Methods
+    -------
+    :meth:`__new__`
+    :meth:`set_coord2dim`
+
+    See Also
+    --------
+    :class:`abc.ABCMeta`: Metaclass for abstract base classes.
+    """
+    def __new__(mcs, name, bases, dct):
+        """Set class attributes for dimensions and coordinates from :attr:`dim2coord`."""
+        if 'dim2coord' in dct: # dict of class attributes
+            dct['dims'] = tuple(dct['dim2coord'].keys())
+            dct['coord2dim'] = mcs.set_coord2dim(dct['dim2coord'])
+            dct['coords'] = tuple(dct['coord2dim'].keys())
+        return super().__new__(mcs, name, bases, dct)
+
+    @staticmethod
+    def set_coord2dim(dim2coord: Dict[str, FrozenSet[str]]) -> Mapping[str, str]:
+        """
+        Map coordinates to dimensions.
+        
+        Returns
+        -------
+        Mapping[str, str]
+            Mapping of the coordinates to the dimensions of the data.
+            Keys: Coordinate names.
+            Values: Dimension names.
+
+        See Also
+        --------
+        :func:`mtcdb.utils.sequences.reverse_dict_container`
+            Here, the output of the function on the class attribute :attr:`coords`
+            is of the form {'coord': ['dim']},
+            since each coordinate is associated with a single dimension. 
+            Then, the list values are unpacked to extract the string values.
+        """
+        rev_dct: Dict[str, List[str]] = reverse_dict_container(dim2coord) # {'coord': ['dim']}}
+        return {coord: dim[0] for coord, dim in rev_dct.items()}
+
+
+class Data(Generic[T], metaclass=MetaData):
+    """
+    Abstract base class for data structures.
     
     Class Attributes
     ----------------
     dims: Tuple[str]
-        Names of the dimensions.
-        Name of an axis: ``dims[axis]``
-        Axis of a dimension: ``dims.index(name)``
-    coords: Dict[str, str]
-        Repertoire of coordinates associated to each dimension.
-        Keys: Dimension name.
-        Values: Coordinate name, i.e. attribute under which 
-                it is stored in the data structure.
+        Names of the dimensions (order matters).
+    coords : Tuple[str]
+        Names of the coordinates. 
+        Each name specifies the attribute under which the coordinate is stored.
+    dim2coord: Dict[str, FrozenSet[str]]
+        Mapping from dimensions to their associated coordinates.
+        Keys: Dimension names.
+        Values: Coordinates associated to each dimension.
+    coord2dim: Mapping[str, str]
+        Mapping from coordinates to their associated dimensions.
+        Keys: Coordinate names.
+        Values: Dimension names.
     path_manager: Type[PathManager]
         Path manager class to build paths for data files.
-        (In each data subclass, pick the right path manager subclass).
     saver: Type[Saver], default=SaverPKL
         Saver class to save the data to files in a specific format.
     loader: Type[Loader], default=LoaderPKL
@@ -63,10 +171,6 @@ class Data(ABC, Generic[T]):
         Number of elements along each dimension.
         Keys: Dimension names.
         Values: Number of elements.
-    coord2dim: Mapping[str, str]
-        Mapping of the coordinates to the dimensions of the data.
-        Keys: Coordinate names.
-        Values: Dimension names.
         
     Methods
     -------
@@ -76,141 +180,67 @@ class Data(ABC, Generic[T]):
     :meth:`path`
     :meth:`load`
     :meth:`save`
-    :meth:`coord2dim`
-        
     
     Examples
     --------
     Access the number of time points in data with a time dimension:
     >>> data.n['time']
 
-    Notes
-    -----
-    Several attributes are read-only and/or immutable to ensure the integrity of the data structure.
-    :attr:`data`
-    :attr:`dims`
-    :attr:`coords`
-    :attr:`shape`
-    :attr:`n`
+    Get the name of an axis:
+    >>> data.dims[0]
 
-    Warning
-    -------
-    Any transformation of the data which affects the dimensions should be prevented.
-    Namely : transpositions (dimension permutation), reshaping (dimension fusion).
+    Get the axis of the time dimension:
+    >>> dims.index('time')
 
-    Implementation
-    --------------
-    Information associated to each dimension is specified in dictionaries
-    whose keys are dimensions names (instead of tuples in which the order matters).
-    This is relevant to to abstract away from the order of the dimensions
-    which might change in data transformations.
-    
     See Also
     --------
-    :meth:`npt.NDArray.setflags`
-        Used to make a numpy array read-only.
+    :meth:`np.ndarray.setflags`: Used to make a numpy array immutable.
+    :class:`MetaData`: Metaclass used to set class-level attributes.
+    :class:`Generic`: Generic class to define a generic type.
     """
-    dims: Tuple[str]
-    coords: Dict[str, str]
+    dims: Tuple[str, ...] = ()
+    coords: Tuple[str, ...] = ()
+    coord2dim: Mapping[str, str] = MappingProxyType({})
+    dim2coord: Mapping[str, FrozenSet[str]] = MappingProxyType({})
     path_manager: Type[PathManager]
     saver: Type[Saver] = SaverPKL
     loader: Type[Loader] = LoaderPKL
     tpe: TargetType = TargetType('object')
 
-    def __init__(self, data: npt.NDArray) -> None:
+    def __init__(self, data: npt.NDArray, **kwargs) -> None:
+        # Initialize data and dimensions
         self.data = data
         self.data.setflags(write=False) # make immutable
         self.shape = self.data.shape
         self.n = MappingProxyType({dim: shape for dim, shape in zip(self.dims, self.shape)})
+        # Initialize coordinates
+        for name in self.coords:
+            if name not in kwargs:
+                raise ValueError(f"Missing coordinate: {name}")
+            setattr(self, name, kwargs[name])
 
     def __repr__(self) -> str:
-        coord_names = list(self.coords.values())
+        coord_names = list(self.coord2dim.keys())
         return f"<{self.__class__.__name__}> Dims: {self.dims}, Coords: {coord_names}"
 
-    @classmethod
-    def coord2dim(cls) -> Mapping[str, str]:
-        """
-        Map coordinates to dimensions.
-        
-        Returns
-        -------
-        Mapping[str, str]
-            Mapping of the coordinates to the dimensions of the data.
-            Keys: Coordinate names.
-            Values: Dimension names.
-
-        Notes
-        -----
-        This is a method rather than an immutable attribute
-        because it should be specific to each subclass.
-        """
-        return MappingProxyType({coord: dim for dim, coord in cls.coords.items()})
-
     def copy(self) -> 'Data':
-        """
-        Copy the data structure.
-
-        Returns
-        -------
-        Data
-
-        See Also
-        --------
-        :meth:`copy.deepcopy`
-        """
+        """Copy the data structure."""
         return copy.deepcopy(self)
 
     @property
     @abstractmethod
     def path(self) -> Path:
-        """
-        Build the path to the file containing the data.
-
-        Overridden in data subclasses to provide the required arguments 
-        to the path manager from the attributes of the data structure.
-
-        Returns
-        -------
-        Path
-        """
+        """Build the path to the file containing the data."""
         return self.path_manager().get_path()
 
     def load(self) -> 'Data':
-        """
-        Retrieve data from a file.
-
-        Notes
-        -----
-        The raw data is recovered in the type specified by :obj:`tpe`.
-        If needed, transform it in an instance of the data structure.
-        By default, with pickle, the data is directly recovered 
-        as an object corresponding to the data structure.
-
-        Returns
-        -------
-        Data
-        """
+        """Retrieve data from a file."""
         data = self.loader(path=self.path, tpe=self.tpe).load()
-        data = self.__class__(data) # call constructor
         return data
 
     def save(self) -> None:
-        """
-        Save the data instance.
-
-        Notes
-        -----
-        If needed, the data structure should be transformed
-        in the format expected by the saver.
-        By default, with pickle, the object can be saved directly
-        without any transformation.
-        """
+        """Save the data instance."""
         self.saver(self.path, self.data).save()
-
-    @property
-    def coord_attrs(self) -> Tuple[str]:
-        """TODO"""
-        raise NotImplementedError("Method not implemented yet.")
 
     def sel(self, **kwargs) -> 'Data':
         """
@@ -241,13 +271,13 @@ class Data(ABC, Generic[T]):
         >>> data.sel(time=slice(0, 1), task='PTD', stim=['R', 'T'])
         """
         # Unpack the names of the coordinates present in the data structure
-        coord2dim = self.coord2dim()
+        coord2dim = self.coord2dim
         coord_attrs = list(coord2dim.keys())
         # Initialize True masks for each dimensions to select all elements by default
         masks = {dim: np.ones(shape, dtype=bool) for dim, shape in zip(self.dims, self.shape)}
         # Update masks with the selection criteria on each coordinate
         for name, label in kwargs.items():
-            if name in self.coord_attrs:
+            if name in coord_attrs:
                 dim = coord2dim[name] # dimension to which the coordinate applies
                 coord = getattr(self, name) # coordinate object
                 # Create a boolean mask depending on the target label type
@@ -271,9 +301,9 @@ class Data(ABC, Generic[T]):
         # Select the coordinates
         new_coords = {name: getattr(self, name) for name in coord_attrs}
         for name, _ in kwargs.items():
-            if name in self.coord_attrs:
+            if name in coord_attrs:
                 new_coords[name] = coord[indices[coord2dim[name]]]
         # Instantiate a new data structure with the selected data,
         # by unpacking the new coordinates dictionary
         raise NotImplementedError("Method not implemented yet.")
-        return self.__class__(new_data, **new_coords)
+        # return self.__class__(new_data, **new_coords)

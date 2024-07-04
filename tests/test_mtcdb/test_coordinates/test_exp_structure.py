@@ -31,13 +31,12 @@ def test_coord_recnum_build_labels():
 
     Test Inputs
     -----------
-    N_SMPL : 10
-    rec : Recording(1)
+    N_SMPL: 10
+    rec: Recording(1)
 
     Expected Output
     ---------------
-    values : np.ndarray
-        10 samples of 1.
+    values: 10 samples of 1.
     """
     values = CoordRecNum.build_labels(n_smpl=N_SMPL, pos=Recording(1))
     expected_values = np.full(N_SMPL, 1, dtype=np.int64)
@@ -50,13 +49,11 @@ def test_coord_recnum_count_by_lab():
 
     Test Inputs
     -----------
-    initial_values : np.ndarray
-        5 samples of 1, 5 samples of 2.
+    initial_values : 5 samples of 1, 5 samples of 2.
 
     Expected Output
     ---------------
-    count : Dict[Recording, int]
-        {Recording(1): 5, Recording(2): 5}
+    count : Two Recording objects as keys, with count 5 for each.
     """
     values = np.array(5*[1] + 5*[2])
     coord = CoordRecNum(values=values)
