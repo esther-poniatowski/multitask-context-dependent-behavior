@@ -17,7 +17,7 @@ See Also
 """
 
 import numpy as np
-import pytest # pylint: disable=unused-import
+import pytest
 
 from mtcdb.coordinates.time import CoordTime
 
@@ -65,7 +65,7 @@ def test_eq():
     coord2 = CoordTime(VALUES)
     coord3 = CoordTime(VALUES + 1)
     assert coord1 == coord2, "Found Not Equal"
-    assert not coord1 == coord3, "Found Equal" # pylint: disable=C0117
+    assert not coord1 == coord3, "Found Equal"
 
 
 def test_copy():

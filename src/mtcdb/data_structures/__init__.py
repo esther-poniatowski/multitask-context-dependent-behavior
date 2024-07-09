@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.datasets` [subpackage]
+:mod:`mtcdb.data_structures` [subpackage]
 
 Classes representing data structures used in the analysis.
 
@@ -23,6 +23,7 @@ Implementation
 uniformly across the whole package to interact with data.
 Each subclass implements one version for a specific data structure.
 It stores : 
+
 - Actual data to analyze
 - Coordinates representing dimension labels
 - Metadata
@@ -30,11 +31,13 @@ It stores :
 **Strategy Design Pattern**
 
 Data structures delegate certain operations to external classes : 
+
 - Path generation
   Each data class is associated to one subclass of :class:`PathManager`.
 - Loading and Saving data from and to files 
   Each data class can be associated to a :class:Loader and/or Saver subclass
   depending on the file format.
+
 To interact with those external classes, data classes store instances 
 of the appropriate objects among their attributes.
 

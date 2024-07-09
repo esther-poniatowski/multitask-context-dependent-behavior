@@ -1,0 +1,20 @@
+[tool.black]
+# Formatting Settings
+line-length = 100
+# Exclude non-code files
+
+force-exclude = '''
+(
+  /(
+    data
+    | docs
+    | notebooks
+    | scripts
+    | stubs
+  )/
+  | .*conf.*
+)
+'''
+# Visual output
+check = true
+color = true

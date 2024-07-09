@@ -14,7 +14,7 @@ one concrete subclass of coordinates.
 """
 
 import numpy as np
-import pytest # pylint: disable=unused-import
+import pytest
 
 from mtcdb.coordinates.trials import CoordError, CoordFold
 

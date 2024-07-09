@@ -45,7 +45,7 @@ def test_saver_check_dir_invalid():
     invalid_path = "/invalid_directory/test.csv"
     with pytest.raises(FileNotFoundError, match="Inexistent directory"):
         saver = Saver(invalid_path, data_list)
-        saver._check_dir() # pylint: disable=protected-access
+        saver._check_dir()
 
 
 def test_saver_check_dir_valid(tmp_path):
@@ -63,7 +63,7 @@ def test_saver_check_dir_valid(tmp_path):
     """
     valid_path = tmp_path / "test.csv"
     saver = Saver(valid_path, data_list)
-    saver._check_dir() # pylint: disable=protected-access
+    saver._check_dir()
 
 
 @pytest.mark.parametrize("filename",
@@ -92,7 +92,7 @@ def test_saver_check_ext(tmp_path, filename):
     filepath = tmp_path / filename
     expected_filepath = tmp_path / "test.csv"
     saver = SaverCSV(filepath, data_list)
-    saver._check_ext() # pylint: disable=protected-access
+    saver._check_ext()
     assert saver.path == expected_filepath, f"Incorrect path. Expected: {expected_filepath}"
 
 
@@ -113,7 +113,7 @@ def test_saver_check_data_valid(data):
     No exception raised.
     """
     saver = SaverCSV("test", data)
-    saver._check_data() # pylint: disable=protected-access
+    saver._check_data()
 
 def test_saver_check_data_invalid():
     """
@@ -130,4 +130,4 @@ def test_saver_check_data_invalid():
     """
     saver = SaverCSV("test", data_dict)
     with pytest.raises(TypeError):
-        saver._check_data() # pylint: disable=protected-access
+        saver._check_data()

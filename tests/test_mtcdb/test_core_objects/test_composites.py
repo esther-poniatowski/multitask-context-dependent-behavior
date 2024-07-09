@@ -6,7 +6,7 @@
 Tests for the module :mod:`mtcdb.core_objects.composites`.
 """
 
-import pytest # pylint: disable=unused-import
+import pytest
 
 from mtcdb.core_objects.composites import Site, Unit, Session
 

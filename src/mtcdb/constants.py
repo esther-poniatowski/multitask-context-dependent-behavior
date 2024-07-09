@@ -30,7 +30,7 @@ T_MAX: float = 1.0
 """Duration of the recording period (in seconds)."""
 
 SMPL_RATE: float = 25000
-"""Sampling rate of the recordings (in seconds).""" 
+"""Sampling rate of the recordings (in seconds)."""
 
 SAMPL_RATE_BAGUR: float = 31250
 """Sampling rate (in seconds) specific to the recordings by S.Bagur."""
@@ -70,3 +70,6 @@ T_OFF = 1.35
 
 T_SHOCK = 1.75
 """Time of shock onset (in seconds) in the pre-processed time courses."""
+
+test_black = [1,2,
+			  3,4]

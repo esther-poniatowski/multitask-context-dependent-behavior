@@ -14,7 +14,6 @@ from mtcdb.utils.functions import filter_kwargs
 
 # Sample functions for testing
 # ----------------------------
-# pylint: disable=unused-argument
 
 def function_a(arg1, arg2='default'):
     """Dummy function with positional and keyword arguments."""

@@ -1,0 +1,17 @@
+# Words Used by Tools
+automodule
+bysource
+docformat
+docstrings
+intersphinx
+maxdepth
+numpydoc
+pydata
+pylance
+sphinxcontrib
+toctree
+typehints
+undoc
+viewcode
+weakref
+xmlpath

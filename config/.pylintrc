@@ -1,0 +1,10 @@
+[MASTER]
+load-plugins=pytest_pylint
+
+[MESSAGES CONTROL]
+disable=unused-import,
+        missing-function-docstring,
+        missing-class-docstring,
+        no-member,
+        unused-variable,
+        protected-access

@@ -25,29 +25,29 @@ Other class-level attributes are constructed from the latter by the metaclass:
 :class:`Data` serves to define common methods and attributes for data structures.
 Each subclass has to :
 - Define its own dimensions and coordinates.
-- Select its path manager, loader and saver subclasses (if needed).
-- Implement its own constructor to define metadata required to build the path.
-  In subclasses, the base class constructor should be called only when data is created, 
-  not when it is loaded from a file.    
+- Select its path manager.
+- Implement its own constructor, to provide two instantiation approaches:
+  creating of new data from scratch or loading existing data from a file.
+  For both, it should set the *minimal metadata* required to build the path.
+  For new data creation, it should admit data values and coordinates as optional parameters
+  and call the base class constructor. 
 - Implement the abstract property :meth:`get_path` to provide the right arguments
   to its own path manager from its attributes.
+- Change the loader and the saver (optional). 
+  By default, the data is loaded and saved with pickle, which is is sufficient for most purposes.
 - Override the abstract methods :meth:`load` and :meth:`save` (if needed) 
   to handle the specific data format. It should transform the data structure
   to the format expected by the loader or saver.
-  By default, the data is loaded and saved with pickle.
-  Thus, it is recovered directly as an instance of :class:`Data` 
-  and can be saved directly without any transformation.
+  By default, data is directly recovered as an instance of :class:`Data` 
+  and can be saved without any transformation.
 
 Warning
 -------
-Any transformation of the data which affects the dimensions should be prevented.
-Namely: transpositions (dimension permutation), reshaping (dimension fusion)...
-Several attributes are read-only and/or immutable to ensure the integrity of the data structure.
-:attr:`data`
-:attr:`dims`
-:attr:`coords`
-:attr:`shape`
-:attr:`n`
+The dimensions are *intrinsic* to each data structure and should not be modified.
+Avoid any transformation of the data which affects the dimensions or the coordinates.
+Examples: transpositions (dimension permutation), reshaping (dimension fusion)...
+To ensure the integrity of the data structure, several attributes are read-only and/or immutable:
+:attr:`data`, :attr:`dims`, :attr:`coords`, :attr:`shape`, :attr:`n`...
 
 Notes
 -----
@@ -205,7 +205,7 @@ class Data(Generic[T], metaclass=MetaData):
     path_manager: Type[PathManager]
     saver: Type[Saver] = SaverPKL
     loader: Type[Loader] = LoaderPKL
-    tpe: TargetType = TargetType('object')
+    tpe: TargetType = TargetType('object') # for pickle loader
 
     def __init__(self, data: npt.NDArray, **kwargs) -> None:
         # Initialize data and dimensions

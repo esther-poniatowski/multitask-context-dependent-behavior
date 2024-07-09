@@ -8,7 +8,7 @@ See Also
 :mod:`mtcdb.io_handlers.path_managers.base`: Tested module.
 """
 
-import pytest # pylint: disable=unused-import
+import pytest
 
 from mtcdb.io_handlers.path_managers.base import PathManager
 

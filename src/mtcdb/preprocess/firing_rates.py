@@ -7,18 +7,18 @@ See Also
 --------
 test_mtcdb.test_preprocess.test_firing_rates:
     Unit tests for this module.
-mtcdb.datasets.RawSpkTimes:
+mtcdb.data_structures.RawSpkTimes:
     Data structure for raw spike times.
 
 """
+from typing import Literal, TypeAlias
 
 import numpy as np
 import numpy.typing as npt
 from scipy.signal import fftconvolve
-from typing import Literal, TypeAlias
+
 
 from mtcdb.constants import T_BIN
-from mtcdb.types import ArrayLike, NumpyArray
 
 
 Stim: TypeAlias = Literal['R', 'T', 'N']
@@ -26,8 +26,8 @@ Task: TypeAlias = Literal['PTD', 'CLK']
 NumpyArray: TypeAlias = npt.NDArray[np.float64]
 
 
-def extract_trial(trial:int, 
-                  spikes: npt.NDArray[np.float64], 
+def extract_trial(trial:int,
+                  spikes: npt.NDArray[np.float64],
                   trials: npt.NDArray[np.int64]
                   ) -> npt.NDArray[np.float64]:
     """
@@ -62,12 +62,12 @@ def extract_trial(trial:int,
     
     See Also
     --------
-    :class:`mtcdb.datasets.RawSpkTimes`: Data structure for raw spike times.
+    :class:`mtcdb.data_structures.RawSpkTimes`: Data structure for raw spike times.
     """
     return spikes[trials==trial]
 
 
-def slice_epoch(tstart: float, tend: float, 
+def slice_epoch(t_start: float, t_end: float, 
                 spk: NumpyArray) -> NumpyArray:
     """
     Extract spiking times within one epoch of one trial.
@@ -78,7 +78,7 @@ def slice_epoch(tstart: float, tend: float,
 
     Parameters
     ----------
-    tstart, tend: float
+    t_start, t_end: float
         Times boundaries of the epoch (in seconds).
     spk: :obj:`mtcdb.types.NumpyArray`
         Spiking times during a *whole trial* (in seconds).
@@ -87,7 +87,7 @@ def slice_epoch(tstart: float, tend: float,
     Returns
     -------
     spk_epoch: :obj:`mtcdb.types.NumpyArray`
-        Spiking times in the epoch comprised between ``tstart`` and ``tend``,
+        Spiking times in the epoch comprised between ``t_start`` and ``t_end``,
         reset to be relative to the beginning of the epoch.
         Shape: ``(nspikes_epoch, 1)``.
     
@@ -96,18 +96,18 @@ def slice_epoch(tstart: float, tend: float,
     - Select the spiking times within the epoch with a boolean mask.
     - Subtract the starting time of the epoch to reset the time.
     """
-    return spk[(spk>=tstart)&(spk<tend)] - tstart
+    return spk[(spk>=t_start)&(spk<t_end)] - t_start
 
 
-def join_epochs(tstart1: float, tend1: float, 
-                tstart2: float, tend2: float, 
+def join_epochs(t_start1: float, t_end1: float, 
+                t_start2: float, t_end2: float, 
                 spk: NumpyArray) -> NumpyArray:
     """
     Join spiking times from two distinct epochs as if they were continuous.
 
     Parameters
     ----------
-    tstart1, tend1, tstart2, tend2: float
+    t_start1, t_end1, t_start2, t_end2: float
         Times boundaries of both epochs to connect (in seconds).
     spk: :obj:`mtcdb.types.NumpyArray`
         Spiking times during a *whole trial* (in seconds).
@@ -116,7 +116,7 @@ def join_epochs(tstart1: float, tend1: float,
     Returns
     -------
     spk_joined: :obj:`mtcdb.types.NumpyArray`
-        Spiking times comprised in ``[tstart1, tend2]`` and ``[tstart2, tend2]``,
+        Spiking times comprised in ``[t_start1, t_end2]`` and ``[t_start2, t_end2]``,
         realigned as if both epochs were continuous.
         Shape: ``(nspikes1 + nspikes2,)``.
         
@@ -136,8 +136,8 @@ def join_epochs(tstart1: float, tend1: float,
     --------
     slice_epoch: Extract spiking times within one epoch of one trial.
     """
-    spk1 = slice_epoch(tstart1, tend1, spk)
-    spk2 = slice_epoch(tstart2, tend2, spk) + (tend1 - tstart1)
+    spk1 = slice_epoch(t_start1, t_end1, spk)
+    spk2 = slice_epoch(t_start2, t_end2, spk) + (t_end1 - t_start1)
     spk_joined = np.concatenate([spk1, spk2])
     return spk_joined
      
@@ -174,7 +174,7 @@ def align_timings(task: Task, stim: Stim,
     
     Returns
     -------
-    tstart1, tend1, tstart2, tend2: tuple[float, float, float, float]
+    t_start1, t_end1, t_start2, t_end2: tuple[float, float, float, float]
         Time boundaries of the first and second epochs to extract
         in the specific trial.
     
@@ -228,7 +228,7 @@ def align_timings(task: Task, stim: Stim,
     It should start at the beginning of the Click, i.e. at the offset of the TORC,
     i.e. at time ``t_on + d_warn``.
     It should last the duration of the stimulus AND post-stimulus periods,
-    i.e. end at ``tstart2 + d_stim + d_post``.
+    i.e. end at ``t_start2 + d_stim + d_post``.
 
     .. note::
         Stimuli might be cropped if their actual duration ``t_off - t_on``
@@ -243,21 +243,21 @@ def align_timings(task: Task, stim: Stim,
     --------
     join_epochs: Join spiking times from two distinct epochs as if they were continuous.
     """
-    tstart1 = t_on - d_pre
+    t_start1 = t_on - d_pre
     if task == 'PTD' or (task == 'CLK' and stim == 'N'): # excise Click train
-        tend1 = t_on + d_stim
-        tstart2 = t_off
-        tend2 = t_off + d_post
+        t_end1 = t_on + d_stim
+        t_start2 = t_off
+        t_end2 = t_off + d_post
     elif task == 'CLK' and (stim == 'T' or stim == 'R'): # excise TORC
-        tend1 = t_on
-        tstart2 = t_on + d_warn
-        tend2 = tstart2 + d_stim + d_post  
+        t_end1 = t_on
+        t_start2 = t_on + d_warn
+        t_end2 = t_start2 + d_stim + d_post  
     else:
         raise ValueError("Unknown task or stimulus")
-    return tstart1, tend1, tstart2, tend2
+    return t_start1, t_end1, t_start2, t_end2
 
 
-def spikes_to_rates(spk: ArrayLike,
+def spikes_to_rates(spk: np.ndarray,
                     t_bin: float,
                     t_max: float,
                     ) -> NumpyArray:

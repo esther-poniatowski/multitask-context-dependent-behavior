@@ -1,0 +1,4 @@
+# Programming Words
+Liskov
+Multiton
+Redeclaration

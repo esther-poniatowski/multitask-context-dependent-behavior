@@ -61,7 +61,7 @@ def test_extract_trial(spikes, trials, expected):
 
 spk = np.arange(0, 1, 0.1)
 expected = np.array([0.0, 0.1, 0.2])
-tstart, tend = 0.2, 0.5
+t_start, t_end = 0.2, 0.5
 
 @pytest.mark.parametrize("spk, expected", 
                          argvalues = [
@@ -82,7 +82,7 @@ def test_slice_epoch(spk, expected):
         ``[0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]``
     spk [empty] : :obj:`mtcdb.types.NumpyArray`
         No spikes (empty array).
-    tstart, tend: float
+    t_start, t_end: float
         Set to 0.2 and 0.5 as the start and end time of the epoch.
     
     Expected Outputs
@@ -94,7 +94,7 @@ def test_slice_epoch(spk, expected):
         Then, spiking times are shifted by the start time of the epoch,
         which requires to subtract 0.2 to each value.
     """
-    sliced = slice_epoch(tstart, tend, spk)
+    sliced = slice_epoch(t_start, t_end, spk)
     assert sliced.shape == expected.shape, "Wrong shape"
     assert_array_eq(sliced, expected), "Wrong values"
 
@@ -103,8 +103,8 @@ spk_0to2 = np.arange(0, 2, 0.1)
 expected_0to2 = np.array([0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7])
 spk_1to2 = np.arange(1, 2, 0.1)
 expected_1to2 = np.array([0.4, 0.5, 0.6, 0.7])
-tstart1, tend1 = 0.3, 0.7
-tstart2, tend2 = 1.3, 1.7
+t_start1, t_end1 = 0.3, 0.7
+t_start2, t_end2 = 1.3, 1.7
 
 @pytest.mark.parametrize("spk, expected", 
                          argvalues = [
@@ -127,7 +127,7 @@ def test_join_epochs(spk, expected):
         Spikes only after 1 s, so that there is no spike in the first epoch.
     spk [empty]: :obj:`mtcdb.types.NumpyArray`    
         No spikes at all (empty array).
-    tstart1, tend1, tstart2, tend2: float
+    t_start1, t_end1, t_start2, t_end2: float
         Two epochs of 0.4 s duration : [0.3, 0.7] and [1.3, 1.7].
 
     Expected Outputs
@@ -146,7 +146,7 @@ def test_join_epochs(spk, expected):
     expected [empty]: :obj:`mtcdb.types.NumpyArray`
         No spike should be retained.
     """
-    spk_joined = join_epochs(tstart1, tend1, tstart2, tend2, spk)
+    spk_joined = join_epochs(t_start1, t_end1, t_start2, t_end2, spk)
     assert spk_joined.shape == expected.shape, "Wrong shape"
     assert_array_eq(spk_joined, expected), "Wrong values"
 

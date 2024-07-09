@@ -12,9 +12,16 @@ help:
 	@echo "   make register-dev		- Register new packages in development mode : src and tests (for Sphinx extracting docstrings)"
 
 
+format:
+	black --config config/black.toml --diff src tests
+
+lint:
+	mypy --config-file config/mypy.ini src tests
+	pylint --rcfile config/pylintrc src tests
+	pyright --config-file config/pyrightconfig.json src tests
+
 test:
 	pytest
-
 
 docs:
 	sphinx-build -b html docs/source/ docs/build/html

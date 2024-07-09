@@ -17,7 +17,7 @@ but apply for all subclasses of :class:`CoordPosition`.
 """
 
 import numpy as np
-import pytest # pylint: disable=unused-import
+import pytest
 
 from mtcdb.coordinates.exp_structure import CoordRecNum
 from mtcdb.core_objects.exp_structure import Recording

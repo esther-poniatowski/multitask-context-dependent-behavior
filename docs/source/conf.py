@@ -6,6 +6,9 @@ conf
 
 Configuration settings for the Sphinx documentation builder.
 """
+# pylint: disable=invalid-name
+# pylint: disable=redefined-builtin
+
 
 # -- Path setup --------------------------------------------------------------
 
@@ -13,7 +16,7 @@ import os
 import sys
 
 # Add source code directory to locations accessible for import
-sys.path.insert(0, os.path.abspath('../src')) 
+sys.path.insert(0, os.path.abspath('../src'))
 sys.path.insert(0, os.path.abspath('../tests'))
 
 
@@ -42,7 +45,7 @@ extensions = [
 
 exclude_patterns = [
 	'.DS_Store', '*~', '.vscode',
-	'__pycache__', '*.pyc', '*.pyo', 
+	'__pycache__', '*.pyc', '*.pyo',
 	'.pytest_cache', '_build']
 
 
@@ -65,7 +68,7 @@ autodoc_default_options = {
     'exclude-members': '__weakref__'
 }
 # Document type hints
-autodoc_typehints = "description" 
+autodoc_typehints = "description"
 add_module_names = False
 
 
@@ -82,10 +85,10 @@ napoleon_custom_sections = [('Test Inputs', 'params_style'), # for test docs
                             ('Sub-Packages', 'params_style'), # for package docs
                             ('Modules', 'params_style'), # for module docs
                             ('Files', 'params_style'), # for module docs
-                            'Algorithm', 
+                            'Algorithm',
                             'Implementation',
                             'Exceptions'
-                            ] 
+                            ]
 
 
 # -- Intersphinx Settings ----------------------------------------------------

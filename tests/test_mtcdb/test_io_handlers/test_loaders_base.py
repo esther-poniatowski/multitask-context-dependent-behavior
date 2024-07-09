@@ -39,7 +39,7 @@ def test_loader_check_file_invalid():
     filepath = "invalid_path"
     loader = Loader(filepath, tpe='list')
     with pytest.raises(FileNotFoundError):
-        loader._check_file() # pylint: disable=protected-access
+        loader._check_file()
 
 def test_loader_check_file_valid(tmp_path):
     """
@@ -56,7 +56,7 @@ def test_loader_check_file_valid(tmp_path):
     """
     filepath = tmp_path
     loader = Loader(filepath, tpe='list')
-    loader._check_file() # pylint: disable=protected-access
+    loader._check_file()
 
 
 def test_loader_check_type_invalid():
@@ -74,7 +74,7 @@ def test_loader_check_type_invalid():
     """
     loader = LoaderCSV("test.csv", tpe='dict')
     with pytest.raises(TypeError):
-        loader._check_type() # pylint: disable=protected-access
+        loader._check_type()
 
 
 def test_loader_check_type_valid():
@@ -91,4 +91,4 @@ def test_loader_check_type_valid():
     No exception raised.
     """
     loader = LoaderCSV("test.csv", tpe='list')
-    loader._check_type() # pylint: disable=protected-access
+    loader._check_type()

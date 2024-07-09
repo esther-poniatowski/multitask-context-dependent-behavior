@@ -17,7 +17,7 @@ but apply for all subclasses of :class:`CoordExpCond`.
 """
 
 import numpy as np
-import pytest # pylint: disable=unused-import
+import pytest
 
 from mtcdb.coordinates.exp_condition import CoordTask
 from mtcdb.core_objects.exp_condition import Task

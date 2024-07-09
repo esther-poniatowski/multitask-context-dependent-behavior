@@ -1,0 +1,26 @@
+// Folder-Specific Settings - Test Directory
+{
+    // Testing
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": [
+        "tests" // path to the directory containing tests
+    ],
+    
+    // Code Diagnosis with Pylance extension
+	"python.analysis.typeCheckingMode": "basic",
+    "python.analysis.inlayHints.pytestParameters": true,
+    "python.analysis.inlayHints.pytestFixtures": true,
+    "python.analysis.inlayHints.pytestMark": true,
+    "python.analysis.inlayHints.pytestUnittest": true,
+    "python.analysis.enablePytestSupport": true,
+
+    // Linting with Pylint extension
+    "pylint.args": ["--rcfile=../pylintrc"],
+ 
+    // Type Checking with MyPy extension
+	"mypy-type-checker.args": [
+		"--config-file=${workspaceFolder:FolderName}/mypy.ini" // path to mypy configuration file
+		],
+
+}

@@ -9,8 +9,3 @@ All the modules of the package share common parameters and types, which are defi
    :members:
    :undoc-members:
 
-=====
-
-.. automodule:: mtcdb.types
-   :members:
-   :undoc-members:

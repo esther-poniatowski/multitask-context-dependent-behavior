@@ -1,0 +1,14 @@
+# Words Used by Languages and Tools
+debugpy
+esbonio
+hbenl
+leonhard
+lextudio
+littlefoxteam
+miniconda
+mypy
+pycache
+pylint
+snekvik
+swyddfa
+trond

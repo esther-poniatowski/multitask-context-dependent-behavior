@@ -8,7 +8,7 @@ See Also
 :mod:`mtcdb.io_handlers.path_managers.impl`: Tested module.
 """
 
-import pytest # pylint: disable=unused-import
+import pytest
 
 from mtcdb.io_handlers.path_managers.impl import RawSpkTimesPath, FiringRatesPath
 

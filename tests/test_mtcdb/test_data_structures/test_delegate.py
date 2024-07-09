@@ -3,7 +3,7 @@
 """
 :mod:`test_mtcdb.test_datasets.test_utils` [module]
 
-Tests for the module :mod:`mtcdb.datasets.utils`.
+Tests for the module :mod:`mtcdb.data_structures.utils`.
 
 Check that the delegation to the `DataArray` methods and properties 
 works correctly, and that any custom methods behave as expected.
@@ -14,7 +14,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-#from mtcdb.datasets.activity import FiringRates
+#from mtcdb.data_structures.activity import FiringRates
 
 pytestmark = pytest.mark.skip(reason="Not implemented yet")
 

@@ -43,7 +43,7 @@ def test_init():
     ValueError
     """
     with pytest.raises(ValueError):
-        obj = Recording(0) # pylint: disable=unused-variable
+        obj = Recording(0)
 
 
 def test_operations():

@@ -1,0 +1,128 @@
+// Workspace-Specific Settings for the Entire Project
+{
+	// Folders Included in the Workspace (allow specific settings)
+	"folders": [
+		{
+			// Project
+				"name": "mtcdb-workspace",
+				"path": "."
+			}
+	],
+
+	// Workspace Settings (apply globally)
+	"settings": {
+		// General Editor Settings
+		"editor.lineNumbers": "on",
+		"editor.rulers": [100],
+
+		// Exclusions from the File Explorer
+		"files.exclude": {
+			"**/.git": true,
+			"**/.DS_Store": true,
+			"**/.pytest_cache": true,
+			"**/__pycache__": true,
+			"**/.mypy_cache": true
+		},
+
+		// Python Environment
+		"python.defaultInterpreterPath": "/Users/eresther/miniconda3/envs/mtcdb/bin/python",
+		"python.terminal.activateEnvironment": true,
+		"terminal.integrated.inheritEnv": false, // user setting, here to remember if troubleshooting
+
+		// Testing
+		"python.testing.pytestEnabled": true,
+		"python.testing.pytestArgs": [
+			"tests" // path to the directory containing tests
+		],
+
+		// Formatting
+		"files.trimTrailingWhitespace": true, // remove trailing white spaces on save
+		"files.insertFinalNewline": true, // at least one line at the end of the file
+		"files.trimFinalNewlines": true, // at most one line at the end of the file
+		"[python]": {
+			"editor.defaultFormatter": "ms-python.black-formatter",
+			"editor.formatOnSave": true
+		},
+		"black-formatter.args": [
+			"--config", "./config/black.toml", // pass the configuration file
+			"--check"
+		],
+
+		// Linting
+
+
+		// Copilot
+		"github.copilot.enable": {
+			"*": true,
+			"python": true,
+			"restructuredtext": true,
+			"makefile": true,
+			"plaintext": true,
+			"markdown": true,
+			"yaml": true,
+			"json": true,
+			"ini": true,
+			"shellscript": true,
+			"xml": true,
+			"gitignore": true,
+			"git": true,
+		},
+
+		// Spell Checker
+		"cSpell.enabled": true,
+		"cSpell.customDictionaries": {
+			"project": {"name": "project", "path": "./dictionaries/project.txt"},
+			"programming": {"name": "programming", "path": "./dictionaries/programming.txt"},
+			"python": {"name": "python", "path": "./dictionaries/python.txt"},
+			"sphinx": {"name": "sphinx", "path": "./dictionaries/sphinx.txt"},
+			"user": {"name": "user", "path": "./dictionaries/user.txt"},
+			"vscode": {"name": "vscode", "path": "./dictionaries/vscode.txt"},
+		},
+	},
+
+	// Debugging Settings
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "Python Debugger: Current File",
+				"type": "debugpy",
+				"request": "launch",
+				"program": "${file}",
+				"console": "integratedTerminal"
+			}
+    	]
+	},
+
+	// Recommended Extensions
+	"extensions": {
+		"recommendations": [
+			// Core Python
+			"ms-python.python",
+			// Auto-Completion
+			"ms-python.vscode-pylance",
+			"github.copilot",
+			// Debugging
+			"ms-python.debugpy",
+			// Testing
+			"hbenl.vscode-test-explorer",
+			"ms-python.python-test-adapter",
+			"littlefoxteam.vscode-python-test-adapter",
+			// Linting
+			"ms-python.pylint",
+			// Type Checking
+			"ms-python.mypy-type-checker",
+			// Formatting
+			"ms-python.black-formatter",
+			// Documentation
+			"lextudio.restructuredtext",
+			"trond-snekvik.simple-rst",
+			"leonhard-s.python-sphinx-highlighting",
+			"swyddfa.esbonio",
+			// Syntax
+			"streetsidesoftware.code-spell-checker",
+			// Tasks
+			"ms-vscode.makefile-tools",
+		]
+	}
+}

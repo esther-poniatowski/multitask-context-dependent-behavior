@@ -5,4 +5,4 @@ Data Structures
 .. toctree::
    :maxdepth: 1
 
-   api/datasets/activity
+   api/data_structures/

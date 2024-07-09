@@ -14,7 +14,7 @@ data/
 # Jupyter Notebook
 **/.ipynb_checkpoints/
 
-# Python
+# Python Cache
 **/__pycache__
 *.py[cod]
 .pytest_cache
