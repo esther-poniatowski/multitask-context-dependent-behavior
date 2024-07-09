@@ -60,7 +60,7 @@ D_SHOCK = 0.4
 """Duration of the shock (in seconds) in the experiments."""
 
 # D_STIM_0 = 0.4
-#"""Duration shorter for first stimulus (in seconds) in the experiments."""
+# """Duration shorter for first stimulus (in seconds) in the experiments."""
 
 T_ON = 0.6
 """Time of stimulus onset (in seconds) in the pre-processed time courses."""
@@ -71,5 +71,4 @@ T_OFF = 1.35
 T_SHOCK = 1.75
 """Time of shock onset (in seconds) in the pre-processed time courses."""
 
-test_black = [1,2,
-			  3,4]
+test_black = [1, 2, 3, 4]

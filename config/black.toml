@@ -1,8 +1,9 @@
 [tool.black]
+
 # Formatting Settings
 line-length = 100
-# Exclude non-code files
 
+# Exclude Non-Code Files
 force-exclude = '''
 (
   /(
@@ -15,6 +16,6 @@ force-exclude = '''
   | .*conf.*
 )
 '''
-# Visual output
-check = true
+
+# Visual Output
 color = true

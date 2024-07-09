@@ -41,14 +41,22 @@ since python files actually use `rst` in docstrings.
 For code analyzers and formatters, include only directories containing codes ("src", "tests")
 and exclude all others (docs, notebooks, data, stubs...).
 Specify path inclusions/exclusions in configuration files and pass them to the extensions.
-Two possible strategies :
-- "Inclusion" strategy : Include only the relevant directories.
-- "Exclusion" strategy : Include the whole project and exclude irrelevant directories.
-Implementation choice : Exclusion.
-Advantages :
-- When working on any file in VS Code, under the hood, the extensions are run with the
-  current file passed as argument (and the additional configuration files). Therefore,
-  exclusion should be forced on the irrelevant directories so that they can be worked on.
+Several strategies can be considered :
+1. "Inclusion" strategy : Include only the relevant directories.
+Disadvantage : If a file path is passed on the command line after the configuration file,
+it is included even if it does not belong to the relevant directories.
+2. "Exclusion" strategy : Include the whole project and exclude irrelevant directories (force).
+Advantages : If a file path is passed on the command line after the configuration file,
+it is excluded if it belongs to the irrelevant directories.
+3. Passing the relevant directories as arguments to the extensions.
+Disadvantage : If a file path is passed on the command line after the configuration file,
+it leads to an error because it is added after the directories.
+
+Those distinct behaviors are determinant when using "format on save"in VS Code.
+Under the hood, the extensions are run with the current file passed as argument (`--stdin-filename`).
+Therefore, exclusions should be forced on the irrelevant directories so that they can be opened
+in the editor without being formatted.
 Warning: Any new directory to exclude must be explicitly added in multiple configuration files.
 Before, the relevant directories "src" and "tests" were passed to the extensions,
 but now I pass the whole project and exclude
+Conclusion : Use the "exclusion" strategy.

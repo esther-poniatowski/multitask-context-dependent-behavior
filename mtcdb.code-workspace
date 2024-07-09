@@ -17,7 +17,7 @@
 
 		// Exclusions from the File Explorer
 		"files.exclude": {
-			"**/.git": true,
+			"**/.git": false,
 			"**/.DS_Store": true,
 			"**/.pytest_cache": true,
 			"**/__pycache__": true,
@@ -43,10 +43,7 @@
 			"editor.defaultFormatter": "ms-python.black-formatter",
 			"editor.formatOnSave": true
 		},
-		"black-formatter.args": [
-			"--config", "./config/black.toml", // pass the configuration file
-			"--check"
-		],
+		"black-formatter.args": ["--config", "./config/black.toml"],
 
 		// Linting
 

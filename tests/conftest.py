@@ -27,5 +27,5 @@ def pytest_configure(config):
 	if config.option.xmlpath is None:
 		config.option.xmlpath = ""
 
-test_black = [1,2, 3,
+test_black = [1,2,
 			  3,4]
