@@ -1,12 +1,9 @@
-### gitignore file 
+### gitignore file
 ### Project multitask-context-dependent-behavior
 
 # Temporary files
 *.tmp
 *.temp
-
-# Data Directory
-data/
 
 # MacOS
 .DS_Store
@@ -19,6 +16,9 @@ data/
 *.py[cod]
 .pytest_cache
 **/.mypy_cache
+
+# Data Directory
+data/
 
 # Sphinx Builds
 docs/build
