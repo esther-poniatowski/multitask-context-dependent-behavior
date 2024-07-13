@@ -14,14 +14,31 @@
 		// General Editor Settings
 		"editor.lineNumbers": "on",
 		"editor.rulers": [100],
+		"editor.wordWrap": "off",
 
-		// Exclusions from the File Explorer
+		// Hide from the File Explorer
 		"files.exclude": {
 			"**/.git": false,
 			"**/.DS_Store": true,
 			"**/.pytest_cache": true,
 			"**/__pycache__": true,
 			"**/.mypy_cache": true
+		},
+
+		// Copilot
+		"github.copilot.enable": {
+			"*": true,
+			"python": true,
+			"restructuredtext": true,
+			"makefile": true,
+			"plaintext": true,
+			"markdown": true,
+			"yaml": true,
+			"json": true,
+			"ini": true,
+			"shellscript": true,
+			"gitignore": true,
+			"git": true,
 		},
 
 		// Python Environment
@@ -46,24 +63,10 @@
 		"black-formatter.args": ["--config", "./config/black.toml"],
 
 		// Linting
+		"pylint.lintOnChange": true, // user setting, here to remember to activate
+		"pylint.args": ["--rcfile=config/pylintrc.ini"],
 
-
-		// Copilot
-		"github.copilot.enable": {
-			"*": true,
-			"python": true,
-			"restructuredtext": true,
-			"makefile": true,
-			"plaintext": true,
-			"markdown": true,
-			"yaml": true,
-			"json": true,
-			"ini": true,
-			"shellscript": true,
-			"xml": true,
-			"gitignore": true,
-			"git": true,
-		},
+		// Type Checking
 
 		// Spell Checker
 		"cSpell.enabled": true,
@@ -75,9 +78,21 @@
 			"user": {"name": "user", "path": "./dictionaries/user.txt"},
 			"vscode": {"name": "vscode", "path": "./dictionaries/vscode.txt"},
 		},
+
+		// Documentation
+		"restructuredtext.linter.disabledLinters": ["doc8", "rstcheck", "rst-lint"],
+		// "restructuredtext.linter.doc8.executablePath": "/Users/eresther/miniconda3/envs/mtcdb/bin/doc8",
+		"esbonio.server.enabled": true,
+		"esbonio.server.enabledInPyFiles": true,
+		"esbonio.server.excludedModules": [],
+		"esbonio.sphinx.confDir": "docs/source",
+		"esbonio.sphinx.srcDir": "docs/source",
+		//"esbonio.sphinx.buildDir": "build",
+		"esbonio.sphinx.builderName": "html",
+
 	},
 
-	// Debugging Settings
+	// Debugging Configurations
 	"launch": {
 		"version": "0.2.0",
 		"configurations": [
@@ -105,12 +120,12 @@
 			"hbenl.vscode-test-explorer",
 			"ms-python.python-test-adapter",
 			"littlefoxteam.vscode-python-test-adapter",
+			// Formatting
+			"ms-python.black-formatter",
 			// Linting
 			"ms-python.pylint",
 			// Type Checking
 			"ms-python.mypy-type-checker",
-			// Formatting
-			"ms-python.black-formatter",
 			// Documentation
 			"lextudio.restructuredtext",
 			"trond-snekvik.simple-rst",
@@ -120,6 +135,9 @@
 			"streetsidesoftware.code-spell-checker",
 			// Tasks
 			"ms-vscode.makefile-tools",
+			// Version Control
+			"github.vscode-pull-request-github",
+			"mhutchie.git-graph"
 		]
 	}
 }

@@ -2,14 +2,17 @@
 
 help:
 	@echo "Makefile commands:"
+	@echo "   make format        	- Format Python code with Black"
+	@echo "   make lint          	- Lint Python code with MyPy, Pylint and Pyright"
 	@echo "   make test         	- Run tests and generate XML report for Sphinx"
 	@echo "   make docs         	- Build Sphinx documentation in HTML"
 	@echo "   make open-docs        - Open the HTML documentation in the default web browser"
 	@echo "   make clean        	- Remove Python file artifacts"
 	@echo "   make export-env   	- Export current conda environment to YAML"
 	@echo "   make check-dev    	- Check packages registered in the environment in development mode"
-	@echo "   make unregister-dev	- Unregister all packages currently in development mode (for resetting)"
-	@echo "   make register-dev		- Register new packages in development mode : src and tests (for Sphinx extracting docstrings)"
+	@echo "   make unregister-dev	- Unregister all packages currently in development mode (reset)"
+	@echo "   make register-dev		- Register new packages in development mode : src and tests"
+	@echo "   make setup-dev		- Set up the environment in developing mode"
 
 
 format:
@@ -37,7 +40,7 @@ clean:
 
 
 export-env:
-	conda env export > environment.yml
+	conda env export > config/environment.yml
 
 
 check-dev:
@@ -56,3 +59,5 @@ unregister-dev:
 register-dev:
 	conda develop src
 	conda develop tests
+
+setup-dev:

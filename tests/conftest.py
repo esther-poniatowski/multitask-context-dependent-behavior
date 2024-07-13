@@ -26,6 +26,3 @@ def pytest_configure(config):
 	os.makedirs(reports_dir, exist_ok=True)
 	if config.option.xmlpath is None:
 		config.option.xmlpath = ""
-
-test_black = [1,2,
-			  3,4]
