@@ -1,11 +1,9 @@
 Contributors
 ============
 
-
 **Main Author**
 
 - Esther Poniatowski (esther.poniatowski@ens.psl.eu)
-
 
 **Supervisors**
 
@@ -26,4 +24,3 @@ Contributors
 **Funding**
 
 - Ecole Normale Supérieure de Paris (`ENS-PSL <https://www.ens.psl.eu/>`_)
-

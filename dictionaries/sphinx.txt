@@ -3,8 +3,10 @@ automodule
 bysource
 docformat
 docstrings
+genindex
 intersphinx
 maxdepth
+modindex
 numpydoc
 pydata
 pylance

@@ -1,5 +1,4 @@
 # Words used in the experiment
-BAGUR
 D_CLK
 D_POST
 D_PRE
@@ -8,6 +7,7 @@ D_SHOCK
 D_STIM
 D_WARN
 DPEG
+exptevents
 firingrates
 frates
 Morbier
@@ -15,16 +15,15 @@ mtcdb
 nspikes
 ntpts
 ntrials
-Perceptifs
 Perigenual
 Prelimbic
 preprocess
+PSTH
 rawspktimes
 recnum
-SAMPL
+sampl
 smpl
 Stim
-Systemes
 t_bin
 T_SHOCK
 Telesto

@@ -5,6 +5,7 @@ allclose
 arange
 argvalues
 astype
+classmethod
 conftest
 dataframe
 deepcopy
@@ -23,6 +24,7 @@ newaxis
 npt.NDArray
 Numpy
 pathlib
+pylintrc
 pyproject
 pytest
 repr

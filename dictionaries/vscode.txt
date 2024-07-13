@@ -5,10 +5,12 @@ hbenl
 leonhard
 lextudio
 littlefoxteam
+mhutchie
 miniconda
 mypy
 pycache
 pylint
+rcfile
 snekvik
 swyddfa
 trond
