@@ -25,6 +25,8 @@ See Also
 --------
 test_mtcdb: Tests for the whole package.
 """
+# pylint: disable=unused-variable
+# pylint: disable=unused-wildcard-import
 __author__ = "Esther Poniatowski"
 __maintainer__ = "Esther Poniatowski"
 __credits__ = [

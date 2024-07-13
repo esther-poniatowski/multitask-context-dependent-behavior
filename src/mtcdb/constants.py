@@ -16,11 +16,6 @@ Access a constant in another module:
         from mtcdb.constants import CONSTANT_NAME
 """
 
-# --- Paths ---
-
-PATH_DATA_ROOT: str = ".../data/"
-"""Path to the data directory."""
-
 # --- Time and Durations ---
 
 T_BIN: float = 50e-3
@@ -70,5 +65,3 @@ T_OFF = 1.35
 
 T_SHOCK = 1.75
 """Time of shock onset (in seconds) in the pre-processed time courses."""
-
-test_black = [1, 2, 3, 4]

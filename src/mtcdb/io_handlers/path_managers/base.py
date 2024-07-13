@@ -30,7 +30,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Union, Optional
 
-from mtcdb.constants import PATH_DATA_ROOT
+from mtcdb.constants import PATH_DATA
 
 
 class PathManager(ABC):
@@ -39,7 +39,7 @@ class PathManager(ABC):
 
     Attributes
     ----------
-    path_root: str or Path, default=PATH_DATA_ROOT
+    path_root: str or Path, default=PATH_DATA
         Root directory for the data files.
 
     Methods
@@ -48,12 +48,13 @@ class PathManager(ABC):
     :meth:`check_dir` (static)
     :meth:`create_dir` (static)
     :meth:`display_tree`
-    
+
     See Also
     --------
-    :obj:`mtcdb.constants.PATH_DATA_ROOT`: Default root directory for the data files.
+    :obj:`mtcdb.constants.PATH_DATA`: Default root directory for the data files.
     """
-    def __init__(self, path_root: Union[str, Path] = PATH_DATA_ROOT):
+
+    def __init__(self, path_root: Union[str, Path] = PATH_DATA):
         path_root = Path(path_root)
         self.check_dir(path_root, raise_error=True)
         self.path_root = path_root
@@ -73,7 +74,7 @@ class PathManager(ABC):
     def check_dir(path: Union[str, Path], raise_error: bool = False) -> bool:
         """
         Ensure the existence of a directory exists.
-        
+
         Parameters
         ----------
         path: str or Path
@@ -85,7 +86,7 @@ class PathManager(ABC):
         -------
         bool
             True if the directory exists, False otherwise.
-        
+
         Raises
         ------
         FileNotFoundError
@@ -112,10 +113,10 @@ class PathManager(ABC):
         ----------
         path: str or Path
             Path to a directory to create.
-        
+
         See Also
         --------
-        :func:`pathlib.mkdir`: Create a directory. 
+        :func:`pathlib.mkdir`: Create a directory.
             Parameter `parents` : Create parent directories if needed.
             Parameter `exist_ok` : If the directory already exists, nothing is done.
         """
@@ -128,11 +129,9 @@ class PathManager(ABC):
             print(f"Pre-existing directory: {path}")
         return path
 
-    def display_tree(self,
-                    path: Optional[Union[str, Path]] = None,
-                    level: int = 0,
-                    limit: int = 5
-                    ) -> None:
+    def display_tree(
+        self, path: Optional[Union[str, Path]] = None, level: int = 0, limit: int = 5
+    ) -> None:
         """
         Display the tree structure of a directory.
 
@@ -147,11 +146,11 @@ class PathManager(ABC):
 
         Implementation
         --------------
-        Display the name of each file or subdirectory in the currently traversed directory, 
+        Display the name of each file or subdirectory in the currently traversed directory,
         with an indentation level depending on its depth in the hierarchy.
-        If a directory contains more items than the specified limit, 
+        If a directory contains more items than the specified limit,
         show an ellipsis (`...`) to indicate the presence of more items.
-        Call the method recursively on sub-directories until reaching 
+        Call the method recursively on sub-directories until reaching
         the end of the directory hierarchy (i.e when encountering a directory
         that contains no subdirectories or files).
         """
@@ -162,8 +161,8 @@ class PathManager(ABC):
         items = list(path.iterdir())
         display_items = items[:limit]
         for item in display_items:
-            print('    ' * level + '|-- ' + item.name)
+            print("    " * level + "|-- " + item.name)
             if item.is_dir():
                 self.display_tree(item, level + 1, limit)
         if len(items) > limit:
-            print('    ' * level + '|-- ...')
+            print("    " * level + "|-- ...")
