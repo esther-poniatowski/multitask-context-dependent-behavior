@@ -1,7 +1,7 @@
 .. Multi-Task Context-Dependent Behavior - Documentation Master File
 
 Multi-Task Context-Dependent Behavior - Documentation
-=====================================================  
+=====================================================
 
 .. toctree::
    :maxdepth: 2
@@ -27,6 +27,14 @@ Multi-Task Context-Dependent Behavior - Documentation
    code/usage
    code/index
    code/test_report
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Data Recovery Protocol
+
+   data_recovery/transfer
+   data_recovery/extract_spikes
 
 
 Indices and Tables
