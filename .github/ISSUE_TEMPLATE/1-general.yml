@@ -1,18 +1,12 @@
 # ISSUE TEMPLATE
 
 name: Issue Template
-description: General template for new issues.
+description: General template for new issues
 title: "[Issue] - "
 labels: ["feat"]
-assignees:
-  - esther-poniatowski
+projects: ["esther-poniatowski/mtcdb-track"]
+assignees: esther-poniatowski
 body:
-  - type: markdown
-    attributes:
-      value: |
-        ## Goal
-        Brief statement of the goal.
-
   - type: textarea
     id: goal
     attributes:
@@ -21,40 +15,6 @@ body:
       placeholder: ...
     validations:
       required: true
-
-  - type: textarea
-    id: milestone
-    attributes:
-      label: Milestone
-      description: Link to the milestone.
-      placeholder: https://github.com/username/repository/milestone/1
-
-  - type: dropdown
-    id: status
-    attributes:
-      label: Status
-      options:
-        - To Do
-        - In Progress
-        - Done
-
-  - type: dropdown
-    id: priority
-    attributes:
-      label: Priority
-      options:
-        - High
-        - Medium
-        - Low
-
-  - type: dropdown
-    id: complexity
-    attributes:
-      label: Complexity
-      options:
-        - High
-        - Medium
-        - Low
 
   - type: textarea
     id: background
@@ -67,43 +27,31 @@ body:
     id: acceptance_criteria
     attributes:
       label: Acceptance Criteria
-      description: List criteria for achieving this goal.
       placeholder: |
-        - [ ]
+        -
 
   - type: textarea
     id: tasks
     attributes:
       label: Tasks
-      description: List steps and sub-steps for implementation.
       placeholder: |
         1.
-           - [ ]
 
   - type: textarea
     id: dependencies
     attributes:
       label: Dependencies
-      description: List related issues using GitHub keywords.
       placeholder: |
-	      - Related to #34 (parent issue)
-	      - See #56
-
-  - type: textarea
-    id: associated_branch
-    attributes:
-      label: Associated Branch
-      description: Link to the branch.
-      placeholder: https://github.com/username/repository/tree/branch-name
+	      - Related to
 
   - type: textarea
     id: related_files
     attributes:
       label: Related Files
-      description: List related files or lines of code.
       placeholder: |
-        - File [file-name](https://github.com/username/repository/main/file.txt)
-        - Function [function-name](https://github.com/user/repository/blob/main/src/main.py#L10-L20)
+        - Branch (URL)
+        - File (URL)
+        - Code (URL)
 
   - type: textarea
     id: notes
