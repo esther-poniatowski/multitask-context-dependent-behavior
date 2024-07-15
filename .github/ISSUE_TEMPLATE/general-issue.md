@@ -21,13 +21,8 @@ assignees: esther-poniatowski
 ## Dependencies
 - Related to #(parent issue)
 
-## Associated branch
-[branch-name](URL)
-
-## Dependencies
-- Related to #
-
 ## Related Files
+- Branch [branch-name](URL)
 - File [file-name](URL)
 
 ## Notes
