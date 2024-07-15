@@ -33,8 +33,7 @@ body:
       label: Tasks
       description: Sub-tasks or implementation steps
       value: |
-        1.
-          - [ ]
+        - [ ]
 
   - type: textarea
     id: dependencies
@@ -52,11 +51,11 @@ body:
       label: Cross-References
       description: Links to related branch, files, code lines...
       value: |
-        - Branch (
+        - [](url)
       placeholder: |
-        - Branch (https://github.com/username/repository/tree/branch-name)
-        - File (https://github.com/username/repository/main/file.txt)
-        - Code (https://github.com/user/repository/blob/main/src/main.py#L10-L20)
+        - [Branch](https://github.com/username/repository/tree/branch-name)
+        - [File](https://github.com/username/repository/main/file.txt)
+        - [Code](https://github.com/user/repository/blob/main/src/main.py#L10-L20)
 
   - type: textarea
     id: notes
