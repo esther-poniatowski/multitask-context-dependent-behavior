@@ -23,7 +23,7 @@ body:
     id: acceptance_criteria
     attributes:
       label: Acceptance Criteria
-      descriptions: Requirements to achieve this goal
+      description: Requirements to achieve this goal
       value: |
         - [ ]
 
