@@ -5,6 +5,7 @@ allclose
 arange
 argvalues
 astype
+bincount
 classmethod
 conftest
 dataframe
