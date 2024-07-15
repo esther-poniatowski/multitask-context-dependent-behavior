@@ -11,51 +11,55 @@ body:
     id: goal
     attributes:
       label: Goal
-      description: Brief statement of the goal.
-      placeholder: ...
-    validations:
-      required: true
+      description: Brief statement of the goal
 
   - type: textarea
     id: background
     attributes:
       label: Background
-      description: Context or reason for this feature/fix.
-      placeholder: ...
+      description: Context or reason for this feature/fix
 
   - type: textarea
     id: acceptance_criteria
     attributes:
       label: Acceptance Criteria
-      placeholder: |
-        -
+      descriptions: Requirements to achieve this goal
+      value: |
+        - [ ]
 
   - type: textarea
     id: tasks
     attributes:
       label: Tasks
-      placeholder: |
+      description: Sub-tasks or implementation steps
+      value: |
         1.
+          - [ ]
 
   - type: textarea
     id: dependencies
     attributes:
       label: Dependencies
+      description: Links to related issues or PRs
+      value: |
+        - Related to #
       placeholder: |
-        - Related to
+        - Related to #<issue_number>
 
   - type: textarea
     id: related_files
     attributes:
-      label: Related Files
+      label: Cross-References
+      description: Links to related branch, files, code lines...
+      value: |
+        - Branch (
       placeholder: |
-        - Branch (URL)
-        - File (URL)
-        - Code (URL)
+        - Branch (https://github.com/username/repository/tree/branch-name)
+        - File (https://github.com/username/repository/main/file.txt)
+        - Code (https://github.com/user/repository/blob/main/src/main.py#L10-L20)
 
   - type: textarea
     id: notes
     attributes:
       label: Notes
       description: Any additional information or considerations.
-      placeholder: ...
