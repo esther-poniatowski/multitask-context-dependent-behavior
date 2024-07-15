@@ -1,14 +1,16 @@
-# Feature Name: <feature-name>
+# Feature Name: `hierarchical-bootstrap`
 
 ## Issues
-- Main issue: [#ID](https://github.com/my-repo/issues/ID)
-- Sub-Issue:  [#ID](https://github.com/my-repo/issues/ID)
+- Main issue: #48
+- Sub-Issue:  #55
 
 ## Current Status
-Currently working on: ...
+Currently working on:
+- Determining pseudo-trial number
+- Main function
 
 ## Notes
-- Important decision
+
 
 ## Open Questions
-- Question ?
+Turn those functions into a builder ?
