@@ -1,14 +1,13 @@
-# Feature Name: <feature-name>
+# Feature Name: ``
 
 ## Issues
-- Main issue: [#ID](https://github.com/my-repo/issues/ID)
-- Sub-Issue:  [#ID](https://github.com/my-repo/issues/ID)
+- Main issue: #
+- Sub-Issue:  #
 
 ## Current Status
-Currently working on: ...
+Currently working on:
 
 ## Notes
-- Important decision
+
 
 ## Open Questions
-- Question ?
