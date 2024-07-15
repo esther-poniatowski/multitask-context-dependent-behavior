@@ -42,7 +42,7 @@ body:
     attributes:
       label: Dependencies
       placeholder: |
-      - Related to
+        - Related to
 
   - type: textarea
     id: related_files
