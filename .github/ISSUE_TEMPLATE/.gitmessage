@@ -1,0 +1,13 @@
+pref(): Title
+###################################################
+
+######################################################################
+
+# BREAKING CHANGES: (indentation: 2 spaces)
+
+# Related to: #ID
+# Fixes: #ID
+# Closes: PR#ID
+
+Signed-off-by: Esther Poniatowski <eponiatowski@clipper.ens.psl.eu>
+# Co-authored-by:
