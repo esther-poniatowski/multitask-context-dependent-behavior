@@ -65,3 +65,8 @@ T_OFF = 1.35
 
 T_SHOCK = 1.75
 """Time of shock onset (in seconds) in the pre-processed time courses."""
+
+
+# --- Paths ---
+
+PATH_DATA: str = "data"  # FIXME: Use an environment variable
