@@ -15,6 +15,9 @@
 		"editor.lineNumbers": "on",
 		"editor.rulers": [100],
 		"editor.wordWrap": "off",
+		"rewrap.wrappingColumn": 100,
+		"rewrap.wholeComment": true,
+		"rewrap.autoWrap.enabled": true,
 
 		// Hide from the File Explorer
 		"files.exclude": {
