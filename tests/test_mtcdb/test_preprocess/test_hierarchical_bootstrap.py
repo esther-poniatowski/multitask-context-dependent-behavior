@@ -13,7 +13,10 @@ import numpy.typing as npt
 from numpy.testing import assert_array_almost_equal as assert_array_eq
 import pytest
 
-from mtcdb.preprocess.hierarchical_bootstrap import determine_pseudo_trial_number, pick_trials
+from mtcdb.preprocess.hierarchical_bootstrap import (
+    pick_trials,
+    hierarchical_bootstrap,
+)
 
 
 def test_pick_trials_equal():
@@ -66,7 +69,7 @@ def test_pick_trials_greater():
     expected_0 = n - n_pseudo
     actual = pick_trials(n, n_pseudo)
     counts = np.bincount(actual)
-    # Count the number of 1 and O in `counts``
+    # Count the number of 1 and O in `counts`
     nb_1 = np.count_nonzero(counts == 1)
     nb_0 = np.count_nonzero(counts == 0)
     assert nb_1 == expected_1, f"Expected {expected_1}, Got {nb_1}"
@@ -101,3 +104,33 @@ def test_pick_trials_smaller():
     nb_q_plus_1 = np.count_nonzero(counts == q + 1)
     assert nb_q == expected_q, f"Expected {expected_q}, Got {nb_q}"
     assert nb_q_plus_1 == expected_q_plus_1, f"Expected {expected_q_plus_1}, Got {nb_q_plus_1}"
+
+
+def test_hierarchical_bootstrap():
+    """
+    Tests for :func:`hierarchical_bootstrap`.
+
+    Test Inputs
+    -----------
+    counts = np.array([3, 4, 5, 6, 7])
+    alpha = 0.5
+    n_pseudo_min = 4
+
+    Expected Outputs
+    ----------------
+    Number of trials to generate:
+    n_pseudo = mean(min+max) = (3+7)/2 = 5 > n_pseudo_min
+    n_units = 5
+    """
+    n_min, n_max = 3, 7
+    n_pseudo_min = 4
+    alpha = 0.5
+    expected_n = 5
+    counts = np.arange(n_min, n_max + 1)  # uniform from `n_min` to `n_max`
+    n_units = len(counts)
+    expected_shape = (n_units, expected_n)
+    actual = hierarchical_bootstrap(counts, n_pseudo_min, alpha)
+    assert actual.shape[0] == n_units, f"Expected {n_units} units, Got {actual.shape[0]}"
+    assert actual.shape[1] == expected_n, f"Expected {expected_n} trials, Got {actual.shape[1]}"
+    assert actual.shape == expected_shape, f"Expected shape {expected_shape}, Got {actual.shape}"
+    assert np.all(actual < counts[:, None]), f"Items out of bounds"
