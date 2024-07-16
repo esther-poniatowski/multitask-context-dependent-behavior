@@ -5,12 +5,9 @@
 - Sub-Issue:  #55
 
 ## Current Status
-Currently working on:
-- Determining pseudo-trial number
-- Main function
+Pending, waiting to determine if converting the functions into a builder is the best approach.
 
 ## Notes
 
 
 ## Open Questions
-Turn those functions into a builder ?
