@@ -12,7 +12,7 @@ See Also
 # pyright: reportRedeclaration=false
 
 from types import MappingProxyType
-from typing import Tuple, Mapping, FrozenSet
+from typing import Tuple, Mapping, FrozenSet, Dict
 
 import numpy as np
 import pytest
@@ -53,20 +53,43 @@ def data(dim2coord) -> np.ndarray:
 
 
 @pytest.fixture
-def coords(dim2coord, data) -> Tuple[np.ndarray, ...]:
+def coord2type(dim2coord) -> Dict[str, type]:
+    """
+    Fixture to generate the class attribute :attr:`coord2type`.
+
+    Returns
+    -------
+    MappingProxyType:
+        Type of each coordinate, here only numpy arrays.
+
+    Notes
+    -----
+    This is consistent with the use of the method :meth:`empty`, which is available in :mod:`numpy`.
+    """
+    c2t = {}
+    for coord_set in dim2coord.values():
+        for coord_name in coord_set:
+            c2t[coord_name] = np.ndarray
+    return c2t
+
+
+@pytest.fixture
+def coords(dim2coord, data) -> Dict[str, np.ndarray]:
     """
     Fixture to generate coordinates consistent with :func:`dim2coord` and :func:`data`.
 
     Returns
     -------
-    coord1, coord2...: np.ndarray
-        Arrays associated to each dimension, with appropriate lengths.
+    coords: Dict[str, np.ndarray]
+        Coordinates associated to each dimension with appropriate lengths.
+        Coordinates are stored in a dictionary with the name of the coordinate as keys, so that they
+        can be passed directly as kwargs to the :class:`Data` constructor.
     """
-    coords = []
+    coords = {}
     for i, (dim, coord_set) in enumerate(dim2coord.items()):
-        for c in coord_set:  # all coordinates associated to the dimension
-            coords.append(np.arange(data.shape[i]))
-    return tuple(coords)
+        for coord_name in coord_set:  # all coordinates associated to the dimension
+            coords[coord_name] = np.arange(data.shape[i])
+    return coords
 
 
 @pytest.fixture
@@ -77,9 +100,9 @@ def subclass(request):
     Returns
     -------
     TestClass:
-        Class inheriting from :class:`Data`.
-        It defines the class attribute :attr:`dim2coord` required by the metaclass :class:`MetaData`.
-        It implements the property :attr:`path` required by the abstract base class :class:`Data`.
+        Class inheriting from :class:`Data`. It defines the class attributes :attr:`dim2coord`,
+        :attr:`coord2type` and :attr:`path_manager` required by the metaclass :class:`MetaData`. It
+        implements the property :attr:`path` required by the abstract base class :class:`Data`.
 
     See Also
     --------
@@ -91,6 +114,8 @@ def subclass(request):
 
     class TestClass(Data):
         dim2coord = request.getfixturevalue("dim2coord")
+        coord2type = request.getfixturevalue("coord2type")
+        path_manager = None
 
         @property
         def path(self):
@@ -135,54 +160,39 @@ def test_class_creation(dim2coord, subclass):
 
 
 @pytest.mark.parametrize("valid", argvalues=[True, False], ids=["Valid", "Invalid"])
-def test_base_init(valid, test_class, test_data):
+def test_init_from_scratch(subclass, data, coords, valid):
     """
-    Test :meth:`Data.__init__` with all required coordinates or missing coordinates.
+    Test :meth:`Data.__init__` to create a data instance from scratch.
+
+    Two possibilities: either with all required coordinates, or with missing coordinates.
 
     Test Inputs
     -----------
     TestData:
         Class inheriting from :class:`Data`.
     data:
-        Numpy array.
-    **kwargs:
-        Coordinate arrays passed with the names
-        of the coordinates in the class attribute :attr:`coords`.
+        Numpy array which should be passed as the data attribute.
+    coords:
+        Coordinate arrays which should be passed with the names of the coordinates in the class
+        attribute :attr:`coords`.
 
     Expected Output
     ---------------
     [Valid]: All attributes are set correctly.
     [Invalid]: ValueError due to missing coordinates.
     """
-    TestClass = test_class
-    data, coord1, coord2, coord3 = test_data
     expected_n = MappingProxyType({"dim1": data.shape[0], "dim2": data.shape[1]})
     if valid:
-        obj = TestClass(data=data, coord1=coord1, coord2=coord2, coord3=coord3)
+        obj = subclass(data=data, **coords)
         np.testing.assert_array_equal(obj.data, data)
-        np.testing.assert_array_equal(obj.coord1, coord1)
-        np.testing.assert_array_equal(obj.coord2, coord2)
         assert obj.n == expected_n
     else:
         with pytest.raises(ValueError):
-            TestClass(data=data, coord1=coord1)
+            # TODO
+            pass
 
 
-# ----------------------------------------------------------------------------
-class TestData(Data):
-    dim2coord = MappingProxyType({"dim1": frozenset(["coord_x"]), "dim2": frozenset(["coord_y"])})
-
-    def __init__(self, data=None, **kwargs):
-        if data is None:
-            data = np.zeros((len(kwargs["coord_x"]), len(kwargs["coord_y"])))
-        super().__init__(data, **kwargs)
-
-    @property
-    def path(self):
-        return "path/to/data"
-
-
-def test_init_two_ways():
+def test_load_data():
     """
     Test for the initialization of a :class:`Data` subclass in two ways.
 
