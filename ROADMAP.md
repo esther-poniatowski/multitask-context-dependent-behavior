@@ -1,4 +1,4 @@
-# Feature Name: ``
+# Feature Name: `recover-licks`
 
 ## Issues
 - Main issue: #36
