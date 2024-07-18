@@ -21,20 +21,20 @@ Each coordinate object encapsulates :
 - Specific metadata describing the unique properties of the coordinate instance
 - Methods relevant to manipulate the coordinate labels
 
-**Creating Coordinate**
+**Creating Coordinates**
 
-A coordinate object can be obtained via two pathways :
+A coordinate object can be obtained via several pathways :
 
-+-----------+--------------------------------------+--------------------------------------+
-|           | Generating basic labels              | Injecting pre-computed labels        |
-+===========+======================================+======================================+
-| Approach  | ``Coordinate.create(...)``           | ``Coordinate(values, ...)``          |
-|           | with minimal arguments               | with both values and arguments       |
-+-----------+--------------------------------------+--------------------------------------+
-| Use Cases | In tests, to get ready-to-use        | In processing pipelines, to build    |
-|           | coordinate objects                   | complex composite coordinates for    |
-|           |                                      | specific data sets                   |
-+-----------+--------------------------------------+--------------------------------------+
++----------+----------------------------+----------------------------+-----------------------------+
+|          | Creating empty coordinates | Generating basic labels    | Injecting custom labels     |
++==========+============================+============================+=============================+
+| Approach | ``Coordinate.empty()``     | ``Coordinate.create()``    | ``Coordinate(values, ...)`` |
+|          | with no arguments          | with minimal arguments     | with values and arguments   |
++----------+----------------------------+----------------------------+-----------------------------+
+| Use      | In empty data structures,  | In tests, to get           | In processing pipelines, to |
+| Cases    | to initialize placeholders | ready-to-use               | build composite coordinates |
+|          | of the appropriate type    | coordinate objects         | adapted to specific data    |
++----------+----------------------------+----------------------------+-----------------------------+
 
 
 Modules
@@ -66,8 +66,12 @@ To be valid, each coordinate subclass must perform the following steps:
 Implement a Custom Constructor
 ...............................
 
-- Admit an argument ``values`` and pass it to the base constructor
-- Set additional attributes (if needed) to store metadata along with the coordinate labels.
+- Admit an argument ``values`` in first position (after ``self``) and pass it to the base
+  constructor.
+- Set class-specific attributes (if needed) to store metadata along with the coordinate labels. Any
+  additional parameter should be assigned a *default value* in the constructor signature. This is
+  necessary because the method :meth:`empty` defined in the *base class* calls the *subclass*
+  constructor, but remains agnostic to any subclass-specific extra parameter.
 
 Comply with the Interface
 .........................

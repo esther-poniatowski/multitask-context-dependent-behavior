@@ -92,9 +92,7 @@ class CoordPosition(Coordinate, Generic[P]):
         return {pos: np.sum(self.values == pos) for pos in np.unique(self.values)}
 
     @staticmethod
-    def build_labels(
-        n_smpl: int, pos: P
-    ) -> npt.NDArray[np.int64]:  # pylint: disable=arguments-differ
+    def build_labels(n_smpl: int, pos: P) -> npt.NDArray[np.int64]:
         """
         Build basic labels filled with a *single* position.
 
