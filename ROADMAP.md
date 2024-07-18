@@ -1,11 +1,11 @@
 # Feature Name: ``
 
 ## Issues
-- Main issue: #
+- Main issue: #36
 - Sub-Issue:  #
 
 ## Current Status
-Currently working on:
+Create a script for extracting lick histograms in the server.
 
 ## Notes
 
