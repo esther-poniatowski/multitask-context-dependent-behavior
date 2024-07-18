@@ -3,7 +3,7 @@
 """
 :mod:`mtcdb.coordinates.time` [module]
 
-Coordinate for labelling time points.
+Coordinate for labelling time stamps at which measurements were performed.
 
 Classes
 -------
@@ -22,18 +22,17 @@ from mtcdb.constants import T_ON, T_OFF, T_SHOCK
 
 class CoordTime(Coordinate):
     """
-    Coordinate labels for times at which measurements were performed.
+    Coordinate labels for time stamps at which measurements were performed.
 
     Attributes
     ----------
     values: npt.NDArray[np.float64]
-        Time coordinate.
-        Homogeneous sequence of time points (in seconds),
-        starting from 0 and incremented by the time bin.
-        Shape : ``(n_smpl,)`` with ``n_smpl`` the number of time points.
+        Time labels (in seconds).
+        Homogeneous sequence starting from 0 and incremented by the time bin.
+        Shape : ``(n_smpl,)`` with ``n_smpl`` the number of time stamps.
     t_bin: Optional[float]
-        Time bin of the coordinate (in seconds).
-        None if the time points are not uniformly spaced.
+        Time bin of the sampling (in seconds).
+        None if the time stamps are not uniformly spaced.
     t_on: float
         Time of stimulus onset (in seconds).
     t_off: float
@@ -49,11 +48,14 @@ class CoordTime(Coordinate):
     --------
     :class:`mtcdb.coordinates.base.Coordinate`
     """
-    def __init__(self,
-                 values: npt.NDArray[np.float64],
-                 t_on: float = T_ON,
-                 t_off: float = T_OFF,
-                 t_shock: float = T_SHOCK):
+
+    def __init__(
+        self,
+        values: npt.NDArray[np.float64],
+        t_on: float = T_ON,
+        t_off: float = T_OFF,
+        t_shock: float = T_SHOCK,
+    ):
         super().__init__(values=values)
         self.set_t_bin()
         self.t_on = t_on
@@ -66,14 +68,14 @@ class CoordTime(Coordinate):
     def set_t_bin(self):
         """
         Recover the time bin from the coordinate values.
-        
+
         Raises
         ------
         UserWarning
             If the time points are not uniformly spaced.
             No time bin can be computed.
         """
-        diffs = np.diff(self.values) # shape : (n_smpl - 1,)
+        diffs = np.diff(self.values)  # shape : (n_smpl - 1,)
         if np.allclose(diffs, diffs[0]):
             self.t_bin = diffs[0]
         else:
@@ -81,13 +83,14 @@ class CoordTime(Coordinate):
             self.t_bin = None
 
     @staticmethod
-    def build_labels(n_smpl: Optional[int] = None, # pylint: disable=arguments-differ
-                     t_bin: Optional[float] = None,
-                     t_min: float = 0,
-                     t_max: Optional[float] = None
-                     ) -> npt.NDArray[np.float64]:
+    def build_labels(
+        n_smpl: Optional[int] = None,  # pylint: disable=arguments-differ
+        t_bin: Optional[float] = None,
+        t_min: float = 0,
+        t_max: Optional[float] = None,
+    ) -> npt.NDArray[np.float64]:
         """
-        Build a time coordinate from scratch.
+        Build basic time labels from minimal parameters.
 
         Parameters
         ----------
@@ -101,21 +104,21 @@ class CoordTime(Coordinate):
         Returns
         -------
         values: npt.NDArray[np.float64]
-            Time points coordinate.
+            Time labels.
 
         Notes
         -----
-        Regardless of the provided parameters, the generated sequence of time points 
-        is always uniformly spaced and starts at ``t_min``. 
+        Regardless of the provided parameters, the generated sequence of time points
+        is always uniformly spaced and starts at ``t_min``.
         Different combinations of parameters allow to specify various creation constraints :
 
-        - ``n_smpl``, ``t_bin``, (``t_min``) : 
+        - ``n_smpl``, ``t_bin``, (``t_min``) :
            -> ``n_smpl`` time points incremented by ``t_bin``.
         - ``n_smpl``, ``t_max``, (``t_min``) :
            -> ``n_smpl`` time points between ``t_min`` and ``t_max``.
         - ``t_bin``, ``t_max``, (``t_min``) :
            -> ``(t_max - t_min)/t_bin`` time points between ``t_min`` and ``t_max``.
-        
+
         Implementation
         --------------
         To ensure the consistency of the time coordinate across methods,
@@ -127,7 +130,7 @@ class CoordTime(Coordinate):
         but the closest multiple of ``t_bin`` below ``t_max``.
         """
         if n_smpl is not None and t_bin is not None and t_max is None:
-            pass # no need to adjust the parameters
+            pass  # no need to adjust the parameters
         elif n_smpl is not None and t_max is not None and t_bin is None:
             t_bin = (t_max - t_min) / n_smpl
         elif t_bin is not None and t_max is not None and n_smpl is None:
