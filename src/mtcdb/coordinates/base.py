@@ -41,8 +41,9 @@ class Coordinate(ABC):
     :meth:`__eq__`
     :meth:`copy`
     :meth:`__getitem__`
-    :meth:`build_labels` (classmethod, abstract)
-    :meth:`create` (classmethod)
+    :meth:`build_labels` (abstract classmethod)
+    :meth:`create`       (classmethod)
+    :meth:`empty`        (classmethod)
 
     Notes
     -----
@@ -175,3 +176,15 @@ class Coordinate(ABC):
         init_args = filter_kwargs(cls.__init__, **kwargs)
         values = cls.build_labels(**build_args)
         return cls(values=values, **init_args)
+
+    @classmethod
+    def empty(cls: Type[C]) -> C:
+        """
+        Create an empty coordinate object with no labels.
+
+        Returns
+        -------
+        Coordinate
+            Instance of the subclass with an empty array as labels.
+        """
+        return cls(values=np.empty(0))

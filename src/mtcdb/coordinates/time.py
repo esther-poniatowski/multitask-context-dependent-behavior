@@ -32,7 +32,7 @@ class CoordTime(Coordinate):
         Shape : ``(n_smpl,)`` with ``n_smpl`` the number of time stamps.
     t_bin: Optional[float]
         Time bin of the sampling (in seconds).
-        None if the time stamps are not uniformly spaced.
+        None if the time stamps are not uniformly spaced or if the coordinate is empty.
     t_on: float
         Time of stimulus onset (in seconds).
     t_off: float
@@ -73,14 +73,16 @@ class CoordTime(Coordinate):
         ------
         UserWarning
             If the time points are not uniformly spaced.
-            No time bin can be computed.
         """
-        diffs = np.diff(self.values)  # shape : (n_smpl - 1,)
-        if np.allclose(diffs, diffs[0]):
-            self.t_bin = diffs[0]
-        else:
-            warnings.warn("Time points not uniformly spaced.")
+        if len(self.values) < 2:  # at least two elements required for `diff`
             self.t_bin = None
+        else:
+            diffs = np.diff(self.values)  # shape : (n_smpl - 1,)
+            if np.allclose(diffs, diffs[0]):  # homogeneous sequence
+                self.t_bin = diffs[0]
+            else:
+                warnings.warn("Time points not uniformly spaced.")
+                self.t_bin = None
 
     @staticmethod
     def build_labels(
