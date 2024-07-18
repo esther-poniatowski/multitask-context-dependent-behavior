@@ -21,26 +21,25 @@ from mtcdb.core_objects.bio import CorticalDepth
 from mtcdb.core_objects.composites import Unit
 
 
-
-T = TypeVar('T', Unit, CorticalDepth)
+T = TypeVar("T", Unit, CorticalDepth)
 """Generic type variable for neuronal features."""
 
 
 class CoordPopulation(Coordinate, Generic[T]):
     """
-    Classes representing features in a neuronal population : 
-    Units, CorticalDepth.
+    Coordinate labels representing features in a neuronal population : Units, CorticalDepth.
 
     Class Attributes
     ----------------
     feature: Type[T]
-        Reference to the class of the neuronal feature object.
+        Subclass of :class:`CoreObject` corresponding to the type of feature which is represented by
+        the coordinate.
 
     Attributes
     ----------
     values: npt.NDArray[np.str_]
-        Feature labels for the population.
-        It contains the string values of the features.
+        Labels for the feature in one population. All the features are represented by string values,
+        matching the values of the corresponding feature objects.
 
     See Also
     --------
@@ -48,6 +47,7 @@ class CoordPopulation(Coordinate, Generic[T]):
     :class:`mtcdb.core_objects.bio.CorticalDepth`
     :class:`mtcdb.coordinates.base.Coordinate`
     """
+
     def __init__(self, values: npt.NDArray[np.str_]):
         super().__init__(values=values)
 
@@ -60,7 +60,7 @@ class CoordPopulation(Coordinate, Generic[T]):
         ----------
         pop : List[Any]
             List of objects to check.
-        
+
         Raises
         ------
         TypeError
@@ -77,31 +77,32 @@ class CoordUnit(CoordPopulation[Unit]):
     Attributes
     ----------
     values: npt.NDArray[np.str_]
-        Units identifiers (attribute ``id`` of the unit objects).
+        Units identifiers (attribute :attr:`id` of the unit objects).
 
     See Also
     --------
     :class:`mtcdb.core_objects.composites.Unit`
     :class:`mtcdb.coordinates.base.CoordPopulation`
     """
+
     def __init__(self, values: npt.NDArray[np.str_]):
         super().__init__(values=values)
 
     @classmethod
-    def build_labels(cls, units: Iterable[Unit]) -> npt.NDArray[np.str_]: # pylint: disable=arguments-differ
+    def build_labels(cls, units: Iterable[Unit]) -> npt.NDArray[np.str_]:
         """
-        Build coordinate labels from a list of units.
+        Build basic labels from a list of units.
 
         Parameters
         ----------
         units : Iterable[Unit]
             Units in the population.
-        
+
         Returns
         -------
         values: npt.NDArray[np.str_]
-            Coordinate for the id for each unit.
-        
+            Labels corresponding to the identifier of each unit.
+
         Raises
         ------
         TypeError
@@ -118,7 +119,7 @@ class CoordDepth(CoordPopulation[CorticalDepth]):
     Attributes
     ----------
     values: npt.NDArray[np.str_]
-        Depth in the cortex (attribute ``depth`` of the unit objects).
+        Depth in the cortex (attribute :attr:`Unit.depth` of the unit objects).
 
     Methods
     -------
@@ -130,23 +131,24 @@ class CoordDepth(CoordPopulation[CorticalDepth]):
     :class:`mtcdb.core_objects.bio.CorticalDepth`
     :class:`mtcdb.coordinates.coord_base.Coordinate`
     """
+
     def __init__(self, values: npt.NDArray[np.str_]):
         super().__init__(values=values)
 
     @classmethod
-    def build_labels(cls, units: Iterable[Unit]) -> npt.NDArray[np.str_]: # pylint: disable=arguments-differ
+    def build_labels(cls, units: Iterable[Unit]) -> npt.NDArray[np.str_]:
         """
-        Build coordinate labels from a list of units.
+        Build basic labels from a list of units.
 
         Parameters
         ----------
         units : Iterable[Unit]
             Units in the population.
-        
+
         Returns
         -------
         values: npt.NDArray[np.str_]
-            Coordinate for the cortical depth for each unit.
+            Labels for the cortical depth for each unit.
 
         Raises
         ------
@@ -164,7 +166,7 @@ class CoordDepth(CoordPopulation[CorticalDepth]):
         ----------
         depth: CorticalDepth
             Layer to select.
-        
+
         Returns
         -------
         mask: npt.NDArray[np.bool_]
@@ -176,7 +178,7 @@ class CoordDepth(CoordPopulation[CorticalDepth]):
     def count_by_lab(self) -> Dict[CorticalDepth, int]:
         """
         Count the number of units in each layer.
-        
+
         Returns
         -------
         counts: Dict[CorticalDepth, int]
