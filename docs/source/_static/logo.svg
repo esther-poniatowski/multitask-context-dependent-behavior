@@ -25,7 +25,7 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="1.1893044"
-     inkscape:cx="164.3818"
+     inkscape:cx="165.22263"
      inkscape:cy="198.85573"
      inkscape:window-width="1728"
      inkscape:window-height="969"
@@ -52,7 +52,10 @@
        id="path490-8"
        cy="42.773453"
        cx="39.639038"
-       r="11.26334" /><path
+       r="11.26334"
+       inkscape:export-filename="path490-8.png"
+       inkscape:export-xdpi="328.14908"
+       inkscape:export-ydpi="328.14908" /><path
        style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:0.14135;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:0;stroke-dasharray:none;stroke-opacity:1"
        d="m 38.742543,40.664225 -2.029196,1.432646 1.085961,-3.014815"
        id="path6546"
