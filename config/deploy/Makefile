@@ -1,27 +1,51 @@
-# Import passwords and IP addresses
-include .env
+# =================================================================================================
+# Makefile to deploy the relevant part of the project on the hub.
+#
+# Targets
+# -------
+# send-keys
+# 	Send SSH keys to the hub.
+# connect
+# 	Connect to the hub.
+#
+# Variables
+# ---------
+# ROOT
+# 	Root directory of the project. Set upon activating the conda environment of the project.
+# CREDENTIALS_DIR
+# 	Directory containing the credentials.
+# CREDENTIALS_ENV
+# 	Environment file containing the credentials. For the hub: `lspaud1.env`.
+#
+# Warning
+# -------
+# In a Makefile recipe, each line is run in a *separate* subshell.
+#
+# Notes
+# -----
+# The := operator is used to assign the value of a variable at the time of the declaration.
+#
+# See Also
+# --------
+# send_keys.sh
+# connect_with_keys.sh
+# =================================================================================================
 
-.PHONY: send-keys connect_biggerguy mount_volume connect_lsp send_codes_to_lsp send_codes_to_biggerguy generate_site_lists copy_site_lists
+CONFIG_DIR := $(ROOT)/config
+CREDENTIALS_DIR := $(CONFIG_DIR)/credentials
+CREDENTIALS_ENV := $(CREDENTIALS_DIR)/lspaud1.env
 
-# Directory containing the transfer codes
-ROOT_PATH := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-DIR_NAME := $(shell basename $(ROOT_PATH))
-
-help:
-	@echo "Makefile commands:"
-	@echo "
-
+.PHONY: send-keys
 send-keys:
-	ssh-copy-id $(USER_LSPAUD1)@$(IP_LSPAUD1); echo $(PASS_LSPAUD1)
-	ssh-copy-id $(USER_MARRSFREESTYLE)@$(IP_MARRSFREESTYLE); echo $(PASS_MARRSFREESTYLE)
+	$(CONFIG_DIR)/deploy/send_keys.sh $(CREDENTIALS_ENV)
 
-connect-lspaud1:
-	eval "$(ssh-agent -s)"
-	ssh-add $(PATH_KEY)
-	ssh -X $(USER_LSPAUD1)@$(IP_LSPAUD1)
+.PHONY: connect
+connect:
+	$(CONFIG_DIR)/deploy/connect_with_keys.sh $(CREDENTIALS_ENV)
 
-connect-marrsfreestyle:
-	ssh $(USER_MARRSFREESTYLE)@$(IP_MARRSFREESTYLE)
-
-mount-data4:
-	ssh $(USER_LSPAUD1)@$(IP_LSPAUD1) 'cd; sudo mount -t cifs -o username=$(USER_LSPAUD1),domain=LSPneuro_NAS1,rw,noperm,gid=$(USER_LSPAUD1),iocharset=utf8 //$(IP_DATA4)/data4 ~/data4; echo $(PASS_DATA4)'
+.PHONY: check-inclusion
+check-inclusion:
+	@echo "ROOT: $(ROOT)"
+	@echo "CONFIG_DIR: $(CONFIG_DIR)"
+	@echo "CREDENTIALS_DIR: $(CREDENTIALS_DIR)"
+	@echo "CREDENTIALS_ENV: $(CREDENTIALS_ENV)"
