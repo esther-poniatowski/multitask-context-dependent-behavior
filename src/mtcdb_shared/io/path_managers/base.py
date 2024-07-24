@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.io_handlers.path_manager_base` [module]
+:mod:`mtcdb_shared.io.path_manager_base` [module]
 
 Manage the file system paths centrally.
 

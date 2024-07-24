@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.io_handlers.savers` [subpackage]
+:mod:`mtcdb_shared.io.savers` [subpackage]
 
 Classes to save data to files.
 

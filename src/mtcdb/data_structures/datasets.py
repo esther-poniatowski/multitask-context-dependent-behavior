@@ -12,9 +12,9 @@ from typing import Tuple, Dict
 from typing import Type, TypeVar, Generic
 
 from mtcdb.constants import SMPL_RATE, T_BIN, D_PRE, D_POST, D_STIM, D_PRESHOCK, D_SHOCK, SMOOTH_WINDOW
-from mtcdb.io_handlers.path_managers.impl import PathManager, RawSpkTimesPath, SpikesTrainsPath
-from mtcdb.io_handlers.loaders.impl import LoaderPKL, LoaderNPY
-from mtcdb.io_handlers.savers.impl import SaverPKL
+from mtcdb_shared.io.path_managers.impl import PathManager, RawSpkTimesPath, SpikesTrainsPath
+from mtcdb_shared.io.loaders.impl import LoaderPKL, LoaderNPY
+from mtcdb_shared.io.savers.impl import SaverPKL
 
 
 T = TypeVar('T')
@@ -25,15 +25,15 @@ Type variable representing the type of raw data set in the generic Data class.
 class Data(ABC, Generic[T]):
     """
     Base class for data structures.
-    
+
     Class Attributes
     ----------------
     dims: Tuple[str]
-        Names of the dimensions. 
+        Names of the dimensions.
     coords: Dict[str, str]
         Repertoire of coordinates associated to each dimension.
         Keys: Dimension name.
-        Values: Coordinate name, i.e. attribute under which 
+        Values: Coordinate name, i.e. attribute under which
                 it is stored in the data structure.
     path_manager: Type[PathManager]
         Path manager class to build paths for data files.
@@ -44,7 +44,7 @@ class Data(ABC, Generic[T]):
         Loader class to load the data from files.
     tpe : Type, default='Data'
         Type of the loaded data (parameter of the loader).
-    
+
     Attributes
     ----------
     data: npt.NDArray
@@ -55,7 +55,7 @@ class Data(ABC, Generic[T]):
         such as transpositions (dimension permutation) or reshaping (dimension fusion).
         The name of an axis is determined by the corresponding dimension name :
         ``dims[axis]``
-        The axis of each dimension is determined by the order in the list : 
+        The axis of each dimension is determined by the order in the list :
         ``dims.index(name)``
     coord2dim: MappingProxyType[str, str]
         Mapping of the coordinates to the dimensions of the data.
@@ -68,7 +68,7 @@ class Data(ABC, Generic[T]):
         Number of elements along each dimension.
         Keys: Dimension names.
         Values: Number of elements.
-        
+
     Methods
     -------
     __init__
@@ -77,11 +77,11 @@ class Data(ABC, Generic[T]):
     path
     load
     save
-    
+
     Notes
     -----
     Several attributes are read-only to ensure the integrity of the data structure.
-    Those attributes are : 
+    Those attributes are :
     - data
     - dims
     - coord2dim
@@ -97,7 +97,7 @@ class Data(ABC, Generic[T]):
     --------
     Access the number of time points in data with a time dimension:
     >>> data.n['time']
-    
+
     See Also
     --------
     :meth:`npt.NDArray.setflags`
@@ -109,7 +109,7 @@ class Data(ABC, Generic[T]):
     saver: Type[Saver] = SaverPKL
     loader: Type[Loader] = LoaderPKL
     tpe : Type[T] = 'Data'
-    
+
     def __init__(self, data: npt.NDArray) -> None:
         self._data = data
         self._data.setflags(write=False)
@@ -121,13 +121,13 @@ class Data(ABC, Generic[T]):
     def data(self) -> npt.NDArray:
         """
         Read-only access to the actual data values to analyze.
-        
+
         Returns
         -------
         npt.NDArray
         """
         return self._data
-    
+
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}> Dims: {self.dims}\n Coords: {list(self.coords.values())}"
 
@@ -144,14 +144,14 @@ class Data(ABC, Generic[T]):
         :meth:`copy.deepcopy`
         """
         return copy.deepcopy(self)
-    
+
     @abstractmethod
     @property
     def path(self) -> Path:
         """
         Build the path to the file containing the data.
 
-        Overridden in data subclasses to provide the required arguments 
+        Overridden in data subclasses to provide the required arguments
         to the path manager from the attributes of the data structure.
 
         Returns
@@ -159,7 +159,7 @@ class Data(ABC, Generic[T]):
         Path
         """
         return self.path_manager.get_path()
-    
+
     def load(self) -> 'Data':
         """
         Retrieve data from a file.
@@ -168,7 +168,7 @@ class Data(ABC, Generic[T]):
         -----
         The raw data is recovered in the type specified by :obj:`tpe`.
         If needed, transform it in an instance of the data structure.
-        By default, with pickle, the data is directly recovered 
+        By default, with pickle, the data is directly recovered
         as an object corresponding to the data structure.
 
         Returns
@@ -178,7 +178,7 @@ class Data(ABC, Generic[T]):
         data = self.loader(self.path, self.tpe).load() # chain loader methods
         data = self.__class__(data) # call constructor
         return data
-    
+
     def save(self) -> None:
         """
         Save the data instance.
@@ -269,7 +269,7 @@ class RawSpkTimes(Data):
         Times are reset at 0 in each block.
     block: CoordBlock
         Coordinate for the sessions' block in which each spike occurred.
-        Ascending order, from 1 to the number of blocks in the session, 
+        Ascending order, from 1 to the number of blocks in the session,
         with contiguous duplicates (e.g. ``1111122223333...``).
     unit_id: str
         Unit's identifier.
@@ -308,25 +308,25 @@ class RawSpkTimes(Data):
         self.unit_id = unit_id
         self.session_id = session_id
         self.smpl_rate = smpl_rate
-    
+
     def __repr__(self) -> str:
         return f"Unit {self.unit_id}, Session {self.session_id}\n" + super().__repr__()
 
     @property
     def path(self) -> Path:
         return self.path_manager.get_path(self.unit_id, self.session_id)
-    
+
     def load(self) -> 'RawSpkTimes':
         """
         Retrieve data from a file.
 
         Notes
         -----
-        The raw data of one neuron in one session is stored in a 
+        The raw data of one neuron in one session is stored in a
         ``npt.NDArray`` of floats with shape ``(2, nspikes)``.
         ``raw[0]`` : Block of trials in which each spike occurred.
         ``raw[1]`` : Spiking times.
-        In this initial array, trial indices are stored under type ``float``, 
+        In this initial array, trial indices are stored under type ``float``,
         because of the constraint homogeneous types in numpy arrays.
         Here they are converted to integers.
 
@@ -343,7 +343,7 @@ class RawSpkTimes(Data):
     def n_blocks(self) -> int:
         """
         Number of blocks in the session.
-        
+
         Returns
         -------
         int
@@ -404,7 +404,7 @@ class SpikesTrains(Data):
     t_end: npt.NDArray[float]
         Time of the end of the trial, i.e. duration (in seconds).
         It might be longer than the time of the last spike.
-    
+
     Warning
     -------
     Each "trial" corresponds to one slot in one block in one recording session.
@@ -417,16 +417,16 @@ class SpikesTrains(Data):
     If the ith trial contains ``n_spk`` spikes, then the row ``data[i]`` associated to this trial has :
     - ``n_spk`` cells storing the spiking times (from index 0 to ``n_spk-1``)
     - ``n_spk_max - n_spk`` remaining cells filled with ``NaN``.
-    
+
     This data structure represents an intermediary step between :class:`RawSpkTimes` and :class:`FiringRates`.
     It centralizes information about spikes and trials to avoid repeating expensive computations.
     Indeed, most coordinates have to be built by parsing the raw ``expt_events`` files of the sessions.
 
     This data structure can be used for the following purposes :
-    - Visualizing raster plots before firing rate are computed.      
+    - Visualizing raster plots before firing rate are computed.
     - Selecting trials and units for the final analyses.
       To assess several criteria, additional processing is required on each separate trial.
-    
+
     New coordinates will be added to store the filtering metrics.
     """
     dims: Tuple[str] = ("time", "trial")
@@ -467,14 +467,14 @@ class FiringRatesUnit(Data):
     smooth_window: float
         Smoothing window size (in seconds).
     """
-    def __init__(self, 
-                 unit_id:str, 
-                 t_bin:float = T_BIN, 
-                 d_pre:float = D_PRE, 
+    def __init__(self,
+                 unit_id:str,
+                 t_bin:float = T_BIN,
+                 d_pre:float = D_PRE,
                  d_post:float = D_POST,
-                 d_stim:float = D_STIM, 
+                 d_stim:float = D_STIM,
                  d_pre_shock:float = D_PRESHOCK,
-                 d_shock:float = D_SHOCK, 
+                 d_shock:float = D_SHOCK,
                  smooth_window:float = SMOOTH_WINDOW):
         super().__init__(self.loader, self.saver, self.empty_shape)
         self.unit_id = unit_id
@@ -491,7 +491,7 @@ class FiringRatesUnit(Data):
         self.t_bin = t_bin
         self.t_max = self.n_tpts*t_bin
         self.smooth_window = smooth_window
-    
+
 
 class FiringRatesPop(Data):
     """
@@ -526,13 +526,13 @@ class FiringRatesPop(Data):
 
 
 The second decision is about the access to the coordinate objects from the data structure.
-Indeed, the user may want to access some attributes of the coordinate object directly via the data structure, 
+Indeed, the user may want to access some attributes of the coordinate object directly via the data structure,
 without having to call the coordinate object itself.
 
 The third decision is about the indexing of the data structure with the coordinate objects.
 I might want to implement a kind of "sel" method as in xarray,
 to select data along a specific coordinate.
-This method would return a new data structure with the selected data, 
+This method would return a new data structure with the selected data,
 and all its other attributes should be updated accordingly.
 
 '''

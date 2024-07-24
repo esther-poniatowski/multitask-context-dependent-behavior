@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.io_handlers.path_managers` [module]
+:mod:`mtcdb_shared.io.path_managers` [module]
 
 Implementations of path generation rules.
 
@@ -13,13 +13,13 @@ Classes
 
 See Also
 --------
-:class:`mtcdb.io_handlers.path_manager_base.PathManager` : Interface to manage file paths.
+:class:`mtcdb_shared.io.path_manager_base.PathManager` : Interface to manage file paths.
 """
 
 from pathlib import Path
 from typing import Union
 
-from mtcdb.io_handlers.path_managers.base import PathManager
+from mtcdb_shared.io.path_managers.base import PathManager
 
 
 class RawSpkTimesPath(PathManager):
@@ -30,7 +30,7 @@ class RawSpkTimesPath(PathManager):
 
         Parameters
         ----------
-        unit: str 
+        unit: str
         session: str
 
         Returns

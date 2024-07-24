@@ -14,7 +14,7 @@ Modules
 
 See Also
 --------
-:mod:`mtcdb.io_handlers`: Tested subpackage.
+:mod:`mtcdb_shared.io`: Tested subpackage.
 `tmp_path`: Fixture in pytest for temporary directories.
     Paths are represented as `pathlib.Path` objects.
 """

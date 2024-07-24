@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.io_handlers.path_managers` [subpackage]
+:mod:`mtcdb_shared.io.path_managers` [subpackage]
 
 Classes to define file path rules and generate paths.
 
@@ -21,6 +21,6 @@ Define a File Path
     session = 'avo052a04_p_PTD'
     pm = RawSpkTimesPath(path_root)
     path = pm.get_path(unit, session)
-    print(path)  
+    print(path)
     # Output: /path/to/data/directory/raw/avo052a-d1/avo052a04_p_PTD
 """

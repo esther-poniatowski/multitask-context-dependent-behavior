@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.io_handlers.test_savers_loaders_impl` [module]
+:mod:`test_mtcdb.io.test_savers_loaders_impl` [module]
 
 Notes
 -----
 Saver and Loader subclasses are tested together to ensure their consistent interaction.
-Contrary to the tests in :mod:`test_mtcdb.io_handlers.test_saver_base` 
-and :mod:`test_mtcdb.io_handlers.test_loader_base`, here the focus is on
+Contrary to the tests in :mod:`test_mtcdb.io.test_saver_base`
+and :mod:`test_mtcdb.io.test_loader_base`, here the focus is on
 the specific *content* of the data which is saved and loaded, rather than
 on general checks carried out in the base classes.
 
 Implementation
 --------------
-Although the saver can automatically set appropriate extensions, 
+Although the saver can automatically set appropriate extensions,
 here it is necessary to append paths with appropriate extensions
 in order to recover the data manually without redefining the path.
 
 See Also
 --------
-:mod:`mtcdb.io_handlers.savers.impl`: Tested module.
-:mod:`mtcdb.io_handlers.loaders.impl`: Tested module.
+:mod:`mtcdb_shared.io.savers.impl`: Tested module.
+:mod:`mtcdb_shared.io.loaders.impl`: Tested module.
 """
 
 import numpy as np
@@ -37,8 +37,8 @@ from test_mtcdb.test_io_handlers.test_data import ( # dummy data
     data_obj,
     expected_from_list,
 )
-from mtcdb.io_handlers.loaders.impl import LoaderCSV, LoaderNPY, LoaderPKL
-from mtcdb.io_handlers.savers.impl import SaverCSV, SaverNPY, SaverPKL
+from mtcdb_shared.io.loaders.impl import LoaderCSV, LoaderNPY, LoaderPKL
+from mtcdb_shared.io.savers.impl import SaverCSV, SaverNPY, SaverPKL
 
 @pytest.mark.parametrize("data, expected, tpe",
                          argvalues=[
@@ -100,7 +100,7 @@ def test_saver_loader_npy(tmp_path):
     -----------
     data : numpy.ndarray
         NumPy array with float values.
-    
+
     Expected Output
     ---------------
     data : numpy.ndarray

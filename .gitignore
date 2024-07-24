@@ -22,3 +22,8 @@ data/
 
 # Sphinx Builds
 docs/build
+
+.env*
+.flaskenv*
+!.env.project
+!.env.vault
