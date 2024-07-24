@@ -65,3 +65,11 @@ T_OFF = 1.35
 
 T_SHOCK = 1.75
 """Time of shock onset (in seconds) in the pre-processed time courses."""
+
+# --- Trials ---
+
+N_PSEUDO_MIN = 5
+"""Minimum number of pseudo-trials in a condition and fold."""
+
+ALPHA_BOOTSTRAP = 0.5
+"""Variability factor to adjust the number of pseudo-trials to generate."""
