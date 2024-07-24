@@ -18,7 +18,7 @@
 		// View Settings
 		"workbench.editor.closeEmptyGroups": false,
 		"workbench.editor.openSideBySideDirection": "right",
-		"workbench.editor.openPositioning": "left",
+		"workbench.editor.openPositioning": "last",
 
 		// General Editor Settings
 		"editor.lineNumbers": "on",
