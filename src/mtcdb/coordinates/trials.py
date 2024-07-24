@@ -21,22 +21,23 @@ from mtcdb.coordinates.base import Coordinate
 
 class CoordError(Coordinate):
     """
-    Coordinate labels for error trials in the data set.
+    Coordinate labels for error and success trials in the data set.
 
     Attributes
     ----------
     values: npt.NDArray[np.bool_]
-        Booleans indicating for each measurement whether it 
+        Booleans indicating for each measurement whether it
         occurred during an error trial (True) or correct trial (False).
-    
+
     Methods
     -------
-    count_by_lab
+    :meth:`count_by_lab`
 
     See Also
     --------
     :class:`mtcdb.coordinates.base.Coordinate`
     """
+
     def __init__(self, values: npt.NDArray[np.bool_]):
         super().__init__(values=values)
 
@@ -46,26 +47,26 @@ class CoordError(Coordinate):
         return f"<{self.__class__.__name__}>: {len(self)} samples, {format_counts}."
 
     @staticmethod
-    def build_labels(n_smpl: int) -> npt.NDArray[np.str_]: # pylint: disable=arguments-differ
+    def build_labels(n_smpl: int) -> npt.NDArray[np.str_]:
         """
-        Build coordinate filled with correct trials.
-        
+        Build basic labels filled with correct trials.
+
         Parameters
         ----------
         n_smpl: int
             Number of samples, i.e. of labels.
-        
+
         Returns
         -------
         values: npt.NDArray[np.bool_]
-            Coordinate filled with ``False``.
+            Labels filled with ``False``.
         """
         return np.full(n_smpl, False, dtype=np.bool_)
 
     def count_by_lab(self) -> Dict[bool, int]:
         """
         Count the number of samples for correct and error trials respectively.
-        
+
         Returns
         -------
         n_smpl: Dict[bool, int]
@@ -80,9 +81,9 @@ class CoordFold(Coordinate):
 
     Methods
     -------
-    count_by_lab
-    get_test
-    get_train
+    :meth:`count_by_lab`
+    :meth:`get_test`
+    :meth:`get_train`
 
     Attributes
     ----------
@@ -90,11 +91,18 @@ class CoordFold(Coordinate):
         Fold identifiers, starting from 0.
     k: int
         Number of folds.
-        It is computed from the unique values in the coordinate.
+
+    Notes
+    -----
+    The number of folds is computed from the unique values in the coordinate.
+
+    The test set for a fold contains the samples labelled *with* the fold, whereas the training set
+    contains the samples *not* labelled with the fold. This convention for cross-validation ensures
+    that the training and testing sets of samples are disjoint. The test set withholds a minor
+    subset of samples while the training set withholds the broad subset.
     """
-    def __init__(self,
-                 values: npt.NDArray[np.int64],
-                 k: Optional[int] = None):
+
+    def __init__(self, values: npt.NDArray[np.int64], k: Optional[int] = None):
         super().__init__(values=values)
         if k is not None:
             self.k = k
@@ -103,30 +111,30 @@ class CoordFold(Coordinate):
 
     def __repr__(self) -> str:
         counts = self.count_by_lab()
-        format_counts = ', '.join([f"Fold {fold}: {n}" for fold, n in enumerate(counts)])
+        format_counts = ", ".join([f"Fold {fold}: {n}" for fold, n in enumerate(counts)])
         return f"<{self.__class__.__name__}>: {len(self)} samples, {format_counts}."
 
     @staticmethod
-    def build_labels(n_smpl: int) -> npt.NDArray[np.int64]: # pylint: disable=arguments-differ
+    def build_labels(n_smpl: int) -> npt.NDArray[np.int64]:
         """
-        Build a coordinate which gathers all the samples in a single fold. 
+        Build basic fold labels in which all the samples are gathered in a single fold.
 
         Parameters
         ----------
         n_smpl: int
             Number of samples.
-        
+
         Returns
         -------
         values: npt.NDArray[np.int64]
-            Coordinate filled with ``0``.
+            Labels filled with ``0``.
         """
         return np.zeros(n_smpl, dtype=np.int64)
 
     def count_by_lab(self) -> List[int]:
         """
         Count the number of samples in each fold.
-        
+
         Returns
         -------
         n_smpl: List[int]
@@ -137,16 +145,13 @@ class CoordFold(Coordinate):
 
     def get_test(self, fold: int) -> npt.NDArray[np.bool_]:
         """
-        Identify the test samples for one fold.
+        Identify the test samples for one fold (labelled *with* the fold number).
 
-        The test set contains the samples labelled with the fold,
-        to withhold only a minor subset of the full data set.
-        
         Parameters
         ----------
         fold: int
-            Fold to select.
-        
+            Fold to select for testing.
+
         Returns
         -------
         mask: npt.NDArray[np.bool_]
@@ -157,16 +162,13 @@ class CoordFold(Coordinate):
 
     def get_train(self, fold: int) -> npt.NDArray[np.bool_]:
         """
-        Identify the train samples for one fold.
+        Identify the train samples for one fold (labelled *without* the fold number).
 
-        The training set contains the samples *not* labelled with the fold,
-        to withhold only a broad subset of the full data set.
-        
         Parameters
         ----------
         fold: int
-            Fold to select.
-        
+            Fold to select for training.
+
         Returns
         -------
         mask: npt.NDArray[np.bool_]

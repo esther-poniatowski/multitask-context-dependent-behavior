@@ -14,9 +14,9 @@
 		// General Editor Settings
 		"editor.lineNumbers": "on",
 		"editor.rulers": [100],
-		"editor.wordWrap": "off",
+		"editor.wordWrap": "off", // avoid visual wrapping
 		"rewrap.wrappingColumn": 100,
-		"rewrap.wholeComment": true,
+		"rewrap.wholeComment": false,
 		"rewrap.autoWrap.enabled": true,
 
 		// Hide from the File Explorer
