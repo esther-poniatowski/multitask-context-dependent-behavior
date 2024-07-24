@@ -10,6 +10,7 @@ classmethod
 conftest
 dataframe
 deepcopy
+divmod
 dtype
 fftconvolve
 getattr
