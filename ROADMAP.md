@@ -1,12 +1,10 @@
 # Feature Name: ``
 
 ## Issues
-- Main issue: #48
-- Sub-Issue:  #56
+- Main issue: #
+- Sub-Issue:  #
 
 ## Current Status
-Finish Data Class
-Test-driven development for both instantiation approaches : loading and creating from scratch.
 
 
 ## Notes
