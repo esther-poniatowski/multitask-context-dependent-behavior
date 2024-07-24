@@ -22,47 +22,44 @@ from mtcdb.coordinates.base import Coordinate
 from mtcdb.core_objects.exp_condition import Task, Context, Stimulus
 
 
-C = TypeVar('C', Task, Context, Stimulus)
+C = TypeVar("C", Task, Context, Stimulus)
 """Generic type variable for experimental conditions."""
 
 
 class CoordExpCond(Coordinate, Generic[C]):
     """
-    Sub-class representing one experimental condition among :
-    Task, Context, Stimulus.
+    Coordinate labels representing one experimental condition among Task, Context, Stimulus.
 
     Class Attributes
     ----------------
     condition: Type[C]
-        Reference to the class of the experimental condition object.
-    
+        Subclass of :class:`CoreObject` corresponding to the type of experimental condition which is
+        represented by the coordinate.
+        It has to be defined in each subclass to match the specific condition type.
+
     Attributes
     ----------
     values: npt.NDArray[np.str_]
-        Labels for the condition associated with each measurement.
-        It contains the string values of the conditions 
-        stored in the attribute ``value`` of the condition objects.
+        Labels for the condition associated with each measurement. All the conditions are
+        represented by string values, matching the values of the corresponding condition objects.
+        It contains the string values of the conditions stored in the attribute ``value`` of the condition objects.
 
     Methods
     -------
     :meth:`count_by_lab`
     :meth:`replace_label`
 
-    Implementation
-    --------------
-    All the conditions correspond to object types implemented in Enum classes.
-    Here, the coordinates retain only the *string values* of the conditions.
-    However, any interaction with the coordinate values should be done
-    through condition objects (instead of strings themselves),
-    to ensure the consistency of the data and types.
-    In subclasses, the class attribute :attr:`condition` has to be overridden
-    to match the specific condition type.
+    Notes
+    -----
+    Interactions with the coordinate values should be done through condition objects (instead of
+    strings themselves), to ensure the consistency of the data and types.
 
     See Also
     --------
     :class:`mtcdb.coordinates.base.Coordinate`
     :mod:`mtcdb.core_objects.exp_condition`
     """
+
     condition: Type[C]
 
     def __init__(self, values: npt.NDArray[np.str_]):
@@ -70,32 +67,32 @@ class CoordExpCond(Coordinate, Generic[C]):
 
     def __repr__(self):
         counts = self.count_by_lab()
-        format_counts = ', '.join([f"{cnd!r}: {n}" for cnd, n in counts.items()]) # type: ignore
+        format_counts = ", ".join([f"{cnd!r}: {n}" for cnd, n in counts.items()])  # type: ignore
         return f"<{self.__class__.__name__}>: {len(self)} samples, {format_counts}."
 
     @staticmethod
-    def build_labels(n_smpl: int, cnd: C) -> npt.NDArray[np.str_]: # pylint: disable=arguments-differ
+    def build_labels(n_smpl: int, cnd: C) -> npt.NDArray[np.str_]:
         """
-        Build a condition coordinate filled with a *single* label.
-        
+        Build basic labels filled with a *single* condition.
+
         Parameters
         ----------
         n_smpl: int
             Number of samples, i.e. of labels.
         cnd: C
             Condition which corresponds to the single label.
-        
+
         Returns
         -------
         values: npt.NDArray[np.str_]
-            Condition coordinate filled with the label of the condition.
+            Labels coordinate filled a single condition.
         """
         return np.full(n_smpl, cnd.value)
 
-    def replace_label(self, old: C, new: C) -> 'CoordExpCond':
+    def replace_label(self, old: C, new: C) -> "CoordExpCond":
         """
         Replace one label by another one in the condition coordinate.
-        
+
         Parameters
         ----------
         old, new: C
@@ -112,11 +109,10 @@ class CoordExpCond(Coordinate, Generic[C]):
         new_coord.values = values
         return new_coord
 
-    def count_by_lab(self, cnd: Optional[C] = None
-                     ) -> Union[int, Dict[C, int]]:
+    def count_by_lab(self, cnd: Optional[C] = None) -> Union[int, Dict[C, int]]:
         """
         Count the number of samples in one condition or all conditions.
-        
+
         Parameters
         ----------
         cnd: str, optional
@@ -143,13 +139,14 @@ class CoordExpCond(Coordinate, Generic[C]):
 
 class CoordTask(CoordExpCond[Task]):
     """
-    Coordinate labels for tasks in which measurements were performed.
+    Coordinate labels for tasks.
 
     See Also
     --------
     :class:`mtcdb.core_objects.exp_condition.Task`
     :class:`mtcdb.coordinates.CoordExpCond`
     """
+
     condition: Type[Task] = Task
 
     def __init__(self, values: npt.NDArray[np.str_]):
@@ -158,13 +155,14 @@ class CoordTask(CoordExpCond[Task]):
 
 class CoordContext(CoordExpCond[Context]):
     """
-    Coordinate labels for contexts in which measurements were performed.
+    Coordinate labels for contexts.
 
     See Also
     --------
     :class:`mtcdb.core_objects.exp_condition.Context`
     :class:`mtcdb.coordinates.CoordExpCond`
     """
+
     condition: Type[Context] = Context
 
     def __init__(self, values: npt.NDArray[np.str_]):
@@ -173,13 +171,14 @@ class CoordContext(CoordExpCond[Context]):
 
 class CoordStim(CoordExpCond[Stimulus]):
     """
-    Coordinate labels for stimuli associated with the measurements.
+    Coordinate labels for stimuli.
 
     See Also
     --------
     :class:`mtcdb.core_objects.exp_condition.Stimulus`
     :class:`mtcdb.coordinates.CoordExpCond`
     """
+
     condition: Type[Stimulus] = Stimulus
 
     def __init__(self, values: npt.NDArray[np.str_]):

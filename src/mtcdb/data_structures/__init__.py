@@ -5,64 +5,158 @@
 
 Classes representing data structures used in the analysis.
 
-Each custom data structure stands as a type in itself.
-It encapsulates the data, constraints and properties inherent to the specific data,
-and the relevant methods to manipulate it.
-Each data type can be used in docstrings and type hints of other objects.
-It is documented here once for all, as a central reference.
+**Content and Functionalities of Data Structures**
+
+Data structures are designed to store and manipulate the data sets used in the analysis. Each class
+of data structure represents one family of data, which corresponds to one milestone in the analysis
+(e.g. raw spikes, population firing rates, decoder models...). Each instance of a data class
+represents one specific data set within the family (e.g. raw spikes for one unit in one session).
+
+Each data structure object encapsulates :
+
+- Actual data to analyze
+- Coordinates associated to the dimensions, used to index the data
+- General metadata describing the constraints inherent to the data set family
+- Specific metadata describing the unique properties of the data set instance
+- Methods relevant to manipulate the data, specifically to load and save data from/to files
+
+
+**Creating and Loading Data Structures**
+
+A data structure object can be obtained via two pathways :
+
++-----------+--------------------------------------+--------------------------------------+
+|           | Loading data from a file             | Creating data from scratch           |
++===========+======================================+======================================+
+| Approach  | ``Data(...).load()``                 | ``Data(..., data, **coords)``        |
+|           | with minimal arguments               | with additional arguments to pass    |
+|           | to build the path to the file        | data and coordinate values           |
++-----------+--------------------------------------+--------------------------------------+
+| Use Cases | - To recover data at the start       | - To create the final product at     |
+|           |   of a processing pipeline           |   the end of a processing pipeline   |
+|           | - To visualize data contents         | - To test functions with custom data |
++-----------+--------------------------------------+--------------------------------------+
+
 
 Modules
 -------
 :mod:`mtcdb.data_structures.base`
 
+
 Implementation
 --------------
-**Abstract Base Classes and Concrete Implementations**
+Interactions with Coordinates - Dependency Injection
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:class:`Data` is an abstract base class which defines the interface used
-uniformly across the whole package to interact with data.
-Each subclass implements one version for a specific data structure.
-It stores :
+Data structures store coordinates, which have to be instantiated *outside* of the data constructors
+and passed as arguments. This constraint reduces coupling between :class:`Data` and the specific
+:class:`Coordinate` classes.
 
-- Actual data to analyze
-- Coordinates representing dimension labels
-- Metadata
-
-**Strategy Design Pattern**
+IO-Handling - Strategy Design Pattern
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Data structures delegate certain operations to external classes :
 
-- Path generation
-  Each data class is associated to one subclass of :class:`PathManager`.
-- Loading and Saving data from and to files
-  Each data class can be associated to a :class:Loader and/or Saver subclass
-  depending on the file format.
+- :class:`PathManager` subclasses for path generation.
+- :class:`Loader` and :class:`Saver` subclasses for loading/saving data in specific file formats.
 
-To interact with those external classes, data classes store instances
-of the appropriate objects among their attributes.
+To interact with those external classes, data classes store instances of the appropriate objects
+among their attributes.
 
-**Interactions with Coordinates - Dependency Injection**
+Uniform Interface for Data Structures
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Coordinate objects have to be instantiated outside of the data constructors
-and passed as arguments.
-This constraint reduces coupling between Data and Coordinate classes.
+All data structures adhere to a *uniform* interface, which is used throughout the package to
+interact with data consistently. This interface is established though a combination of:
 
-**Data Instantiation**
+- A metaclass :class:`MetaData`:
+  Sets *class-level* attributes related to the dimensions and coordinates of any data structure.
+- An abstract base class :class:`Data`:
+  Defines methods and attributes shared by all the specific data structures.
 
-A data structure can be created via two pathways :
+Implementing Specific Data Structures
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- Loading data from a file
-  Method: ``load``
-  Use cases:
-      - To recover data at the start of a processing pipeline
-      - To visualize data contents
+Each *specific* data structure is implemented as a concrete subclass which inherits from
+:class:`Data`.
 
-- Creating data from scratch
-  Method: `Data(...)`
-  (direct call to the constructor with appropriate arguments)
-  Use cases:
-      - To create the final product at the end of a processing pipeline
-      - To test functions with custom data
+To be valid, each data structure subclass must perform the following steps:
+
+Define Intrinsic Dimensions and Coordinates
+...........................................
+
+- Specify two class-level attributes in the subclass body: :attr:`dim2coord` and :attr:`coord2type`.
+- Other class-level attributes (:attr:`dims`, :attr:`coords`, :attr:`coord2dim`) are automatically
+  generated by the metaclass to ensure consistency.
+
+Manage Paths specific to this Data Structure
+............................................
+
+- In the class-level attribute :attr:`path_manager`, select the appropriate path manager among the
+  :class:`PathManager` subclasses.
+- Implement the abstract property :meth:`get_path`accordingly. It should provide to this path
+  manager method :meth:`get_path` all the arguments it requires from the attributes of the data
+  structure.
+
+Customize Loading and Saving (Optional)
+.......................................
+
+- Change the attributes :attr:`loader` and :attr:`saver` if needed.
+- Override :meth:`load` and :meth:`save` methods to transform data into the format expected by the
+  loader or saver. To preserve the interface, the method :meth:`load` should not admit any
+  additional argument.
+
+By default, the data is handled with :mod:`pickle`, which allows to recover it as an instance of
+:class:`Data` and to save it directly without any transformation.
+
+Implement a Custom Constructor
+..............................
+
+Responsibilities are shared between the base class and the subclass constructors.
+
+The base class constructor handles the assignment of data and coordinates. It ensures that the
+arguments are consistent and fulfill the constraints specified by the class attributes.
+
+Each subclass constructor extends the base class constructor. It should:
+
+- Admit and set *minimal metadata* required by the specific path loader associated with the data
+  subclass.
+- Admit optional arguments for data and coordinates. Those values should be provided via named
+  arguments corresponding to the coordinates defined in its class attributes. They should be passed
+  to the base class constructor with coordinates as keyword arguments.
+
+Examples
+--------
+Define a data structure subclass with a time dimension and a trial dimension associated with three
+coordinates: task, context and stimulus.
+
+.. code-block:: python
+
+    class ExampleData(Data):
+        dim2coord = MappingProxyType({
+        "time": frozenset(["time"]),
+        "trials": frozenset(['task', 'ctx', 'stim'])
+        })
+        coord2type = {
+            'time': CoordTime,
+            'task': CoordTask,
+            'ctx': CoordCtx,
+            'stim': CoordStim,
+        }
+        path_manager = PathManagerExample
+
+        def __init__(self,
+                    id_: str,
+                    data: npt.NDArray,
+                    time: CoordTime,
+                    task: CoordTask,
+                    ctx: CoordCtx,
+                    stim: CoordStim):
+            self.id = id_
+            super().__init__(data, time=time, task=task, ctx=ctx, stim=stim)
+
+        def get_path(self):
+            return self.path_manager(self.id).get_path()
 
 See Also
 --------
