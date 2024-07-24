@@ -5,12 +5,12 @@
 
 See Also
 --------
-:mod:`mtcdb.io_handlers.path_managers.impl`: Tested module.
+:mod:`mtcdb_shared.io.path_managers.impl`: Tested module.
 """
 
 import pytest
 
-from mtcdb.io_handlers.path_managers.impl import RawSpkTimesPath, FiringRatesPath
+from mtcdb_shared.io.path_managers.impl import RawSpkTimesPath, FiringRatesPath
 
 
 def test_rawspktimes_path(tmp_path):
@@ -19,7 +19,7 @@ def test_rawspktimes_path(tmp_path):
 
     Test Inputs
     -----------
-    tmp_path : Path 
+    tmp_path : Path
         Root directory for data, created by pytest fixture.
     unit: str
     session: str

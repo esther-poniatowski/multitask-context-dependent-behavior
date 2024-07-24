@@ -22,6 +22,7 @@ getitem
 hasattr
 isin
 isinstance
+issubclass
 issubdtype
 loadtxt
 makedirs

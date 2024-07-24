@@ -18,12 +18,12 @@ from dataclasses import dataclass, fields
 import numpy as np
 import numpy.typing as npt
 
-from mtcdb.io_handlers.path_managers.base import PathManager
-from mtcdb.io_handlers.formats import TargetType
-from mtcdb.io_handlers.loaders.base import Loader
-from mtcdb.io_handlers.loaders.impl import LoaderPKL
-from mtcdb.io_handlers.savers.base import Saver
-from mtcdb.io_handlers.savers.impl import SaverPKL
+from mtcdb_shared.io.path_managers.base import PathManager
+from mtcdb_shared.io.formats import TargetType
+from mtcdb_shared.io.loaders.base import Loader
+from mtcdb_shared.io.loaders.impl import LoaderPKL
+from mtcdb_shared.io.savers.base import Saver
+from mtcdb_shared.io.savers.impl import SaverPKL
 from mtcdb.utils.sequences import reverse_dict_container
 
 

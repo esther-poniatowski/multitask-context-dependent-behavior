@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.io_handlers.savers.impl` [module]
+:mod:`mtcdb_shared.io.savers.impl` [module]
 
 Save data from files in specific formats.
 
@@ -15,8 +15,8 @@ Classes
 
 See Also
 --------
-:class:`mtcdb.io_handlers.formats.FileExt`: File extensions.
-:class:`mtcdb.io_handlers.savers.base.Saver`: Base class for savers.
+:class:`mtcdb_shared.io.formats.FileExt`: File extensions.
+:class:`mtcdb_shared.io.savers.base.Saver`: Base class for savers.
 """
 
 import pickle
@@ -27,8 +27,8 @@ import csv
 import numpy as np
 import pandas as pd
 
-from mtcdb.io_handlers.formats import FileExt
-from mtcdb.io_handlers.savers.base import Saver
+from mtcdb_shared.io.formats import FileExt
+from mtcdb_shared.io.savers.base import Saver
 
 
 class SaverPKL(Saver):
@@ -39,7 +39,7 @@ class SaverPKL(Saver):
     -----
     Any object can be saved in a Pickle file,
     therefore the class attribute :attr:`save_methods` is not needed.
-    Since it is not possible to enumerate all the types that can 
+    Since it is not possible to enumerate all the types that can
     be saved in a Pickle file, the method :meth:`_save` is overridden
     to dodge the checking step of the base method.
     """
@@ -47,7 +47,7 @@ class SaverPKL(Saver):
 
     def save(self):
         """Save any Python object to a Pickle file.
-        
+
         Warning
         -------
         This method overrides the base method to avoid the checking step.
@@ -73,7 +73,7 @@ class SaverNPY(Saver):
     def _save_numpy(self) -> None:
         """
         Save a numpy array to a NPY file.
-        
+
         See Also
         --------
         :func:`numpy.save`
@@ -108,7 +108,7 @@ class SaverCSV(Saver):
         Warning
         -------
         The content of the list is written as strings.
-        
+
         See Also
         --------
         :func:`csv.writer`
@@ -123,10 +123,10 @@ class SaverCSV(Saver):
         Warning
         -------
         The content of the array is written as strings.
-        The saved file does not store the original data type, 
-        so when loading the data back, it is necessary to specify 
+        The saved file does not store the original data type,
+        so when loading the data back, it is necessary to specify
         the desired data type explicitly.
-        
+
         See Also
         --------
         :func:`numpy.savetxt`
@@ -135,7 +135,7 @@ class SaverCSV(Saver):
             - ``'%d'``  : integers
             - ``'%f'``  : floats
             If not specified, the default format are:
-            - ``'%.18e'`` for floating-point numbers 
+            - ``'%.18e'`` for floating-point numbers
             - string representation for other types
             Thus, differentiation between ``int`` and ``float`` is not automatic.
             Parameter ``delimiter`` : Here, comma (``'``) by default.
@@ -155,12 +155,12 @@ class SaverCSV(Saver):
         -----
         The index is saved or not based on the `save_index` attribute.
         If True, the DataFrame index is saved as an additional column.
-        It is relevant if the index contains meaningful row labels 
+        It is relevant if the index contains meaningful row labels
         (e.g., timestamps, unique identifiers...),
         but not if the index is just a default integer index.
-        Dropping the index ensures that the CSV file format is compatible 
+        Dropping the index ensures that the CSV file format is compatible
         with other tools that expect data without an extra index column.
-        
+
         See Also
         --------
         :meth:`pandas.DataFrame.to_csv`
@@ -174,11 +174,11 @@ class SaverCSV(Saver):
 Save data under the netCDF format.
 
 Constraints for NetCDF:
-- Data Format : dict 
+- Data Format : dict
     Keys   : str, names of variables
     Values : numpy arrays
 - Dimension consistency
-    The length of each dimension must be consistent across all variables that share that dimension. 
+    The length of each dimension must be consistent across all variables that share that dimension.
 - Data Types : integers, floats, strings...
 - Type consistency across dimensions and variables.
 - Metadata: Variables and dimensions can have attributes (metadata) attached to them.
@@ -192,7 +192,7 @@ Input data should be a dictionary with the following structure:
 Implementation
 --------------
 First, create a new NetCDF file ("dataset") at the specified path.
-Second, for each key-value pair in the input data (name-array), 
+Second, for each key-value pair in the input data (name-array),
 perform several encoding steps:
 
 1. Create a dimension. Specify two parameters :

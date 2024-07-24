@@ -5,7 +5,7 @@
 
 Notes
 -----
-Although those tests aim to cover the method defined in the abstract base class, 
+Although those tests aim to cover the method defined in the abstract base class,
 sometimes the SaverCSV subclass is used for concrete implementation.
 It is chosen for simplicity and because it offers more options to test.
 Those tests do not check for the concents of the data saved,
@@ -13,8 +13,8 @@ but rather for the correct handling of the file paths and formats.
 
 See Also
 --------
-:mod:`mtcdb.io_handlers.savers.base`: Tested module.
-:mod:`mtcdb.io_handlers.savers.impl`: Concrete implementations.
+:mod:`mtcdb_shared.io.savers.base`: Tested module.
+:mod:`mtcdb_shared.io.savers.impl`: Concrete implementations.
 """
 
 import pytest
@@ -25,8 +25,8 @@ from test_mtcdb.test_io_handlers.test_data import ( # dummy data
     data_array,
     data_df,
 )
-from mtcdb.io_handlers.savers.base import Saver
-from mtcdb.io_handlers.savers.impl import SaverCSV
+from mtcdb_shared.io.savers.base import Saver
+from mtcdb_shared.io.savers.impl import SaverCSV
 
 
 def test_saver_check_dir_invalid():
@@ -37,7 +37,7 @@ def test_saver_check_dir_invalid():
     -----------
     invalid_path: str
         Path to a non-existent directory.
-    
+
     Expected Exception
     ------------------
     FileNotFoundError
@@ -56,7 +56,7 @@ def test_saver_check_dir_valid(tmp_path):
     -----------
     valid_path: str
         Path to an existent directory.
-    
+
     Expected Output
     ---------------
     No exception raised.
@@ -86,7 +86,7 @@ def test_saver_check_ext(tmp_path, filename):
     expected_filepath [right-ext] : str
         Expected file path, identical to the input path.
     expected_filepath [wrong-ext] : str
-        Expected file path with the wrong extension removed 
+        Expected file path with the wrong extension removed
         and the appropriate extension added.
     """
     filepath = tmp_path / filename
@@ -107,7 +107,7 @@ def test_saver_check_data_valid(data):
     -----------
     data : list, np.ndarray, pd.DataFrame
         Dummy data to test, in one of the three formats supported by SaverCSV.
-    
+
     Expected Output
     ---------------
     No exception raised.
@@ -123,7 +123,7 @@ def test_saver_check_data_invalid():
     -----------
     data_dict : dict
         Dummy data to test in an unsupported format for SaverCSV (dict).
-    
+
     Expected Exception
     ------------------
     TypeError

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.io_handlers.loaders.impl` [module]
+:mod:`mtcdb_shared.io.loaders.impl` [module]
 
 Load data from files in specific formats.
 
@@ -15,9 +15,9 @@ Classes
 
 See Also
 --------
-:class:`mtcdb.io_handlers.formats.FileExt`
-:class:`mtcdb.io_handlers.formats.TargetType`
-:class:`mtcdb.io_handlers.loaders.base.Loader`
+:class:`mtcdb_shared.io.formats.FileExt`
+:class:`mtcdb_shared.io.formats.TargetType`
+:class:`mtcdb_shared.io.loaders.base.Loader`
 
 Implementation
 --------------
@@ -41,8 +41,8 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-from mtcdb.io_handlers.formats import FileExt, TargetType
-from mtcdb.io_handlers.loaders.base import Loader
+from mtcdb_shared.io.formats import FileExt, TargetType
+from mtcdb_shared.io.loaders.base import Loader
 
 
 class LoaderPKL(Loader):

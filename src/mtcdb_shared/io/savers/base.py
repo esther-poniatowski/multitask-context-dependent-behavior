@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.io_handlers.saver_base` [module]
+:mod:`mtcdb_shared.io.saver_base` [module]
 
 Common interface to save data to files.
 
@@ -14,7 +14,7 @@ Classes
 
 Implementation
 --------------
-The base constructors define the key arguments required by any subclass (path and data). 
+The base constructors define the key arguments required by any subclass (path and data).
 Subclasses can include additional arguments for their specific operations.
 """
 
@@ -22,7 +22,7 @@ from abc import ABC
 from pathlib import Path
 from typing import Any, Mapping, Union
 
-from mtcdb.io_handlers.formats import FileExt
+from mtcdb_shared.io.formats import FileExt
 
 
 class Saver(ABC):
@@ -55,7 +55,7 @@ class Saver(ABC):
 
     See Also
     --------
-    :class:`mtcdb.io_handlers.formats.FileExt`: File extensions.
+    :class:`mtcdb_shared.io.formats.FileExt`: File extensions.
     :class:`abc.ABC`: Abstract base class.
     """
     ext: FileExt
@@ -78,10 +78,10 @@ class Saver(ABC):
     def _save(self):
         """
         Call the appropriate method depending on the type of data.
-        
+
         Implementation
         --------------
-        The method name is identified from the dictionary :attr:`save_methods`. 
+        The method name is identified from the dictionary :attr:`save_methods`.
         - Key: Data type
         - Value : Method name
         The actual method is retrieved by calling :func:`getattr` on the instance.
@@ -121,7 +121,7 @@ class Saver(ABC):
         See Also
         --------
         :attr:`pathlib.Path.suffix`
-            Get the file extension. 
+            Get the file extension.
             If there is not extension, the empty string is returned.
         :meth:`pathlib.Path.with_suffix`
             Replace the file extension.
@@ -139,7 +139,7 @@ class Saver(ABC):
         ------
         ValueError
             If the data type is not supported, it is not a key
-            in the :attr:`save_methods` dictionary, which means that the 
+            in the :attr:`save_methods` dictionary, which means that the
             method to save this format is not implemented in the saver.
         """
         if not any(issubclass(type(self.data), tpe) for tpe in self.save_methods):

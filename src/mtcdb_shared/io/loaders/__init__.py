@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.io_handlers.loaders` [subpackage]
+:mod:`mtcdb_shared.io.loaders` [subpackage]
 
 Classes to load files from files.
 

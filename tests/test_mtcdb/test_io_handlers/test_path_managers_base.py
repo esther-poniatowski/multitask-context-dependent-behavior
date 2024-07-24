@@ -5,12 +5,12 @@
 
 See Also
 --------
-:mod:`mtcdb.io_handlers.path_managers.base`: Tested module.
+:mod:`mtcdb_shared.io.path_managers.base`: Tested module.
 """
 
 import pytest
 
-from mtcdb.io_handlers.path_managers.base import PathManager
+from mtcdb_shared.io.path_managers.base import PathManager
 
 
 def test_check_dir_existing(tmp_path):

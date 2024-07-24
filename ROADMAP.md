@@ -9,7 +9,7 @@
 Started: `process_evp.py`, `process_evp.m`
 
 ## Tasks
-- [ ] `.env` file to store the server credentials and other configurations.
+- [X] `.env` file to store the server credentials and other configurations.
 - [ ] Script to connect to the server.
 - [ ] Deployment config to specify the mapping between the local directories and the server
   directories.

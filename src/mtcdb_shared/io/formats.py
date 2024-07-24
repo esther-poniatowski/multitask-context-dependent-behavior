@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.io_handlers.formats` [module]
+:mod:`mtcdb_shared.io.formats` [module]
 
 Classes
 -------
@@ -26,9 +26,9 @@ class FileExt(Enum):
 class TargetType(Enum):
     """
     Target types for data loading.
-    
+
     For usage, each type is specified by the string value, which acts as a descriptive identifier.
-    The interest of this enum class is to enforce the use of supported types, 
+    The interest of this enum class is to enforce the use of supported types,
     and to specify a clear correspondence between string identifiers and target types.
     """
     OBJECT = "object"               # any Python object

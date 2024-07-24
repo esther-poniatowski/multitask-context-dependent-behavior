@@ -5,7 +5,7 @@
 
 Notes
 -----
-Although those tests aim to cover the method defined in the abstract base class, 
+Although those tests aim to cover the method defined in the abstract base class,
 sometimes the LoaderCSV subclass is used for concrete implementation.
 It is chosen for simplicity and because it offers more options to test.
 Those tests do not check for the concents of the data loaded,
@@ -13,14 +13,14 @@ but rather for the correct handling of the file paths and formats.
 
 See Also
 --------
-:mod:`mtcdb.io_handlers.loaders.base`: Tested module.
-:mod:`mtcdb.io_handlers.loaders.impl`: Concrete implementations.
+:mod:`mtcdb_shared.io.loaders.base`: Tested module.
+:mod:`mtcdb_shared.io.loaders.impl`: Concrete implementations.
 """
 
 import pytest
 
-from mtcdb.io_handlers.loaders.base import Loader
-from mtcdb.io_handlers.loaders.impl import LoaderCSV
+from mtcdb_shared.io.loaders.base import Loader
+from mtcdb_shared.io.loaders.impl import LoaderCSV
 
 
 def test_loader_check_file_invalid():

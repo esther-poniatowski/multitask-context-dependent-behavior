@@ -1,6 +1,6 @@
 // Workspace-Specific Settings for the Entire Project
 {
-	// Folders Included in the Workspace (allow specific settings)
+	// Folders Included in the Workspace (for folder-specific settings)
 	"folders": [
 		{
 			// Project
@@ -11,6 +11,10 @@
 
 	// Workspace Settings (apply globally)
 	"settings": {
+		// Environment Variables
+		//"dotenv.enableAutocloaking": true, // load .env files (and hide sensitive information)
+		//"python.envFile": ".env", // load environment variables from .env files
+
 		// General Editor Settings
 		"editor.lineNumbers": "on",
 		"editor.rulers": [100],

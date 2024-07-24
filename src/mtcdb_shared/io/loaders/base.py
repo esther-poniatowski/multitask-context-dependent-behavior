@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.io_handlers.loaders.base` [module]
+:mod:`mtcdb_shared.io.loaders.base` [module]
 
 Common interface to load data from files.
 
@@ -14,7 +14,7 @@ from abc import ABC
 from pathlib import Path
 from typing import Mapping, Union, TypeVar, Generic
 
-from mtcdb.io_handlers.formats import FileExt, TargetType
+from mtcdb_shared.io.formats import FileExt, TargetType
 
 
 T = TypeVar('T')
@@ -40,7 +40,7 @@ class Loader(ABC, Generic[T]):
         Path to the file containing the data to load.
     tpe: TargetType
         Target type for the retrieved data.
-        It determines the method used to load the data and the type 
+        It determines the method used to load the data and the type
         of the returned object.
 
     Methods
@@ -57,8 +57,8 @@ class Loader(ABC, Generic[T]):
 
     See Also
     --------
-    :class:`mtcdb.io_handlers.formats.FileExt`: File extensions.
-    :class:`mtcdb.io_handlers.formats.TargetType`: Target types.
+    :class:`mtcdb_shared.io.formats.FileExt`: File extensions.
+    :class:`mtcdb_shared.io.formats.TargetType`: Target types.
     :class:`abc.ABC`: Abstract base class.
 
     Notes
@@ -69,7 +69,7 @@ class Loader(ABC, Generic[T]):
     This string is used to instantiate the TargetType object in the constructor.
     If the string is not a valid target type, a TypeError is raised.
     To select the appropriate identifier for a target type,
-    inspect the attributes of the class :class:`TargetType` 
+    inspect the attributes of the class :class:`TargetType`
     and choose one of the types used by the specific loader subclass.
     """
     ext: FileExt
@@ -86,7 +86,7 @@ class Loader(ABC, Generic[T]):
     def load(self) -> T:
         """
         Load data from a file.
-        
+
         Returns
         -------
         T
@@ -99,7 +99,7 @@ class Loader(ABC, Generic[T]):
     def _load(self) -> T:
         """
         Call the appropriate method to load the data based on the specified type.
-        
+
         Returns
         -------
         T
@@ -133,7 +133,7 @@ class Loader(ABC, Generic[T]):
         ------
         ValueError
             If the target type is not supported, it is not a key
-            in the dictionary :obj:`load_methods`, which means that the 
+            in the dictionary :obj:`load_methods`, which means that the
             method to load this format is not implemented in the loader.
         """
         if self.tpe not in self.load_methods:
