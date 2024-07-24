@@ -34,8 +34,8 @@ class Multiton(type):
         Existing instances of the class, indexed by their IDs.
         Repertoire of classes using this metaclass and their respective instances.
         Keys: Classes that use :class:`Multiton` as their metaclass.
-        Values: Dictionaries that map unique ``id`` to instances of the respective class.
-    
+        Values: Dictionaries that map unique :attr:`id` to instances of the respective class.
+
     Attributes
     ----------
     __eq__: Callable
@@ -59,17 +59,18 @@ class Multiton(type):
     - Each instance is unique based on its ID.
     - When a new instance is created, its ID is stored in the class attribute :attr:`_instances`.
     - If an instance with the same ID is requested, the existing instance is returned.
-    
-    The metaclass also defines equality and hash methods to be consistent 
+
+    The metaclass also defines equality and hash methods to be consistent
     with the uniqueness of the instances based on their IDs.
     This is necessary to avoid duplicates in bidirectional associations.
     """
+
     _instances: Dict[Type, Dict[Any, Any]] = {}
 
     def __call__(cls, id_, *args, **kwargs) -> Any:
         """
         Create a new instance or return an existing instance of the class.
-        
+
         Parameters
         ----------
         cls: type
@@ -79,9 +80,9 @@ class Multiton(type):
 
         Returns
         -------
-        Any: 
-            Instance of the class with the specified ``id`` (new or existing).
-        
+        Any:
+            Instance of the class with the specified :attr:`id` (new or existing).
+
         Notes
         -----
         This method is called each time the class is *instantiated*,
@@ -114,10 +115,10 @@ class Multiton(type):
             Base classes of the class.
         dct: Dict[str, Any]
             Class dictionary containing its attributes and methods.
-        
+
         Notes
         -----
-        This method is called when a class using the metaclass is *defined* 
+        This method is called when a class using the metaclass is *defined*
         (i.e. instantiated, as an *instance* of the metaclass).
         """
         # Initialize the class as an instance of the metaclass
@@ -132,15 +133,15 @@ class Multiton(type):
             return hash(self.id)
 
         # Attach instance methods to the class
-        cls.__eq__ = __eq__ # type: ignore
-        cls.__hash__ = __hash__ # type: ignore
+        cls.__eq__ = __eq__  # type: ignore
+        cls.__hash__ = __hash__  # type: ignore
 
 
 class Site(metaclass=Multiton):
     """
     Recording site, location where several sessions were performed.
 
-    Each site leads to a set of units (neurons) 
+    Each site leads to a set of units (neurons)
     and a set of sessions (recordings).
     It is used to assess artifacts in units' activity at the same site.
 
@@ -167,33 +168,34 @@ class Site(metaclass=Multiton):
     :class:`Unit`
     :class:`Session`
     """
-    def __init__(self, id_:str):
+
+    def __init__(self, id_: str):
         self.id = id_
         self.initialized = True
-        self.units: List['Unit'] = []
-        self.sessions: List['Session'] = []
+        self.units: List["Unit"] = []
+        self.sessions: List["Session"] = []
 
     def __repr__(self) -> str:
         return f"Site {self.id}: {len(self.units)} units, {len(self.sessions)} sessions."
 
-    def recover_units(self, units_metadata) -> List['Unit']:
+    def recover_units(self, units_metadata) -> List["Unit"]:
         """Recover the units recorded at the site."""
         raise NotImplementedError
 
-    def recover_sessions(self, sessions_metadata) -> List['Session']:
+    def recover_sessions(self, sessions_metadata) -> List["Session"]:
         """Recover the sessions performed at the site."""
         raise NotImplementedError
 
-    def add_unit(self, unit:'Unit'):
+    def add_unit(self, unit: "Unit"):
         """
         Add a unit to the site.
-        
+
         Implementation
         --------------
         Bidirectional association pattern
         - To ensure the consistency of the relationship, when a unit is added to a site,
         the site of the unit should also be set if it is not already done.
-        - To avoid infinite recursion, the first condition checks 
+        - To avoid infinite recursion, the first condition checks
         whether the unit is already recorded in the site.
 
         See Also
@@ -207,10 +209,10 @@ class Site(metaclass=Multiton):
             except AttributeError:
                 pass
 
-    def add_session(self, session:'Session'):
+    def add_session(self, session: "Session"):
         """
         Add a session to the site.
-        
+
         Implementation
         --------------
         This function is part of a bidirectional association pattern.
@@ -272,7 +274,8 @@ class Unit(metaclass=Multiton):
     -----
     Most attributes are set automatically without the need of passing parameters.
     """
-    def __init__(self, id_:str):
+
+    def __init__(self, id_: str):
         self.id = id_
         self.initialized = True
         site, animal, depth = self.split_id()
@@ -300,16 +303,16 @@ class Unit(metaclass=Multiton):
         - {depth}: last letter of {site} (e.g. ``'a'``),
         - {el}   : 1 letter (e.g. ``'d'``),
                     electrode channel
-        - {u}    : 1 number (e.g. ``'1'``),     
+        - {u}    : 1 number (e.g. ``'1'``),
                     unit number attributed by the spike sorting algorithm.
-        
+
         Example
         -------
         >>> unit = Unit("avo052a-d1")
         >>> unit.split_id()
         ('avo052a', 'avo', 'a')
         """
-        s = self.id.split('-')
+        s = self.id.split("-")
         site = s[0]
         animal = s[0][:3]
         depth = s[0][-1]
@@ -326,7 +329,7 @@ class Unit(metaclass=Multiton):
     def set_site(self, site: Site):
         """
         Set the site of the unit.
-        
+
         Implementation
         --------------
         Bidirectional association pattern
@@ -376,7 +379,8 @@ class Session(metaclass=Multiton):
     :class:`mtcdb.core_objects.exp_condition.Task`
     :class:`mtcdb.core_objects.exp_condition.Context`
     """
-    def __init__(self, id_:str):
+
+    def __init__(self, id_: str):
         self.id = id_
         self.initialized = True
         site, rec, ctx, task = self.split_id()
@@ -391,11 +395,11 @@ class Session(metaclass=Multiton):
     def split_id(self) -> Tuple[str, int, str, str]:
         """
         Split the session ID into its components.
-        
+
         Format of the session's ID :
         ``{site}{rec}_{ctx}_{task}``
         Example : ``'avo052a04_p_PTD'``
-        - {site} : 3 letters (e.g. ``'avo'``), 
+        - {site} : 3 letters (e.g. ``'avo'``),
                    3 numbers (e.g. ``'052'``),
                    1 letter (e.g. ``'a'``).
         - {rec}  : 2 numbers (e.g. ``'04'``)
@@ -411,10 +415,10 @@ class Session(metaclass=Multiton):
         Notes
         -----
         For the animal Lemon, the site uses the full name 'lemon'.
-        Therefore, Sites' IDs should be obtained FROM THE END of the string: 
+        Therefore, Sites' IDs should be obtained FROM THE END of the string:
         site[:-1] instead of site[:5] (which would not be valid for 'lemon').
         """
-        s = self.id.split('_')
+        s = self.id.split("_")
         site = s[0][:-2]
         rec = int(s[0][-2:])
         ctx = s[1]
@@ -424,7 +428,7 @@ class Session(metaclass=Multiton):
     def set_site(self, site: Site):
         """
         Set the site of the session.
-        
+
         Implementation
         --------------
         This function is part of a bidirectional association pattern.
@@ -440,14 +444,14 @@ class Session(metaclass=Multiton):
 
 class Trial:
     """
-    Single trial, centered on one stimulus presentation. 
+    Single trial, centered on one stimulus presentation.
 
     Notes
     -----
-    This object is mainly used for data pre-processing, 
+    This object is mainly used for data pre-processing,
     where trials's structure still differ from each other.
-    Afterwards, in the majority of the analyses, 
-    trials's epochs are uniformly and their properties are 
+    Afterwards, in the majority of the analyses,
+    trials's epochs are uniformly and their properties are
     directly stored in the data coordinates.
 
     Attributes
@@ -491,11 +495,8 @@ class Trial:
     :class:`mtcdb.core_objects.exp_structure.Slot`
     :class:`mtcdb.core_objects.exp_condition.Stimulus`
     """
-    def __init__(self,
-                session:str,
-                block:Block,
-                slot:Slot
-                ):
+
+    def __init__(self, session: str, block: Block, slot: Slot):
         self.session: str = session
         self.block: Block = block
         self.slot: Slot = slot

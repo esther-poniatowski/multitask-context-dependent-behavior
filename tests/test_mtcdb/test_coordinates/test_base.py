@@ -5,9 +5,8 @@
 
 Notes
 -----
-Those tests focus on the functionalities defined in the abstract base class,
-and thus common to all coordinate types.
-However, a specific subclass is used for actual testing,
+Those tests focus on the functionalities defined in the abstract base class, which are common to all
+coordinate types. However, a *specific* subclass is used for actual testing (:class:`CoordTime`),
 because the abstract base class cannot be instantiated.
 
 See Also
@@ -22,12 +21,25 @@ import pytest
 from mtcdb.coordinates.time import CoordTime
 
 
-# Dummy coordinate values
 N_SMPL = 10
-VALUES = np.arange(N_SMPL).astype(np.float64)
+"""Number of samples in the test values. Defined globally for consistency in parametrized tests."""
 
 
-def test_len():
+@pytest.fixture
+def values():
+    """
+    Generate dummy coordinate values used for testing.
+
+    Returns
+    -------
+    np.ndarray
+        Coordinate values with shape ``(n_smpl,)``.
+    """
+
+    return np.arange(N_SMPL).astype(np.float64)
+
+
+def test_len(values):
     """
     Test :meth:`__len__` which returns the size of the 1D coordinate array.
 
@@ -41,11 +53,12 @@ def test_len():
     n_smpl : int
         Number of samples in the coordinate.
     """
-    coord = CoordTime(VALUES)
-    assert len(coord) == N_SMPL, "Incorrect length."
+    n_smpl = len(values)
+    coord = CoordTime(values)
+    assert len(coord) == n_smpl, f"Incorrect length: expected {n_smpl}, got {len(coord)}."
 
 
-def test_eq():
+def test_eq(values):
     """
     Test :meth:`__eq__` which checks if two coordinates are equal.
 
@@ -61,14 +74,14 @@ def test_eq():
     False : bool
         The two coordinates are not equal.
     """
-    coord1 = CoordTime(VALUES)
-    coord2 = CoordTime(VALUES)
-    coord3 = CoordTime(VALUES + 1)
+    coord1 = CoordTime(values)
+    coord2 = CoordTime(values)
+    coord3 = CoordTime(values + 1)
     assert coord1 == coord2, "Found Not Equal"
     assert not coord1 == coord3, "Found Equal"
 
 
-def test_copy():
+def test_copy(values):
     """
     Test :meth:`copy` which returns a deep copy of the coordinate.
 
@@ -82,19 +95,15 @@ def test_copy():
     coord : Coordinate
         Deep copy of the input coordinate.
     """
-    coord = CoordTime(VALUES)
+    coord = CoordTime(values)
     coord_copy = coord.copy()
     assert np.array_equal(coord.values, coord_copy.values), "Incorrect copy."
 
 
-@pytest.mark.parametrize("idx",
-                         argvalues=[
-                                3,
-                                slice(3, 6),
-                                (VALUES > 5)
-                         ],
-                         ids=["int", "slice", "bool"])
-def test_getitem(idx):
+@pytest.mark.parametrize(
+    "idx", argvalues=[3, slice(3, 6), (np.arange(N_SMPL) > 5)], ids=["int", "slice", "bool"]
+)
+def test_getitem(values, idx):
     """
     Test :meth:`__getitem__` which returns the value of the coordinate at the specified index.
 
@@ -104,7 +113,7 @@ def test_getitem(idx):
         Coordinate values with shape ``(n_smpl,)``.
     idx [int]: int
         Integer index.
-    idx [slice]: 
+    idx [slice]:
         Slice index.
     idx [bool]: np.ndarray[np.bool_]
         Boolean mask.
@@ -118,9 +127,23 @@ def test_getitem(idx):
     expected [bool]
         Coordinate object with the values filtered by the mask.
     """
-    coord = CoordTime(VALUES)
+    coord = CoordTime(values)
     if isinstance(idx, int):
-        expected = VALUES[idx]
+        expected = values[idx]
     else:
-        expected = CoordTime(np.array(VALUES[idx]))
+        expected = CoordTime(np.array(values[idx]))
     assert coord[idx] == expected, "Incorrect value at index."
+
+
+def test_empty():
+    """
+    Test :meth:`empty` which returns an empty coordinate.
+
+    Expected Output
+    ---------------
+    coord : Coordinate
+        Empty coordinate of the subclass type.
+    """
+    coord = CoordTime.empty()
+    assert isinstance(coord, CoordTime), "Incorrect type."
+    assert len(coord) == 0, "Non-empty coordinate."
