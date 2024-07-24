@@ -15,6 +15,11 @@
 		//"dotenv.enableAutocloaking": true, // load .env files (and hide sensitive information)
 		//"python.envFile": ".env", // load environment variables from .env files
 
+		// View Settings
+		"workbench.editor.closeEmptyGroups": false,
+		"workbench.editor.openSideBySideDirection": "right",
+		"workbench.editor.openPositioning": "left",
+
 		// General Editor Settings
 		"editor.lineNumbers": "on",
 		"editor.rulers": [100],
@@ -96,6 +101,29 @@
 		"esbonio.sphinx.srcDir": "docs/source",
 		//"esbonio.sphinx.buildDir": "build",
 		"esbonio.sphinx.builderName": "html",
+		"saveEditorLayout.list": [
+			{
+				"name": "left-editor-right-graph",
+				"documents": [
+					{
+						"fsPath": "/Users/eresther/Documents/Work/multitask-context-dependent-behavior/ROADMAP.md",
+						"column": 1,
+						"pinned": false
+					}
+				],
+				"layout": {
+					"orientation": 0,
+					"groups": [
+						{
+							"size": 917
+						},
+						{
+							"size": 533
+						}
+					]
+				}
+			}
+		],
 
 	},
 
