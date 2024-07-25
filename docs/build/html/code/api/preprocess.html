@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mtcdb.preprocess [subpackage] &mdash; Multi-Task Context-Dependent Behavior 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/assets/jsonview.bundle.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/libs/html/datatables.min.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/common.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/styles.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/modern.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-needs/layouts.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-test-results/common.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/assets/jsonview.bundle.js"></script>
+        <script src="../../_static/assets/jsonview_loader.js"></script>
+        <script src="../../_static/sphinx-needs/libs/html/datatables.min.js"></script>
+        <script src="../../_static/sphinx-needs/libs/html/datatables_loader.js"></script>
+        <script src="../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Tests Documentation" href="../tests/index.html" />
+    <link rel="prev" title="mtcdb.utils [module]" href="utils.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Multi-Task Context-Dependent Behavior
+          </a>
+              <div class="version">
+                0.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../about/index.html">About the Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../results/index.html">Results</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Code Guide &amp; Usage</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../install.html">Installation Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">API Documentation</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mtcdb.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mtcdb</span></code> [package]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="constants.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mtcdb.constants</span></code> [module]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="constants.html#mtcdb-types-module"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mtcdb.types</span></code> [module]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="utils.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mtcdb.utils</span></code> [module]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="utils.html#mtcdb-utils-sequences-module"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mtcdb.utils.sequences</span></code> [module]</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mtcdb.preprocess</span></code> [subpackage]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mtcdb-preprocess-firing-rates-module"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mtcdb.preprocess.firing_rates</span></code> [module]</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../tests/index.html">Tests Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tests/report.html">Tests Results</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Multi-Task Context-Dependent Behavior</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Code Guide &amp; Usage</a></li>
+          <li class="breadcrumb-item"><a href="index.html">API Documentation</a></li>
+      <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mtcdb.preprocess</span></code> [subpackage]</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/code/api/preprocess.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <span class="target" id="module-mtcdb.preprocess"></span><section id="mtcdb-preprocess-subpackage">
+<h1><a class="reference internal" href="#module-mtcdb.preprocess" title="mtcdb.preprocess"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mtcdb.preprocess</span></code></a> [subpackage]<a class="headerlink" href="#mtcdb-preprocess-subpackage" title="Permalink to this heading"></a></h1>
+<p>Preprocess the raw data (spiking times of single neurons).</p>
+</section>
+<span class="target" id="module-mtcdb.preprocess.firing_rates"></span><section id="mtcdb-preprocess-firing-rates-module">
+<h1><a class="reference internal" href="#module-mtcdb.preprocess.firing_rates" title="mtcdb.preprocess.firing_rates"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mtcdb.preprocess.firing_rates</span></code></a> [module]<a class="headerlink" href="#mtcdb-preprocess-firing-rates-module" title="Permalink to this heading"></a></h1>
+<dl class="simple">
+<dt>Convert raw spike times to firing rates.</dt><dd><p>Just to test the sphinx documentation.
+With line breaks.</p>
+</dd>
+</dl>
+<p>And also another strategy to test the sphinx documentation.
+| to break another line.
+| to break another line.
+again to break another line.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="mtcdb.preprocess.firing_rates.extract_trial">
+<span class="sig-name descname"><span class="pre">extract_trial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trial</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mtcdb/preprocess/firing_rates.html#extract_trial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mtcdb.preprocess.firing_rates.extract_trial" title="Permalink to this definition"></a></dt>
+<dd><p>Extract the spiking times in one specific trial.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>trial</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of the trial of interest.</p></li>
+<li><p><strong>data</strong> (<a class="reference internal" href="constants.html#mtcdb.types.NumpyArray" title="mtcdb.types.NumpyArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mtcdb.types.NumpyArray</span></code></a>) – Raw data corresponding to a <em>whole session</em>, for one unit.
+Shape: <code class="docutils literal notranslate"><span class="pre">(2,</span> <span class="pre">nspikes)</span></code> (see Implementation section).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>spk</strong> – Spiking times occurring in the selected trial.
+Shape: <code class="docutils literal notranslate"><span class="pre">(nspikes_trial,)</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="constants.html#mtcdb.types.NumpyArray" title="mtcdb.types.NumpyArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mtcdb.types.NumpyArray</span></code></a></p>
+</dd>
+</dl>
+<p class="rubric">Implementation</p>
+<p><code class="docutils literal notranslate"><span class="pre">data[1]</span></code>: Spiking times in seconds (starting from 0 in each trial).
+<code class="docutils literal notranslate"><span class="pre">data[0]</span></code>: Trial in which each spike occurred.
+To extract the spiking times of one trial, use a boolean mask on the trial number.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mtcdb.preprocess.firing_rates.slice_epoch">
+<span class="sig-name descname"><span class="pre">slice_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tstart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tend</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spk</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mtcdb/preprocess/firing_rates.html#slice_epoch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mtcdb.preprocess.firing_rates.slice_epoch" title="Permalink to this definition"></a></dt>
+<dd><p>Extract spiking times within one epoch of one trial.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Spiking times are <em>relative</em> to the beginning of the epoch.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tstart</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Times boundaries of the epoch (in seconds).</p></li>
+<li><p><strong>tend</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Times boundaries of the epoch (in seconds).</p></li>
+<li><p><strong>spk</strong> (<a class="reference internal" href="constants.html#mtcdb.types.NumpyArray" title="mtcdb.types.NumpyArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mtcdb.types.NumpyArray</span></code></a>) – Spiking times during a <em>whole trial</em> (in seconds).
+Shape: <code class="docutils literal notranslate"><span class="pre">(nspikes,)</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>spk_epoch</strong> – Spiking times in the epoch comprised between <code class="docutils literal notranslate"><span class="pre">tstart</span></code> and <code class="docutils literal notranslate"><span class="pre">tend</span></code>,
+reset to be relative to the beginning of the epoch.
+Shape: <code class="docutils literal notranslate"><span class="pre">(nspikes_epoch,</span> <span class="pre">1)</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="constants.html#mtcdb.types.NumpyArray" title="mtcdb.types.NumpyArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mtcdb.types.NumpyArray</span></code></a></p>
+</dd>
+</dl>
+<p class="rubric">Implementation</p>
+<ul class="simple">
+<li><p>Select the spiking times within the epoch with a boolean mask.</p></li>
+<li><p>Subtract the starting time of the epoch to reset the time.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mtcdb.preprocess.firing_rates.join_epochs">
+<span class="sig-name descname"><span class="pre">join_epochs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tstart1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tend1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tstart2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tend2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spk</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mtcdb/preprocess/firing_rates.html#join_epochs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mtcdb.preprocess.firing_rates.join_epochs" title="Permalink to this definition"></a></dt>
+<dd><p>Join spiking times from two distinct epochs as if they were continuous.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tstart1</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Times boundaries of both epochs to connect (in seconds).</p></li>
+<li><p><strong>tend1</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Times boundaries of both epochs to connect (in seconds).</p></li>
+<li><p><strong>tstart2</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Times boundaries of both epochs to connect (in seconds).</p></li>
+<li><p><strong>tend2</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Times boundaries of both epochs to connect (in seconds).</p></li>
+<li><p><strong>spk</strong> (<a class="reference internal" href="constants.html#mtcdb.types.NumpyArray" title="mtcdb.types.NumpyArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mtcdb.types.NumpyArray</span></code></a>) – Spiking times during a <em>whole trial</em> (in seconds).
+Shape: <code class="docutils literal notranslate"><span class="pre">(nspikes,)</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>spk_joined</strong> – Spiking times comprised in <code class="docutils literal notranslate"><span class="pre">[tstart1,</span> <span class="pre">tend2]</span></code> and <code class="docutils literal notranslate"><span class="pre">[tstart2,</span> <span class="pre">tend2]</span></code>,
+realigned as if both epochs were continuous.
+Shape: <code class="docutils literal notranslate"><span class="pre">(nspikes1</span> <span class="pre">+</span> <span class="pre">nspikes2,)</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="constants.html#mtcdb.types.NumpyArray" title="mtcdb.types.NumpyArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mtcdb.types.NumpyArray</span></code></a></p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This function is used to recompose homogeneous trials,
+whatever the task, session, experimental parameters.
+Specifically, it allows to align the spiking times across trials.</p>
+<p class="rubric">Examples</p>
+<ul class="simple">
+<li><p>To align stimulus ‘offset’ across trials, the longest trials should be cropped
+by joining the periods before and after this extra-lagging window.</p></li>
+<li><p>In task CLK, to keep only Clicks as stimuli, the warning TORC should be excised,
+by joining the pre-stimulus epoch and the full epoch after the warning TORC.</p></li>
+<li><p>In task CLK, to keep only the warning TORCs as stimuli, the Clicks should be excised,
+by joining the epoch extenting up to the Click onset and the post-stimulus epoch.</p></li>
+</ul>
+<p class="rubric">Implementation</p>
+<ul class="simple">
+<li><p>Extract the spiking times in both periods.</p></li>
+<li><p>Shift the times in the second period by the duration of the first period.</p></li>
+<li><p>Concatenate the two sets of spiking times.</p></li>
+</ul>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#mtcdb.preprocess.firing_rates.slice_epoch" title="mtcdb.preprocess.firing_rates.slice_epoch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">slice_epoch</span></code></a></dt><dd><p>Extract spiking times within one epoch of one trial.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mtcdb.preprocess.firing_rates.spikes_to_rates">
+<span class="sig-name descname"><span class="pre">spikes_to_rates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tbin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mtcdb/preprocess/firing_rates.html#spikes_to_rates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mtcdb.preprocess.firing_rates.spikes_to_rates" title="Permalink to this definition"></a></dt>
+<dd><p>Convert a spike train into a firing rate time course.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spk</strong> (<a class="reference internal" href="constants.html#mtcdb.types.ArrayLike" title="mtcdb.types.ArrayLike"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mtcdb.types.ArrayLike</span></code></a>) – Spiking times.</p></li>
+<li><p><strong>tbin</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Time bin (in seconds).</p></li>
+<li><p><strong>tmax</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Duration of the recording period (in seconds).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>frates</strong> – Firing rate time course (in spikes/s).
+Shape: <code class="docutils literal notranslate"><span class="pre">(ntpts,</span> <span class="pre">1)</span></code> with <code class="docutils literal notranslate"><span class="pre">ntpts</span> <span class="pre">=</span> <span class="pre">tmax/tbin</span></code> (number of bins).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="constants.html#mtcdb.types.NumpyArray" title="mtcdb.types.NumpyArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mtcdb.types.NumpyArray</span></code></a></p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.histogram.html#numpy.histogram" title="(in NumPy v1.26)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.histogram</span></code></a></dt><dd><p>Used to count the number of spikes in each bin.</p>
+</dd>
+</dl>
+</div>
+<p class="rubric">Algorithm</p>
+<ul class="simple">
+<li><p>Divide the recording period  <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">tmax]</span></code> into bins of size <code class="docutils literal notranslate"><span class="pre">tbin</span></code>.</p></li>
+<li><p>Count the number of spikes in each bin.</p></li>
+<li><p>Divide the spikes count in each bin by the bin size <code class="docutils literal notranslate"><span class="pre">tbin</span></code>.</p></li>
+</ul>
+<p class="rubric">Implementation</p>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">np.histogram()</span></code> takes an argument <cite>bins</cite> for bin edges,
+which should include the <em>rightmost edge</em>.
+Bin edges are obtained with <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="(in NumPy v1.26)"><code class="xref py py-func docutils literal notranslate"><span class="pre">numpy.arange()</span></code></a>,
+with the last bin edge at <code class="docutils literal notranslate"><span class="pre">tmax</span> <span class="pre">+</span> <span class="pre">tbin</span></code> to include the last bin.
+<code class="xref py py-func docutils literal notranslate"><span class="pre">np.histogram()</span></code> returns two outputs:
+<code class="docutils literal notranslate"><span class="pre">hist</span></code> (number of spikes in each bin), <code class="docutils literal notranslate"><span class="pre">edges</span></code> (useless).</p>
+<p>The shape of <code class="docutils literal notranslate"><span class="pre">frates</span></code> is extended to two dimensions representing
+time (length <code class="docutils literal notranslate"><span class="pre">n_bins</span></code>),
+trials (length <code class="docutils literal notranslate"><span class="pre">1</span></code>, single trial).
+It ensures compatibility and consistence in the full process.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mtcdb.preprocess.firing_rates.smooth">
+<span class="sig-name descname"><span class="pre">smooth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tbin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'valid'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mtcdb/preprocess/firing_rates.html#smooth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mtcdb.preprocess.firing_rates.smooth" title="Permalink to this definition"></a></dt>
+<dd><p>Smooth the firing rates across time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>frates</strong> (<a class="reference internal" href="constants.html#mtcdb.types.NumpyArray" title="mtcdb.types.NumpyArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mtcdb.types.NumpyArray</span></code></a>) – Firing rate time course (in spikes/s).
+Shape: <code class="docutils literal notranslate"><span class="pre">(ntpts,</span> <span class="pre">ntrials)</span></code>,</p></li>
+<li><p><strong>window</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Smoothing window size (in seconds).</p></li>
+<li><p><strong>tbin</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Time bin (in seconds).</p></li>
+<li><p><strong>mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>smoothed</strong> – Smoothed firing rate time course (in spikes/s).
+Shape: <code class="docutils literal notranslate"><span class="pre">(ntpts_out,</span> <span class="pre">ntrials)</span></code>, <code class="docutils literal notranslate"><span class="pre">ntpts_out</span></code> depend on <code class="docutils literal notranslate"><span class="pre">mode</span></code>.
+With <code class="docutils literal notranslate"><span class="pre">&quot;valid&quot;</span></code>:  <code class="docutils literal notranslate"><span class="pre">ntpts_out</span> <span class="pre">=</span> <span class="pre">ntpts</span> <span class="pre">-</span> <span class="pre">window/tbin</span> <span class="pre">+</span> <span class="pre">1</span></code>.
+With <code class="docutils literal notranslate"><span class="pre">&quot;same&quot;</span></code>:  <code class="docutils literal notranslate"><span class="pre">ntpts_out</span> <span class="pre">=</span> <span class="pre">ntpts</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="constants.html#mtcdb.types.NumpyArray" title="mtcdb.types.NumpyArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mtcdb.types.NumpyArray</span></code></a></p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.signal.fftconvolve</span></code></dt><dd><p>Used to convolve the firing rate time course with a boxcar kernel.</p>
+</dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p>Smoothing consists in averaging consecutive values in a sliding window.</p>
+<p>Algorithm</p>
+<ul class="simple">
+<li><p>Convolve the firing rate time course with a boxcar kernel (FFT method).
+Size of the window: <code class="docutils literal notranslate"><span class="pre">window/tbin</span></code>.</p></li>
+<li><p>Divide the output by the window size to get the average.</p></li>
+</ul>
+<p>Convolution Modes</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">'same'</span></code>: Keep the output shape as the input sequence.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'valid'</span></code>: Keep only the values which are not influenced by zero-padding.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mtcdb.preprocess.firing_rates.align_trials">
+<span class="sig-name descname"><span class="pre">align_trials</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spk</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mtcdb/preprocess/firing_rates.html#align_trials"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mtcdb.preprocess.firing_rates.align_trials" title="Permalink to this definition"></a></dt>
+<dd><p>Align the spiking times across trials within one session.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>spk</strong> (<a class="reference internal" href="constants.html#mtcdb.types.NumpyArray" title="mtcdb.types.NumpyArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mtcdb.types.NumpyArray</span></code></a>) – </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>frates</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="constants.html#mtcdb.types.NumpyArray" title="mtcdb.types.NumpyArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mtcdb.types.NumpyArray</span></code></a></p>
+</dd>
+</dl>
+<p class="rubric">Implementation</p>
+<ul class="simple">
+<li></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mtcdb.preprocess.firing_rates.main">
+<span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/mtcdb/preprocess/firing_rates.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mtcdb.preprocess.firing_rates.main" title="Permalink to this definition"></a></dt>
+<dd><p>Main function for the module.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="utils.html" class="btn btn-neutral float-left" title="mtcdb.utils [module]" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../tests/index.html" class="btn btn-neutral float-right" title="Tests Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Esther Poniatowski.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

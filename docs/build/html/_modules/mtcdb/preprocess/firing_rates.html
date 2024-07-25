@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mtcdb.preprocess.firing_rates &mdash; Multi-Task Context-Dependent Behavior 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/assets/jsonview.bundle.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/libs/html/datatables.min.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/common.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/styles.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/modern.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-needs/layouts.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-test-results/common.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/assets/jsonview.bundle.js"></script>
+        <script src="../../../_static/assets/jsonview_loader.js"></script>
+        <script src="../../../_static/sphinx-needs/libs/html/datatables.min.js"></script>
+        <script src="../../../_static/sphinx-needs/libs/html/datatables_loader.js"></script>
+        <script src="../../../_static/sphinx-needs/libs/html/sphinx_needs_collapse.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Multi-Task Context-Dependent Behavior
+              <img src="../../../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">About the Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../about/background.html">Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about/contributors.html">Contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about/license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Results</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../results/baseline.html">Baseline Encoding</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Code Guide &amp; Usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../code/prerequisites.html">Prerequisites for Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../code/usage.html">Usage Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../code/index.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../code/test_report.html">Tests Results</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Multi-Task Context-Dependent Behavior</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mtcdb.preprocess.firing_rates</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mtcdb.preprocess.firing_rates</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">:mod:`mtcdb.preprocess.firing_rates` [module]</span>
+
+<span class="sd">Convert raw spike times to firing rates.</span>
+
+<span class="sd">See Also</span>
+<span class="sd">--------</span>
+<span class="sd">test_mtcdb.test_preprocess.test_firing_rates:</span>
+<span class="sd">    Unit tests for this module.</span>
+<span class="sd">mtcdb.datasets.RawSpikes:</span>
+<span class="sd">    Data structure for raw spike times.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">NDArray</span>
+<span class="kn">from</span> <span class="nn">scipy.signal</span> <span class="kn">import</span> <span class="n">fftconvolve</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">TypeAlias</span>
+
+<span class="kn">from</span> <span class="nn">mtcdb.constants</span> <span class="kn">import</span> <span class="n">TBIN</span>
+<span class="kn">from</span> <span class="nn">mtcdb.types</span> <span class="kn">import</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">NumpyArray</span>
+
+
+<span class="n">Stim</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">,</span> <span class="s1">&#39;T&#39;</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">]</span>
+<span class="n">Task</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;PTD&#39;</span><span class="p">,</span> <span class="s1">&#39;CLK&#39;</span><span class="p">]</span>
+<span class="n">NumpyArray</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="extract_trial"><a class="viewcode-back" href="../../../code/api/preprocess/firing_rates.html#mtcdb.preprocess.firing_rates.extract_trial">[docs]</a><span class="k">def</span> <span class="nf">extract_trial</span><span class="p">(</span><span class="n">trial</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span> 
+                  <span class="n">spikes</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> 
+                  <span class="n">trials</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span>
+                  <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract the spiking times in one specific trial.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    trial:</span>
+<span class="sd">        Index of the trial of interest, *starting from 1*.</span>
+<span class="sd">    spikes:</span>
+<span class="sd">        Raw spiking times (in seconds) for one unit in a *whole session*.</span>
+<span class="sd">        Shape: ``(nspikes,)``.</span>
+<span class="sd">    trials:</span>
+<span class="sd">        Trial indexes corresponding to spiking times.</span>
+<span class="sd">        Shape: ``(nspikes,)``.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    spk:</span>
+<span class="sd">        Spiking times occurring in the selected trial.</span>
+<span class="sd">        Shape: ``(nspikes_trial,)``.</span>
+<span class="sd">    </span>
+<span class="sd">    Implementation</span>
+<span class="sd">    --------------</span>
+<span class="sd">    To extract the spiking times of one trial, </span>
+<span class="sd">    use a boolean mask on the trial number.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the number of spikes and trials do not match.</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    :class:`mtcdb.datasets.RawSpikes`: Data structure for raw spike times.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">spikes</span><span class="p">[</span><span class="n">trials</span><span class="o">==</span><span class="n">trial</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="slice_epoch"><a class="viewcode-back" href="../../../code/api/preprocess/firing_rates.html#mtcdb.preprocess.firing_rates.slice_epoch">[docs]</a><span class="k">def</span> <span class="nf">slice_epoch</span><span class="p">(</span><span class="n">tstart</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">tend</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> 
+                <span class="n">spk</span><span class="p">:</span> <span class="n">NumpyArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyArray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract spiking times within one epoch of one trial.</span>
+
+<span class="sd">    Important</span>
+<span class="sd">    ---------</span>
+<span class="sd">    Spiking times are *relative* to the beginning of the epoch.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tstart, tend: float</span>
+<span class="sd">        Times boundaries of the epoch (in seconds).</span>
+<span class="sd">    spk: :obj:`mtcdb.types.NumpyArray`</span>
+<span class="sd">        Spiking times during a *whole trial* (in seconds).</span>
+<span class="sd">        Shape: ``(nspikes,)``.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    spk_epoch: :obj:`mtcdb.types.NumpyArray`</span>
+<span class="sd">        Spiking times in the epoch comprised between ``tstart`` and ``tend``,</span>
+<span class="sd">        reset to be relative to the beginning of the epoch.</span>
+<span class="sd">        Shape: ``(nspikes_epoch, 1)``.</span>
+<span class="sd">    </span>
+<span class="sd">    Implementation</span>
+<span class="sd">    --------------</span>
+<span class="sd">    - Select the spiking times within the epoch with a boolean mask.</span>
+<span class="sd">    - Subtract the starting time of the epoch to reset the time.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">spk</span><span class="p">[(</span><span class="n">spk</span><span class="o">&gt;=</span><span class="n">tstart</span><span class="p">)</span><span class="o">&amp;</span><span class="p">(</span><span class="n">spk</span><span class="o">&lt;</span><span class="n">tend</span><span class="p">)]</span> <span class="o">-</span> <span class="n">tstart</span></div>
+
+
+<div class="viewcode-block" id="join_epochs"><a class="viewcode-back" href="../../../code/api/preprocess/firing_rates.html#mtcdb.preprocess.firing_rates.join_epochs">[docs]</a><span class="k">def</span> <span class="nf">join_epochs</span><span class="p">(</span><span class="n">tstart1</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">tend1</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> 
+                <span class="n">tstart2</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">tend2</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> 
+                <span class="n">spk</span><span class="p">:</span> <span class="n">NumpyArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyArray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Join spiking times from two distinct epochs as if they were continuous.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tstart1, tend1, tstart2, tend2: float</span>
+<span class="sd">        Times boundaries of both epochs to connect (in seconds).</span>
+<span class="sd">    spk: :obj:`mtcdb.types.NumpyArray`</span>
+<span class="sd">        Spiking times during a *whole trial* (in seconds).</span>
+<span class="sd">        Shape: ``(nspikes,)``.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    spk_joined: :obj:`mtcdb.types.NumpyArray`</span>
+<span class="sd">        Spiking times comprised in ``[tstart1, tend2]`` and ``[tstart2, tend2]``,</span>
+<span class="sd">        realigned as if both epochs were continuous.</span>
+<span class="sd">        Shape: ``(nspikes1 + nspikes2,)``.</span>
+<span class="sd">        </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function is used to recompose homogeneous trials, </span>
+<span class="sd">    whatever the task, session, experimental parameters.</span>
+<span class="sd">    Specifically, it allows to align the spiking times across trials.</span>
+
+<span class="sd">    Implementation</span>
+<span class="sd">    --------------</span>
+<span class="sd">    - Extract the spiking times in both periods.</span>
+<span class="sd">    - Shift the times in the second period by the duration of the first period.</span>
+<span class="sd">    - Concatenate the two sets of spiking times.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    slice_epoch: Extract spiking times within one epoch of one trial.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">spk1</span> <span class="o">=</span> <span class="n">slice_epoch</span><span class="p">(</span><span class="n">tstart1</span><span class="p">,</span> <span class="n">tend1</span><span class="p">,</span> <span class="n">spk</span><span class="p">)</span>
+    <span class="n">spk2</span> <span class="o">=</span> <span class="n">slice_epoch</span><span class="p">(</span><span class="n">tstart2</span><span class="p">,</span> <span class="n">tend2</span><span class="p">,</span> <span class="n">spk</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">tend1</span> <span class="o">-</span> <span class="n">tstart1</span><span class="p">)</span>
+    <span class="n">spk_joined</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">spk1</span><span class="p">,</span> <span class="n">spk2</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">spk_joined</span></div>
+     
+
+<div class="viewcode-block" id="align_timings"><a class="viewcode-back" href="../../../code/api/preprocess/firing_rates.html#mtcdb.preprocess.firing_rates.align_timings">[docs]</a><span class="k">def</span> <span class="nf">align_timings</span><span class="p">(</span><span class="n">task</span><span class="p">:</span> <span class="n">Task</span><span class="p">,</span> <span class="n">stim</span><span class="p">:</span> <span class="n">Stim</span><span class="p">,</span>
+                  <span class="n">d_pre</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                  <span class="n">d_stim</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                  <span class="n">d_post</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                  <span class="n">d_warn</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                  <span class="n">t_on</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                  <span class="n">t_off</span><span class="p">:</span> <span class="nb">float</span>
+                  <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determine the times boundaries of the epochs to extract in one trial.</span>
+<span class="sd">    </span>
+<span class="sd">    The goal is to align *all* trials across tasks and stimuli.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    task: Task {&#39;PTD&#39;, &#39;CLK&#39;}</span>
+<span class="sd">        Type of task.</span>
+<span class="sd">    stim: Stim {&#39;R&#39;, &#39;T&#39;, &#39;N&#39;}</span>
+<span class="sd">        Type of stimulus.</span>
+<span class="sd">    d_pre, d_stim, d_post: float</span>
+<span class="sd">        Durations of the pre-stimulus, stimulus, </span>
+<span class="sd">        and post-stimulus periods (in seconds),</span>
+<span class="sd">        common to *all* trials in the final dataset.</span>
+<span class="sd">    d_warn: float</span>
+<span class="sd">        Duration of the TORC stimulus (in seconds),</span>
+<span class="sd">        within the total trial duration in task CLK.</span>
+<span class="sd">    t_on, t_off: float</span>
+<span class="sd">        Times of stimulus onset and offset (in seconds)</span>
+<span class="sd">        during the *specific* trial.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tstart1, tend1, tstart2, tend2: tuple[float, float, float, float]</span>
+<span class="sd">        Time boundaries of the first and second epochs to extract</span>
+<span class="sd">        in the specific trial.</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Each trial in the final data set contains three epochs,</span>
+<span class="sd">    whose durations are common across all trials :</span>
+
+<span class="sd">    - Pre-stimulus period : duration ``d_pre``.</span>
+<span class="sd">    - Stimulus period : duration ``d_stim``.</span>
+<span class="sd">    - Post-stimulus period : duration ``d_post``.</span>
+
+<span class="sd">    To do so, in each specific trial from the raw data, several discontinuous</span>
+<span class="sd">    epochs should be joined artificially. </span>
+<span class="sd">    The relevant epochs to extract depend on :</span>
+<span class="sd">    </span>
+<span class="sd">    - The actual times of stimulus onset and offset in the specific trial,</span>
+<span class="sd">      which may vary across sessions and trials (experimental variability).</span>
+<span class="sd">    - The type of task and stimulus to align.</span>
+<span class="sd">      </span>
+<span class="sd">    In task PTD, one single stimulus occurs in one trial</span>
+<span class="sd">    (TORC &#39;R&#39; or Tone &#39;T&#39;).</span>
+<span class="sd">    In task CLK, two stimuli follow each other in one trial</span>
+<span class="sd">    (TORC &#39;N&#39; and Click train &#39;R&#39;/&#39;T&#39;). </span>
+<span class="sd">    Both should constitute independent trials in the final dataset. </span>
+<span class="sd">    To do so, the other stimulus should be excised from the epoch.</span>
+<span class="sd">    </span>
+<span class="sd">    Implementation</span>
+<span class="sd">    --------------</span>
+<span class="sd">    **Task PTD or Task CLK with TORC**</span>
+
+<span class="sd">    The first retained epoch encompasses pre-stimulus *and* stimulus periods.</span>
+<span class="sd">    To align all the stimuli&#39;s onsets across trials, this epoch should start</span>
+<span class="sd">    a duration ``d_pre`` before the stimulus onset, </span>
+<span class="sd">    i.e. at time ``t_on - d_pre``.</span>
+<span class="sd">    To keep a common stimulus diration across trials, this epoch should end </span>
+<span class="sd">    a duration ``d_stim`` after the stimulus onset,</span>
+<span class="sd">    i.e. at time ``t_on + d_stim``.</span>
+<span class="sd">    The second retained epoch encompasses only the post-stimulus period.</span>
+<span class="sd">    To align all the stimuli&#39;s offsets across trials, this epoch should start </span>
+<span class="sd">    at the true end of stimulus ``t_off``, and should end </span>
+<span class="sd">    at a duration ``d_post`` after the stimulus offset,</span>
+<span class="sd">    i.e. at time ``t_off + d_post``.</span>
+
+<span class="sd">    **Task CLK with Click**</span>
+
+<span class="sd">    The first retained epoch encompasses only the pre-stimulus period.</span>
+<span class="sd">    It should start as for the PTD case.</span>
+<span class="sd">    It should end before the TORC, i.e. at time ``t_on``.</span>
+<span class="sd">    The second retained epoch encompasses both the stimulus and post-stimulus periods.</span>
+<span class="sd">    It should start at the beginning of the Click, i.e. at the offset of the TORC,</span>
+<span class="sd">    i.e. at time ``t_on + d_warn``.</span>
+<span class="sd">    It should last the duration of the stimulus AND post-stimulus periods,</span>
+<span class="sd">    i.e. end at ``tstart2 + d_stim + d_post``.</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        Stimuli might be cropped if their actual duration ``t_off - t_on``</span>
+<span class="sd">        is longer than the duration ``d_stim`` set for the whole dataset.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the task or stimulus is unknown.</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    join_epochs: Join spiking times from two distinct epochs as if they were continuous.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tstart1</span> <span class="o">=</span> <span class="n">t_on</span> <span class="o">-</span> <span class="n">d_pre</span>
+    <span class="k">if</span> <span class="n">task</span> <span class="o">==</span> <span class="s1">&#39;PTD&#39;</span> <span class="ow">or</span> <span class="p">(</span><span class="n">task</span> <span class="o">==</span> <span class="s1">&#39;CLK&#39;</span> <span class="ow">and</span> <span class="n">stim</span> <span class="o">==</span> <span class="s1">&#39;N&#39;</span><span class="p">):</span> <span class="c1"># excise Click train</span>
+        <span class="n">tend1</span> <span class="o">=</span> <span class="n">t_on</span> <span class="o">+</span> <span class="n">d_stim</span>
+        <span class="n">tstart2</span> <span class="o">=</span> <span class="n">t_off</span>
+        <span class="n">tend2</span> <span class="o">=</span> <span class="n">t_off</span> <span class="o">+</span> <span class="n">d_post</span>
+    <span class="k">elif</span> <span class="n">task</span> <span class="o">==</span> <span class="s1">&#39;CLK&#39;</span> <span class="ow">and</span> <span class="p">(</span><span class="n">stim</span> <span class="o">==</span> <span class="s1">&#39;T&#39;</span> <span class="ow">or</span> <span class="n">stim</span> <span class="o">==</span> <span class="s1">&#39;R&#39;</span><span class="p">):</span> <span class="c1"># excise TORC</span>
+        <span class="n">tend1</span> <span class="o">=</span> <span class="n">t_on</span>
+        <span class="n">tstart2</span> <span class="o">=</span> <span class="n">t_on</span> <span class="o">+</span> <span class="n">d_warn</span>
+        <span class="n">tend2</span> <span class="o">=</span> <span class="n">tstart2</span> <span class="o">+</span> <span class="n">d_stim</span> <span class="o">+</span> <span class="n">d_post</span>  
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown task or stimulus&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tstart1</span><span class="p">,</span> <span class="n">tend1</span><span class="p">,</span> <span class="n">tstart2</span><span class="p">,</span> <span class="n">tend2</span></div>
+
+
+<div class="viewcode-block" id="spikes_to_rates"><a class="viewcode-back" href="../../../code/api/preprocess/firing_rates.html#mtcdb.preprocess.firing_rates.spikes_to_rates">[docs]</a><span class="k">def</span> <span class="nf">spikes_to_rates</span><span class="p">(</span><span class="n">spk</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+                    <span class="n">tbin</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                    <span class="n">tmax</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyArray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a spike train into a firing rate time course.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spk: :obj:`mtcdb.types.ArrayLike`</span>
+<span class="sd">        Spiking times.</span>
+<span class="sd">    tbin: float</span>
+<span class="sd">        Time bin (in seconds).</span>
+<span class="sd">    tmax: float</span>
+<span class="sd">        Duration of the recording period (in seconds).</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    frates: :obj:`mtcdb.types.NumpyArray`</span>
+<span class="sd">        Firing rate time course (in spikes/s).</span>
+<span class="sd">        Shape: ``(ntpts, 1)`` with ``ntpts = tmax/tbin`` (number of bins).</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    numpy.histogram: Used to count the number of spikes in each bin.</span>
+<span class="sd">    </span>
+<span class="sd">    Algorithm</span>
+<span class="sd">    ---------</span>
+<span class="sd">    - Divide the recording period ``[0, tmax]`` into bins of size ``tbin``.</span>
+<span class="sd">    - Count the number of spikes in each bin.</span>
+<span class="sd">    - Divide the spikes count in each bin by the bin size ``tbin``.</span>
+
+<span class="sd">    Implementation</span>
+<span class="sd">    --------------</span>
+<span class="sd">    :func:`np.histogram` takes an argument `bins` for bin edges,</span>
+<span class="sd">    which should include the *rightmost edge*.</span>
+<span class="sd">    Bin edges are obtained with :func:`numpy.arange`, </span>
+<span class="sd">    with the last bin edge at ``tmax + tbin`` to include the last bin.</span>
+<span class="sd">    :func:`np.histogram` returns two outputs: </span>
+<span class="sd">    ``hist`` (number of spikes in each bin), ``edges`` (useless).</span>
+<span class="sd">    </span>
+<span class="sd">    The shape of ``frates`` is extended to two dimensions representing</span>
+<span class="sd">    time (length ``n_bins``),</span>
+<span class="sd">    trials (length ``1``, single trial).</span>
+<span class="sd">    It ensures compatibility and consistence in the full process.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">frates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">spk</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">tmax</span><span class="o">+</span><span class="n">tbin</span><span class="p">,</span> <span class="n">tbin</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">tbin</span>
+    <span class="n">frates</span> <span class="o">=</span> <span class="n">frates</span><span class="p">[:,</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="c1"># add one dimension for trials</span>
+    <span class="k">return</span> <span class="n">frates</span></div>
+
+
+<div class="viewcode-block" id="smooth"><a class="viewcode-back" href="../../../code/api/preprocess/firing_rates.html#mtcdb.preprocess.firing_rates.smooth">[docs]</a><span class="k">def</span> <span class="nf">smooth</span><span class="p">(</span><span class="n">frates</span><span class="p">:</span> <span class="n">NumpyArray</span><span class="p">,</span>
+           <span class="n">window</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+           <span class="n">tbin</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+           <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;valid&#39;</span><span class="p">,</span>
+           <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumpyArray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Smooth the firing rates across time.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    frates: :obj:`mtcdb.types.NumpyArray`</span>
+<span class="sd">        Firing rate time course (in spikes/s).</span>
+<span class="sd">        Shape: ``(ntpts, ntrials)``,</span>
+<span class="sd">    window: float</span>
+<span class="sd">        Smoothing window size (in seconds).</span>
+<span class="sd">    tbin: float</span>
+<span class="sd">        Time bin (in seconds).</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    smoothed: :obj:`mtcdb.types.NumpyArray`</span>
+<span class="sd">        Smoothed firing rate time course (in spikes/s).</span>
+<span class="sd">        Shape: ``(ntpts_out, ntrials)``, ``ntpts_out`` depend on ``mode``.</span>
+<span class="sd">        With ``&quot;valid&quot;``:  ``ntpts_out = ntpts - window/tbin + 1``.</span>
+<span class="sd">        With ``&quot;same&quot;``:  ``ntpts_out = ntpts``.</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    scipy.signal.fftconvolve: Used to convolve the firing rate time course with a boxcar kernel.</span>
+<span class="sd">    </span>
+<span class="sd">    Algorithm</span>
+<span class="sd">    ---------</span>
+<span class="sd">    Smoothing consists in averaging consecutive values in a sliding window.</span>
+
+<span class="sd">    - Convolve the firing rate time course with a boxcar kernel (FFT method).</span>
+<span class="sd">      Size of the window: ``window/tbin``.</span>
+<span class="sd">    - Divide the output by the window size to get the average.</span>
+
+<span class="sd">    Convolution Modes</span>
+
+<span class="sd">    - ``&#39;same&#39;``: Keep the output shape as the input sequence.</span>
+<span class="sd">    - ``&#39;valid&#39;``: Keep only the values which are not influenced by zero-padding.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">window</span><span class="o">/</span><span class="n">tbin</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span> <span class="c1"># add one dimension for shape compatibility</span>
+    <span class="n">smoothed</span> <span class="o">=</span> <span class="n">fftconvolve</span><span class="p">(</span><span class="n">frates</span><span class="p">,</span> <span class="n">kernel</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">kernel</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">smoothed</span></div>
+
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../code/api/preprocess/firing_rates.html#mtcdb.preprocess.firing_rates.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Process all the raw data of one neuron to compute its final firing rates.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+<span class="c1">###############################################################################</span>
+<span class="c1">###############################################################################</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Esther Poniatowski.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
