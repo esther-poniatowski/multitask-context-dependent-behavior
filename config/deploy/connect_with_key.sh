@@ -22,6 +22,10 @@
 CREDENTIALS=$1
 source $CREDENTIALS
 
+# Display connection information
+echo "User: $USER"
+echo "Host: $HOST"
+
 eval "$(ssh-agent -s)"
-ssh-add $(PATH_KEY)
-ssh -X $(USER)@$(HOST)
+ssh-add $PATH_KEY
+ssh -X $USER@$HOST
