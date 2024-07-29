@@ -1,6 +1,6 @@
 
 # =================================================================================================
-# Main Makefile for the project.
+# Main Makefile for the workspace.
 #
 # Targets
 # -------
@@ -20,18 +20,18 @@
 # ENV_NAME (from ``.env``)
 # 	Name of the conda environment to activate.
 # ROOT (from ``.env``)
-# 	Path to the root of the project.
+# 	Path to the root of the workspace.
 # ACTIVATE (defined in the current Makefile)
 # 	Command to activate the conda environment. Defined as a variable to be reused in other targets.
 #   Actions:
 #     - Initialize the conda shell via the `shell.bash` hook.
 #     - Activate the conda environment.
-#     - Change the directory to the root of the project.
+#     - Change the directory to the root of the workspace.
 #
 # Warning
 # -------
-# This file should be located at the *root* of the project to ensure paths consistency. This
-# makefile plays the role of the entry point for the project. It includes other more specific
+# This file should be located at the *root* of the workspace to ensure paths consistency. This
+# makefile plays the role of the entry point for the workspace. It includes other more specific
 # makefiles usually located at the root of several component directories.
 #
 # Notes

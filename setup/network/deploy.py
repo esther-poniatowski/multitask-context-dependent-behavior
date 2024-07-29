@@ -81,7 +81,7 @@ class Deployer:
     host : str
         IP address or hostname of the remote server.
     root_path : Path
-        Path of the root directory of the project on the remote server.
+        Path of the root directory of the workspace on the remote server.
     sync_map : dict
         Mapping of local paths (files and directories) to the corresponding remote paths.
         The structure and content of the directory corresponds to the `sync-map.yml` file.

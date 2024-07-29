@@ -42,7 +42,7 @@ single `pyproject.toml` file.
 Advantages :
 
 - Compatibility : Individual files use the most conventional format.
-- Readability : It makes clear which tools are used in the project.
+- Readability : It makes clear which tools are used in the workspace.
 - Modularity : They can be passed independently to different tools.
 
 Create `makefile` commands to pass configuration files to the respective tools. Those commands
@@ -60,7 +60,7 @@ Several strategies can be considered :
 1. "Inclusion" strategy : Include only the relevant directories.
 Disadvantage : If a file path is passed on the command line after the configuration file,
 it is included even if it does not belong to the relevant directories.
-2. "Exclusion" strategy : Include the whole project and exclude irrelevant directories (force).
+2. "Exclusion" strategy : Include the whole workspace and exclude irrelevant directories (force).
 Advantages : If a file path is passed on the command line after the configuration file,
 it is excluded if it belongs to the irrelevant directories.
 3. Passing the relevant directories as arguments to the extensions.
@@ -73,5 +73,5 @@ Therefore, exclusions should be forced on the irrelevant directories so that the
 in the editor without being formatted.
 Warning: Any new directory to exclude must be explicitly added in multiple configuration files.
 Before, the relevant directories "src" and "tests" were passed to the extensions,
-but now I pass the whole project and exclude
+but now I pass the whole workspace and exclude
 Conclusion : Use the "exclusion" strategy.
