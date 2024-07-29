@@ -1,6 +1,6 @@
 
 # =================================================================================================
-# Main Makefile for the workspace.
+# Main Makefile for the workspace ("lead" part on the local machine).
 #
 # Targets
 # -------
@@ -13,15 +13,9 @@
 #
 # Variables
 # ---------
-# ENV_FILE
-# 	Path to the ``.env`` file where essential environment variables are stored.
-# MAKEFILE_PATHS (from ``.env``)
-# 	List of paths to the Makefiles to include.
-# ENV_NAME (from ``.env``)
-# 	Name of the conda environment to activate.
-# ROOT (from ``.env``)
-# 	Path to the root of the workspace.
-# ACTIVATE (defined in the current Makefile)
+# ENV_FILES : str
+# 	Paths to the ``.env`` files where essential environment variables are defined.
+# ACTIVATE : str
 # 	Command to activate the conda environment. Defined as a variable to be reused in other targets.
 #   Actions:
 #     - Initialize the conda shell via the `shell.bash` hook.
@@ -34,27 +28,36 @@
 # makefile plays the role of the entry point for the workspace. It includes other more specific
 # makefiles usually located at the root of several component directories.
 #
+# Each included makefile should define a `help-...` target to display the list of available targets.
+# The name of this target should be unique to avoid conflicts across makefiles when including them.
+#
 # Notes
 # -----
-# `.DEFAULT_GOAL` is a special variable that sets the default target. If not specified, the default
-# target corresponds to the first target defined in the Makefile. Here, because other makefiles are
-# included, before defining any target, the default target would be set to one of the included ones.
-# The `.DEFAULT_GOAL` variable is used to ensure that the `workspace-info` target is the default one.
-#
-# Each makefile included should define a `help-...` target to display the list of available targets.
-# The name of this target should be unique to avoid conflicts acroos makefiles when including them.
+# `.DEFAULT_GOAL` (special variable): Set the default target. If not specified, the default target
+# corresponds to the *first* target defined in the Makefile, which is one of the *included*
+# makefiles.
 #
 # See Also
 # --------
+# `.env` file for the definition of the other environment variables:
+#
+# - ROOT
+# - WORKSPACE
+# - MAKEFILE_PATHS
+# - ENV_NAME
+#
 # =================================================================================================
 
-ENV_FILE := .env
+ENV_FILES := meta.env path.env
 
 $(info -----------------)
 $(info INCLUDE ENVIRONMENT VARIABLES)
-ifneq ("$(wildcard $(ENV_FILE))","")
-    include $(ENV_FILE) $(info Include: $(ENV_FILE))
-endif
+$(foreach FILE, $(ENV_FILES), \
+	$(if $(wildcard $(FILE)), \
+		$(eval ENV_FILE := $(FILE)) $(info Include: $(FILE)), \
+		$(warning No environment file at $(FILE)) \
+	) \
+)
 
 $(info -----------------)
 $(info INCLUDE MAKEFILES)
