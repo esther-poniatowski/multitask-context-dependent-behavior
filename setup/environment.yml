@@ -1,0 +1,31 @@
+name: mtcdb
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.9
+  - black
+  - doctest
+  - esbonio
+  - matplotlib
+  - mypy
+  - mypy_extensions
+  - numpy
+  - pandas
+  - pip
+  - pylint
+  - pyright
+  - pytest
+  - pytest-pylint
+  - python-dotenv
+  - pyyaml
+  - scipy
+  - sphinx
+  - sphinxcontrib
+  - sphinx_rtd_theme
+  - scikit-learn
+  - xarray
+  - pip:
+      #- sphinx-test-reports
+      # distutils
+variables:
