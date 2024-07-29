@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-:mod:`set_env_vars` [module]
+:mod:`manage_env_vars` [module]
 
 Manage environment variables in the *active* Conda environment.
 
@@ -9,9 +9,9 @@ Usage
 -----
 .. code-block:: bash
 
-    python set_env_vars.py --method set_all --env-path path/to/.env
-    python set_env_vars.py --method unset --vars VAR1 VAR2
-    python set_env_vars.py --method check
+    python manage_env_vars.py --method set_all --env-path path/to/.env
+    python manage_env_vars.py --method unset --vars VAR1 VAR2
+    python manage_env_vars.py --method check
 
 Arguments
 ---------
