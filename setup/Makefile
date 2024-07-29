@@ -38,7 +38,7 @@
 #     Path to the environment file.
 # ENV_FILE : str
 #     Path to the ``.env`` file where essential environment variables are stored.
-# SET_ENV_VARS : str
+# MANAGE_ENV_VARS : str
 #     Path to the python script which sets the environment variables.
 # DEV_PKG : str
 #     List of packages to register in development mode.
@@ -82,11 +82,11 @@ update-env:
 .PHONY: set-vars
 set-vars:
 	${ACTIVATE} && \
-	python ${SET_ENV_VARS} --env-path ${ENV_FILE}
+	python ${MANAGE_ENV_VARS} --env-path ${ENV_FILE}
 
 .PHONY: check-vars
 check-vars:
-	${ACTIVATE} && python ${SET_ENV_VARS} --method check
+	${ACTIVATE} && python ${MANAGE_ENV_VARS} --method check
 
 .PHONY: set-pkg
 set-pkg:

@@ -8,7 +8,7 @@ Tool package for setting up the development environment.
 Modules
 -------
 :mod:`manage_dev_pkg` [module]
-:mod:`set_env_vars` [module]
+:mod:`manage_env_vars` [module]
 """
 # pylint: disable=unused-variable
 # pylint: disable=unused-wildcard-import
@@ -26,5 +26,5 @@ __status__ = "Development"
 __docformat__ = "numpydoc"
 __all__ = [
     "manage_dev_pkg",
-    "set_env_vars",
+    "manage_env_vars",
 ]
