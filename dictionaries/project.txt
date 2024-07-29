@@ -12,6 +12,7 @@ firingrates
 frates
 Morbier
 mtcdb
+myenv
 nspikes
 ntpts
 ntrials
