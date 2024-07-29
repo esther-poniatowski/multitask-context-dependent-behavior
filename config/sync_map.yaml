@@ -11,7 +11,7 @@
 #
 # Warning
 # -------
-# Paths are *relative* to the *root* directory of the project in the respective servers.
+# Paths are *relative* to the *root* directory of the workspace in the respective servers.
 # For files, the remote path should be the destination *directory*, not a file path.
 # =================================================================================
 

@@ -18,7 +18,7 @@ REPORT_NAME = 'test_results'
 REPORT_EXTENSION = '.xml'
 
 def pytest_configure(config):
-	# Get the root directory of the project
+	# Get the root directory of the workspace
 	root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     # Set the reports directory path
 	reports_dir = os.path.join(root_dir, 'reports')

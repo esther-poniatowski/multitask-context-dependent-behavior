@@ -1,5 +1,5 @@
 # =================================================================================================
-# Makefile to manage the virtual environment of the project.
+# Makefile to manage the virtual environment of the workspace.
 #
 # Targets
 # -------
@@ -28,7 +28,7 @@
 # check-workspace
 #    Display metadata about the workspace to ensure setup success.
 # remove-env
-#    Remove the virtual environment and clean the project from cache files.
+#    Remove the virtual environment and clean the workspace from cache files.
 #
 # Variables
 # ---------
@@ -53,7 +53,7 @@
 #
 # Warning
 # -------
-# The setup command should be invoked from the *root directory* of the project, only once.
+# The setup command should be invoked from the *root directory* of the workspace, only once.
 # =================================================================================================
 
 
@@ -68,7 +68,7 @@ help-setup:
 	@echo "setup-workspace  - Setup the full workspace."
 	@echo "update-workspace - Update the full workspace."
 	@echo "check-workspace  - Display metadata about the workspace."
-	@echo "remove-env       - Remove the virtual environment and clean the project from cache files."
+	@echo "remove-env       - Remove the virtual environment and clean the workspace from cache files."
 
 
 .PHONY: create-env

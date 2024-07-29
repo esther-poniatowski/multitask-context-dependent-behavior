@@ -1,5 +1,5 @@
 # =================================================================================================
-# Makefile to deploy the relevant part of the project on the hub.
+# Makefile to deploy the relevant part of the workspace on the hub.
 #
 # Targets
 # -------
@@ -11,7 +11,7 @@
 # Variables
 # ---------
 # ROOT
-# 	Root directory of the project. Set upon activating the conda environment of the project.
+# 	Root directory of the workspace. Set upon activating the conda environment of the workspace.
 # CREDENTIALS_DIR
 # 	Directory containing the credentials.
 # CREDENTIALS_ENV
