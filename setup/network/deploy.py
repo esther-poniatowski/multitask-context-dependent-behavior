@@ -24,7 +24,7 @@ Example
 -------
 .. code-block:: bash
 
-    python setup/set_env_vars.py --env-path .env
+    python setup/manage_env_vars.py --env-path .env
 
 Notes
 -----

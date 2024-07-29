@@ -6,7 +6,7 @@
 # send-keys
 # 	Send SSH keys to the hub.
 # connect
-# 	Connect to the hub.
+# 	Connect to the data hub.
 #
 # Variables
 # ---------
@@ -49,3 +49,7 @@ check-inclusion:
 	@echo "CONFIG_DIR: $(CONFIG_DIR)"
 	@echo "CREDENTIALS_DIR: $(CREDENTIALS_DIR)"
 	@echo "CREDENTIALS_ENV: $(CREDENTIALS_ENV)"
+
+
+mount-data:
+	# TODO: Run the script mount_data.sh

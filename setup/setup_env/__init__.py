@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`setup_tools` [package]
+:mod:`setup_env` [package]
 
 Tool package for setting up the development environment.
 

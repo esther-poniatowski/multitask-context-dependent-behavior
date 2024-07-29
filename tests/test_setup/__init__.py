@@ -11,5 +11,5 @@ Sub-Packages
 
 See Also
 --------
-:mod:`setup_tools`: Package to test.
+:mod:`setup_env`: Package to test.
 """
