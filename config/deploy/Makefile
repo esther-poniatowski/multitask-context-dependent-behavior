@@ -41,7 +41,7 @@ send-keys:
 
 .PHONY: connect
 connect:
-	$(CONFIG_DIR)/deploy/connect_with_keys.sh $(CREDENTIALS_ENV)
+	$(CONFIG_DIR)/deploy/connect_with_key.sh $(CREDENTIALS_ENV)
 
 .PHONY: check-inclusion
 check-inclusion:
