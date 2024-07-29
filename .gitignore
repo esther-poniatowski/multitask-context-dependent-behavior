@@ -1,6 +1,9 @@
 ### gitignore file
 ### Project multitask-context-dependent-behavior
 
+# Confidential files
+**/credentials/*
+
 # Temporary files
 *.tmp
 *.temp
@@ -21,9 +24,6 @@
 data/
 
 # Sphinx Builds
-
-
-.env*
 .flaskenv*
 !.env.project
 !.env.vault
