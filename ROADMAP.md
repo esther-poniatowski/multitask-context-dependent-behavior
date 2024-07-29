@@ -5,18 +5,18 @@
 - Sub-Issue:  #
 
 ## Current Status
-?
+Currently working on the deployment script. Next step: test some components of the deployment script.
 Started: `process_evp.py`, `process_evp.m`
 
 ## Tasks
 - [X] `.env` file to store the server credentials and other configurations.
-- [ ] Script to connect to the server.
+- [X] Script to connect to the server.
 - [ ] Deployment config to specify the mapping between the local directories and the server
   directories.
-- [ ] Deployment script to transfer files from the local machine to the server.
-- [ ] Local Makefile to orchestrate the deployment.
-- [ ] Set up script to create a dedicated environment in the server.
-- [ ] Environment .yaml file to specify the python dependencies on the server.
+- [X] Deployment script to transfer files from the local machine to the server.
+- [X] Local Makefile to orchestrate the deployment.
+- [X] Set up script to create a dedicated environment in the server.
+- [X] Environment .yaml file to specify the python dependencies on the server.
 - [ ] Set up script to get matlab dependencies in the server and adjust paths.
 - [ ] Package in src to deploy, containing logic to extract lick histograms in the server (see
   Notes).
