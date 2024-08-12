@@ -16,8 +16,8 @@ import warnings
 import numpy as np
 import numpy.typing as npt
 
-from mtcdb.coordinates.base import Coordinate
-from mtcdb.constants import T_ON, T_OFF, T_SHOCK
+from core.coordinates.base import Coordinate
+from core.constants import T_ON, T_OFF, T_SHOCK
 
 
 class CoordTime(Coordinate):

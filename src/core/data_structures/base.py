@@ -13,18 +13,17 @@ import copy
 from pathlib import Path
 from types import MappingProxyType
 from typing import Tuple, List, Dict, FrozenSet, Mapping, Type, TypeVar, Generic, Optional
-from dataclasses import dataclass, fields
 
 import numpy as np
 import numpy.typing as npt
 
-from mtcdb_shared.io.path_managers.base import PathManager
-from mtcdb_shared.io.formats import TargetType
-from mtcdb_shared.io.loaders.base import Loader
-from mtcdb_shared.io.loaders.impl import LoaderPKL
-from mtcdb_shared.io.savers.base import Saver
-from mtcdb_shared.io.savers.impl import SaverPKL
-from mtcdb.utils.sequences import reverse_dict_container
+from utils.io.path_managers.base import PathManager
+from utils.io.formats import TargetType
+from utils.io.loaders.base import Loader
+from utils.io.loaders.impl import LoaderPKL
+from utils.io.savers.base import Saver
+from utils.io.savers.impl import SaverPKL
+from utils.misc.sequences import reverse_dict_container
 
 
 class MetaData(ABCMeta):

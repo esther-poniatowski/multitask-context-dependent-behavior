@@ -28,4 +28,4 @@ test_mtcdb: Tests for the whole package.
 # pylint: disable=unused-variable
 # pylint: disable=unused-wildcard-import
 
-from mtcdb.constants import *
+from core.constants import *

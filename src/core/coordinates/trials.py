@@ -16,7 +16,7 @@ from typing import Optional, Dict, List
 import numpy as np
 import numpy.typing as npt
 
-from mtcdb.coordinates.base import Coordinate
+from core.coordinates.base import Coordinate
 
 
 class CoordError(Coordinate):

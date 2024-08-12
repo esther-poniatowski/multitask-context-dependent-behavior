@@ -15,7 +15,7 @@ import copy
 import numpy as np
 import numpy.typing as npt
 
-from mtcdb.utils.functions import filter_kwargs
+from utils.misc.functions import filter_kwargs
 
 
 C = TypeVar("C", bound="Coordinate")
