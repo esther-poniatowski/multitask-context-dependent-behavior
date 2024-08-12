@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.core_obj` [subpackage]
+:mod:`core.core_objects` [subpackage]
 
 Define classes representing the core objects manipulated in the package.
 
@@ -30,7 +30,7 @@ Examples
 Get the valid labels for Context objects :
 .. code-block:: python
 
-    from mtcdb.core_obj import Context
+    from core.core_objects import Context
     print(list(Context.get_options()))
     # Output: ('a', 'p', 'p-pre', 'p-post')
 
@@ -44,7 +44,7 @@ Get the contexts for naive animals :
 Get the full label for the context 'a' :
 
 .. code-block:: python
-    
+
         ctx = Context('a')
         print(ctx.full_label)
         # Output: 'Active'

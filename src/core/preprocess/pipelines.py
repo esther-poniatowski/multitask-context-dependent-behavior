@@ -1,5 +1,5 @@
 """
-:mod:`mtcdb.preprocess.pipelines` [module]
+:mod:`core.preprocess.pipelines` [module]
 
 
 
@@ -23,12 +23,14 @@ class Builder(ABC):
     def build(self, data):
         pass
 
+
 class BuilderA(Builder):
     # Focus on transformation logic without handling loading or saving directly.
     def build(self, raw_data: RawData):
         # Transformation logic for BuilderA
-        transformed_attributes = ... # Transform raw_data.data
+        transformed_attributes = ...  # Transform raw_data.data
         return ProcessedData(transformed_attributes)
+
 
 class BuilderB(Builder):
     def build(self, processed_data: ProcessedData):
@@ -39,6 +41,7 @@ class BuilderB(Builder):
 
 # -----
 
+
 class Pipeline(ABC):
     @abstractmethod
     def add_step(self, builder: Builder):
@@ -47,6 +50,7 @@ class Pipeline(ABC):
     @abstractmethod
     def execute(self, data):
         pass
+
 
 class DataPipeline(Pipeline):
     #  Ensures that both transformations
@@ -71,7 +75,7 @@ class DataPipeline(Pipeline):
 
 
 # Define parameters for sessions and units
-parameters = [('session1', 'unit1'), ('session1', 'unit2'), ('session2', 'unit1')]
+parameters = [("session1", "unit1"), ("session1", "unit2"), ("session2", "unit1")]
 
 # Create a pipeline and add steps
 pipeline = DataPipeline()

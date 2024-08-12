@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.test_coordinates.test_trials` [module]
+:mod:`test_core.test_coordinates.test_trials` [module]
 
 See Also
 --------
-:mod:`mtcdb.coordinates.trials`: Tested module.
+:mod:`core.coordinates.trials`: Tested module.
 
 Notes
 -----
@@ -20,6 +20,7 @@ from core.coordinates.trials import CoordError, CoordFold
 
 
 N_SMPL = 10
+
 
 def test_coord_error_build_labels():
     """
@@ -54,7 +55,7 @@ def test_coord_error_count_by_lab():
     count : Dict[bool, int]
         {True: 5, False: 5}
     """
-    values = np.array(5*[True] + 5*[False], dtype=np.bool_)
+    values = np.array(5 * [True] + 5 * [False], dtype=np.bool_)
     coord = CoordError(values=values)
     count = coord.count_by_lab()
     expected_count = {True: 5, False: 5}

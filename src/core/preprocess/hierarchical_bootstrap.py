@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.preprocess.hierarchical_bootstrap` [module]
+:mod:`core.preprocess.hierarchical_bootstrap` [module]
 
 Build pseudo-trials through an algorithm inspired from the "hierarchical bootstrap" method.
 

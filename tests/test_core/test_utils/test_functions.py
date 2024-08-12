@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.test_utils.test_functions` [module]
+:mod:`test_core.test_utils.test_functions` [module]
 
 See Also
 --------
-:mod:`mtcdb.utils.functions`: Tested module.
+:mod:`core.utils.functions`: Tested module.
 """
 
 import pytest
@@ -15,26 +15,30 @@ from core.utils.functions import filter_kwargs
 # Sample functions for testing
 # ----------------------------
 
-def function_a(arg1, arg2='default'):
+
+def function_a(arg1, arg2="default"):
     """Dummy function with positional and keyword arguments."""
     return
 
-input_a = {'arg1': 1, 'arg2': '2', 'arg3': 3}
-expected_a = {'arg1': 1, 'arg2': '2'}
+
+input_a = {"arg1": 1, "arg2": "2", "arg3": 3}
+expected_a = {"arg1": 1, "arg2": "2"}
+
 
 def function_b(arg1, *args, **kwargs):
     """Dummy function with positional and variable keyword arguments."""
     return
 
-input_b = {'arg1': 1, 'arg2': 2, 'arg3': 3}
-expected_b = {'arg1': 1}
 
-@pytest.mark.parametrize("func, kwargs, expected",
-                         argvalues =[
-                             (function_a, input_a, expected_a),
-                             (function_b, input_b, expected_b)
-                         ],
-                         ids=["pos_or_kw_args", "var_args"])
+input_b = {"arg1": 1, "arg2": 2, "arg3": 3}
+expected_b = {"arg1": 1}
+
+
+@pytest.mark.parametrize(
+    "func, kwargs, expected",
+    argvalues=[(function_a, input_a, expected_a), (function_b, input_b, expected_b)],
+    ids=["pos_or_kw_args", "var_args"],
+)
 def test_filter_kwargs(func, kwargs, expected):
     """
     Test for :func:`filter_kwargs`.

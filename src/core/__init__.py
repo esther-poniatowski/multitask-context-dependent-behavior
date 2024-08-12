@@ -16,7 +16,7 @@ Modules
 Sub-Packages
 ------------
 :mod:`coordinates`
-:mod:`core_objects`
+:mod:`entities`
 :mod:`data_structures`
 :mod:`io`
 :mod:`utils`

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.coordinates.exp_condition` [module]
+:mod:`core.coordinates.exp_condition` [module]
 
 Coordinates for labelling experimental conditions.
 
@@ -19,7 +19,7 @@ import numpy as np
 import numpy.typing as npt
 
 from core.coordinates.base import Coordinate
-from core.core_objects.exp_condition import Task, Context, Stimulus
+from core.entities.exp_condition import Task, Context, Stimulus
 
 
 C = TypeVar("C", Task, Context, Stimulus)
@@ -56,8 +56,8 @@ class CoordExpCond(Coordinate, Generic[C]):
 
     See Also
     --------
-    :class:`mtcdb.coordinates.base.Coordinate`
-    :mod:`mtcdb.core_objects.exp_condition`
+    :class:`core.coordinates.base.Coordinate`
+    :mod:`core.entities.exp_condition`
     """
 
     condition: Type[C]
@@ -143,8 +143,8 @@ class CoordTask(CoordExpCond[Task]):
 
     See Also
     --------
-    :class:`mtcdb.core_objects.exp_condition.Task`
-    :class:`mtcdb.coordinates.CoordExpCond`
+    :class:`core.entities.exp_condition.Task`
+    :class:`core.coordinates.CoordExpCond`
     """
 
     condition: Type[Task] = Task
@@ -159,8 +159,8 @@ class CoordContext(CoordExpCond[Context]):
 
     See Also
     --------
-    :class:`mtcdb.core_objects.exp_condition.Context`
-    :class:`mtcdb.coordinates.CoordExpCond`
+    :class:`core.entities.exp_condition.Context`
+    :class:`core.coordinates.CoordExpCond`
     """
 
     condition: Type[Context] = Context
@@ -175,8 +175,8 @@ class CoordStim(CoordExpCond[Stimulus]):
 
     See Also
     --------
-    :class:`mtcdb.core_objects.exp_condition.Stimulus`
-    :class:`mtcdb.coordinates.CoordExpCond`
+    :class:`core.entities.exp_condition.Stimulus`
+    :class:`core.coordinates.CoordExpCond`
     """
 
     condition: Type[Stimulus] = Stimulus

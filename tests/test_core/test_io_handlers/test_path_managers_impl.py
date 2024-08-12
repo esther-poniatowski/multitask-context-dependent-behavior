@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.test_utils.test_path_managers_impl` [module]
+:mod:`test_core.test_utils.test_path_managers_impl` [module]
 
 See Also
 --------
@@ -28,8 +28,8 @@ def test_rawspktimes_path(tmp_path):
     ---------------
     Path under the format : `tmp_path / "raw" / unit / session
     """
-    unit = 'avo052a-d1'
-    session = 'avo052a04_p_PTD'
+    unit = "avo052a-d1"
+    session = "avo052a04_p_PTD"
     path_manager = RawSpkTimesPath(tmp_path)
     expected_path = tmp_path / "raw" / unit / session
     assert path_manager.get_path(unit, session) == expected_path, "Incorrect constructed path."
@@ -50,8 +50,8 @@ def test_firingrates_path(tmp_path):
     ---------------
     Path under the format : `tmp_path / "processed" / "populations" / {area}_{training}`
     """
-    area = 'A1'
-    training = 'Trained'
+    area = "A1"
+    training = "Trained"
     path_manager = FiringRatesPath(tmp_path)
     expected_path = tmp_path / "processed" / "populations" / f"{area}_{training}"
     assert path_manager.get_path(area, training) == expected_path, "Incorrect constructed path."

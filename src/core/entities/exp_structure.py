@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.core_objects.exp_structure` [module]
+:mod:`core.core_objects.exp_structure` [module]
 
 Classes representing the sequential structure of an experiment ('positional' information).
 
@@ -20,7 +20,7 @@ from typing import List, Optional
 class Position(ABC):
     """
     Any positional information capturing the sequential structure of the experiment.
-    
+
     Class Attributes
     ----------------
     _min: int, optional
@@ -32,7 +32,7 @@ class Position(ABC):
     ----------
     value: int
         Positional information for one event in the experiment.
-    
+
     Methods
     -------
     :meth:`__eq__` : Equal to.
@@ -55,13 +55,14 @@ class Position(ABC):
     This class does not inherit from CoreObject although it represents an experimental quantity.
     The reason is that representing positional information requires specific logic,
     and thus a dedicated base class.
-    This base class is inherited by three concrete sub-classes classes 
+    This base class is inherited by three concrete sub-classes classes
     used conjointly to describe the full positional information of an experiment.
     """
+
     _min: Optional[int] = None
     _max: Optional[int] = None
 
-    def __init__(self, value:int):
+    def __init__(self, value: int):
         if not isinstance(value, int):
             raise ValueError("Position should be an integer.")
         if self._min is not None and value < self._min:
@@ -94,13 +95,13 @@ class Position(ABC):
 
 class Recording(Position):
     """
-    Recording number. 
+    Recording number.
 
     It corresponds to the order of one session among all the
     sessions performed at one recording site on the same day.
     It is used to order the sessions chronologically.
 
-    Minimal value: 1.    
+    Minimal value: 1.
     Maximal value: None (no upper bound a priori).
 
     Warning
@@ -109,6 +110,7 @@ class Recording(Position):
     Indeed, the relevant sessions retained for this study are a subset
     of all the tasks performed in the full data base.
     """
+
     _min: int = 1
 
     # No need to override __init__ method.
@@ -126,18 +128,19 @@ class Block(Position):
     - At least 1 reference stimulus.
     - At most 7 stimuli in total.
     - At most 1 target stimulus in the sequence, occurring in last position.
-    The end of a sequence is usually marked by the occurrence of the target stimulus, 
+    The end of a sequence is usually marked by the occurrence of the target stimulus,
     except in "catch" trials where it is also a reference stimulus.
-    
+
     The number of blocks presented in a session may vary across sessions.
     Usually, it is of the order of 30-40 blocks.
 
-    Minimal value: 1.    
+    Minimal value: 1.
     Maximal value: None (no fixed bound a priori).
 
     Warning
     -------
     Block numbers start at 1, not 0 (in contrast to Python indexing)."""
+
     _min: int = 1
 
     # No need to override __init__ method.
@@ -161,6 +164,7 @@ class Slot(Position):
     Minimal value: 0
     Maximal value: 7
     """
+
     _min: int = 0
     _max: int = 7
 
@@ -170,6 +174,6 @@ class Slot(Position):
         return f"Slot {self.value} in block."
 
     @classmethod
-    def get_options(cls) -> List['Slot']:
+    def get_options(cls) -> List["Slot"]:
         """Get all the options for slots in one block."""
-        return [cls(i) for i in range(cls._min, cls._max+1)]
+        return [cls(i) for i in range(cls._min, cls._max + 1)]

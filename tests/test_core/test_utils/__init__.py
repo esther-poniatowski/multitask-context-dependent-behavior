@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.test_utils` [subpackage]
+:mod:`test_core.test_utils` [subpackage]
 
 Modules
 -------
@@ -10,5 +10,5 @@ Modules
 
 See Also
 --------
-:mod:`mtcdb.utils`: Tested subpackage.
+:mod:`core.utils`: Tested subpackage.
 """

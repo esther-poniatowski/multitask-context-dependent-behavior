@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.coordinates.exp_structure` [module]
+:mod:`core.coordinates.exp_structure` [module]
 
 Coordinates for labelling the sequential structure of the experiment (positional information).
 
@@ -19,7 +19,7 @@ import numpy as np
 import numpy.typing as npt
 
 from core.coordinates.base import Coordinate
-from core.core_objects.exp_structure import Recording, Block, Slot
+from core.entities.exp_structure import Recording, Block, Slot
 
 
 P = TypeVar("P", Recording, Block, Slot)
@@ -61,8 +61,8 @@ class CoordPosition(Coordinate, Generic[P]):
 
     See Also
     --------
-    :class:`mtcdb.coordinates.base.Coordinate`
-    :mod:`mtcdb.core_objects.exp_structure`
+    :class:`core.coordinates.base.Coordinate`
+    :mod:`core.entities.exp_structure`
     """
 
     position: Type[P]
@@ -118,8 +118,8 @@ class CoordRecNum(CoordPosition[Recording]):
 
     See Also
     --------
-    :class:`mtcdb.core_objects.Recording`
-    :class:`mtcdb.coordinates.CoordPosition`
+    :class:`core.entities.Recording`
+    :class:`core.coordinates.CoordPosition`
     """
 
     position = Recording
@@ -139,8 +139,8 @@ class CoordBlock(CoordPosition[Block]):
 
     See Also
     --------
-    :class:`mtcdb.core_objects.Block`
-    :class:`mtcdb.coordinates.CoordPosition`
+    :class:`core.entities.Block`
+    :class:`core.coordinates.CoordPosition`
     """
 
     position = Block
@@ -155,8 +155,8 @@ class CoordSlot(CoordPosition[Slot]):
 
     See Also
     --------
-    :class:`mtcdb.core_objects.Slot`
-    :class:`mtcdb.coordinates.CoordPosition`
+    :class:`core.entities.Slot`
+    :class:`core.coordinates.CoordPosition`
     """
 
     position = Slot

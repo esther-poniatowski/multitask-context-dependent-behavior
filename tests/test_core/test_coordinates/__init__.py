@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*--
 """
-:mod:`test_mtcdb.test_coordinates` [subpackage]
+:mod:`test_core.test_coordinates` [subpackage]
 
 Modules
 -------
@@ -9,5 +9,5 @@ Modules
 
 See Also
 --------
-:mod:`mtcdb.coordinates`: Tested subpackage.
+:mod:`core.coordinates`: Tested subpackage.
 """
