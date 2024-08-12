@@ -76,6 +76,7 @@
 		],
 
 		// Type Checking
+		"mypy-type-checker.args": ["--config-file=./config/tools/mypy.ini"],
 
 		// Spell Checker
 		"cSpell.enabled": true,
