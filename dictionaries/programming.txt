@@ -1,7 +1,0 @@
-# Programming Words
-byobu
-DEVNULL
-Liskov
-Multiton
-nargs
-Redeclaration
