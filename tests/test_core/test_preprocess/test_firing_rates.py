@@ -8,10 +8,9 @@ Tests for the module :mod:`core.preprocess.firing_rates`.
 See Also
 --------
 np.testing.assert_array_almost_equal:
-    Assess element-wise equality between 2 arrays within a tolerance.
-    Used to ignore numerical errors due to floating point arithmetic.
-    Specifically designed for testing purposes (detailed error messages).
-    Default tolerance: 1e-5.
+    Assess element-wise equality between 2 arrays within a tolerance. Used to ignore numerical
+    errors due to floating point arithmetic. Specifically designed for testing purposes (detailed
+    error messages). Default tolerance: 1e-5.
 """
 
 import numpy as np
