@@ -41,8 +41,8 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-from mtcdb_shared.io.formats import FileExt, TargetType
-from mtcdb_shared.io.loaders.base import Loader
+from utils.io.formats import FileExt, TargetType
+from utils.io.loaders.base import Loader
 
 
 class LoaderPKL(Loader):

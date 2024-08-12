@@ -22,7 +22,7 @@ from abc import ABC
 from pathlib import Path
 from typing import Any, Mapping, Union
 
-from mtcdb_shared.io.formats import FileExt
+from utils.io.formats import FileExt
 
 
 class Saver(ABC):
