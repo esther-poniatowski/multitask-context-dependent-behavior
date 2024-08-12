@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb_shared.io.path_managers` [module]
+:mod:`utils.io.path_managers` [module]
 
 Implementations of path generation rules.
 
@@ -13,7 +13,7 @@ Classes
 
 See Also
 --------
-:class:`mtcdb_shared.io.path_manager_base.PathManager` : Interface to manage file paths.
+:class:`utils.io.path_manager_base.PathManager` : Interface to manage file paths.
 """
 
 from pathlib import Path
@@ -24,7 +24,8 @@ from utils.io.path_managers.base import PathManager
 
 class RawSpkTimesPath(PathManager):
     """Path generation rules used by SpkTimes data structures."""
-    def get_path(self, unit: str, session: str) -> Path: # pylint: disable=arguments-differ
+
+    def get_path(self, unit: str, session: str) -> Path:  # pylint: disable=arguments-differ
         """
         Construct the path for the raw data of one unit in one session.
 
@@ -38,12 +39,13 @@ class RawSpkTimesPath(PathManager):
         Path
             Format: ``{root}/raw/{unit}/{session}``
         """
-        return self.path_root / 'raw' / unit / session
+        return self.path_root / "raw" / unit / session
 
 
 class SpikesTrainsPath(PathManager):
     """Path generation rules used by SpikesTrains data structures."""
-    def get_path(self, unit: str) -> Path: # pylint: disable=arguments-differ
+
+    def get_path(self, unit: str) -> Path:  # pylint: disable=arguments-differ
         """
         Construct the path for a file storing the spike trains of one unit.
 
@@ -56,12 +58,15 @@ class SpikesTrainsPath(PathManager):
         Path
             Format: ``{root}/processed/units/{unit}``
         """
-        return self.path_root / 'processed' / 'units' / unit
+        return self.path_root / "processed" / "units" / unit
 
 
 class FiringRatesPath(PathManager):
     """Path generation rules used by FiringRates data structures."""
-    def get_path(self, area: str, training: Union[str, bool]) -> Path: # pylint: disable=arguments-differ
+
+    def get_path(
+        self, area: str, training: Union[str, bool]
+    ) -> Path:  # pylint: disable=arguments-differ
         """
         Construct the path for a file storing firing rates.
 
@@ -77,12 +82,15 @@ class FiringRatesPath(PathManager):
         Path
             Format: ``{root}/processed/populations/{area}_{training}``
         """
-        return self.path_root / 'processed' / 'populations' / f"{area}_{training}"
+        return self.path_root / "processed" / "populations" / f"{area}_{training}"
 
 
 class DecoderPath(PathManager):
     """Path generation rules used by Decoder data structures."""
-    def get_path(self, area: str, training: Union[str, bool],  model: str) -> Path: # pylint: disable=arguments-differ
+
+    def get_path(
+        self, area: str, training: Union[str, bool], model: str
+    ) -> Path:  # pylint: disable=arguments-differ
         """
         Construct the path for a file storing decoder weights.
 
@@ -101,5 +109,5 @@ class DecoderPath(PathManager):
             Format: ``{root}/models/decoders/{model}/{area}_{training}``
         """
         if isinstance(training, bool):
-            training = 'Trained' if training else 'Naive'
-        return self.path_root / 'models' / 'decoders' / model / f"{area}_{training}"
+            training = "Trained" if training else "Naive"
+        return self.path_root / "models" / "decoders" / model / f"{area}_{training}"

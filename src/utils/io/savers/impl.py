@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb_shared.io.savers.impl` [module]
+:mod:`utils.io.savers.impl` [module]
 
 Save data from files in specific formats.
 
@@ -15,8 +15,8 @@ Classes
 
 See Also
 --------
-:class:`mtcdb_shared.io.formats.FileExt`: File extensions.
-:class:`mtcdb_shared.io.savers.base.Saver`: Base class for savers.
+:class:`utils.io.formats.FileExt`: File extensions.
+:class:`utils.io.savers.base.Saver`: Base class for savers.
 """
 
 import pickle
@@ -43,6 +43,7 @@ class SaverPKL(Saver):
     be saved in a Pickle file, the method :meth:`_save` is overridden
     to dodge the checking step of the base method.
     """
+
     ext = FileExt.PKL
 
     def save(self):
@@ -58,7 +59,7 @@ class SaverPKL(Saver):
         """
         self._check_dir()
         self._check_ext()
-        with self.path.open('wb') as file:
+        with self.path.open("wb") as file:
             pickle.dump(self.data, file)
         print(f"Saved to {self.path}")
 
@@ -67,6 +68,7 @@ class SaverNPY(Saver):
     """
     Save data in the NPY format.
     """
+
     ext = FileExt.NPY
     save_methods = MappingProxyType({np.ndarray: "_save_numpy"})
 
@@ -91,12 +93,11 @@ class SaverCSV(Saver):
         Flag to determine whether to save the index of a DataFrame)
         (additional attribute compared to the base class).
     """
+
     ext = FileExt.CSV
-    save_methods = MappingProxyType({
-        list: "_save_list",
-        np.ndarray: "_save_numpy",
-        pd.DataFrame: "_save_dataframe"
-    })
+    save_methods = MappingProxyType(
+        {list: "_save_list", np.ndarray: "_save_numpy", pd.DataFrame: "_save_dataframe"}
+    )
 
     def __init__(self, path: str, data: Any, save_index: bool = False) -> None:
         super().__init__(path, data)
@@ -113,7 +114,7 @@ class SaverCSV(Saver):
         --------
         :func:`csv.writer`
         """
-        with self.path.open('w', newline='', encoding='utf-8') as f:
+        with self.path.open("w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerows(self.data)
 
@@ -141,11 +142,11 @@ class SaverCSV(Saver):
             Parameter ``delimiter`` : Here, comma (``'``) by default.
         """
         if np.issubdtype(self.data.dtype, np.integer):
-            fmt = '%d'
+            fmt = "%d"
         elif np.issubdtype(self.data.dtype, np.floating):
-            fmt = '%.18e'
+            fmt = "%.18e"
         else:
-            fmt = '%s'
+            fmt = "%s"
         np.savetxt(self.path, self.data, delimiter=",", fmt=fmt)
 
     def _save_dataframe(self):
@@ -166,7 +167,6 @@ class SaverCSV(Saver):
         :meth:`pandas.DataFrame.to_csv`
         """
         self.data.to_csv(self.path, index=self.save_index)
-
 
 
 # pylint: disable=W0105

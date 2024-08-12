@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.utils.functions` [module]
+:mod:`utils.misc.functions` [module]
 
 Utilities to manipulate functions.
 

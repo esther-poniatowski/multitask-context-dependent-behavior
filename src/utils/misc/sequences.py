@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.utils.sequences` [module]
+:mod:`utils.misc.sequences` [module]
 
 Utilities for sequences or iterables (lists, dictionaries, tuples, array-like...).
 

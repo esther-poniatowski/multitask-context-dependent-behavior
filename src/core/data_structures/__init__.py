@@ -162,10 +162,10 @@ See Also
 --------
 :mod:`core.coordinates`
     Coordinate classes representing the dimensions of the data structures.
-:mod:`mtcdb_shared.io.path_managers`
+:mod:`utils.io.path_managers`
     PathManager classes implementing path generation rules for each data class.
-:meth:`mtcdb_shared.io.loaders`
+:meth:`utils.io.loaders`
     Loader classes used to load data from files in various formats.
-:meth:`mtcdb_shared.io.saver`
+:meth:`utils.io.saver`
     Saver classes used to save data to files in a format determined by the data type itself.
 """
