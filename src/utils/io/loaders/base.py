@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb_shared.io.loaders.base` [module]
+:mod:`utils.io.loaders.base` [module]
 
 Common interface to load data from files.
 
@@ -17,7 +17,7 @@ from typing import Mapping, Union, TypeVar, Generic
 from utils.io.formats import FileExt, TargetType
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 """Type variable representing the arbitrary type of data handled by the Loader."""
 
 
@@ -57,8 +57,8 @@ class Loader(ABC, Generic[T]):
 
     See Also
     --------
-    :class:`mtcdb_shared.io.formats.FileExt`: File extensions.
-    :class:`mtcdb_shared.io.formats.TargetType`: Target types.
+    :class:`utils.io.formats.FileExt`: File extensions.
+    :class:`utils.io.formats.TargetType`: Target types.
     :class:`abc.ABC`: Abstract base class.
 
     Notes
@@ -72,6 +72,7 @@ class Loader(ABC, Generic[T]):
     inspect the attributes of the class :class:`TargetType`
     and choose one of the types used by the specific loader subclass.
     """
+
     ext: FileExt
     load_methods: Mapping[TargetType, str]
 

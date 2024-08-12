@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb_shared.io.formats` [module]
+:mod:`utils.io.formats` [module]
 
 Classes
 -------
@@ -15,8 +15,10 @@ See Also
 
 from enum import Enum
 
+
 class FileExt(Enum):
     """Extensions for file formats."""
+
     CSV = ".csv"
     NC = ".nc"
     NPY = ".npy"
@@ -31,11 +33,12 @@ class TargetType(Enum):
     The interest of this enum class is to enforce the use of supported types,
     and to specify a clear correspondence between string identifiers and target types.
     """
-    OBJECT = "object"               # any Python object
-    LIST = "list"                   # flat list or list of lists
-    DICT = "dict"                   # dictionary
-    NDARRAY = "ndarray"             # numpy.ndarray
-    NDARRAY_INT = "ndarray_int"     # numpy.ndarray of integers
-    NDARRAY_FLOAT = "ndarray_float" # numpy.ndarray of floats
-    NDARRAY_STR = "ndarray_str"     # numpy.ndarray of strings
-    DATAFRAME = "dataframe"         # pandas.DataFrame
+
+    OBJECT = "object"  # any Python object
+    LIST = "list"  # flat list or list of lists
+    DICT = "dict"  # dictionary
+    NDARRAY = "ndarray"  # numpy.ndarray
+    NDARRAY_INT = "ndarray_int"  # numpy.ndarray of integers
+    NDARRAY_FLOAT = "ndarray_float"  # numpy.ndarray of floats
+    NDARRAY_STR = "ndarray_str"  # numpy.ndarray of strings
+    DATAFRAME = "dataframe"  # pandas.DataFrame

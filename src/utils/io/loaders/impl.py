@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb_shared.io.loaders.impl` [module]
+:mod:`utils.io.loaders.impl` [module]
 
 Load data from files in specific formats.
 
@@ -15,9 +15,9 @@ Classes
 
 See Also
 --------
-:class:`mtcdb_shared.io.formats.FileExt`
-:class:`mtcdb_shared.io.formats.TargetType`
-:class:`mtcdb_shared.io.loaders.base.Loader`
+:class:`utils.io.formats.FileExt`
+:class:`utils.io.formats.TargetType`
+:class:`utils.io.loaders.base.Loader`
 
 Implementation
 --------------

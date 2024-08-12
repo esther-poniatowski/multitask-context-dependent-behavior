@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.utils` [subpackage]
+:mod:`utils.misc` [subpackage]
 
 Utility functions used in the whole package.
 

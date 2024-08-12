@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb_shared.io.saver_base` [module]
+:mod:`utils.io.saver_base` [module]
 
 Common interface to save data to files.
 
@@ -55,9 +55,10 @@ class Saver(ABC):
 
     See Also
     --------
-    :class:`mtcdb_shared.io.formats.FileExt`: File extensions.
+    :class:`utils.io.formats.FileExt`: File extensions.
     :class:`abc.ABC`: Abstract base class.
     """
+
     ext: FileExt
     save_methods: Mapping[type, str]
 

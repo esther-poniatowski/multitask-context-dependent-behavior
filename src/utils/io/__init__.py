@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb_shared.io` [subpackage]
+:mod:`utils.io` [subpackage]
 
 Classes to handle input/output files manipulations.
 

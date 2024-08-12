@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb_shared.io.path_managers` [subpackage]
+:mod:`utils.io.path_managers` [subpackage]
 
 Classes to define file path rules and generate paths.
 

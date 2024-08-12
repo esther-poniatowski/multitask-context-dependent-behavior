@@ -146,7 +146,7 @@ class MetaData(ABCMeta):
 
         See Also
         --------
-        :func:`core.utils.sequences.reverse_dict_container`
+        :func:`utils.misc.sequences.reverse_dict_container`
             Here, the output of the function is of the form {'coord': ['dim']}, since each
             coordinate is associated with a single dimension.
             To obtain single string values instead of lists, each list is unpacked.
