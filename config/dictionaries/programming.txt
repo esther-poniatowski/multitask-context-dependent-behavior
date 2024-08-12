@@ -1,0 +1,9 @@
+# Programming Words
+byobu
+configurer
+DEVNULL
+Liskov
+Multiton
+nargs
+Redeclaration
+subpackage
