@@ -9,18 +9,14 @@ Currently working on the deployment script. Next step: test some components of t
 Started: `process_evp.py`, `process_evp.m`
 
 ## Tasks
-- [X] `.env` file to store the server credentials and other configurations.
 - [X] Script to connect to the server.
 - [ ] Deployment config to specify the mapping between the local directories and the server
   directories.
 - [X] Deployment script to transfer files from the local machine to the server.
-- [X] Local Makefile to orchestrate the deployment.
-- [X] Set up script to create a dedicated environment in the server.
-- [X] Environment .yaml file to specify the python dependencies on the server.
-- [ ] Set up script to get matlab dependencies in the server and adjust paths.
-- [ ] Package in src to deploy, containing logic to extract lick histograms in the server (see
+- [ ] Server scripts for setup (in `setup/`): create env, get matlab dependencies, adjust paths.
+- [ ] Server package (in `src/`): logic to extract lick histograms in the server (see
   Notes).
-- [ ] Server Makefile to orchestrate the full process.
+- [ ] Server scripts (in `ops/`) to orchestrate the full process.
 
 
 ## Notes
@@ -50,5 +46,5 @@ https://www.mathworks.com/help/matlab/ref/matlablinux.html
 ## Open Questions
 Yves' suggestions :
 1. Start matlab, cd in baphy folder ()
-3. cmd: `baphy_set_path`
-Is it necessary? Not clean process
+2. cmd: `baphy_set_path`
+Is it necessary? Not clean process.
