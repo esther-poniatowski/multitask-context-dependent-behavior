@@ -1,6 +1,9 @@
 ### gitignore file
 ### Project multitask-context-dependent-behavior
 
+# Confidential files
+**/credentials/*
+
 # Temporary files
 *.tmp
 *.temp
@@ -20,4 +23,5 @@
 # Data Directory
 data/
 
-# Sphinx Builds
+# Archives
+**/archive/*
