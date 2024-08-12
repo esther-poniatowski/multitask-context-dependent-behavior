@@ -1,0 +1,18 @@
+# Words Used by Languages and Tools
+Autocloaking
+debugpy
+esbonio
+hbenl
+leonhard
+lextudio
+littlefoxteam
+mhutchie
+miniconda
+mypy
+pycache
+pylint
+rcfile
+rstcheck
+snekvik
+swyddfa
+trond
