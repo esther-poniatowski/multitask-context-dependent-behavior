@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-# ============================================================================
+# ==================================================================================================
 # Script Name:   mount_data.sh
-# Description:   Mount the data4 from the NAS to the local directory.
+# Description:   Mount the data4 CIFS from the NAS to the local directory.
 #
 # Notes
 # -----
@@ -25,7 +25,8 @@
 #         iocharset=utf8 \
 #         //<host>/<share_name> <local_dir>
 #
-# Options:
+# Options
+# -------
 # - `username`               : Username used to access the CIFS share.
 # - `domain`                 : Name of the computer where the CIFS share is located.
 # - `rw`                     : Mount with read and write permissions.
@@ -35,7 +36,7 @@
 # - `//host/share_name`      : Network path to the CIFS share.
 # - `local_dir`              : Local directory where the CIFS share will be mounted.
 # Syntax `//`: Indicate that the path is a *network* location (not a *local* file path).
-# =============================================================================
+# ==================================================================================================
 
 # Load Variables from config file
 PATH_CONFIG="$ROOT/config/data4.sh"
