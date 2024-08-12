@@ -1,6 +1,6 @@
-// Workspace-Specific Settings for the Entire Project
+// Workspace-Specific Settings for Multitask Context-Dependent Behavior
 {
-	// Folders Included in the Workspace (for folder-specific settings)
+	// Folders Included in the Workspace (to enable folder-specific settings if needed)
 	"folders": [
 		{
 			// Project
@@ -11,16 +11,21 @@
 
 	// Workspace Settings (apply globally)
 	"settings": {
+		// Python Environment
+		"python.defaultInterpreterPath": "${userHome}/miniconda3/envs/mtcdb/bin/python",
+		"python.terminal.activateEnvironment": true,
+		"terminal.integrated.inheritEnv": false, // user setting, here to remember if troubleshooting
+
 		// Environment Variables
 		//"dotenv.enableAutocloaking": true, // load .env files (and hide sensitive information)
 		//"python.envFile": ".env", // load environment variables from .env files
 
-		// View Settings
+		// View and Layout
 		"workbench.editor.closeEmptyGroups": false,
 		"workbench.editor.openSideBySideDirection": "right",
 		"workbench.editor.openPositioning": "last",
 
-		// General Editor Settings
+		// Editor Guides and Wrapping
 		"editor.lineNumbers": "on",
 		"editor.rulers": [100],
 		"editor.wordWrap": "off", // avoid visual wrapping
@@ -28,7 +33,7 @@
 		"rewrap.wholeComment": false,
 		"rewrap.autoWrap.enabled": true,
 
-		// Hide from the File Explorer
+		// File Explorer
 		"files.exclude": {
 			"**/.git": false,
 			"**/.DS_Store": true,
@@ -53,17 +58,6 @@
 			"git": true,
 		},
 
-		// Python Environment
-		"python.defaultInterpreterPath": "/Users/eresther/miniconda3/envs/mtcdb/bin/python",
-		"python.terminal.activateEnvironment": true,
-		"terminal.integrated.inheritEnv": false, // user setting, here to remember if troubleshooting
-
-		// Testing
-		"python.testing.pytestEnabled": true,
-		"python.testing.pytestArgs": [
-			"tests" // path to the directory containing tests
-		],
-
 		// Formatting
 		"files.trimTrailingWhitespace": true, // remove trailing white spaces on save
 		"files.insertFinalNewline": true, // at least one line at the end of the file
@@ -72,23 +66,26 @@
 			"editor.defaultFormatter": "ms-python.black-formatter",
 			"editor.formatOnSave": true
 		},
-		"black-formatter.args": ["--config", "./config/black.toml"],
+		"black-formatter.args": ["--config", "./config/tools/black.toml"],
 
 		// Linting
 		"pylint.lintOnChange": true, // user setting, here to remember to activate
-		"pylint.args": ["--rcfile=config/pylintrc.ini"],
+		"pylint.args": [
+			"--rcfile=config/tools/pylintrc.ini",
+			//"--load-plugins=pylint_configurer",
+		],
 
 		// Type Checking
 
 		// Spell Checker
 		"cSpell.enabled": true,
 		"cSpell.customDictionaries": {
-			"project": {"name": "project", "path": "./dictionaries/project.txt"},
-			"programming": {"name": "programming", "path": "./dictionaries/programming.txt"},
-			"python": {"name": "python", "path": "./dictionaries/python.txt"},
-			"sphinx": {"name": "sphinx", "path": "./dictionaries/sphinx.txt"},
-			"user": {"name": "user", "path": "./dictionaries/user.txt"},
-			"vscode": {"name": "vscode", "path": "./dictionaries/vscode.txt"},
+			"project": {"name": "project", "path": "./config/dictionaries/project.txt"},
+			"programming": {"name": "programming", "path": "./config/dictionaries/programming.txt"},
+			"python": {"name": "python", "path": "./config/dictionaries/python.txt"},
+			"sphinx": {"name": "sphinx", "path": "./config/dictionaries/sphinx.txt"},
+			"user": {"name": "user", "path": "./config/dictionaries/user.txt"},
+			"vscode": {"name": "vscode", "path": "./config/dictionaries/vscode.txt"},
 		},
 
 		// Documentation
@@ -101,28 +98,11 @@
 		"esbonio.sphinx.srcDir": "docs/source",
 		//"esbonio.sphinx.buildDir": "build",
 		"esbonio.sphinx.builderName": "html",
-		"saveEditorLayout.list": [
-			{
-				"name": "left-editor-right-graph",
-				"documents": [
-					{
-						"fsPath": "/Users/eresther/Documents/Work/multitask-context-dependent-behavior/ROADMAP.md",
-						"column": 1,
-						"pinned": false
-					}
-				],
-				"layout": {
-					"orientation": 0,
-					"groups": [
-						{
-							"size": 917
-						},
-						{
-							"size": 533
-						}
-					]
-				}
-			}
+
+		// Testing
+		"python.testing.pytestEnabled": true,
+		"python.testing.pytestArgs": [
+			"tests" // path to the directory containing tests
 		],
 
 	},
