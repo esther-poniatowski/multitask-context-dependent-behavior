@@ -15,7 +15,7 @@ Classes
 from types import MappingProxyType
 from typing import FrozenSet, Mapping
 
-from mtcdb.core_objects.base import CoreObject
+from core.core_objects.base import CoreObject
 
 
 class Task(CoreObject[str]):
@@ -61,7 +61,7 @@ class Context(CoreObject[str]):
             It corresponds to a passive session before an active session.
         p-post : Post-passive context (only for trained animals).
             It corresponds to a passive session after an active session.
-    
+
     Methods
     -------
     :meth:`get_trained`
@@ -93,7 +93,7 @@ class Stimulus(CoreObject[str]):
 
     Notes
     -----
-    The same stimuli labels are used for consistency in both active and passive contexts, 
+    The same stimuli labels are used for consistency in both active and passive contexts,
     even though they are meaningful only in the active context.
     Moreover, the exact nature of the sound under a given label differ across tasks.
 

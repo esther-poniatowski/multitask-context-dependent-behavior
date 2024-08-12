@@ -18,8 +18,8 @@ from typing import TypeVar, Type, Generic, Dict
 import numpy as np
 import numpy.typing as npt
 
-from mtcdb.coordinates.base import Coordinate
-from mtcdb.core_objects.exp_structure import Recording, Block, Slot
+from core.coordinates.base import Coordinate
+from core.core_objects.exp_structure import Recording, Block, Slot
 
 
 P = TypeVar("P", Recording, Block, Slot)

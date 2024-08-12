@@ -14,8 +14,8 @@ import numpy.typing as npt
 from scipy.signal import fftconvolve
 from typing import Literal, TypeAlias
 
-from mtcdb.constants import T_BIN
-from mtcdb.types import ArrayLike, NumpyArray
+from core.constants import T_BIN
+from core.types import ArrayLike, NumpyArray
 
 
 class Builder(ABC):
@@ -43,32 +43,32 @@ class Pipeline(ABC):
     @abstractmethod
     def add_step(self, builder: Builder):
         pass
-    
+
     @abstractmethod
     def execute(self, data):
         pass
 
 class DataPipeline(Pipeline):
-    #  Ensures that both transformations 
-    # (from RawData to ProcessedData and from ProcessedData to FinalData) 
+    #  Ensures that both transformations
+    # (from RawData to ProcessedData and from ProcessedData to FinalData)
     # are applied in sequence for each set of parameters.
     def __init__(self):
         self.steps = []
-    
+
     def add_step(self, builder: Builder):
         self.steps.append(builder)
-    
+
     def execute(self, raw_data: RawData):
         for session, unit in parameters:
             raw_data = RawData(session, unit)
             raw_data.load_data()
-            
+
             data = raw_data
             for step in self.steps:
                 data = step.build(data)
-            
+
             data.save_data()
-    
+
 
 # Define parameters for sessions and units
 parameters = [('session1', 'unit1'), ('session1', 'unit2'), ('session2', 'unit1')]

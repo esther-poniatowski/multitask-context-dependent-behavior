@@ -18,8 +18,8 @@ from typing import TypeVar, Type, Generic, Optional, Union, Dict
 import numpy as np
 import numpy.typing as npt
 
-from mtcdb.coordinates.base import Coordinate
-from mtcdb.core_objects.exp_condition import Task, Context, Stimulus
+from core.coordinates.base import Coordinate
+from core.core_objects.exp_condition import Task, Context, Stimulus
 
 
 C = TypeVar("C", Task, Context, Stimulus)

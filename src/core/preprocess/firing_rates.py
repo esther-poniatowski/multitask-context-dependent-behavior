@@ -18,7 +18,7 @@ import numpy.typing as npt
 from scipy.signal import fftconvolve
 
 
-from mtcdb.constants import T_BIN
+from core.constants import T_BIN
 
 
 Stim: TypeAlias = Literal['R', 'T', 'N']
@@ -43,23 +43,23 @@ def extract_trial(trial:int,
     trials:
         Trial indexes corresponding to spiking times.
         Shape: ``(nspikes,)``.
-    
+
     Returns
     -------
     spk:
         Spiking times occurring in the selected trial.
         Shape: ``(nspikes_trial,)``.
-    
+
     Implementation
     --------------
-    To extract the spiking times of one trial, 
+    To extract the spiking times of one trial,
     use a boolean mask on the trial number.
 
     Raises
     ------
     ValueError
         If the number of spikes and trials do not match.
-    
+
     See Also
     --------
     :class:`mtcdb.data_structures.RawSpkTimes`: Data structure for raw spike times.
@@ -67,7 +67,7 @@ def extract_trial(trial:int,
     return spikes[trials==trial]
 
 
-def slice_epoch(t_start: float, t_end: float, 
+def slice_epoch(t_start: float, t_end: float,
                 spk: NumpyArray) -> NumpyArray:
     """
     Extract spiking times within one epoch of one trial.
@@ -83,14 +83,14 @@ def slice_epoch(t_start: float, t_end: float,
     spk: :obj:`mtcdb.types.NumpyArray`
         Spiking times during a *whole trial* (in seconds).
         Shape: ``(nspikes,)``.
-    
+
     Returns
     -------
     spk_epoch: :obj:`mtcdb.types.NumpyArray`
         Spiking times in the epoch comprised between ``t_start`` and ``t_end``,
         reset to be relative to the beginning of the epoch.
         Shape: ``(nspikes_epoch, 1)``.
-    
+
     Implementation
     --------------
     - Select the spiking times within the epoch with a boolean mask.
@@ -99,8 +99,8 @@ def slice_epoch(t_start: float, t_end: float,
     return spk[(spk>=t_start)&(spk<t_end)] - t_start
 
 
-def join_epochs(t_start1: float, t_end1: float, 
-                t_start2: float, t_end2: float, 
+def join_epochs(t_start1: float, t_end1: float,
+                t_start2: float, t_end2: float,
                 spk: NumpyArray) -> NumpyArray:
     """
     Join spiking times from two distinct epochs as if they were continuous.
@@ -112,17 +112,17 @@ def join_epochs(t_start1: float, t_end1: float,
     spk: :obj:`mtcdb.types.NumpyArray`
         Spiking times during a *whole trial* (in seconds).
         Shape: ``(nspikes,)``.
-    
+
     Returns
     -------
     spk_joined: :obj:`mtcdb.types.NumpyArray`
         Spiking times comprised in ``[t_start1, t_end2]`` and ``[t_start2, t_end2]``,
         realigned as if both epochs were continuous.
         Shape: ``(nspikes1 + nspikes2,)``.
-        
+
     Notes
     -----
-    This function is used to recompose homogeneous trials, 
+    This function is used to recompose homogeneous trials,
     whatever the task, session, experimental parameters.
     Specifically, it allows to align the spiking times across trials.
 
@@ -140,7 +140,7 @@ def join_epochs(t_start1: float, t_end1: float,
     spk2 = slice_epoch(t_start2, t_end2, spk) + (t_end1 - t_start1)
     spk_joined = np.concatenate([spk1, spk2])
     return spk_joined
-     
+
 
 def align_timings(task: Task, stim: Stim,
                   d_pre: float,
@@ -152,7 +152,7 @@ def align_timings(task: Task, stim: Stim,
                   ) -> tuple[float, float, float, float]:
     """
     Determine the times boundaries of the epochs to extract in one trial.
-    
+
     The goal is to align *all* trials across tasks and stimuli.
 
     Parameters
@@ -162,7 +162,7 @@ def align_timings(task: Task, stim: Stim,
     stim: Stim {'R', 'T', 'N'}
         Type of stimulus.
     d_pre, d_stim, d_post: float
-        Durations of the pre-stimulus, stimulus, 
+        Durations of the pre-stimulus, stimulus,
         and post-stimulus periods (in seconds),
         common to *all* trials in the final dataset.
     d_warn: float
@@ -171,13 +171,13 @@ def align_timings(task: Task, stim: Stim,
     t_on, t_off: float
         Times of stimulus onset and offset (in seconds)
         during the *specific* trial.
-    
+
     Returns
     -------
     t_start1, t_end1, t_start2, t_end2: tuple[float, float, float, float]
         Time boundaries of the first and second epochs to extract
         in the specific trial.
-    
+
     Notes
     -----
     Each trial in the final data set contains three epochs,
@@ -188,34 +188,34 @@ def align_timings(task: Task, stim: Stim,
     - Post-stimulus period : duration ``d_post``.
 
     To do so, in each specific trial from the raw data, several discontinuous
-    epochs should be joined artificially. 
+    epochs should be joined artificially.
     The relevant epochs to extract depend on :
-    
+
     - The actual times of stimulus onset and offset in the specific trial,
       which may vary across sessions and trials (experimental variability).
     - The type of task and stimulus to align.
-      
+
     In task PTD, one single stimulus occurs in one trial
     (TORC 'R' or Tone 'T').
     In task CLK, two stimuli follow each other in one trial
-    (TORC 'N' and Click train 'R'/'T'). 
-    Both should constitute independent trials in the final dataset. 
+    (TORC 'N' and Click train 'R'/'T').
+    Both should constitute independent trials in the final dataset.
     To do so, the other stimulus should be excised from the epoch.
-    
+
     Implementation
     --------------
     **Task PTD or Task CLK with TORC**
 
     The first retained epoch encompasses pre-stimulus *and* stimulus periods.
     To align all the stimuli's onsets across trials, this epoch should start
-    a duration ``d_pre`` before the stimulus onset, 
+    a duration ``d_pre`` before the stimulus onset,
     i.e. at time ``t_on - d_pre``.
-    To keep a common stimulus duration across trials, this epoch should end 
+    To keep a common stimulus duration across trials, this epoch should end
     a duration ``d_stim`` after the stimulus onset,
     i.e. at time ``t_on + d_stim``.
     The second retained epoch encompasses only the post-stimulus period.
-    To align all the stimuli's offsets across trials, this epoch should start 
-    at the true end of stimulus ``t_off``, and should end 
+    To align all the stimuli's offsets across trials, this epoch should start
+    at the true end of stimulus ``t_off``, and should end
     at a duration ``d_post`` after the stimulus offset,
     i.e. at time ``t_off + d_post``.
 
@@ -238,7 +238,7 @@ def align_timings(task: Task, stim: Stim,
     ------
     ValueError
         If the task or stimulus is unknown.
-    
+
     See Also
     --------
     join_epochs: Join spiking times from two distinct epochs as if they were continuous.
@@ -251,7 +251,7 @@ def align_timings(task: Task, stim: Stim,
     elif task == 'CLK' and (stim == 'T' or stim == 'R'): # excise TORC
         t_end1 = t_on
         t_start2 = t_on + d_warn
-        t_end2 = t_start2 + d_stim + d_post  
+        t_end2 = t_start2 + d_stim + d_post
     else:
         raise ValueError("Unknown task or stimulus")
     return t_start1, t_end1, t_start2, t_end2
@@ -263,7 +263,7 @@ def spikes_to_rates(spk: np.ndarray,
                     ) -> NumpyArray:
     """
     Convert a spike train into a firing rate time course.
-    
+
     Parameters
     ----------
     spk: :obj:`mtcdb.types.ArrayLike`
@@ -272,17 +272,17 @@ def spikes_to_rates(spk: np.ndarray,
         Time bin (in seconds).
     t_max: float
         Duration of the recording period (in seconds).
-    
+
     Returns
     -------
     frates: :obj:`mtcdb.types.NumpyArray`
         Firing rate time course (in spikes/s).
         Shape: ``(ntpts, 1)`` with ``ntpts = t_max/t_bin`` (number of bins).
-    
+
     See Also
     --------
     numpy.histogram: Used to count the number of spikes in each bin.
-    
+
     Algorithm
     ---------
     - Divide the recording period ``[0, t_max]`` into bins of size ``t_bin``.
@@ -293,11 +293,11 @@ def spikes_to_rates(spk: np.ndarray,
     --------------
     :func:`np.histogram` takes an argument `bins` for bin edges,
     which should include the *rightmost edge*.
-    Bin edges are obtained with :func:`numpy.arange`, 
+    Bin edges are obtained with :func:`numpy.arange`,
     with the last bin edge at ``t_max + t_bin`` to include the last bin.
-    :func:`np.histogram` returns two outputs: 
+    :func:`np.histogram` returns two outputs:
     ``hist`` (number of spikes in each bin), ``edges`` (useless).
-    
+
     The shape of ``frates`` is extended to two dimensions representing
     time (length ``n_bins``),
     trials (length ``1``, single trial).
@@ -325,7 +325,7 @@ def smooth(frates: NumpyArray,
         Smoothing window size (in seconds).
     t_bin: float
         Time bin (in seconds).
-    
+
     Returns
     -------
     smoothed: :obj:`mtcdb.types.NumpyArray`
@@ -333,11 +333,11 @@ def smooth(frates: NumpyArray,
         Shape: ``(ntpts_out, ntrials)``, ``ntpts_out`` depend on ``mode``.
         With ``"valid"``:  ``ntpts_out = ntpts - window/t_bin + 1``.
         With ``"same"``:  ``ntpts_out = ntpts``.
-    
+
     See Also
     --------
     scipy.signal.fftconvolve: Used to convolve the firing rate time course with a boxcar kernel.
-    
+
     Algorithm
     ---------
     Smoothing consists in averaging consecutive values in a sliding window.

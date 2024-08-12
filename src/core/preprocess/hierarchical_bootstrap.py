@@ -33,7 +33,7 @@ from typing import List, Union
 import numpy as np
 import numpy.typing as npt
 
-from mtcdb.constants import N_PSEUDO_MIN, ALPHA_BOOTSTRAP
+from core.constants import N_PSEUDO_MIN, ALPHA_BOOTSTRAP
 
 
 def determine_pseudo_trial_number(

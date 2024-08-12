@@ -16,9 +16,9 @@ from typing import TypeVar, Generic, Dict, Iterable, Any
 import numpy as np
 import numpy.typing as npt
 
-from mtcdb.coordinates.base import Coordinate
-from mtcdb.core_objects.bio import CorticalDepth
-from mtcdb.core_objects.composites import Unit
+from core.coordinates.base import Coordinate
+from core.core_objects.bio import CorticalDepth
+from core.core_objects.composites import Unit
 
 
 T = TypeVar("T", Unit, CorticalDepth)

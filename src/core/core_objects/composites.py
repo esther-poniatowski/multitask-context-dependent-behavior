@@ -19,9 +19,9 @@ Classes
 
 from typing import List, Dict, Tuple, Optional, Any, Type
 
-from mtcdb.core_objects.bio import Animal, Area, CorticalDepth, Training
-from mtcdb.core_objects.exp_condition import Context, Task, Stimulus
-from mtcdb.core_objects.exp_structure import Block, Slot, Recording
+from core.core_objects.bio import Animal, Area, CorticalDepth, Training
+from core.core_objects.exp_condition import Context, Task, Stimulus
+from core.core_objects.exp_structure import Block, Slot, Recording
 
 
 class Multiton(type):
