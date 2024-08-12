@@ -23,7 +23,5 @@
 # Data Directory
 data/
 
-# Sphinx Builds
-.flaskenv*
-!.env.project
-!.env.vault
+# Archives
+**/archive/*
