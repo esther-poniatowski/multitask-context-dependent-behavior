@@ -1,0 +1,156 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+:mod:`mtcdb_shared.io.loaders.impl` [module]
+
+Load data from files in specific formats.
+
+Any object which needs to load data can interact with one Loader subclass.
+
+Classes
+-------
+:class:`LoaderPKL`
+:class:`LoaderNPY`
+:class:`LoaderCSV`
+
+See Also
+--------
+:class:`mtcdb_shared.io.formats.FileExt`
+:class:`mtcdb_shared.io.formats.TargetType`
+:class:`mtcdb_shared.io.loaders.base.Loader`
+
+Implementation
+--------------
+When a single target type is supported by a specific loader,
+it is defined as a class attribute in the loader class and set as
+the default value for the :attr:`tpe` parameter in the constructor.
+It should match the identifier of the only key in the dictionary :attr:`load_methods`.
+
+This solution is chosen instead of overriding the constructor of the subclass
+and removing the :attr:`tpe` parameter from the signature.
+Indeed, this would not respect the Liskov Substitution Principle,
+which is problematic especially in the abstract :class:`Data` class.
+"""
+
+import pickle
+from types import MappingProxyType
+from typing import Any
+
+import csv
+import numpy as np
+import numpy.typing as npt
+import pandas as pd
+
+from utils.io.formats import FileExt, TargetType
+from utils.io.loaders.base import Loader
+
+
+class LoaderPKL(Loader):
+    """Load data from a Pickle file."""
+
+    ext = FileExt.PKL
+    tpe = TargetType("object")
+    load_methods = {tpe: "_load"}
+
+    def __init__(self, path, tpe=tpe):
+        """Override the base class method since the type does not need to be specified."""
+        super().__init__(path, tpe=tpe)
+
+    def _load(self) -> Any:
+        """
+        Load any Python object from a Pickle file.
+
+        Override the abstract method in the base class
+        to load any Python object without requiring a key
+        in the dictionary :obj:`load_methods`.
+
+        See Also
+        --------
+        :func:`pickle.load`
+        """
+        with self.path.open("rb") as file:
+            return pickle.load(file)
+
+
+class LoaderNPY(Loader):
+    """Load data from a NPY file."""
+
+    ext = FileExt.NPY
+    tpe = TargetType("ndarray")
+    load_methods = MappingProxyType({tpe: "_load_numpy"})
+
+    def __init__(self, path, tpe=tpe) -> None:
+        """Override the base class method since the type is fixed."""
+        super().__init__(path, tpe=tpe)
+
+    def _load_numpy(self) -> npt.NDArray:
+        """Load a NPY file into a numpy array.
+
+        See Also
+        --------
+        :func:`numpy.load`
+        """
+        return np.load(self.path)
+
+
+class LoaderCSV(Loader):
+    """Load data from a CSV file."""
+
+    ext = FileExt.CSV
+    load_methods = MappingProxyType(
+        {
+            TargetType.LIST: "_load_list",
+            TargetType.NDARRAY_FLOAT: "_load_numpy",
+            TargetType.NDARRAY_INT: "_load_numpy",
+            TargetType.NDARRAY_STR: "_load_numpy",
+            TargetType.DATAFRAME: "_load_dataframe",
+        }
+    )
+
+    def _load_list(self) -> list:
+        """Load a CSV file into a list of lists.
+
+        See Also
+        --------
+        :func:`csv.reader`
+        """
+        with self.path.open("r", newline="", encoding="utf-8") as f:
+            reader = csv.reader(f)
+            return [row for row in reader]
+
+    def _load_numpy(self) -> npt.NDArray:
+        """Load a CSV file into a numpy array.
+
+        Warning
+        -------
+        The attribute :obj:`tpe` should specify not only ``npt.NDArray``,
+        but also the precise *data type* of the array contents.
+        - For float data : npt.NDArray[np.float64]
+        - For integer data : npt.NDArray[np.int64]
+        - For string data : npt.NDArray[np.str_]
+        If the data type is not specified, the default type is ``float``:
+        - Integer data is converted to ``float`` (default type).
+        - String data raise a ValueError.
+
+        See Also
+        --------
+        :func:`numpy.loadtxt`
+        """
+        if self.tpe == TargetType.NDARRAY_FLOAT:
+            dtype = "float"
+        elif self.tpe == TargetType.NDARRAY_INT:
+            dtype = "int"
+        elif self.tpe == TargetType.NDARRAY_STR:
+            dtype = "str"
+        else:
+            dtype = "float"  # default type
+        return np.loadtxt(self.path, delimiter=",", dtype=dtype)
+
+    def _load_dataframe(self) -> pd.DataFrame:
+        """Load a CSV file into a pandas DataFrame.
+
+        See Also
+        --------
+        :func:`pandas.read_csv`
+        """
+        return pd.read_csv(self.path)

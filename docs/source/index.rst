@@ -33,6 +33,7 @@ Multi-Task Context-Dependent Behavior - Documentation
    :maxdepth: 1
    :caption: Data Recovery Protocol
 
+   data_recovery/index
    data_recovery/transfer
    data_recovery/extract_spikes
 

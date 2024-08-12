@@ -1,5 +1,0 @@
-# Programming Words
-byobu
-Liskov
-Multiton
-Redeclaration

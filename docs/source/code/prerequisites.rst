@@ -4,7 +4,7 @@ Prerequisites for Usage
 Preliminary instructions *before* using the project framework in the :ref:`usage` section.
 
 
-.. _install: 
+.. _install:
 
 Installation
 ------------
@@ -15,11 +15,11 @@ Prerequisites
 The installation process consists in creating :
 
 - A *working directory* containing all the project files (documentation, packages, scripts, notebooks...)
-- A *virtual environment* dedicated to the project, which automatically handles the required Python interpreter and dependencies. 
+- A *virtual environment* dedicated to the project, which automatically handles the required Python interpreter and dependencies.
 
 Before proceeding with the installation steps, please ensure that the following tools are installed on the system :
 
-- `Conda <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`_ 
+- `Conda <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`_
 - `Git <https://git-scm.com/downloads>`_ (optional, for Option 1 in Step 1).
 
 .. warning::
@@ -44,7 +44,7 @@ Step 1 - Create the Project's Working Directory
 2. Click on the green **Code** button, Choose **Download ZIP** from the dropdown menu.
 3. Extract the ZIP file to the system location where the project working directory should reside.
 
-In both cases, the entire project directory named ``multitask-context-dependent-behavior`` is created into the desired location. 
+In both cases, the entire project directory named ``multitask-context-dependent-behavior`` is created into the desired location.
 
 
 Step 2 - Create a Virtual Environment
@@ -56,7 +56,7 @@ Step 2 - Create a Virtual Environment
 
 A new conda environment is created under the name ``mtcdb``.
 
-.. note:: 
+.. note::
    Dependencies are stored separately from the project directory, in the Conda directory designated for the system.
 
 
@@ -73,7 +73,7 @@ Step 3 - Verify Installation
 
 .. code-block:: bash
 
-    python -c "import mtcdb; print(mtcdb.__version__)"
+    python -c "import core; print(core.__version__)"
 
 Expected outcome in the terminal : Number of the downloaded version of the project.
 
@@ -86,7 +86,7 @@ Expected outcome in the terminal : Number of the downloaded version of the proje
 
 
 
-.. _setup: 
+.. _setup:
 
 Set Up for Usage
 ----------------
@@ -123,11 +123,3 @@ After using the code, deactivate the environment to return to the base environme
 .. code-block:: bash
 
     conda deactivate
-
-
-
-
-
-
-
-
