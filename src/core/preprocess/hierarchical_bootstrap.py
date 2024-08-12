@@ -28,8 +28,6 @@ Processing steps:
 2. Pick trials for each unit independently for future inclusion in the data set.
 3. Combine trials across units to form actual pseudo-trials.
 """
-from typing import List, Union
-
 import numpy as np
 import numpy.typing as npt
 

@@ -9,7 +9,6 @@ See Also
 """
 
 import numpy as np
-import numpy.typing as npt
 from numpy.testing import assert_array_almost_equal as assert_array_eq
 import pytest
 
@@ -43,9 +42,10 @@ def test_pick_trials_equal():
         which means that 0 occurs once, 1 occurs twice, 2 occurs zero times, and 3 occurs once.
     """
     n, n_pseudo = 3, 3
+    trials = pick_trials(n, n_pseudo)
+    count_occurrences = np.bincount(trials, minlength=n)
     expected_count = np.array([1, 1, 1])
-    actual = pick_trials(n, n_pseudo)
-    assert_array_eq(np.bincount(actual), expected_count), f"Expected equal counts"
+    assert_array_eq(count_occurrences, expected_count), f"Expected equal counts"
 
 
 def test_pick_trials_greater():
@@ -59,19 +59,20 @@ def test_pick_trials_greater():
 
     Expected Outputs
     ----------------
-    n_pseudo trials are selected at only once.
+    n_pseudo trials are selected only once.
     n - n_pseudo trials are not selected.
     expected_nb_1 = n_pseudo
     expected_nb_0 = n - n_pseudo
     """
     n, n_pseudo = 5, 3
+    trials = pick_trials(n, n_pseudo)
+    # Count the number of occurrences of each trial index
+    count_occurrences = np.bincount(trials, minlength=n)
+    # Count the number of 1 and O in `counts` itself
+    nb_1 = np.count_nonzero(count_occurrences == 1)
+    nb_0 = np.count_nonzero(count_occurrences == 0)
     expected_1 = n_pseudo
     expected_0 = n - n_pseudo
-    actual = pick_trials(n, n_pseudo)
-    counts = np.bincount(actual)
-    # Count the number of 1 and O in `counts`
-    nb_1 = np.count_nonzero(counts == 1)
-    nb_0 = np.count_nonzero(counts == 0)
     assert nb_1 == expected_1, f"Expected {expected_1}, Got {nb_1}"
     assert nb_0 == expected_0, f"Expected {expected_0}, Got {nb_0}"
 
@@ -96,12 +97,14 @@ def test_pick_trials_smaller():
     """
     n, n_pseudo = 3, 8
     q, r = divmod(n_pseudo, n)
-    expected_q = n - r
-    expected_q_plus_1 = r
-    actual = pick_trials(n, n_pseudo)
-    counts = np.bincount(actual)
+    trials = pick_trials(n, n_pseudo)
+    # Count the number of occurrences of each trial index
+    counts = np.bincount(trials, minlength=n)
+    # Count the number of trials selected q times and q + 1 times
     nb_q = np.count_nonzero(counts == q)
     nb_q_plus_1 = np.count_nonzero(counts == q + 1)
+    expected_q = n - r
+    expected_q_plus_1 = r
     assert nb_q == expected_q, f"Expected {expected_q}, Got {nb_q}"
     assert nb_q_plus_1 == expected_q_plus_1, f"Expected {expected_q_plus_1}, Got {nb_q_plus_1}"
 
@@ -129,8 +132,8 @@ def test_hierarchical_bootstrap():
     counts = np.arange(n_min, n_max + 1)  # uniform from `n_min` to `n_max`
     n_units = len(counts)
     expected_shape = (n_units, expected_n)
-    actual = hierarchical_bootstrap(counts, n_pseudo_min, alpha)
-    assert actual.shape[0] == n_units, f"Expected {n_units} units, Got {actual.shape[0]}"
-    assert actual.shape[1] == expected_n, f"Expected {expected_n} trials, Got {actual.shape[1]}"
-    assert actual.shape == expected_shape, f"Expected shape {expected_shape}, Got {actual.shape}"
-    assert np.all(actual < counts[:, None]), f"Items out of bounds"
+    pseudo = hierarchical_bootstrap(counts, n_pseudo_min, alpha)
+    assert pseudo.shape[0] == n_units, f"Expected {n_units} units, Got {pseudo.shape[0]}"
+    assert pseudo.shape[1] == expected_n, f"Expected {expected_n} trials, Got {pseudo.shape[1]}"
+    assert pseudo.shape == expected_shape, f"Expected shape {expected_shape}, Got {pseudo.shape}"
+    assert np.all(pseudo < counts[:, None]), f"Items out of bounds"
