@@ -13,7 +13,7 @@ import numpy.typing as npt
 from numpy.testing import assert_array_almost_equal as assert_array_eq
 import pytest
 
-from mtcdb.preprocess.hierarchical_bootstrap import (
+from core.preprocess.hierarchical_bootstrap import (
     pick_trials,
     hierarchical_bootstrap,
 )

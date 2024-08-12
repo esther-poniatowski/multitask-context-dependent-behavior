@@ -13,7 +13,7 @@ from typing import FrozenSet, Mapping
 
 import pytest
 
-from mtcdb.core_objects.base import CoreObject
+from core.core_objects.base import CoreObject
 
 
 # Test Inputs
@@ -37,7 +37,7 @@ class TestObject(CoreObject):
 def test_init():
     """
     Test for :meth:`__init__`.
-    
+
     Expected Outputs
     ----------------
     For valid value: TestObject is created with value 1.
@@ -53,7 +53,7 @@ def test_init():
 def test_get_options():
     """
     Test for :meth:`get_options`.
-    
+
     Expected Outputs
     ----------------
     OPTIONS: FrozenSet
@@ -64,7 +64,7 @@ def test_get_options():
 def test_full_label():
     """
     Test for property :attr:`full_label`.
-    
+
     Expected Outputs
     ----------------
     "One": str
@@ -76,10 +76,10 @@ def test_full_label():
 def test_eq():
     """
     Test for :meth:`__eq__`.
-    
+
     Expected Outputs
     ----------------
-    True: 
+    True:
         For two objects with the same value.
     False:
         For two objects with different values.
@@ -94,7 +94,7 @@ def test_hash():
 
     Expected Outputs
     ----------------
-    True: 
+    True:
         Check containment.
         Indeed, the hash value in the checking process.
     """

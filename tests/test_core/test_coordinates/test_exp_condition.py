@@ -9,18 +9,18 @@ See Also
 
 Notes
 -----
-Those tests focus on the functionalities which are *specific* to 
+Those tests focus on the functionalities which are *specific* to
 one concrete subclass of coordinates.
 
-The tests are performed on the :class:`CoordTask`subclass, 
+The tests are performed on the :class:`CoordTask`subclass,
 but apply for all subclasses of :class:`CoordExpCond`.
 """
 
 import numpy as np
 import pytest
 
-from mtcdb.coordinates.exp_condition import CoordTask
-from mtcdb.core_objects.exp_condition import Task
+from core.coordinates.exp_condition import CoordTask
+from core.core_objects.exp_condition import Task
 
 
 N_SMPL = 10

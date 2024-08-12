@@ -9,18 +9,18 @@ See Also
 
 Notes
 -----
-Those tests focus on the functionalities which are *specific* to 
+Those tests focus on the functionalities which are *specific* to
 one concrete subclass of coordinates.
 
-The tests are performed on the :class:`CoordRecNum`subclass, 
+The tests are performed on the :class:`CoordRecNum`subclass,
 but apply for all subclasses of :class:`CoordPosition`.
 """
 
 import numpy as np
 import pytest
 
-from mtcdb.coordinates.exp_structure import CoordRecNum
-from mtcdb.core_objects.exp_structure import Recording
+from core.coordinates.exp_structure import CoordRecNum
+from core.core_objects.exp_structure import Recording
 
 
 N_SMPL = 10

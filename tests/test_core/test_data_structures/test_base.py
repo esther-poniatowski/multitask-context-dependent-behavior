@@ -17,7 +17,7 @@ from typing import Tuple, Mapping, FrozenSet, Dict
 import numpy as np
 import pytest
 
-from mtcdb.data_structures.base import Data
+from core.data_structures.base import Data
 
 
 @pytest.fixture

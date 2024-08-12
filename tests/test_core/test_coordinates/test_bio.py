@@ -13,9 +13,9 @@ See Also
 import numpy as np
 import pytest
 
-from mtcdb.coordinates.bio import CoordUnit, CoordDepth
-from mtcdb.core_objects.bio import CorticalDepth
-from mtcdb.core_objects.composites import Unit
+from core.coordinates.bio import CoordUnit, CoordDepth
+from core.core_objects.bio import CorticalDepth
+from core.core_objects.composites import Unit
 
 
 # Test values for CoordUnit
@@ -112,7 +112,7 @@ def test_coord_depth_count_by_lab():
     coord = CoordDepth(values=VALUES)
     count = coord.count_by_lab()
     expected_count = {
-        CorticalDepth('a'): 2, 
+        CorticalDepth('a'): 2,
         CorticalDepth('b'): 2,
         CorticalDepth('c'): 0,
         CorticalDepth('d'): 0,

@@ -10,7 +10,7 @@ See Also
 
 import pytest
 
-from mtcdb.utils.functions import filter_kwargs
+from core.utils.functions import filter_kwargs
 
 # Sample functions for testing
 # ----------------------------

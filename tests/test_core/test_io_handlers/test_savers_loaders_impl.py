@@ -26,7 +26,7 @@ See Also
 import numpy as np
 import pytest
 
-from test_mtcdb.test_io_handlers.test_data import ( # dummy data
+from test_core.test_io_handlers.test_data import (  # dummy data
     data_list,
     data_dict,
     data_array,
@@ -37,18 +37,21 @@ from test_mtcdb.test_io_handlers.test_data import ( # dummy data
     data_obj,
     expected_from_list,
 )
-from mtcdb_shared.io.loaders.impl import LoaderCSV, LoaderNPY, LoaderPKL
-from mtcdb_shared.io.savers.impl import SaverCSV, SaverNPY, SaverPKL
+from utils.io.loaders.impl import LoaderCSV, LoaderNPY, LoaderPKL
+from utils.io.savers.impl import SaverCSV, SaverNPY, SaverPKL
 
-@pytest.mark.parametrize("data, expected, tpe",
-                         argvalues=[
-                             (data_list, expected_from_list, 'list'),
-                             (data_array_float, data_array_float, 'ndarray_float'),
-                             (data_array_int, data_array_int, 'ndarray_int'),
-                             (data_array_str, data_array_str, 'ndarray_str'),
-                             (data_df, data_df, 'dataframe')
-                         ],
-                         ids=["list", "numpy_float", "numpy_int", "numpy_str", "dataframe"])
+
+@pytest.mark.parametrize(
+    "data, expected, tpe",
+    argvalues=[
+        (data_list, expected_from_list, "list"),
+        (data_array_float, data_array_float, "ndarray_float"),
+        (data_array_int, data_array_int, "ndarray_int"),
+        (data_array_str, data_array_str, "ndarray_str"),
+        (data_df, data_df, "dataframe"),
+    ],
+    ids=["list", "numpy_float", "numpy_int", "numpy_str", "dataframe"],
+)
 def test_saver_loader_csv(tmp_path, data, expected, tpe):
     """
     Test for :class:`saver_module.SaverCSV` and :class:`loader_module.LoaderCSV`.
@@ -84,11 +87,11 @@ def test_saver_loader_csv(tmp_path, data, expected, tpe):
     loader = LoaderCSV(filepath, tpe)
     content = loader.load()
     # Compare the loaded data with the expected data
-    if tpe == 'list':
+    if tpe == "list":
         assert content == expected, "Content mismatch"
-    elif 'ndarray' in tpe:
+    elif "ndarray" in tpe:
         assert np.array_equal(content, expected), "Content mismatch"
-    elif tpe == 'dataframe':
+    elif tpe == "dataframe":
         assert content.equals(expected), "Content mismatch"
 
 
@@ -117,10 +120,11 @@ def test_saver_loader_npy(tmp_path):
     assert np.array_equal(content, data_array), "Content mismatch"
 
 
-@pytest.mark.parametrize("data, is_custom_class",
-                        argvalues=[(data_dict, False),
-                                   (data_obj, True)],
-                        ids=["dict", "custom_class"])
+@pytest.mark.parametrize(
+    "data, is_custom_class",
+    argvalues=[(data_dict, False), (data_obj, True)],
+    ids=["dict", "custom_class"],
+)
 def test_saver_loader_pkl(tmp_path, data, is_custom_class):
     """
     Test for :class:`saver_module.SaverPKL` and :class:`loader_module.LoaderPKL`.

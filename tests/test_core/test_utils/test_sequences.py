@@ -11,7 +11,7 @@ See Also
 import numpy as np
 import pytest
 
-from mtcdb.utils.sequences import unique, reverse_dict_container
+from core.utils.sequences import unique, reverse_dict_container
 
 
 seq = [1, 2, 2, 3, 3, 3, 4]
@@ -30,7 +30,7 @@ def test_unique(sequence, expected_output):
     sequence: Iterable [test parameter]
         Simple sequence with duplicates, of one of the following types:
         ``list``, ``tuple``, ``ndarray``.
-    
+
     Expected Outputs
     ----------------
     expected_output: Iterable
@@ -52,13 +52,13 @@ def test_reverse_dict_container():
     """
     Test for :func:`mtcdb.utils.sequences.reverse_dict_container`
     with a valid container type.
-    
+
     Test Inputs
     -----------
     dct: Dict[str, List[int]]
         Keys: Two strings.
         Values: Lists of integers, with one unique and one repeated element.
-    
+
     Expected Output
     ---------------
     expected_dict: Dict[int, Set[str]]
