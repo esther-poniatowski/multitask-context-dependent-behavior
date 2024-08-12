@@ -8,7 +8,7 @@ Tests for the module :mod:`mtcdb.core_objects.composites`.
 
 import pytest
 
-from mtcdb.core_objects.composites import Site, Unit, Session
+from core.core_objects.composites import Site, Unit, Session
 
 
 def test_split_id_unit():
@@ -32,7 +32,7 @@ def test_bidirectional_association():
     Test :meth:`Site.add_unit` and :meth:`Unit.set_site`.
 
     As the site is set automatically when a unit is instantiated,
-    it is only necessary to test 
+    it is only necessary to test
     - Whether the site is correctly set for this unit.
     - Whether the unit is recorded among the units of the site.
     """

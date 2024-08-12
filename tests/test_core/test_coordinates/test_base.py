@@ -18,7 +18,7 @@ See Also
 import numpy as np
 import pytest
 
-from mtcdb.coordinates.time import CoordTime
+from core.coordinates.time import CoordTime
 
 
 N_SMPL = 10

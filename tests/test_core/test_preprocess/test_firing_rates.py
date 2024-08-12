@@ -7,7 +7,7 @@ Tests for the module :mod:`mtcdb.preprocess.firing_rates`.
 
 See Also
 --------
-np.testing.assert_array_almost_equal: 
+np.testing.assert_array_almost_equal:
     Assess element-wise equality between 2 arrays within a tolerance.
     Used to ignore numerical errors due to floating point arithmetic.
     Specifically designed for testing purposes (detailed error messages).
@@ -19,18 +19,18 @@ import numpy.typing as npt
 from numpy.testing import assert_array_almost_equal as assert_array_eq
 import pytest
 
-from mtcdb.preprocess.firing_rates import extract_trial
-from mtcdb.preprocess.firing_rates import slice_epoch
-from mtcdb.preprocess.firing_rates import join_epochs
-from mtcdb.preprocess.firing_rates import spikes_to_rates
-from mtcdb.preprocess.firing_rates import smooth
+from core.preprocess.firing_rates import extract_trial
+from core.preprocess.firing_rates import slice_epoch
+from core.preprocess.firing_rates import join_epochs
+from core.preprocess.firing_rates import spikes_to_rates
+from core.preprocess.firing_rates import smooth
 
 
 spikes: npt.NDArray[np.float64] = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6])
 trials: npt.NDArray[np.int64] = np.array([1, 1, 2, 2, 3, 3])
 expected: npt.NDArray[np.float64] = np.array([0.3, 0.4])
 
-@pytest.mark.parametrize("spikes, trials, expected", 
+@pytest.mark.parametrize("spikes, trials, expected",
                          argvalues = [
                              (spikes, trials, expected),
                              (np.array([]), np.array([]), np.array([]))
@@ -41,7 +41,7 @@ def test_extract_trial(spikes, trials, expected):
     Tests for :func:`mtcdb.preprocess.firing_rates.extract_trial`.
 
     Parametrized for the argument ``data``.
-    
+
     Test Inputs
     -----------
     trials [with_content]: :obj:`mtcdb.types.NumpyArray` of int
@@ -49,7 +49,7 @@ def test_extract_trial(spikes, trials, expected):
     spikes [with_content]: :obj:`mtcdb.types.NumpyArray` of float
         2 spikes per trial.
     trials, spikes [empty]: :obj:`mtcdb.types.NumpyArray`
-        No spikes (empty array). 
+        No spikes (empty array).
     trial [empty]: int
         Set to 2, to extract the spiking times of the second trial.
     """
@@ -63,10 +63,10 @@ spk = np.arange(0, 1, 0.1)
 expected = np.array([0.0, 0.1, 0.2])
 t_start, t_end = 0.2, 0.5
 
-@pytest.mark.parametrize("spk, expected", 
+@pytest.mark.parametrize("spk, expected",
                          argvalues = [
                             (spk, expected),
-                            (np.array([]), np.array([])) 
+                            (np.array([]), np.array([]))
                             ],
                          ids = ["with_content", "empty"])
 def test_slice_epoch(spk, expected):
@@ -74,7 +74,7 @@ def test_slice_epoch(spk, expected):
     Test for :func:`mtcdb.preprocess.firing_rates.slice_epoch`.
 
     Parametrized for the argument ``spk``.
-    
+
     Test Inputs
     -----------
     spk [with_content] : :obj:`mtcdb.types.NumpyArray`
@@ -84,12 +84,12 @@ def test_slice_epoch(spk, expected):
         No spikes (empty array).
     t_start, t_end: float
         Set to 0.2 and 0.5 as the start and end time of the epoch.
-    
+
     Expected Outputs
     ----------------
     expected [with_content]: :obj:`mtcdb.types.NumpyArray`
         ``[0.0, 0.1, 0.2]``
-        3 spikes are retained in the epoch, originally at ``[0.2, 0.3, 0.4]`` s 
+        3 spikes are retained in the epoch, originally at ``[0.2, 0.3, 0.4]`` s
         (since the starting time is included but not the ending time).
         Then, spiking times are shifted by the start time of the epoch,
         which requires to subtract 0.2 to each value.
@@ -106,7 +106,7 @@ expected_1to2 = np.array([0.4, 0.5, 0.6, 0.7])
 t_start1, t_end1 = 0.3, 0.7
 t_start2, t_end2 = 1.3, 1.7
 
-@pytest.mark.parametrize("spk, expected", 
+@pytest.mark.parametrize("spk, expected",
                          argvalues = [
                              (spk_0to2, expected_0to2),
                              (spk_1to2, expected_1to2),
@@ -118,14 +118,14 @@ def test_join_epochs(spk, expected):
     Test for :func:`mtcdb.preprocess.firing_rates.join_epochs`.
 
     Parametrized for the argument ``spk``.
-    
+
     Test Inputs
     -----------
     spk [0to2]: :obj:`mtcdb.types.NumpyArray`
         Spikes evenly distributed in ``[0, 2]`` every 0.1 s (20 spikes).
     spk [1to2]: :obj:`mtcdb.types.NumpyArray`
         Spikes only after 1 s, so that there is no spike in the first epoch.
-    spk [empty]: :obj:`mtcdb.types.NumpyArray`    
+    spk [empty]: :obj:`mtcdb.types.NumpyArray`
         No spikes at all (empty array).
     t_start1, t_end1, t_start2, t_end2: float
         Two epochs of 0.4 s duration : [0.3, 0.7] and [1.3, 1.7].
@@ -157,7 +157,7 @@ expected_empty = np.full((10, 1), 0.0)
 t_max = 1.0
 t_bin = 0.1
 
-@pytest.mark.parametrize("spk, expected", 
+@pytest.mark.parametrize("spk, expected",
                           argvalues = [
                              (spk, expected),
                              (np.array([]), expected_empty)
@@ -168,7 +168,7 @@ def test_spikes_to_rates(spk, expected):
     Test for :func:`mtcdb.preprocess.firing_rates.spikes_to_rates`.
 
     Parametrized for the argument ``spk``.
-    
+
     Test Inputs
     -----------
     spk [with_content]: :obj:`mtcdb.types.NumpyArray`
@@ -179,7 +179,7 @@ def test_spikes_to_rates(spk, expected):
         Set to 1.0, for a recording period spanning ``[0, 1]``.
     t_bin: float
         Set to 0.1, to divide the recording period into 10 time bins.
-    
+
     Expected Outputs
     ----------------
     expected [with_content]: :obj:`mtcdb.types.NumpyArray`
@@ -217,7 +217,7 @@ def test_smooth():
     mode: str
         Set to ``'valid'``, to keep only the values which are not
         influenced by zero-padding.
-    
+
     Expected Outputs
     ----------------
     expected: :obj:`mtcdb.types.NumpyArray`
@@ -225,14 +225,14 @@ def test_smooth():
         In the ``'valid'`` mode, the output time dimension is given by:
         ``ntpts_out = ntpts - window/t_bin + 1``.
         Here: ``window/t_bin = 2`` bins, so ``ntpts_out = 10 - 2 + 1 = 9``.
-        Output values: All equal to 0.5, 
+        Output values: All equal to 0.5,
         which is the average of two consecutive values in both input trials
         (0 + 1)/2 = (0.25 + 0.75)/2 = 0.5.
-    
+
     Notes
     -----
-    No need to parametrize this test for an empty input array: 
-    the firing rate time courses will be of fixed duration, 
+    No need to parametrize this test for an empty input array:
+    the firing rate time courses will be of fixed duration,
     hence non-empty (even if all values are 0.0).
 
     See Also
@@ -242,4 +242,3 @@ def test_smooth():
     smoothed = smooth(frates, window, t_bin, mode)
     assert smoothed.shape == expected.shape, "Wrong shape"
     assert_array_eq(smoothed, expected), "Wrong values"
-

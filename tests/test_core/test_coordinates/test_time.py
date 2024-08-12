@@ -9,14 +9,14 @@ See Also
 
 Notes
 -----
-Those tests focus on the functionalities which are *specific* to 
+Those tests focus on the functionalities which are *specific* to
 one concrete subclass of coordinates.
 """
 
 import numpy as np
 import pytest
 
-from mtcdb.coordinates.time import CoordTime
+from core.coordinates.time import CoordTime
 
 
 N_SMPL = 10

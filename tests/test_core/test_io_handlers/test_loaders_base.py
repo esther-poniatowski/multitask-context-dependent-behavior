@@ -19,8 +19,8 @@ See Also
 
 import pytest
 
-from mtcdb_shared.io.loaders.base import Loader
-from mtcdb_shared.io.loaders.impl import LoaderCSV
+from utils.io.loaders.base import Loader
+from utils.io.loaders.impl import LoaderCSV
 
 
 def test_loader_check_file_invalid():

@@ -10,7 +10,7 @@ See Also
 
 import pytest
 
-from mtcdb_shared.io.path_managers.impl import RawSpkTimesPath, FiringRatesPath
+from utils.io.path_managers.impl import RawSpkTimesPath, FiringRatesPath
 
 
 def test_rawspktimes_path(tmp_path):

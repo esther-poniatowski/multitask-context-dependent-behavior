@@ -13,8 +13,8 @@ from typing import FrozenSet
 
 import pytest
 
-from mtcdb.core_objects.bio import Animal
-from mtcdb.core_objects.exp_structure import Recording
+from core.core_objects.bio import Animal
+from core.core_objects.exp_structure import Recording
 
 
 NAIVE_ANIMALS: FrozenSet = frozenset([Animal("mor"), Animal("tan")])
@@ -24,7 +24,7 @@ NAIVE_ANIMALS: FrozenSet = frozenset([Animal("mor"), Animal("tan")])
 def test_get_naive():
     """
     Test for :meth:`Animal.get_naive`.
-    
+
     Expected Outputs
     ----------------
     NAIVE_ANIMALS: FrozenSet
@@ -35,7 +35,7 @@ def test_get_naive():
 def test_init():
     """
     Test for :attr:`Recording._min`.
-    
+
     Try to initialize a recording with a value below 1.
 
     Expected Outputs
@@ -49,7 +49,7 @@ def test_init():
 def test_operations():
     """
     Test for :meth:`Recording.__eq__` and :meth:`Recording.__ne__`.
-    
+
     Expected Outputs
     ----------------
     True: The two recordings are equal.

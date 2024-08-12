@@ -10,7 +10,7 @@ See Also
 
 import pytest
 
-from mtcdb_shared.io.path_managers.base import PathManager
+from utils.io.path_managers.base import PathManager
 
 
 def test_check_dir_existing(tmp_path):
