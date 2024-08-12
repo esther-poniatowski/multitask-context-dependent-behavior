@@ -3,13 +3,16 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python>=3.9
+  - python=3.12
   - black
   - doctest
   - esbonio
+  - ipykernel
+  - jupyter
   - matplotlib
   - mypy
   - mypy_extensions
+  - netCDF4 # for xarray
   - numpy
   - pandas
   - pip
@@ -22,10 +25,11 @@ dependencies:
   - scipy
   - sphinx
   - sphinxcontrib
+  - sphinx-needs
   - sphinx_rtd_theme
   - scikit-learn
   - xarray
   - pip:
       #- sphinx-test-reports
-      # distutils
+      #- distutils
 variables:
