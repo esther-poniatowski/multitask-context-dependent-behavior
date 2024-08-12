@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.test_coordinates.test_exp_structure` [module]
+:mod:`test_core.test_coordinates.test_exp_structure` [module]
 
 See Also
 --------
-:mod:`mtcdb.coordinates.exp_structure`: Tested module.
+:mod:`core.coordinates.exp_structure`: Tested module.
 
 Notes
 -----
@@ -20,10 +20,11 @@ import numpy as np
 import pytest
 
 from core.coordinates.exp_structure import CoordRecNum
-from core.core_objects.exp_structure import Recording
+from core.entities.exp_structure import Recording
 
 
 N_SMPL = 10
+
 
 def test_coord_recnum_build_labels():
     """
@@ -55,7 +56,7 @@ def test_coord_recnum_count_by_lab():
     ---------------
     count : Two Recording objects as keys, with count 5 for each.
     """
-    values = np.array(5*[1] + 5*[2])
+    values = np.array(5 * [1] + 5 * [2])
     coord = CoordRecNum(values=values)
     count = coord.count_by_lab()
     expected_count = {1: 5, 2: 5}

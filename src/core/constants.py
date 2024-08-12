@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.constants` [module]
+:mod:`core.constants` [module]
 
 Constants and global variables for the whole package.
 
@@ -13,7 +13,7 @@ Access a constant in another module:
 
 .. code-block:: python
 
-        from mtcdb.constants import CONSTANT_NAME
+        from core.constants import CONSTANT_NAME
 """
 
 # --- Time and Durations ---

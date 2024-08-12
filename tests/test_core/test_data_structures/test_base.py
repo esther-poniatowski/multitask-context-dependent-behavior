@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.test_data_structures.test_base` [module]
+:mod:`test_core.test_data_structures.test_base` [module]
 
 See Also
 --------
-:mod:`mtcdb.data_structures.base`: Tested module.
+:mod:`core.data_structures.base`: Tested module.
 """
 
 # pyright: reportAttributeAccessIssue=false
 # pyright: reportRedeclaration=false
+# pylint: disable=redefined-outer-name
 
 from types import MappingProxyType
-from typing import Tuple, Mapping, FrozenSet, Dict
+from typing import Dict
 
 import numpy as np
 import pytest
@@ -23,7 +24,7 @@ from core.data_structures.base import Data
 @pytest.fixture
 def dim2coord():
     """
-    Fixture to generate the class attribute :attr:`dim2coord`.
+    Fixture - Generate the class attribute :attr:`dim2coord`.
 
     Returns
     -------
@@ -39,7 +40,7 @@ def dim2coord():
 @pytest.fixture
 def data(dim2coord) -> np.ndarray:
     """
-    Fixture to generate data consistent with :func:`dim2coord`.
+    Fixture - Generate data consistent with :func:`dim2coord`.
 
     Returns
     -------
@@ -55,7 +56,7 @@ def data(dim2coord) -> np.ndarray:
 @pytest.fixture
 def coord2type(dim2coord) -> Dict[str, type]:
     """
-    Fixture to generate the class attribute :attr:`coord2type`.
+    Fixture - Generate the class attribute :attr:`coord2type`.
 
     Returns
     -------
@@ -66,7 +67,7 @@ def coord2type(dim2coord) -> Dict[str, type]:
     -----
     This is consistent with the use of the method :meth:`empty`, which is available in :mod:`numpy`.
     """
-    c2t = {}
+    c2t: Dict[str, type] = {}
     for coord_set in dim2coord.values():
         for coord_name in coord_set:
             c2t[coord_name] = np.ndarray
@@ -76,7 +77,7 @@ def coord2type(dim2coord) -> Dict[str, type]:
 @pytest.fixture
 def coords(dim2coord, data) -> Dict[str, np.ndarray]:
     """
-    Fixture to generate coordinates consistent with :func:`dim2coord` and :func:`data`.
+    Fixture - Generate coordinates consistent with :func:`dim2coord` and :func:`data`.
 
     Returns
     -------
@@ -95,7 +96,7 @@ def coords(dim2coord, data) -> Dict[str, np.ndarray]:
 @pytest.fixture
 def subclass(request):
     """
-    Fixture to create a test class inheriting from :class:`Data`.
+    Fixture - Define a test class inheriting from :class:`Data`.
 
     Returns
     -------
@@ -113,6 +114,8 @@ def subclass(request):
     """
 
     class TestClass(Data):
+        """Test class inheriting from :class:`Data`."""
+
         dim2coord = request.getfixturevalue("dim2coord")
         coord2type = request.getfixturevalue("coord2type")
         path_manager = None
@@ -168,13 +171,15 @@ def test_init_from_scratch(subclass, data, coords, valid):
 
     Test Inputs
     -----------
-    TestData:
+    subclass:
         Class inheriting from :class:`Data`.
     data:
         Numpy array which should be passed as the data attribute.
     coords:
         Coordinate arrays which should be passed with the names of the coordinates in the class
         attribute :attr:`coords`.
+    valid: bool
+        Whether to test with all coordinates or with missing coordinates.
 
     Expected Output
     ---------------
@@ -188,8 +193,9 @@ def test_init_from_scratch(subclass, data, coords, valid):
         assert obj.n == expected_n
     else:
         with pytest.raises(ValueError):
-            # TODO
-            pass
+            coord_names = list(coords.keys())
+            invalid_coords = {k: v for k, v in coords.items() if k != coord_names[0]}  # remove one
+            obj = subclass(data=data, **invalid_coords)
 
 
 def test_load_data():

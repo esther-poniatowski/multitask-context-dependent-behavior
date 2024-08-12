@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.test_objects.test_composites` [module]
+:mod:`test_core.test_objects.test_composites` [module]
 
-Tests for the module :mod:`mtcdb.core_objects.composites`.
+Tests for the module :mod:`core.core_objects.composites`.
 """
 
 import pytest
 
-from core.core_objects.composites import Site, Unit, Session
+from core.entities.composites import Site, Unit, Session
 
 
 def test_split_id_unit():
@@ -16,7 +16,7 @@ def test_split_id_unit():
     Test :meth:`Unit.split_id`.
     """
     unit = Unit("avo052a-d1")
-    assert unit.split_id() == ('avo052a', 'avo', 'a')
+    assert unit.split_id() == ("avo052a", "avo", "a")
 
 
 def test_split_id_session():
@@ -24,7 +24,7 @@ def test_split_id_session():
     Test :meth:`Session.split_id`.
     """
     session = Session("avo052a04_p_PTD")
-    assert session.split_id() == ('avo052a', 4, 'p', 'PTD')
+    assert session.split_id() == ("avo052a", 4, "p", "PTD")
 
 
 def test_bidirectional_association():
@@ -49,6 +49,7 @@ def test_site_init():
     site = Site("avo052a")
     assert site.id == "avo052a"
 
+
 def test_unit_init():
     """
     Test :meth:`Unit.__init__`.
@@ -56,6 +57,7 @@ def test_unit_init():
     unit = Unit("avo052a-d1")
     assert unit.id == "avo052a-d1"
     assert unit.site.id == "avo052a"
+
 
 def test_session_init():
     """

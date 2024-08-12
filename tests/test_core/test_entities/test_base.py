@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.test_objects.test_bases` [module]
+:mod:`test_core.test_objects.test_bases` [module]
 
 See Also
 --------
-:mod:`mtcdb.core_objects.base`: Tested module.
+:mod:`core.core_objects.base`: Tested module.
 """
 
 from types import MappingProxyType
@@ -13,7 +13,7 @@ from typing import FrozenSet, Mapping
 
 import pytest
 
-from core.core_objects.base import CoreObject
+from core.entities.base import CoreObject
 
 
 # Test Inputs
@@ -25,14 +25,17 @@ OPTIONS: FrozenSet[int] = frozenset([1, 2, 3])
 FULL_LABELS: Mapping[int, str] = MappingProxyType({1: "One", 2: "Two", 3: "Three"})
 """Full labels for the valid values."""
 
+
 class TestObject(CoreObject):
     """Concrete class for testing the base object."""
+
     _options = OPTIONS
     _full_labels = FULL_LABELS
 
 
 # Test Functions
 # --------------
+
 
 def test_init():
     """
@@ -47,7 +50,7 @@ def test_init():
     obj = TestObject(1)
     assert obj.value == 1
     with pytest.raises(ValueError):
-        obj = TestObject('invalid_value')
+        obj = TestObject("invalid_value")
 
 
 def test_get_options():

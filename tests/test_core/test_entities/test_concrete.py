@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.test_objects.test_concrete` [module]
+:mod:`test_core.test_objects.test_concrete` [module]
 
 See Also
 --------
-:mod:`mtcdb.core_objects.bio`
-:mod:`mtcdb.core_objects.exp_structure`
+:mod:`core.core_objects.bio`
+:mod:`core.core_objects.exp_structure`
 """
 
 from typing import FrozenSet
 
 import pytest
 
-from core.core_objects.bio import Animal
-from core.core_objects.exp_structure import Recording
+from core.entities.bio import Animal
+from core.entities.exp_structure import Recording
 
 
 NAIVE_ANIMALS: FrozenSet = frozenset([Animal("mor"), Animal("tan")])

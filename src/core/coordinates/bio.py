@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.coordinates.bio` [module]
+:mod:`core.coordinates.bio` [module]
 
 Coordinate for labelling biological information in neuronal populations.
 
@@ -17,8 +17,8 @@ import numpy as np
 import numpy.typing as npt
 
 from core.coordinates.base import Coordinate
-from core.core_objects.bio import CorticalDepth
-from core.core_objects.composites import Unit
+from core.entities.bio import CorticalDepth
+from core.entities.composites import Unit
 
 
 T = TypeVar("T", Unit, CorticalDepth)
@@ -43,9 +43,9 @@ class CoordPopulation(Coordinate, Generic[T]):
 
     See Also
     --------
-    :class:`mtcdb.core_objects.composites.Unit`
-    :class:`mtcdb.core_objects.bio.CorticalDepth`
-    :class:`mtcdb.coordinates.base.Coordinate`
+    :class:`core.entities.composites.Unit`
+    :class:`core.entities.bio.CorticalDepth`
+    :class:`core.coordinates.base.Coordinate`
     """
 
     def __init__(self, values: npt.NDArray[np.str_]):
@@ -81,8 +81,8 @@ class CoordUnit(CoordPopulation[Unit]):
 
     See Also
     --------
-    :class:`mtcdb.core_objects.composites.Unit`
-    :class:`mtcdb.coordinates.base.CoordPopulation`
+    :class:`core.entities.composites.Unit`
+    :class:`core.coordinates.base.CoordPopulation`
     """
 
     def __init__(self, values: npt.NDArray[np.str_]):
@@ -128,8 +128,8 @@ class CoordDepth(CoordPopulation[CorticalDepth]):
 
     See Also
     --------
-    :class:`mtcdb.core_objects.bio.CorticalDepth`
-    :class:`mtcdb.coordinates.coord_base.Coordinate`
+    :class:`core.entities.bio.CorticalDepth`
+    :class:`core.coordinates.coord_base.Coordinate`
     """
 
     def __init__(self, values: npt.NDArray[np.str_]):

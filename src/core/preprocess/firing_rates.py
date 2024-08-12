@@ -1,16 +1,17 @@
 """
-:mod:`mtcdb.preprocess.firing_rates` [module]
+:mod:`core.preprocess.firing_rates` [module]
 
 Convert raw spike times to firing rates.
 
 See Also
 --------
-test_mtcdb.test_preprocess.test_firing_rates:
+test_core.test_preprocess.test_firing_rates:
     Unit tests for this module.
-mtcdb.data_structures.RawSpkTimes:
+core.data_structures.RawSpkTimes:
     Data structure for raw spike times.
 
 """
+
 from typing import Literal, TypeAlias
 
 import numpy as np
@@ -21,15 +22,14 @@ from scipy.signal import fftconvolve
 from core.constants import T_BIN
 
 
-Stim: TypeAlias = Literal['R', 'T', 'N']
-Task: TypeAlias = Literal['PTD', 'CLK']
+Stim: TypeAlias = Literal["R", "T", "N"]
+Task: TypeAlias = Literal["PTD", "CLK"]
 NumpyArray: TypeAlias = npt.NDArray[np.float64]
 
 
-def extract_trial(trial:int,
-                  spikes: npt.NDArray[np.float64],
-                  trials: npt.NDArray[np.int64]
-                  ) -> npt.NDArray[np.float64]:
+def extract_trial(
+    trial: int, spikes: npt.NDArray[np.float64], trials: npt.NDArray[np.int64]
+) -> npt.NDArray[np.float64]:
     """
     Extract the spiking times in one specific trial.
 
@@ -62,13 +62,12 @@ def extract_trial(trial:int,
 
     See Also
     --------
-    :class:`mtcdb.data_structures.RawSpkTimes`: Data structure for raw spike times.
+    :class:`core.data_structures.RawSpkTimes`: Data structure for raw spike times.
     """
-    return spikes[trials==trial]
+    return spikes[trials == trial]
 
 
-def slice_epoch(t_start: float, t_end: float,
-                spk: NumpyArray) -> NumpyArray:
+def slice_epoch(t_start: float, t_end: float, spk: NumpyArray) -> NumpyArray:
     """
     Extract spiking times within one epoch of one trial.
 
@@ -80,13 +79,13 @@ def slice_epoch(t_start: float, t_end: float,
     ----------
     t_start, t_end: float
         Times boundaries of the epoch (in seconds).
-    spk: :obj:`mtcdb.types.NumpyArray`
+    spk: :obj:`core.types.NumpyArray`
         Spiking times during a *whole trial* (in seconds).
         Shape: ``(nspikes,)``.
 
     Returns
     -------
-    spk_epoch: :obj:`mtcdb.types.NumpyArray`
+    spk_epoch: :obj:`core.types.NumpyArray`
         Spiking times in the epoch comprised between ``t_start`` and ``t_end``,
         reset to be relative to the beginning of the epoch.
         Shape: ``(nspikes_epoch, 1)``.
@@ -96,12 +95,12 @@ def slice_epoch(t_start: float, t_end: float,
     - Select the spiking times within the epoch with a boolean mask.
     - Subtract the starting time of the epoch to reset the time.
     """
-    return spk[(spk>=t_start)&(spk<t_end)] - t_start
+    return spk[(spk >= t_start) & (spk < t_end)] - t_start
 
 
-def join_epochs(t_start1: float, t_end1: float,
-                t_start2: float, t_end2: float,
-                spk: NumpyArray) -> NumpyArray:
+def join_epochs(
+    t_start1: float, t_end1: float, t_start2: float, t_end2: float, spk: NumpyArray
+) -> NumpyArray:
     """
     Join spiking times from two distinct epochs as if they were continuous.
 
@@ -109,13 +108,13 @@ def join_epochs(t_start1: float, t_end1: float,
     ----------
     t_start1, t_end1, t_start2, t_end2: float
         Times boundaries of both epochs to connect (in seconds).
-    spk: :obj:`mtcdb.types.NumpyArray`
+    spk: :obj:`core.types.NumpyArray`
         Spiking times during a *whole trial* (in seconds).
         Shape: ``(nspikes,)``.
 
     Returns
     -------
-    spk_joined: :obj:`mtcdb.types.NumpyArray`
+    spk_joined: :obj:`core.types.NumpyArray`
         Spiking times comprised in ``[t_start1, t_end2]`` and ``[t_start2, t_end2]``,
         realigned as if both epochs were continuous.
         Shape: ``(nspikes1 + nspikes2,)``.
@@ -142,14 +141,16 @@ def join_epochs(t_start1: float, t_end1: float,
     return spk_joined
 
 
-def align_timings(task: Task, stim: Stim,
-                  d_pre: float,
-                  d_stim: float,
-                  d_post: float,
-                  d_warn: float,
-                  t_on: float,
-                  t_off: float
-                  ) -> tuple[float, float, float, float]:
+def align_timings(
+    task: Task,
+    stim: Stim,
+    d_pre: float,
+    d_stim: float,
+    d_post: float,
+    d_warn: float,
+    t_on: float,
+    t_off: float,
+) -> tuple[float, float, float, float]:
     """
     Determine the times boundaries of the epochs to extract in one trial.
 
@@ -244,11 +245,11 @@ def align_timings(task: Task, stim: Stim,
     join_epochs: Join spiking times from two distinct epochs as if they were continuous.
     """
     t_start1 = t_on - d_pre
-    if task == 'PTD' or (task == 'CLK' and stim == 'N'): # excise Click train
+    if task == "PTD" or (task == "CLK" and stim == "N"):  # excise Click train
         t_end1 = t_on + d_stim
         t_start2 = t_off
         t_end2 = t_off + d_post
-    elif task == 'CLK' and (stim == 'T' or stim == 'R'): # excise TORC
+    elif task == "CLK" and (stim == "T" or stim == "R"):  # excise TORC
         t_end1 = t_on
         t_start2 = t_on + d_warn
         t_end2 = t_start2 + d_stim + d_post
@@ -257,16 +258,17 @@ def align_timings(task: Task, stim: Stim,
     return t_start1, t_end1, t_start2, t_end2
 
 
-def spikes_to_rates(spk: np.ndarray,
-                    t_bin: float,
-                    t_max: float,
-                    ) -> NumpyArray:
+def spikes_to_rates(
+    spk: np.ndarray,
+    t_bin: float,
+    t_max: float,
+) -> NumpyArray:
     """
     Convert a spike train into a firing rate time course.
 
     Parameters
     ----------
-    spk: :obj:`mtcdb.types.ArrayLike`
+    spk: :obj:`core.types.ArrayLike`
         Spiking times.
     t_bin: float
         Time bin (in seconds).
@@ -275,7 +277,7 @@ def spikes_to_rates(spk: np.ndarray,
 
     Returns
     -------
-    frates: :obj:`mtcdb.types.NumpyArray`
+    frates: :obj:`core.types.NumpyArray`
         Firing rate time course (in spikes/s).
         Shape: ``(ntpts, 1)`` with ``ntpts = t_max/t_bin`` (number of bins).
 
@@ -303,22 +305,23 @@ def spikes_to_rates(spk: np.ndarray,
     trials (length ``1``, single trial).
     It ensures compatibility and consistence in the full process.
     """
-    frates = np.histogram(spk, bins=np.arange(0, t_max+t_bin, t_bin))[0]/t_bin
-    frates = frates[:,np.newaxis] # add one dimension for trials
+    frates = np.histogram(spk, bins=np.arange(0, t_max + t_bin, t_bin))[0] / t_bin
+    frates = frates[:, np.newaxis]  # add one dimension for trials
     return frates
 
 
-def smooth(frates: NumpyArray,
-           window: float,
-           t_bin: float,
-           mode: str = 'valid',
-           ) -> NumpyArray:
+def smooth(
+    frates: NumpyArray,
+    window: float,
+    t_bin: float,
+    mode: str = "valid",
+) -> NumpyArray:
     """
     Smooth the firing rates across time.
 
     Parameters
     ----------
-    frates: :obj:`mtcdb.types.NumpyArray`
+    frates: :obj:`core.types.NumpyArray`
         Firing rate time course (in spikes/s).
         Shape: ``(ntpts, ntrials)``,
     window: float
@@ -328,7 +331,7 @@ def smooth(frates: NumpyArray,
 
     Returns
     -------
-    smoothed: :obj:`mtcdb.types.NumpyArray`
+    smoothed: :obj:`core.types.NumpyArray`
         Smoothed firing rate time course (in spikes/s).
         Shape: ``(ntpts_out, ntrials)``, ``ntpts_out`` depend on ``mode``.
         With ``"valid"``:  ``ntpts_out = ntpts - window/t_bin + 1``.
@@ -351,8 +354,8 @@ def smooth(frates: NumpyArray,
     - ``'same'``: Keep the output shape as the input sequence.
     - ``'valid'``: Keep only the values which are not influenced by zero-padding.
     """
-    kernel = np.ones((int(window/t_bin), 1)) # add one dimension for shape compatibility
-    smoothed = fftconvolve(frates, kernel, mode=mode, axes=0)/len(kernel)
+    kernel = np.ones((int(window / t_bin), 1))  # add one dimension for shape compatibility
+    smoothed = fftconvolve(frates, kernel, mode=mode, axes=0) / len(kernel)
     return smoothed
 
 
@@ -361,6 +364,7 @@ def main():
     Process all the raw data of one neuron to compute its final firing rates.
     """
     pass
+
 
 ###############################################################################
 ###############################################################################

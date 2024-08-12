@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.core_obj.base_enum` [module]
+:mod:`core.core_objects.base_enum` [module]
 
 Define an abstract base class for all enumeration classes.
 
@@ -11,14 +11,14 @@ Classes
 
 Implementation
 --------------
-The base class defines a common interface for all classes representing 
+The base class defines a common interface for all classes representing
 the core objects in the package. It should be inherited by subclasses
-that represent specific types of objects, which correspond to concrete 
+that represent specific types of objects, which correspond to concrete
 quantities or categories in the experiment.
 Each subclass stands as a type in itself and provides a central documentation
 for the object it represents. It stores :
 - A set of valid values for the object it represents.
-- Metadata (optional) about the type of object, often used to filter 
+- Metadata (optional) about the type of object, often used to filter
   the valid objects based on various criteria.
 
 See Also
@@ -38,7 +38,7 @@ T = TypeVar("T")
 class CoreObject(ABC, Generic[T]):
     """
     Abstract base class for custom enumeration classes.
-    
+
     Class Attributes
     ----------------
     _options: FrozenSet[T]
@@ -67,12 +67,12 @@ class CoreObject(ABC, Generic[T]):
         class ConcreteObject(CoreObject):
             _options = ["a", "b"]
             _full_labels = {"a": "Alpha", "b": "Beta"}
-    
+
     Instantiate an object and get its full label:
     .. code-block:: python
         obj = ConcreteObject("a")
         print(obj.full_label)  # "Alpha"
-    
+
     Check if two objects are equal:
     .. code-block:: python
         obj1 = ConcreteObject("a")
@@ -80,13 +80,14 @@ class CoreObject(ABC, Generic[T]):
         obj3 = ConcreteObject("b")
         print(obj1 == obj2)  # True
         print(obj1 == obj3)  # False
-    
+
     Check if an object belongs to a list:
     .. code-block:: python
         items = [ConcreteObject("a"), ConcreteObject("a")]
         print(obj1 in items)  # True
         print(obj3 in items)  # False
     """
+
     _options: FrozenSet[T] = frozenset()
     _full_labels: Mapping[T, str] = MappingProxyType({})
 
@@ -103,7 +104,7 @@ class CoreObject(ABC, Generic[T]):
     @classmethod
     def get_options(cls) -> FrozenSet[T]:
         """Get all the valid options for the values of an object."""
-        return cls._options # type: ignore
+        return cls._options  # type: ignore
 
     def __eq__(self, other) -> bool:
         """Check equality based on the value."""
@@ -113,15 +114,15 @@ class CoreObject(ABC, Generic[T]):
 
     def __hash__(self) -> int:
         """Provide a hash based on the value.
-        
+
         Usages :
         - Set the object as a key in a dictionary.
         - Include the object in a set.
-        - Check containment: 
-          The hash value is used to quickly locate the possible match in the collection, 
+        - Check containment:
+          The hash value is used to quickly locate the possible match in the collection,
           and then the method :meth:`__eq__` is used to verify equality.
-        
-        If two objects are considered equal (via :meth:`__eq__`), 
+
+        If two objects are considered equal (via :meth:`__eq__`),
         they must have the same hash value to ensures that they will be treated
         as the same object in hash-based collections.
         Therefore, the hash value should be based on the value of the object.

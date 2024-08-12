@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.data_structures.datasets` [module]
+:mod:`core.data_structures.datasets` [module]
 """
 import numpy as np
 import numpy.typing as npt
@@ -10,7 +10,16 @@ from types import MappingProxyType
 from typing import Tuple, Dict
 from typing import Type, TypeVar, Generic
 
-from core.constants import SMPL_RATE, T_BIN, D_PRE, D_POST, D_STIM, D_PRESHOCK, D_SHOCK, SMOOTH_WINDOW
+from core.constants import (
+    SMPL_RATE,
+    T_BIN,
+    D_PRE,
+    D_POST,
+    D_STIM,
+    D_PRESHOCK,
+    D_SHOCK,
+    SMOOTH_WINDOW,
+)
 from utils.io.path_managers.impl import PathManager, RawSpkTimesPath, SpikesTrainsPath
 from utils.io.loaders.base import Loader
 from utils.io.savers.base import Saver
@@ -39,7 +48,7 @@ class RawSpkTimes(Data):
         Session's identifier.
     smpl_rate: float
         Sampling time for the recording (in seconds).
-        Default: :obj:`mtcdb.constants.SMPL_RATE`
+        Default: :obj:`core.constants.SMPL_RATE`
 
     Notes
     -----
@@ -52,19 +61,21 @@ class RawSpkTimes(Data):
     Each spiking time (in seconds) is *relative* to the beginning of the block
     of trials in which is occurred (i.e. time origin is reset at 0 in each block).
     """
+
     dims: Tuple[str] = ("time",)
     coords: Dict[str, str] = {"time": "block"}
     path_manager: Type[PathManager] = RawSpkTimesPath
     loader: Type[Loader] = LoaderNPY
-    tpe : Type[T] = npt.NDArray[np.float64]
+    tpe: Type[T] = npt.NDArray[np.float64]
 
-    def __init__(self,
-                 data: npt.NDArray[np.float64],
-                 block: 'CoordBlock',
-                 unit_id: str,
-                 session_id: str,
-                 smpl_rate: float = SMPL_RATE
-                 ) -> None:
+    def __init__(
+        self,
+        data: npt.NDArray[np.float64],
+        block: "CoordBlock",
+        unit_id: str,
+        session_id: str,
+        smpl_rate: float = SMPL_RATE,
+    ) -> None:
         super().__init__(data=data)
         self.block = block
         self.unit_id = unit_id
@@ -78,7 +89,7 @@ class RawSpkTimes(Data):
     def path(self) -> Path:
         return self.path_manager.get_path(self.unit_id, self.session_id)
 
-    def load(self) -> 'RawSpkTimes':
+    def load(self) -> "RawSpkTimes":
         """
         Retrieve data from a file.
 
@@ -110,12 +121,12 @@ class RawSpkTimes(Data):
         -------
         int
         """
-        if self.trials.size != 0: # avoid ValueError in max()
+        if self.trials.size != 0:  # avoid ValueError in max()
             return self.block.max()
-        else: # empty array
+        else:  # empty array
             return 0
 
-    def get_block(self, blk: int) -> 'RawSpkTimes':
+    def get_block(self, blk: int) -> "RawSpkTimes":
         """
         Extract the spiking times which occurred in one block of trials.
 
@@ -191,15 +202,20 @@ class SpikesTrains(Data):
 
     New coordinates will be added to store the filtering metrics.
     """
+
     dims: Tuple[str] = ("time", "trial")
-    coords: Dict[str, str] = {"trial": ["rec", "block", "slot", "task", "ctx", "stim", "error"],}
+    coords: Dict[str, str] = {
+        "trial": ["rec", "block", "slot", "task", "ctx", "stim", "error"],
+    }
     path_manager: Type[PathManager] = SpikesTrainsPath
     loader: Type[Loader] = LoaderPKL
-    tpe : Type[T] = 'Data'
+    tpe: Type[T] = "Data"
     saver: Type[Saver] = SaverPKL
 
-    def __init__(self,
-                 data: npt.NDArray[np.float64],) -> None:
+    def __init__(
+        self,
+        data: npt.NDArray[np.float64],
+    ) -> None:
         super().__init__(data=data)
 
 
@@ -229,15 +245,18 @@ class FiringRatesUnit(Data):
     smooth_window: float
         Smoothing window size (in seconds).
     """
-    def __init__(self,
-                 unit_id:str,
-                 t_bin:float = T_BIN,
-                 d_pre:float = D_PRE,
-                 d_post:float = D_POST,
-                 d_stim:float = D_STIM,
-                 d_pre_shock:float = D_PRESHOCK,
-                 d_shock:float = D_SHOCK,
-                 smooth_window:float = SMOOTH_WINDOW):
+
+    def __init__(
+        self,
+        unit_id: str,
+        t_bin: float = T_BIN,
+        d_pre: float = D_PRE,
+        d_post: float = D_POST,
+        d_stim: float = D_STIM,
+        d_pre_shock: float = D_PRESHOCK,
+        d_shock: float = D_SHOCK,
+        smooth_window: float = SMOOTH_WINDOW,
+    ):
         super().__init__(self.loader, self.saver, self.empty_shape)
         self.unit_id = unit_id
         self.path_data = self.get_path()
@@ -251,7 +270,7 @@ class FiringRatesUnit(Data):
         self.t_on = 0
         self.t_off = self.t_on + d_stim
         self.t_bin = t_bin
-        self.t_max = self.n_tpts*t_bin
+        self.t_max = self.n_tpts * t_bin
         self.smooth_window = smooth_window
 
 
@@ -284,7 +303,7 @@ class FiringRatesPop(Data):
         pass
 
 
-'''
+"""
 
 
 The second decision is about the access to the coordinate objects from the data structure.
@@ -297,4 +316,4 @@ to select data along a specific coordinate.
 This method would return a new data structure with the selected data,
 and all its other attributes should be updated accordingly.
 
-'''
+"""

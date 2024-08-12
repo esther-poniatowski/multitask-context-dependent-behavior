@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.test_coordinates.test_base` [module]
+:mod:`test_core.test_coordinates.test_base` [module]
 
 Notes
 -----
@@ -11,8 +11,8 @@ because the abstract base class cannot be instantiated.
 
 See Also
 --------
-:mod:`mtcdb.coordinates.base`: Tested module.
-:mod:`mtcdb.coordinates.time`: Tested module.
+:mod:`core.coordinates.base`: Tested module.
+:mod:`core.coordinates.time`: Tested module.
 """
 
 import numpy as np

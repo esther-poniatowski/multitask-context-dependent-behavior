@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.io.test_savers_loaders_impl` [module]
+:mod:`test_core.io.test_savers_loaders_impl` [module]
 
 Notes
 -----
 Saver and Loader subclasses are tested together to ensure their consistent interaction.
-Contrary to the tests in :mod:`test_mtcdb.io.test_saver_base`
-and :mod:`test_mtcdb.io.test_loader_base`, here the focus is on
+Contrary to the tests in :mod:`test_core.io.test_saver_base`
+and :mod:`test_core.io.test_loader_base`, here the focus is on
 the specific *content* of the data which is saved and loaded, rather than
 on general checks carried out in the base classes.
 

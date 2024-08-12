@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.test_coordinates.test_bio` [module]
+:mod:`test_core.test_coordinates.test_bio` [module]
 
 See Also
 --------
-:mod:`mtcdb.coordinates.bio`: Tested module.
-:class:`mtcdb.core_objects.bio.Depth`
-:class:`mtcdb.core_objects.composites.Unit`
+:mod:`core.coordinates.bio`: Tested module.
+:class:`core.entities.bio.Depth`
+:class:`core.entities.composites.Unit`
 """
 
 import numpy as np
 import pytest
 
 from core.coordinates.bio import CoordUnit, CoordDepth
-from core.core_objects.bio import CorticalDepth
-from core.core_objects.composites import Unit
+from core.entities.bio import CorticalDepth
+from core.entities.composites import Unit
 
 
 # Test values for CoordUnit
-UNITS_IDS = ['avo052a-d1', 'daf035b-d2']
-DEPTHS = ['a', 'b'] # letter after the first number in the unit ID
+UNITS_IDS = ["avo052a-d1", "daf035b-d2"]
+DEPTHS = ["a", "b"]  # letter after the first number in the unit ID
 POP = [Unit(unit_id) for unit_id in UNITS_IDS]
 
 
@@ -54,7 +54,8 @@ def test_coord_unit_build_labels_invalid():
     TypeError
     """
     with pytest.raises(TypeError):
-        CoordUnit.build_labels(units=UNITS_IDS) # type: ignore[reportArgumentType]
+        CoordUnit.build_labels(units=UNITS_IDS)  # type: ignore[reportArgumentType]
+
 
 def test_coord_depth_build_labels():
     """
@@ -74,7 +75,8 @@ def test_coord_depth_build_labels():
 
 
 # Test values for CoordDepth
-VALUES = np.array(['a', 'a', 'b', 'b'], dtype=np.str_)
+VALUES = np.array(["a", "a", "b", "b"], dtype=np.str_)
+
 
 def test_coord_depth_get_layer():
     """
@@ -91,8 +93,16 @@ def test_coord_depth_get_layer():
         Boolean mask for the samples in the layer 'b'.
     """
     coord = CoordDepth(values=VALUES)
-    mask = coord.get_layer(depth=CorticalDepth('b'))
-    expected_mask = np.array([False, False, True, True,], dtype=np.bool_)
+    mask = coord.get_layer(depth=CorticalDepth("b"))
+    expected_mask = np.array(
+        [
+            False,
+            False,
+            True,
+            True,
+        ],
+        dtype=np.bool_,
+    )
     assert np.array_equal(mask, expected_mask)
 
 
@@ -112,15 +122,15 @@ def test_coord_depth_count_by_lab():
     coord = CoordDepth(values=VALUES)
     count = coord.count_by_lab()
     expected_count = {
-        CorticalDepth('a'): 2,
-        CorticalDepth('b'): 2,
-        CorticalDepth('c'): 0,
-        CorticalDepth('d'): 0,
-        CorticalDepth('e'): 0,
-        CorticalDepth('f'): 0
+        CorticalDepth("a"): 2,
+        CorticalDepth("b"): 2,
+        CorticalDepth("c"): 0,
+        CorticalDepth("d"): 0,
+        CorticalDepth("e"): 0,
+        CorticalDepth("f"): 0,
     }
     assert count == expected_count
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main()

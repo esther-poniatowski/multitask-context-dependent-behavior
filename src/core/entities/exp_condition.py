@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.core_objects.exp_condition` [module]
+:mod:`core.core_objects.exp_condition` [module]
 
 Classes representing the experimental conditions of the behavioral paradigm.
 
@@ -15,7 +15,7 @@ Classes
 from types import MappingProxyType
 from typing import FrozenSet, Mapping
 
-from core.core_objects.base import CoreObject
+from core.entities.base import CoreObject
 
 
 class Task(CoreObject[str]):
@@ -34,13 +34,16 @@ class Task(CoreObject[str]):
             Categories : Two complex chords.
             Similar to PTD in terms of task structure.
     """
+
     _options: FrozenSet[str] = frozenset(["PTD", "CLK", "CCH"])
 
-    _full_labels: Mapping[str, str] = MappingProxyType({
-        "PTD": "Pure Tone Discrimination",
-        "CLK": "Click Rate Discrimination",
-        "CCH": "Complex Chord Discrimination"
-    })
+    _full_labels: Mapping[str, str] = MappingProxyType(
+        {
+            "PTD": "Pure Tone Discrimination",
+            "CLK": "Click Rate Discrimination",
+            "CCH": "Complex Chord Discrimination",
+        }
+    )
 
 
 class Context(CoreObject[str]):
@@ -67,24 +70,22 @@ class Context(CoreObject[str]):
     :meth:`get_trained`
     :meth:`get_naive`
     """
+
     _options: FrozenSet[str] = frozenset(["a", "p", "p-pre", "p-post"])
 
     @classmethod
-    def get_trained(cls) -> FrozenSet['Context']:
+    def get_trained(cls) -> FrozenSet["Context"]:
         """Contexts for trained animals (all)."""
         return frozenset(cls(o) for o in cls._options)
 
     @classmethod
-    def get_naive(cls) -> FrozenSet['Context']:
+    def get_naive(cls) -> FrozenSet["Context"]:
         """Contexts for naive animals (only passive)."""
         return frozenset([cls("p")])
 
-    _full_labels: Mapping[str, str] = MappingProxyType({
-        "p": "Passive",
-        "a": "Active",
-        "p-pre": "Pre-Passive",
-        "p-post": "Post-Passive"
-    })
+    _full_labels: Mapping[str, str] = MappingProxyType(
+        {"p": "Passive", "a": "Active", "p-pre": "Pre-Passive", "p-post": "Post-Passive"}
+    )
 
 
 class Stimulus(CoreObject[str]):
@@ -115,20 +116,19 @@ class Stimulus(CoreObject[str]):
     :meth:`get_clk`
     :meth:`get_ptd`
     """
+
     _options: FrozenSet[str] = frozenset(["R", "T", "N"])
 
     @classmethod
-    def get_clk(cls) -> FrozenSet['Stimulus']:
+    def get_clk(cls) -> FrozenSet["Stimulus"]:
         """Stimuli for task CLK (all)."""
         return frozenset(cls(o) for o in cls._options)
 
     @classmethod
-    def get_ptd(cls) -> FrozenSet['Stimulus']:
+    def get_ptd(cls) -> FrozenSet["Stimulus"]:
         """Stimuli for task PTD (no neutral)."""
         return frozenset([cls("R"), cls("T")])
 
-    _full_labels: Mapping[str, str] = MappingProxyType({
-        "R": "Reference",
-        "T": "Target",
-        "N": "Neutral"
-    })
+    _full_labels: Mapping[str, str] = MappingProxyType(
+        {"R": "Reference", "T": "Target", "N": "Neutral"}
+    )

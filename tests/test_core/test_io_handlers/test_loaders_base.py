@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.test_io_handlers.test_loaders_base` [module]
+:mod:`test_core.test_io_handlers.test_loaders_base` [module]
 
 Notes
 -----
@@ -37,9 +37,10 @@ def test_loader_check_file_invalid():
     FileNotFoundError
     """
     filepath = "invalid_path"
-    loader = Loader(filepath, tpe='list')
+    loader = Loader(filepath, tpe="list")
     with pytest.raises(FileNotFoundError):
         loader._check_file()
+
 
 def test_loader_check_file_valid(tmp_path):
     """
@@ -55,7 +56,7 @@ def test_loader_check_file_valid(tmp_path):
     No exception raised.
     """
     filepath = tmp_path
-    loader = Loader(filepath, tpe='list')
+    loader = Loader(filepath, tpe="list")
     loader._check_file()
 
 
@@ -72,7 +73,7 @@ def test_loader_check_type_invalid():
     ------------------
     ValueError
     """
-    loader = LoaderCSV("test.csv", tpe='dict')
+    loader = LoaderCSV("test.csv", tpe="dict")
     with pytest.raises(TypeError):
         loader._check_type()
 
@@ -90,5 +91,5 @@ def test_loader_check_type_valid():
     ---------------
     No exception raised.
     """
-    loader = LoaderCSV("test.csv", tpe='list')
+    loader = LoaderCSV("test.csv", tpe="list")
     loader._check_type()

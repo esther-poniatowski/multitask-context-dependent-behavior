@@ -7,11 +7,11 @@ Tests for the Multi-Task Context-Dependent Behavior package.
 
 Sub-Packages
 ------------
-:mod:`test_mtcdb.test_core_objects`
-:mod:`test_mtcdb.test_coordinates`
-:mod:`test_mtcdb.test_data_structures`
-:mod:`test_mtcdb.test_io_handlers`
-:mod:`test_mtcdb.test_utils`
+:mod:`test_core.test_core_objects`
+:mod:`test_core.test_coordinates`
+:mod:`test_core.test_data_structures`
+:mod:`test_core.test_io_handlers`
+:mod:`test_core.test_utils`
 
 See Also
 --------

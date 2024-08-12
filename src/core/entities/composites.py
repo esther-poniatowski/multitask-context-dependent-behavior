@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.core_objects.composites` [module]
+:mod:`core.core_objects.composites` [module]
 
 Classes representing composite objects storing experimental information.
 
@@ -19,9 +19,9 @@ Classes
 
 from typing import List, Dict, Tuple, Optional, Any, Type
 
-from core.core_objects.bio import Animal, Area, CorticalDepth, Training
-from core.core_objects.exp_condition import Context, Task, Stimulus
-from core.core_objects.exp_structure import Block, Slot, Recording
+from core.entities.bio import Animal, Area, CorticalDepth, Training
+from core.entities.exp_condition import Context, Task, Stimulus
+from core.entities.exp_structure import Block, Slot, Recording
 
 
 class Multiton(type):
@@ -265,10 +265,10 @@ class Unit(metaclass=Multiton):
     :class:`Multiton`
     :class:`Site`
     :class:`Session`
-    :class:`mtcdb.core_objects.bio.Animal`
-    :class:`mtcdb.core_objects.bio.Area`
-    :class:`mtcdb.core_objects.bio.CorticalDepth`
-    :class:`mtcdb.core_objects.bio.Training`
+    :class:`core.core_objects.bio.Animal`
+    :class:`core.core_objects.bio.Area`
+    :class:`core.core_objects.bio.CorticalDepth`
+    :class:`core.core_objects.bio.Training`
 
     Notes
     -----
@@ -375,9 +375,9 @@ class Session(metaclass=Multiton):
     --------
     :class:`Multiton`
     :class:`Site`
-    :class:`mtcdb.core_objects.exp_structure.Recording`
-    :class:`mtcdb.core_objects.exp_condition.Task`
-    :class:`mtcdb.core_objects.exp_condition.Context`
+    :class:`core.core_objects.exp_structure.Recording`
+    :class:`core.core_objects.exp_condition.Task`
+    :class:`core.core_objects.exp_condition.Context`
     """
 
     def __init__(self, id_: str):
@@ -491,9 +491,9 @@ class Trial:
     See Also
     --------
     :class:`Session`
-    :class:`mtcdb.core_objects.exp_structure.Block`
-    :class:`mtcdb.core_objects.exp_structure.Slot`
-    :class:`mtcdb.core_objects.exp_condition.Stimulus`
+    :class:`core.core_objects.exp_structure.Block`
+    :class:`core.core_objects.exp_structure.Slot`
+    :class:`core.core_objects.exp_condition.Stimulus`
     """
 
     def __init__(self, session: str, block: Block, slot: Slot):

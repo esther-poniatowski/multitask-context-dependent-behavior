@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.core_obj.bio` [module]
+:mod:`core.core_objects.bio` [module]
 
 Classes representing the biological system under investigation.
 
@@ -16,7 +16,7 @@ Classes
 from types import MappingProxyType
 from typing import FrozenSet, Mapping
 
-from core.core_objects.base import CoreObject
+from core.entities.base import CoreObject
 
 
 class Animal(CoreObject[str]):
@@ -35,39 +35,57 @@ class Animal(CoreObject[str]):
     :meth:`get_naive`
     :meth:`get_trained`
     """
-    _options: FrozenSet[str] = frozenset([
-        "ath", "avo", "daf", "dai", "ele", "lem", "mor", "oni",
-        "plu", "saf", "sir", "tan", "tel", "tul", "was"
-    ])
+
+    _options: FrozenSet[str] = frozenset(
+        [
+            "ath",
+            "avo",
+            "daf",
+            "dai",
+            "ele",
+            "lem",
+            "mor",
+            "oni",
+            "plu",
+            "saf",
+            "sir",
+            "tan",
+            "tel",
+            "tul",
+            "was",
+        ]
+    )
     _naive: FrozenSet[str] = frozenset(["mor", "tan"])
 
     @classmethod
-    def get_naive(cls) -> FrozenSet['Animal']:
+    def get_naive(cls) -> FrozenSet["Animal"]:
         """Naive animals, recorded only during passive listening."""
         return frozenset(cls(o) for o in cls._naive)
 
     @classmethod
-    def get_trained(cls) -> FrozenSet['Animal']:
+    def get_trained(cls) -> FrozenSet["Animal"]:
         """Trained animals, recorded in both passive and active sessions."""
         return frozenset(cls(o) for o in cls._options - cls._naive)
 
-    _full_labels: Mapping[str, str] = MappingProxyType({
-        "ath": "Athena",
-        "avo": "Avocado",
-        "daf": "Daffodil",
-        "dai": "Daisy",
-        "ele": "Electra",
-        "lem": "Lemon",
-        "mor": "Morbier",
-        "oni": "Onion",
-        "plu": "Pluto",
-        "saf": "Saffron",
-        "sir": "Sirius",
-        "tan": "Tango",
-        "tel": "Telesto",
-        "tul": "Tulip",
-        "was": "Wasabi"
-    })
+    _full_labels: Mapping[str, str] = MappingProxyType(
+        {
+            "ath": "Athena",
+            "avo": "Avocado",
+            "daf": "Daffodil",
+            "dai": "Daisy",
+            "ele": "Electra",
+            "lem": "Lemon",
+            "mor": "Morbier",
+            "oni": "Onion",
+            "plu": "Pluto",
+            "saf": "Saffron",
+            "sir": "Sirius",
+            "tan": "Tango",
+            "tel": "Telesto",
+            "tul": "Tulip",
+            "was": "Wasabi",
+        }
+    )
 
 
 class Training(CoreObject[bool]):
@@ -81,11 +99,9 @@ class Training(CoreObject[bool]):
         False: Naive animals, recorded only during passive listening.
         True: Trained animals, recorded in both passive and active sessions.
     """
+
     _options: FrozenSet[bool] = frozenset([False, True])
-    _full_labels: Mapping[bool, str] = MappingProxyType({
-        True: "Trained",
-        False: "Naive"
-    })
+    _full_labels: Mapping[bool, str] = MappingProxyType({True: "Trained", False: "Naive"})
 
 
 class Area(CoreObject[str]):
@@ -102,24 +118,27 @@ class Area(CoreObject[str]):
     :meth:`get_trained`
     :meth:`get_naive`
     """
+
     _options: FrozenSet[str] = frozenset(["A1", "dPEG", "VPr", "PFC"])
 
     @classmethod
-    def get_trained(cls) -> FrozenSet['Area']:
+    def get_trained(cls) -> FrozenSet["Area"]:
         """Areas for trained animals (all)."""
         return frozenset(cls(o) for o in cls._options)
 
     @classmethod
-    def get_naive(cls) -> FrozenSet['Area']:
+    def get_naive(cls) -> FrozenSet["Area"]:
         """Areas for naive animals (all except PFC)."""
         return frozenset(cls(o) for o in cls._options - {"PFC"})
 
-    _full_labels: Mapping[str, str] = MappingProxyType({
-        "A1":   "Primary Auditory Cortex",
-        "dPEG": "Dorsal Perigenual Cortex",
-        "VPr":  "Ventral Prelimbic Cortex",
-        "PFC":  "Prefrontal Cortex"
-    })
+    _full_labels: Mapping[str, str] = MappingProxyType(
+        {
+            "A1": "Primary Auditory Cortex",
+            "dPEG": "Dorsal Perigenual Cortex",
+            "VPr": "Ventral Prelimbic Cortex",
+            "PFC": "Prefrontal Cortex",
+        }
+    )
 
 
 class CorticalDepth(CoreObject):
@@ -131,4 +150,5 @@ class CorticalDepth(CoreObject):
     _options : FrozenSet[str]
         Recording depths represented by one letter.
     """
+
     _options: FrozenSet[str] = frozenset(["a", "b", "c", "d", "e", "f"])

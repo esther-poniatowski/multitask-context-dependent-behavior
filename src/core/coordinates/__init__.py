@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.coordinates` [subpackage]
+:mod:`core.coordinates` [subpackage]
 
 Classes representing coordinates (labels) associated to the data structures.
 

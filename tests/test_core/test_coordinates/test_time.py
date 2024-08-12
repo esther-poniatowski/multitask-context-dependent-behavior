@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.test_coordinates.test_time` [module]
+:mod:`test_core.test_coordinates.test_time` [module]
 
 See Also
 --------
-:mod:`mtcdb.coordinates.time`: Tested module.
+:mod:`core.coordinates.time`: Tested module.
 
 Notes
 -----
@@ -22,6 +22,7 @@ from core.coordinates.time import CoordTime
 N_SMPL = 10
 T_BIN = 0.1
 VALUES = np.arange(N_SMPL).astype(np.float64)
+
 
 def test_coord_time_set_t_bin():
     """
@@ -42,17 +43,20 @@ def test_coord_time_set_t_bin():
     coord_time.set_t_bin()
     assert coord_time.t_bin == 0.1
 
-@pytest.mark.parametrize("n_smpl, t_bin, t_max",
-                         argvalues=[
-                             (N_SMPL, T_BIN, None),
-                             (N_SMPL, None, 1.0),
-                             (None, T_BIN, 1.0),
-                        ],
-                         ids=[
-                             "n_smpl, t_bin",
-                             "n_smpl, t_max",
-                             "t_bin, t_max",
-                         ])
+
+@pytest.mark.parametrize(
+    "n_smpl, t_bin, t_max",
+    argvalues=[
+        (N_SMPL, T_BIN, None),
+        (N_SMPL, None, 1.0),
+        (None, T_BIN, 1.0),
+    ],
+    ids=[
+        "n_smpl, t_bin",
+        "n_smpl, t_max",
+        "t_bin, t_max",
+    ],
+)
 def test_coord_time_build_labels_valid(n_smpl, t_bin, t_max):
     """
     Test :meth:`CoordTime.build_labels` with a valid combination of parameters.

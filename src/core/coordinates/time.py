@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.coordinates.time` [module]
+:mod:`core.coordinates.time` [module]
 
 Coordinate for labelling time stamps at which measurements were performed.
 
@@ -46,7 +46,7 @@ class CoordTime(Coordinate):
 
     See Also
     --------
-    :class:`mtcdb.coordinates.base.Coordinate`
+    :class:`core.coordinates.base.Coordinate`
     """
 
     def __init__(

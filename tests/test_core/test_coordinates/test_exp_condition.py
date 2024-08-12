@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.test_coordinates.test_exp_condition` [module]
+:mod:`test_core.test_coordinates.test_exp_condition` [module]
 
 See Also
 --------
-:mod:`mtcdb.coordinates.exp_condition`: Tested module.
+:mod:`core.coordinates.exp_condition`: Tested module.
 
 Notes
 -----
@@ -20,7 +20,7 @@ import numpy as np
 import pytest
 
 from core.coordinates.exp_condition import CoordTask
-from core.core_objects.exp_condition import Task
+from core.entities.exp_condition import Task
 
 
 N_SMPL = 10
@@ -40,8 +40,8 @@ def test_coord_task_build_labels():
     values : np.ndarray
         10 samples of 'PTD'.
     """
-    values = CoordTask.build_labels(n_smpl=N_SMPL, cnd=Task('PTD'))
-    expected_values = np.full(N_SMPL, 'PTD')
+    values = CoordTask.build_labels(n_smpl=N_SMPL, cnd=Task("PTD"))
+    expected_values = np.full(N_SMPL, "PTD")
     assert np.array_equal(values, expected_values)
 
 
@@ -59,10 +59,10 @@ def test_coord_task_replace_label():
     ---------------
     updated_values : 10 samples of 'PTD'.
     """
-    old_values = np.full(N_SMPL, 'CCH')
-    new_values = np.full(N_SMPL, 'PTD')
+    old_values = np.full(N_SMPL, "CCH")
+    new_values = np.full(N_SMPL, "PTD")
     old_coord = CoordTask(values=old_values)
-    new_coord = old_coord.replace_label(old=Task('CCH'), new=Task('PTD'))
+    new_coord = old_coord.replace_label(old=Task("CCH"), new=Task("PTD"))
     assert np.array_equal(new_coord.values, new_values)
 
 
@@ -80,8 +80,8 @@ def test_task_count_by_lab():
     count : Dict[Task, int]
         {Task('PTD'): 5, Task('CLK'): 5}
     """
-    values = np.array(5*['PTD'] + 5*['CLK'])
+    values = np.array(5 * ["PTD"] + 5 * ["CLK"])
     coord = CoordTask(values=values)
     count = coord.count_by_lab()
-    expected_count = {Task('PTD'): 5, Task('CLK'): 5, Task('CCH'): 0}
+    expected_count = {Task("PTD"): 5, Task("CLK"): 5, Task("CCH"): 0}
     assert count == expected_count

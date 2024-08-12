@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.data_structures` [subpackage]
+:mod:`core.data_structures` [subpackage]
 
 Classes representing data structures used in the analysis.
 
@@ -40,7 +40,7 @@ A data structure object can be obtained via two pathways :
 
 Modules
 -------
-:mod:`mtcdb.data_structures.base`
+:mod:`core.data_structures.base`
 
 
 Implementation
@@ -160,7 +160,7 @@ coordinates: task, context and stimulus.
 
 See Also
 --------
-:mod:`mtcdb.coordinates`
+:mod:`core.coordinates`
     Coordinate classes representing the dimensions of the data structures.
 :mod:`mtcdb_shared.io.path_managers`
     PathManager classes implementing path generation rules for each data class.

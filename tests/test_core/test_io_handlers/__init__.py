@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_mtcdb.test_io_handlers` [subpackage]
+:mod:`test_core.test_io_handlers` [subpackage]
 
 Modules
 -------

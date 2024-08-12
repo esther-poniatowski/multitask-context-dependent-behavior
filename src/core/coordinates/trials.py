@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.coordinates.trials` [module]
+:mod:`core.coordinates.trials` [module]
 
 Coordinate for labelling trials : errors, folds.
 
@@ -35,7 +35,7 @@ class CoordError(Coordinate):
 
     See Also
     --------
-    :class:`mtcdb.coordinates.base.Coordinate`
+    :class:`core.coordinates.base.Coordinate`
     """
 
     def __init__(self, values: npt.NDArray[np.bool_]):

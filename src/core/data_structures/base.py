@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`mtcdb.data_structures.base` [module]
+:mod:`core.data_structures.base` [module]
 
 Classes
 -------
@@ -146,7 +146,7 @@ class MetaData(ABCMeta):
 
         See Also
         --------
-        :func:`mtcdb.utils.sequences.reverse_dict_container`
+        :func:`core.utils.sequences.reverse_dict_container`
             Here, the output of the function is of the form {'coord': ['dim']}, since each
             coordinate is associated with a single dimension.
             To obtain single string values instead of lists, each list is unpacked.

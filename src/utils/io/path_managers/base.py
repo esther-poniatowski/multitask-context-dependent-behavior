@@ -51,7 +51,7 @@ class PathManager(ABC):
 
     See Also
     --------
-    :obj:`mtcdb.constants.PATH_DATA`: Default root directory for the data files.
+    :obj:`core.constants.PATH_DATA`: Default root directory for the data files.
     """
 
     def __init__(self, path_root: Union[str, Path] = PATH_DATA):

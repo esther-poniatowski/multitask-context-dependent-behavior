@@ -1,5 +1,5 @@
 """
-:mod:`mtcdb.preprocess` [subpackage]
+:mod:`core.preprocess` [subpackage]
 
 Preprocess the raw data up to obtain a format suitable for analysis.
 
@@ -16,17 +16,17 @@ Output
 
 Modules
 -------
-mtcdb.preprocess.firing_rates
+core.preprocess.firing_rates
     Convert spikes to firing rates.
     Align trials and epochs.
-mtcdb.preprocess.validate
+core.preprocess.validate
     Select the valid trials and units to analyze.
-mtcdb.preprocess.pseudo
+core.preprocess.pseudo
     Build pseudo-trials and pseudo-populations.
-mtcdb.preprocess.zscores
+core.preprocess.zscores
     Compute Z-scores statistics.
 
 See Also
 --------
-test_mtcdb.test_preprocess: Unit tests for this sub-package.
+test_core.test_preprocess: Unit tests for this sub-package.
 """
