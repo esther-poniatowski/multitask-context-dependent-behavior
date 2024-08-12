@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`tests_core` [package]
+:mod:`tests_utils` [package]
 
 Sub-Packages
 ------------
-:mod:`test_core.test_entities`
-:mod:`test_core.test_coordinates`
-:mod:`test_core.test_data_structures`
+:mod:`tests_utils.test_misc`
+:mod:`tests_utils.test_io`
 
 See Also
 --------
-:mod:`core`: Tested package.
+:mod:`utils`: Tested package.
 
 Notes
 -----

@@ -64,7 +64,6 @@ def test_session_init():
     Test :meth:`Session.__init__`.
     """
     session = Session("avo052a04_p_PTD")
-    a = 0
     assert session.id == "avo052a04_p_PTD"
     assert session.site.id == "avo052a"
     assert session.task.value == "PTD"
