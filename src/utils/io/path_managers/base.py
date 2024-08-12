@@ -30,7 +30,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Union, Optional
 
-from mtcdb.constants import PATH_DATA
+from core.constants import PATH_DATA
 
 
 class PathManager(ABC):

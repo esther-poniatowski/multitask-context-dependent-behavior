@@ -14,7 +14,7 @@ from abc import ABC
 from pathlib import Path
 from typing import Mapping, Union, TypeVar, Generic
 
-from mtcdb_shared.io.formats import FileExt, TargetType
+from utils.io.formats import FileExt, TargetType
 
 
 T = TypeVar('T')
