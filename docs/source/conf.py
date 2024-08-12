@@ -76,9 +76,7 @@ add_module_names = False
 
 # Custom types for napoleon
 napoleon_use_param = True
-napoleon_type_aliases = {"ArrayLike": ":obj:`mtcdb.types.ArrayLike`",
-                         "NumpyArray": ":obj:`mtcdb.types.NumpyArray`",
-}
+napoleon_type_aliases = {}
 # Custom sections for napoleon
 napoleon_custom_sections = [('Test Inputs', 'params_style'), # for test docs
                             ('Expected Outputs', 'params_style'), # for test docs
