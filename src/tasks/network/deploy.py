@@ -20,15 +20,9 @@ Arguments
 --sync-map-path : str
     Path to the `sync-map.yml` file where the sync map is defined (see :attrs:`Deployer.sync_map`).
 
-Example
--------
-.. code-block:: bash
-
-    python setup/manage_env_vars.py --env-path .env
-
 Notes
 -----
-Structure of the input sync map:
+Structure of the input sync map in the `sync-map.yml` file:
 
 .. code-block:: yaml
 
@@ -44,7 +38,7 @@ Structure of the input sync map:
         remote: path/to/remote/file2
 
 
-Structure of the output sync map:
+Structure of the output sync map processed by the :class:`Deployer` class:
 
 .. code-block:: python
 
@@ -91,7 +85,7 @@ class Deployer:
     Methods
     -------
     :meth:`deploy`
-    :meth:`rsync_transfer`
+    :meth:`transfer`
 
     See Also
     --------
@@ -110,30 +104,14 @@ class Deployer:
         self.sync_map = sync_map
 
     def deploy(self):
-        """Process the sync map to transfer files and directories to the remote server."""
+        """Transfer files and directories to the remote server based on the sync map."""
         for key in ['directories', 'files']:
             for map in self.sync_map.get(key, []):
-                self.rsync_transfer(map['local'], map['remote'])
+                self.transfer(map['local'], map['remote'])
 
-    def rsync_transfer(self, local_path, path):
+    def transfer(self, local_path, path):
         """
-        Transfer a file or directory to the remote server using rsync.
-
-        Notes
-        -----
-        Remote synchronization is performed using the `rsync` command.
-
-        Syntax:
-
-        .. code-block:: bash
-
-                rsync -avz <local_path> <remote_path>
-
-        Options:
-
-            -a: Archive mode - Preserve file attributes (e.g., timestamps, permissions...)
-            -v: Verbose mode - Display the progress of the transfer
-            -z: Compress data during the transfer
+        Transfer one file or directory to the remote server though remote synchronization.
 
         Raises
         ------
@@ -148,20 +126,29 @@ class Deployer:
         :meth:`subprocess.run`
             Execute a command in a subprocess.
             Used here to run the rsync command.
+        :command:`rsync`
+            Command-line utility to synchronize files and directories between two locations.
+            Syntax (here): `rsync -avz <source_path> <destination_path>`
+
+            Options:
+
+            `-a` (archive)  : Preserve file attributes (e.g., timestamps, permissions...)
+            `-v` (verbose)  : Display the progress of the transfer
+            `-z`            : Compress data during the transfer
         """
         local_full_path = Path(local_path).resolve()
-        full_path = f"{self.user}@{self.host}:{self.root_path}/{path}"
-        command = ['rsync', '-avz', str(local_full_path), full_path]
+        remote_full_path = f"{self.user}@{self.host}:{self.root_path}/{path}"
+        command = f"rsync -avz {local_full_path} {remote_full_path}"
         try:
             subprocess.run(command, check=True)
-            print(f"Successfully synced {local_full_path} to {full_path}")
+            print(f"Successfully synced {local_full_path} to {remote_full_path}")
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(f"Failed to sync {local_full_path} to {full_path}") from e
+            raise RuntimeError(f"Failed to sync {local_full_path} to {remote_full_path}") from e
 
 
 def load_network_config(path: Union[Path, str]) -> Dict[str, str]:
     """
-    Load network settings from a `.env` file and extract the user, host, and root path.
+    Extract user, host, and root path from a `.env` file.
 
     Arguments
     ---------
@@ -218,7 +205,8 @@ def load_sync_map(path):
         return yaml.safe_load(file)
 
 
-if __name__ == '__main__':
+def main():
+    """Execute the deployment process."""
     parser = argparse.ArgumentParser(description="Deploy files to a remote server.")
     parser.add_argument('--env-path', type=str, required=True, help='Path to the .env file.')
     parser.add_argument('--sync-map-path', type=str, required=True, help='Path to the sync-map.yml file.')
@@ -234,3 +222,6 @@ if __name__ == '__main__':
         sync_map=sync_map
     )
     deployer.deploy()
+
+if __name__ == '__main__':
+    main()
