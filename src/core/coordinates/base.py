@@ -8,7 +8,7 @@ Classes
 :class:`Coordinate`
 """
 
-from typing import Any, Type, TypeVar, Union
+from typing import Any, Type, TypeVar, Union, Generic
 
 from abc import ABC, abstractmethod
 import copy
@@ -19,16 +19,19 @@ from utils.misc.functions import filter_kwargs
 
 
 C = TypeVar("C", bound="Coordinate")
-"""Generic type variable for Coordinate subclasses."""
+"""Type variable for Coordinate subclasses."""
+
+L = TypeVar("L", np.int64, np.float64, np.str_)
+"""Type variable for the labels of the coordinate."""
 
 
-class Coordinate(ABC):
+class Coordinate(Generic[L], ABC):
     """
     Abstract Base Class representing coordinates for one dimension of a data set.
 
     Attributes
     ----------
-    values: npt.NDArray[Any]
+    values: npt.NDArray[L]
         Labels of the coordinate associated with one data dimension.
         Shape : ``(n_smpl,)``, where ``n_smpl`` should equal the length of the associated dimension
         in the data set.
@@ -51,7 +54,7 @@ class Coordinate(ABC):
     Therefore, coordinate values are stored in 1D arrays (restriction compared to :mod:`xarray`).
     """
 
-    def __init__(self, values: npt.NDArray[Any]):
+    def __init__(self, values: npt.NDArray[L]):
         self.values = values
 
     def __repr__(self) -> str:
@@ -99,9 +102,7 @@ class Coordinate(ABC):
         """
         return copy.deepcopy(self)
 
-    def __getitem__(
-        self, idx: Union[int, slice, npt.NDArray[np.bool_]]
-    ) -> Union["Coordinate", Any]:
+    def __getitem__(self, idx: Union[int, slice, npt.NDArray[np.bool_]]) -> Union["Coordinate", L]:
         """
         Index the coordinate labels by delegating to the underlying numpy array.
 
@@ -113,9 +114,10 @@ class Coordinate(ABC):
 
         Returns
         -------
-        Coordinate
-            New coordinate object whose labels are restricted to the selected values.
-            All the other attributes of the original coordinate object are preserved.
+        Union[Coordinate, Any]
+            If the index is an integer, return the corresponding label.
+            Otherwise, return a new coordinate object whose labels are restricted to the selected
+            values. All the other attributes of the initial coordinate object are preserved.
         """
         if isinstance(idx, int):
             return self.values[idx]

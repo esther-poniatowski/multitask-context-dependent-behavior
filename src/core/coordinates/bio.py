@@ -135,6 +135,7 @@ class CoordDepth(CoordPopulation[CorticalDepth]):
     def __init__(self, values: npt.NDArray[np.str_]):
         super().__init__(values=values)
 
+    # pylint: disable=arguments-differ
     @classmethod
     def build_labels(cls, units: Iterable[Unit]) -> npt.NDArray[np.str_]:
         """
@@ -157,6 +158,8 @@ class CoordDepth(CoordPopulation[CorticalDepth]):
         """
         cls._check_population(units)
         return np.array([unit.depth.value for unit in units], dtype=np.str_)
+
+    # pylint: enable=arguments-differ
 
     def get_layer(self, depth: CorticalDepth) -> npt.NDArray[np.bool_]:
         """

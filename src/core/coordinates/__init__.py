@@ -93,6 +93,9 @@ embedded (e.g. name of the associated dimension in the data structure instance).
 managed by the data structures themselves. This design enhances modularity and decouples the
 coordinate classes from the data set classes to which they apply.
 
+Disable the pylint error `arguments-differ` for the :meth:`build_labels` method in each concrete
+subclass. Indeed, the method signature is necessarily different from the abstract method signature
+since it depends on the specific sub-class features.
 
 Examples
 --------

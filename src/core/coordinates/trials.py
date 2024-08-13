@@ -46,6 +46,7 @@ class CoordError(Coordinate):
         format_counts = f"Correct: {counts[False]}, Error: {counts[True]}"
         return f"<{self.__class__.__name__}>: {len(self)} samples, {format_counts}."
 
+    # pylint: disable=arguments-differ
     @staticmethod
     def build_labels(n_smpl: int) -> npt.NDArray[np.str_]:
         """
@@ -62,6 +63,8 @@ class CoordError(Coordinate):
             Labels filled with ``False``.
         """
         return np.full(n_smpl, False, dtype=np.bool_)
+
+    # pylint: enable=arguments-differ
 
     def count_by_lab(self) -> Dict[bool, int]:
         """
@@ -114,6 +117,7 @@ class CoordFold(Coordinate):
         format_counts = ", ".join([f"Fold {fold}: {n}" for fold, n in enumerate(counts)])
         return f"<{self.__class__.__name__}>: {len(self)} samples, {format_counts}."
 
+    # pylint: disable=arguments-differ
     @staticmethod
     def build_labels(n_smpl: int) -> npt.NDArray[np.int64]:
         """
@@ -130,6 +134,8 @@ class CoordFold(Coordinate):
             Labels filled with ``0``.
         """
         return np.zeros(n_smpl, dtype=np.int64)
+
+    # pylint: enable=arguments-differ
 
     def count_by_lab(self) -> List[int]:
         """
