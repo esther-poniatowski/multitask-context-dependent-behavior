@@ -29,8 +29,7 @@ See Also
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Union, Optional
-
-from core.constants import PATH_DATA
+import os
 
 
 class PathManager(ABC):
@@ -39,25 +38,26 @@ class PathManager(ABC):
 
     Attributes
     ----------
-    path_root: str or Path, default=PATH_DATA
+    root_data: str or Path
         Root directory for the data files.
+        If not provided, the default is the value of the environment variable `DATA_DIR` defined in
+        the system.
 
     Methods
     -------
     :meth:`get_path` (abstract)
+    :meth:`get_root` (static)
     :meth:`check_dir` (static)
     :meth:`create_dir` (static)
     :meth:`display_tree`
-
-    See Also
-    --------
-    :obj:`core.constants.PATH_DATA`: Default root directory for the data files.
     """
 
-    def __init__(self, path_root: Union[str, Path] = PATH_DATA):
-        path_root = Path(path_root)
-        self.check_dir(path_root, raise_error=True)
-        self.path_root = path_root
+    def __init__(self, root_data: Optional[Union[str, Path]] = None) -> None:
+        if root_data is None:
+            root_data = self.get_root()
+        root_data = Path(root_data)
+        self.check_dir(root_data, raise_error=True)
+        self.root_data = root_data
 
     @abstractmethod
     def get_path(self, *args, **kwargs) -> Path:
@@ -71,9 +71,29 @@ class PathManager(ABC):
         """
 
     @staticmethod
+    def get_root() -> Path:
+        """
+        Get the data root directory from the environment variable defined in the system.
+
+        Returns
+        -------
+        root_data: str
+            Root directory for the data files.
+
+        Raises
+        ------
+        EnvironmentError
+            If no environment variable exists under the name `DATA_DIR`.
+        """
+        root_data = os.environ.get("DATA_DIR")
+        if root_data is None:
+            raise EnvironmentError("Environment variable 'DATA_DIR' is not set.")
+        return Path(root_data)
+
+    @staticmethod
     def check_dir(path: Union[str, Path], raise_error: bool = False) -> bool:
         """
-        Ensure the existence of a directory exists.
+        Ensure the existence of a directory in the file system.
 
         Parameters
         ----------
@@ -154,7 +174,7 @@ class PathManager(ABC):
           hierarchy (i.e when encountering a directory that contains no subdirectories or files).
         """
         if path is None:
-            path = self.path_root
+            path = self.root_data
         path = Path(path)
         self.check_dir(path, raise_error=True)
         items = list(path.iterdir())

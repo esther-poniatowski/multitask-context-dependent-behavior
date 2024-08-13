@@ -74,9 +74,3 @@ N_PSEUDO_MIN = 5
 
 ALPHA_BOOTSTRAP = 0.5
 """Variability factor to adjust the number of pseudo-trials to generate."""
-
-
-# --- Paths ---
-
-PATH_DATA: str = "data"  # FIXME: Use an environment variable
-"""Path to the data directory."""

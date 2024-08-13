@@ -7,6 +7,7 @@ See Also
 --------
 :mod:`utils.io.path_managers.base`: Tested module.
 """
+import os
 
 import pytest
 
@@ -32,7 +33,7 @@ def test_check_dir_existing(tmp_path):
 
 def test_check_dir_non_existing():
     """
-    Test :func:`PathManager.check_dir` for a non-existing directory.
+    Test :meth:`PathManager.check_dir` for a non-existing directory.
 
     Test Inputs
     -----------
@@ -48,7 +49,7 @@ def test_check_dir_non_existing():
 
 def test_create_dir(tmp_path):
     """
-    Test :func:`PathManager.create_dir` for creating a new directory.
+    Test :meth:`PathManager.create_dir` for creating a new directory.
 
     Test Inputs
     -----------
@@ -63,3 +64,22 @@ def test_create_dir(tmp_path):
     created_dir = PathManager.create_dir(new_dir)
     assert new_dir.exists(), "Directory not created"
     assert created_dir == new_dir, "Returned path does not match the created directory"
+
+
+def test_get_root(tmp_path):
+    """
+    Test :meth:`PathManager.get_root` for the default value.
+
+    Test Inputs
+    -----------
+    tmp_path : Path
+        Temporary directory created by pytest fixture. It is exported as an environment variable
+        under the name "DATA_DIR" in the current shell.
+
+    Expected Output
+    ---------------
+    Value of the environment variable "DATA_DIR".
+    """
+    data_dir = tmp_path
+    os.environ["DATA_DIR"] = str(data_dir)
+    assert PathManager.get_root() == data_dir, "Root directory not retrieved"
