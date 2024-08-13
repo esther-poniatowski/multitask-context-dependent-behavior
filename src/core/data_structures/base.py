@@ -396,7 +396,7 @@ class Data(Generic[T], metaclass=MetaData):
     @abstractmethod
     def path(self) -> Path:
         """Abstract Property - Build the path to the file containing the data."""
-        return self.path_manager().get_path()  # type: ignore[abstract]
+        return self.path_manager().get_path()  # type: ignore[abstract] # pylint: disable=abstract-class-instantiated
 
     def load(self) -> "Data":
         """Retrieve an instance from the file at :attr:`path`."""

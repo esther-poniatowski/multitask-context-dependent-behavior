@@ -10,7 +10,12 @@ See Also
 
 # pyright: reportAttributeAccessIssue=false
 # pyright: reportRedeclaration=false
+# pylint: disable=no-name-in-module
+# pylint: disable=missing-function-docstring
+# pylint: disable=missing-module-docstring
+# pylint: disable=missing-class-docstring
 # pylint: disable=redefined-outer-name
+
 
 from types import MappingProxyType
 from typing import Dict
@@ -114,7 +119,6 @@ def subclass(request):
     """
 
     class TestClass(Data):
-        """Test class inheriting from :class:`Data`."""
 
         dim2coord = request.getfixturevalue("dim2coord")
         coord2type = request.getfixturevalue("coord2type")

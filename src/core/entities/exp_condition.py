@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.core_objects.exp_condition` [module]
+:mod:`core.entities.exp_condition` [module]
 
 Classes representing the experimental conditions of the behavioral paradigm.
 

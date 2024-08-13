@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.core_objects.bio` [module]
+:mod:`core.entities.bio` [module]
 
 Classes representing the biological system under investigation.
 

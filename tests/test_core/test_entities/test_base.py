@@ -5,7 +5,7 @@
 
 See Also
 --------
-:mod:`core.core_objects.base`: Tested module.
+:mod:`core.entities.base`: Tested module.
 """
 
 from types import MappingProxyType
