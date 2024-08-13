@@ -77,6 +77,11 @@
 
 		// Type Checking
 		"mypy-type-checker.args": ["--config-file=./config/tools/mypy.ini"],
+		"mypy-type-checker.ignorePatterns": [
+			"**/docs/**",
+			"**/docs/*.py",
+			"**/docs/**/*.py"
+		],
 
 		// Spell Checker
 		"cSpell.enabled": true,
