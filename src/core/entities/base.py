@@ -12,7 +12,7 @@ Classes
 Implementation
 --------------
 The base class defines a common interface for all classes representing
-the core objects in the package. It should be inherited by subclasses
+the entities in the package. It should be inherited by subclasses
 that represent specific types of objects, which correspond to concrete
 quantities or categories in the experiment.
 Each subclass stands as a type in itself and provides a central documentation
@@ -32,7 +32,7 @@ from typing import Generic, TypeVar, Mapping, FrozenSet
 
 
 T = TypeVar("T")
-"""Type variable for the values representing a core object."""
+"""Type variable for the values representing an entity."""
 
 
 class CoreObject(ABC, Generic[T]):
@@ -104,7 +104,7 @@ class CoreObject(ABC, Generic[T]):
     @classmethod
     def get_options(cls) -> FrozenSet[T]:
         """Get all the valid options for the values of an object."""
-        return cls._options  # type: ignore
+        return cls._options
 
     def __eq__(self, other) -> bool:
         """Check equality based on the value."""
