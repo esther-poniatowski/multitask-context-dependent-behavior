@@ -16,10 +16,10 @@ Define a File Path
 
 .. code-block:: python
 
-    path_root = '/path/to/data/directory'
+    root_data = '/path/to/data/directory'
     unit = 'avo052a-d1'
     session = 'avo052a04_p_PTD'
-    pm = RawSpkTimesPath(path_root)
+    pm = RawSpkTimesPath(root_data)
     path = pm.get_path(unit, session)
     print(path)
     # Output: /path/to/data/directory/raw/avo052a-d1/avo052a04_p_PTD

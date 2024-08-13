@@ -47,7 +47,7 @@ class RawSpkTimesPath(PathManager):
         Path
             Format: ``{root}/raw/{unit}/{session}``
         """
-        return self.path_root / "raw" / unit / session
+        return self.root_data / "raw" / unit / session
 
 
 class SpikesTrainsPath(PathManager):
@@ -66,7 +66,7 @@ class SpikesTrainsPath(PathManager):
         Path
             Format: ``{root}/processed/units/{unit}``
         """
-        return self.path_root / "processed" / "units" / unit
+        return self.root_data / "processed" / "units" / unit
 
 
 class FiringRatesPath(PathManager):
@@ -88,7 +88,7 @@ class FiringRatesPath(PathManager):
         Path
             Format: ``{root}/processed/populations/{area}_{training}``
         """
-        return self.path_root / "processed" / "populations" / f"{area}_{training}"
+        return self.root_data / "processed" / "populations" / f"{area}_{training}"
 
 
 class DecoderPath(PathManager):
@@ -114,4 +114,4 @@ class DecoderPath(PathManager):
         """
         if isinstance(training, bool):
             training = "Trained" if training else "Naive"
-        return self.path_root / "models" / "decoders" / model / f"{area}_{training}"
+        return self.root_data / "models" / "decoders" / model / f"{area}_{training}"
