@@ -204,6 +204,12 @@ leveraging different sections:
 - `[mypy-src]` : Configuration for the `src/` directory.
 - `[mypy-tests]` : Configuration for the `tests/` directory.
 
+.. warning::
+    The `exclude` option in the configuration file only affects recursive directory discovery. When
+    calling mypy and explicitly passing a path, it will be checked even if it matches an
+    exclusion pattern.
+    Idea: Develop a custom plugin that intercepts file processing and skips excluded directories.
+
 
 ### Black
 
