@@ -8,7 +8,7 @@ Classes
 :class:`Coordinate`
 """
 
-from typing import Any, Type, TypeVar, Union, Generic
+from typing import Any, Type, TypeVar, Union, Generic, overload, Self
 
 from abc import ABC, abstractmethod
 import copy
@@ -55,7 +55,7 @@ class Coordinate(Generic[L], ABC):
     """
 
     def __init__(self, values: npt.NDArray[L]):
-        self.values = values
+        self.values = values  # type: ignore[var-annotated]
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}> : {len(self)} samples."
@@ -84,11 +84,11 @@ class Coordinate(Generic[L], ABC):
         bool
             True if all the elements in the numpy arrays are equal, False otherwise.
         """
-        if not isinstance(other, Coordinate):
+        if not isinstance(other, type(self)):
             return False
         return np.array_equal(self.values, other.values)
 
-    def copy(self: C) -> C:
+    def copy(self) -> Self:
         """
         Copy the coordinate object with all its attributes.
 
@@ -102,19 +102,27 @@ class Coordinate(Generic[L], ABC):
         """
         return copy.deepcopy(self)
 
-    def __getitem__(self, idx: Union[int, slice, npt.NDArray[np.bool_]]) -> Union["Coordinate", L]:
+    @overload
+    def __getitem__(self, idx: int) -> L: ...
+
+    @overload
+    def __getitem__(self, idx: slice) -> Self: ...
+
+    @overload
+    def __getitem__(self, idx: npt.NDArray[np.bool_]) -> Self: ...
+
+    def __getitem__(self, idx: Union[int, slice, npt.NDArray[np.bool_]]) -> Union[L, Self]:
         """
         Index the coordinate labels by delegating to the underlying numpy array.
 
         Parameters
         ----------
         idx: Union[int, slice, npt.NDArray[bool]]
-            Selection object accepted by numpy arrays
-            (int, slice, boolean mask, etc.).
+            Selection object accepted by numpy arrays: int, slice, boolean mask.
 
         Returns
         -------
-        Union[Coordinate, Any]
+        Union[L, Self]
             If the index is an integer, return the corresponding label.
             Otherwise, return a new coordinate object whose labels are restricted to the selected
             values. All the other attributes of the initial coordinate object are preserved.
