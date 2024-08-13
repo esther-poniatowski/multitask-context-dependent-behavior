@@ -146,13 +146,12 @@ class PathManager(ABC):
 
         Implementation
         --------------
-        Display the name of each file or subdirectory in the currently traversed directory,
-        with an indentation level depending on its depth in the hierarchy.
-        If a directory contains more items than the specified limit,
-        show an ellipsis (`...`) to indicate the presence of more items.
-        Call the method recursively on sub-directories until reaching
-        the end of the directory hierarchy (i.e when encountering a directory
-        that contains no subdirectories or files).
+
+        - Display the name of each file or subdirectory in the currently traversed directory, with
+          an indentation level depending on its depth in the hierarchy.
+        - If a directory contains more items than the specified limit, show an ellipsis (`...`).
+        - Call the method recursively on sub-directories until reaching the end of the directory
+          hierarchy (i.e when encountering a directory that contains no subdirectories or files).
         """
         if path is None:
             path = self.path_root

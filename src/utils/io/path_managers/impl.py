@@ -14,7 +14,15 @@ Classes
 See Also
 --------
 :class:`utils.io.path_manager_base.PathManager` : Interface to manage file paths.
+
+Notes
+-----
+Disable the pylint warning ``arguments-differ``.
+This warning is raised because the signature of the concrete ``get_path`` methods is different from
+the one in the base class. This is intentional since the arguments depend on the specific data
+structure associated to each path manager.
 """
+# pylint: disable=arguments-differ
 
 from pathlib import Path
 from typing import Union
@@ -23,9 +31,9 @@ from utils.io.path_managers.base import PathManager
 
 
 class RawSpkTimesPath(PathManager):
-    """Path generation rules used by SpkTimes data structures."""
+    """Path generation rules used by :class:`RawSpkTimes` data structures."""
 
-    def get_path(self, unit: str, session: str) -> Path:  # pylint: disable=arguments-differ
+    def get_path(self, unit: str, session: str) -> Path:
         """
         Construct the path for the raw data of one unit in one session.
 
@@ -43,9 +51,9 @@ class RawSpkTimesPath(PathManager):
 
 
 class SpikesTrainsPath(PathManager):
-    """Path generation rules used by SpikesTrains data structures."""
+    """Path generation rules used by :class:`SpikesTrains` data structures."""
 
-    def get_path(self, unit: str) -> Path:  # pylint: disable=arguments-differ
+    def get_path(self, unit: str) -> Path:
         """
         Construct the path for a file storing the spike trains of one unit.
 
@@ -62,11 +70,9 @@ class SpikesTrainsPath(PathManager):
 
 
 class FiringRatesPath(PathManager):
-    """Path generation rules used by FiringRates data structures."""
+    """Path generation rules used by :class:`FiringRates` data structures."""
 
-    def get_path(
-        self, area: str, training: Union[str, bool]
-    ) -> Path:  # pylint: disable=arguments-differ
+    def get_path(self, area: str, training: Union[str, bool]) -> Path:
         """
         Construct the path for a file storing firing rates.
 
@@ -88,9 +94,7 @@ class FiringRatesPath(PathManager):
 class DecoderPath(PathManager):
     """Path generation rules used by Decoder data structures."""
 
-    def get_path(
-        self, area: str, training: Union[str, bool], model: str
-    ) -> Path:  # pylint: disable=arguments-differ
+    def get_path(self, area: str, training: Union[str, bool], model: str) -> Path:
         """
         Construct the path for a file storing decoder weights.
 
