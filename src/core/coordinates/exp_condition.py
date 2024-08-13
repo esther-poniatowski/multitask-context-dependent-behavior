@@ -41,8 +41,9 @@ class CoordExpCond(Coordinate, Generic[C]):
     ----------
     values: npt.NDArray[np.str_]
         Labels for the condition associated with each measurement. All the conditions are
-        represented by string values, matching the values of the corresponding condition objects.
-        It contains the string values of the conditions stored in the attribute ``value`` of the condition objects.
+        represented by string values, matching the values of the corresponding condition objects. It
+        contains the string values of the conditions stored in the attribute ``value`` of the
+        condition objects.
 
     Methods
     -------
@@ -67,9 +68,10 @@ class CoordExpCond(Coordinate, Generic[C]):
 
     def __repr__(self):
         counts = self.count_by_lab()
-        format_counts = ", ".join([f"{cnd!r}: {n}" for cnd, n in counts.items()])  # type: ignore
+        format_counts = ", ".join([f"{cnd!r}: {n}" for cnd, n in counts.items()])
         return f"<{self.__class__.__name__}>: {len(self)} samples, {format_counts}."
 
+    # pylint: disable=arguments-differ
     @staticmethod
     def build_labels(n_smpl: int, cnd: C) -> npt.NDArray[np.str_]:
         """
@@ -88,6 +90,8 @@ class CoordExpCond(Coordinate, Generic[C]):
             Labels coordinate filled a single condition.
         """
         return np.full(n_smpl, cnd.value)
+
+    # pylint: enable=arguments-differ
 
     def replace_label(self, old: C, new: C) -> "CoordExpCond":
         """

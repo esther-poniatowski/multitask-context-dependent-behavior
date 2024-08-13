@@ -52,6 +52,8 @@ class CoordPosition(Coordinate, Generic[P]):
     Methods
     -------
     :meth:`count_by_lab`
+    :meth:`min`
+    :meth:`max`
 
     Notes
     -----
@@ -91,6 +93,15 @@ class CoordPosition(Coordinate, Generic[P]):
         """
         return {pos: np.sum(self.values == pos) for pos in np.unique(self.values)}
 
+    def min(self) -> int:
+        """Delegate to the numpy function."""
+        return np.min(self.values)
+
+    def max(self) -> int:
+        """Delegate to the numpy function."""
+        return np.max(self.values)
+
+    # pylint: disable=arguments-differ
     @staticmethod
     def build_labels(n_smpl: int, pos: P) -> npt.NDArray[np.int64]:
         """
@@ -110,6 +121,8 @@ class CoordPosition(Coordinate, Generic[P]):
             Length: ``n_smpl``, Unique value: ``pos``.
         """
         return np.full(n_smpl, pos.value, dtype=np.int64)
+
+    # pylint: enable=arguments-differ
 
 
 class CoordRecNum(CoordPosition[Recording]):
@@ -134,8 +147,8 @@ class CoordBlock(CoordPosition[Block]):
 
     Warning
     -------
-    Labels in the coordinate start at 1 (not 0) and extend until
-    the maximum number of trials in the session(s) encountered by the unit.
+    Labels in the coordinate start at 1 (not 0) and extend until the maximum number of trials in the
+    session(s) encountered by the unit.
 
     See Also
     --------

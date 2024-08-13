@@ -84,6 +84,7 @@ class CoordTime(Coordinate):
                 warnings.warn("Time points not uniformly spaced.")
                 self.t_bin = None
 
+    # pylint: disable=arguments-differ
     @staticmethod
     def build_labels(
         n_smpl: Optional[int] = None,  # pylint: disable=arguments-differ
@@ -140,3 +141,5 @@ class CoordTime(Coordinate):
         else:
             raise ValueError("Invalid parameter combination.")
         return np.arange(n_smpl) * t_bin + t_min
+
+    # pylint: enable=arguments-differ
