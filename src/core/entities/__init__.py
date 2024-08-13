@@ -3,7 +3,7 @@
 """
 :mod:`core.entities` [subpackage]
 
-Define classes representing the core objects manipulated in the package.
+Define classes representing the entities manipulated in the package.
 
 Each object is associated to a concrete feature describing the experiment.
 It constitutes a type in itself, with its own attributes, methods and properties.

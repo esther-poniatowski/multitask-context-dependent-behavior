@@ -133,8 +133,8 @@ class Multiton(type):
             return hash(self.id)
 
         # Attach instance methods to the class
-        cls.__eq__ = __eq__  # type: ignore
-        cls.__hash__ = __hash__  # type: ignore
+        cls.__eq__ = __eq__
+        cls.__hash__ = __hash__
 
 
 class Site(metaclass=Multiton):
