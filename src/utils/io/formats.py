@@ -29,9 +29,13 @@ class TargetType(Enum):
     """
     Target types for data loading.
 
-    For usage, each type is specified by the string value, which acts as a descriptive identifier.
-    The interest of this enum class is to enforce the use of supported types,
-    and to specify a clear correspondence between string identifiers and target types.
+    Goals:
+
+    - Enforce the use of supported types for data loading.
+    - Specify a clear correspondence between string identifiers and target types.
+
+    Usage:
+    Each type is specified by the string value, which acts as a descriptive identifier.
     """
 
     OBJECT = "object"  # any Python object

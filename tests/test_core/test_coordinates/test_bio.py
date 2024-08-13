@@ -54,7 +54,7 @@ def test_coord_unit_build_labels_invalid():
     TypeError
     """
     with pytest.raises(TypeError):
-        CoordUnit.build_labels(units=UNITS_IDS)  # type: ignore[reportArgumentType]
+        CoordUnit.build_labels(units=UNITS_IDS)
 
 
 def test_coord_depth_build_labels():
