@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.core_objects` [subpackage]
+:mod:`core.entities` [subpackage]
 
 Define classes representing the core objects manipulated in the package.
 
@@ -30,7 +30,7 @@ Examples
 Get the valid labels for Context objects :
 .. code-block:: python
 
-    from core.core_objects import Context
+    from core.entities import Context
     print(list(Context.get_options()))
     # Output: ('a', 'p', 'p-pre', 'p-post')
 

@@ -5,8 +5,8 @@
 
 See Also
 --------
-:mod:`core.core_objects.bio`
-:mod:`core.core_objects.exp_structure`
+:mod:`core.entities.bio`
+:mod:`core.entities.exp_structure`
 """
 
 from typing import FrozenSet

@@ -3,7 +3,7 @@
 """
 :mod:`test_core.test_objects.test_composites` [module]
 
-Tests for the module :mod:`core.core_objects.composites`.
+Tests for the module :mod:`core.entities.composites`.
 """
 
 import pytest

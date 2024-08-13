@@ -4,10 +4,9 @@
 :mod:`core` [package]
 
 Package for Multi-Task Context-Dependent Behavior PhD work (2022-2025).
-The whole package performs data analysis of neuronal recordings in ferret brains,
-collected in two context-dependent decision making tasks.
 
-Full package documentation at [URL].
+The whole package performs data analysis of neuronal recordings in ferret brains, collected in two
+context-dependent decision making tasks.
 
 Modules
 -------
@@ -23,7 +22,7 @@ Sub-Packages
 
 See Also
 --------
-test_core: Tests for the whole package.
+:mod:`test_core`: Tests for the whole package.
 """
 # pylint: disable=unused-variable
 # pylint: disable=unused-wildcard-import

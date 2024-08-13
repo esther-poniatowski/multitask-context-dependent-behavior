@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.core_objects.base_enum` [module]
+:mod:`core.entities.base_enum` [module]
 
 Define an abstract base class for all enumeration classes.
 
