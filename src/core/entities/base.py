@@ -108,7 +108,7 @@ class CoreObject(ABC, Generic[T]):
 
     def __eq__(self, other) -> bool:
         """Check equality based on the value."""
-        if isinstance(other, CoreObject):
+        if isinstance(other, type(self)):
             return self.value == other.value
         return False
 

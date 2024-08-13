@@ -12,7 +12,7 @@ from abc import ABCMeta, abstractmethod
 import copy
 from pathlib import Path
 from types import MappingProxyType
-from typing import Tuple, List, Dict, FrozenSet, Mapping, Type, TypeVar, Generic, Optional
+from typing import Tuple, List, Dict, FrozenSet, Mapping, Type, TypeVar, Generic, Optional, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -243,6 +243,11 @@ class Data(Generic[T], metaclass=MetaData):
     :meth:`np.ndarray.setflags`: Used to make a numpy array immutable.
     :class:`MetaData`: Metaclass used to set class-level attributes.
     :class:`Generic`: Generic class to define a generic type.
+    :class:`Coordinate`: Base class for coordinates.
+    :class:`PathManager`: Base class for path managers.
+    :class:`Loader`: Base class for loaders.
+    :class:`Saver`: Base class for savers.
+    :class:`TargetType`: Class to specify the type of the loaded data.
 
     Notes
     -----
@@ -388,7 +393,7 @@ class Data(Generic[T], metaclass=MetaData):
         coord_names = list(self.coord2dim.keys())
         return f"<{self.__class__.__name__}> Dims: {self.dims}, Coords: {coord_names}"
 
-    def copy(self) -> "Data":
+    def copy(self) -> Self:
         """Return a *deep copy* of the data structure."""
         return copy.deepcopy(self)
 
@@ -398,7 +403,7 @@ class Data(Generic[T], metaclass=MetaData):
         """Abstract Property - Build the path to the file containing the data."""
         return self.path_manager().get_path()  # type: ignore[abstract] # pylint: disable=abstract-class-instantiated
 
-    def load(self) -> "Data":
+    def load(self) -> Self:
         """Retrieve an instance from the file at :attr:`path`."""
         data = self.loader(path=self.path, tpe=self.tpe).load()
         return data
@@ -407,7 +412,7 @@ class Data(Generic[T], metaclass=MetaData):
         """Save an instance to a file at :attr:`path` in the format specific to the saver."""
         self.saver(self.path, self.data).save()
 
-    def sel(self, **kwargs) -> "Data":
+    def sel(self, **kwargs) -> Self:
         """
         Select data along specific coordinates.
 
