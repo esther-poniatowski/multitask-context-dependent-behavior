@@ -20,9 +20,9 @@ import numpy.typing as npt
 from utils.path_system.storage_rulers.base import PathRuler
 from utils.io_data.formats import TargetType
 from utils.io_data.loaders.base import Loader
-from utils.io_data.loaders.impl import LoaderPKL
+from utils.io_data.loaders.impl import LoaderPKL, LoaderDILL
 from utils.io_data.savers.base import Saver
-from utils.io_data.savers.impl import SaverPKL
+from utils.io_data.savers.impl import SaverPKL, SaverDILL
 from utils.misc.sequences import reverse_dict_container
 
 
@@ -268,8 +268,8 @@ class Data(Generic[T], metaclass=DataStructMeta):
     # Required - Set in each subclass (here only declared)
     path_ruler = PathRuler
     # Optional - Overridden in some subclasses (here default values)
-    saver: Type[Saver] = SaverPKL
-    loader: Type[Loader] = LoaderPKL
+    saver: Type[Saver] = SaverDILL
+    loader: Type[Loader] = LoaderDILL
     tpe: TargetType = TargetType("object")  # for :class:`LoaderPKL`
 
     def __init__(self, data: Optional[npt.NDArray], **kwargs) -> None:
@@ -403,14 +403,43 @@ class Data(Generic[T], metaclass=DataStructMeta):
         """Abstract Property - Build the path to the file containing the data."""
         return self.path_ruler().get_path()  # type: ignore[abstract] # pylint: disable=abstract-class-instantiated
 
-    def load(self) -> Self:
+    def load(self) -> None:
         """Retrieve an instance from the file at :attr:`path`."""
-        data = self.loader(path=self.path, tpe=self.tpe).load()
-        return data
+        loaded_obj = self.loader(path=self.path, tpe=self.tpe).load()
+        self.__dict__.update(loaded_obj.__dict__)
 
     def save(self) -> None:
         """Save an instance to a file at :attr:`path` in the format specific to the saver."""
-        self.saver(self.path, self.data).save()
+        self.saver(self.path, self).save()
+
+    def __getitem__(self, coord_name: str):
+        """
+        Retrieve a coordinate using its name as a string.
+
+        Parameters
+        ----------
+        coord_name: str
+            Name of the coordinate to retrieve.
+
+        Returns
+        -------
+        Coordinate
+            Coordinate object stored in the data structure.
+
+        Raises
+        ------
+        KeyError
+            If the coordinate name is not found in the data structure.
+
+        Example
+        -------
+        Access the coordinate 'time':
+        >>> data['time']
+        """
+        if coord_name in self.coord2dim:
+            return getattr(self, coord_name)
+        else:
+            raise KeyError(f"Coordinate '{coord_name}' not found in the data structure.")
 
     def sel(self, **kwargs) -> Self:
         """
