@@ -6,11 +6,9 @@
 Modules
 -------
 :mod:`mock_data`
-:mod:`test_path_manager_base`
-:mod:`test_path_managers`
 :mod:`test_loader_base`
 :mod:`test_saver_base`
-:mod:`test_savers_loaders`
+:mod:`test_savers_loaders_impl`
 
 See Also
 --------
