@@ -9,11 +9,11 @@ Classes
 -------
 :class:`CoordExpCond` (Generic)
 :class:`CoordTask`
-:class:`CoordContext`
+:class:`CoordCtx`
 :class:`CoordStim`
 """
 
-from typing import TypeVar, Type, Generic, Optional, Union, Dict
+from typing import TypeVar, Type, Generic, Optional, Union, Dict, Self, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -92,8 +92,7 @@ class CoordExpCond(Coordinate, Generic[C]):
         return np.full(n_smpl, cnd.value)
 
     # pylint: enable=arguments-differ
-
-    def replace_label(self, old: C, new: C) -> "CoordExpCond":
+    def replace_label(self, old: C, new: C) -> Self:
         """
         Replace one label by another one in the condition coordinate.
 
@@ -112,6 +111,12 @@ class CoordExpCond(Coordinate, Generic[C]):
         values[values == old.value] = new.value
         new_coord.values = values
         return new_coord
+
+    @overload
+    def count_by_lab(self, cnd: C) -> int: ...
+
+    @overload
+    def count_by_lab(self) -> Dict[C, int]: ...
 
     def count_by_lab(self, cnd: Optional[C] = None) -> Union[int, Dict[C, int]]:
         """
@@ -151,13 +156,13 @@ class CoordTask(CoordExpCond[Task]):
     :class:`core.coordinates.CoordExpCond`
     """
 
-    condition: Type[Task] = Task
+    condition = Task
 
     def __init__(self, values: npt.NDArray[np.str_]):
         super().__init__(values=values)
 
 
-class CoordContext(CoordExpCond[Context]):
+class CoordCtx(CoordExpCond[Context]):
     """
     Coordinate labels for contexts.
 
@@ -167,7 +172,7 @@ class CoordContext(CoordExpCond[Context]):
     :class:`core.coordinates.CoordExpCond`
     """
 
-    condition: Type[Context] = Context
+    condition = Context
 
     def __init__(self, values: npt.NDArray[np.str_]):
         super().__init__(values=values)
@@ -183,7 +188,7 @@ class CoordStim(CoordExpCond[Stimulus]):
     :class:`core.coordinates.CoordExpCond`
     """
 
-    condition: Type[Stimulus] = Stimulus
+    condition = Stimulus
 
     def __init__(self, values: npt.NDArray[np.str_]):
         super().__init__(values=values)
