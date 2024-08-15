@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`utils.io.path_managers` [module]
+:mod:`utils.path_system.storage_rulers.impl` [module]
 
 Implementations of path generation rules.
 
@@ -13,7 +13,7 @@ Classes
 
 See Also
 --------
-:class:`utils.io.path_manager_base.PathManager` : Interface to manage file paths.
+:class:`utils.path_system.storage_rulers.base.PathRuler` : Interface to manage file paths.
 
 Notes
 -----
@@ -27,10 +27,10 @@ structure associated to each path manager.
 from pathlib import Path
 from typing import Union
 
-from utils.io.path_managers.base import PathManager
+from utils.path_system.storage_rulers.base import PathRuler
 
 
-class RawSpkTimesPath(PathManager):
+class RawSpkTimesPath(PathRuler):
     """Path generation rules used by :class:`RawSpkTimes` data structures."""
 
     def get_path(self, unit: str, session: str) -> Path:
@@ -50,7 +50,7 @@ class RawSpkTimesPath(PathManager):
         return self.root_data / "raw" / unit / session
 
 
-class SpikesTrainsPath(PathManager):
+class SpikesTrainsPath(PathRuler):
     """Path generation rules used by :class:`SpikesTrains` data structures."""
 
     def get_path(self, unit: str) -> Path:
@@ -69,7 +69,7 @@ class SpikesTrainsPath(PathManager):
         return self.root_data / "processed" / "units" / unit
 
 
-class FiringRatesPath(PathManager):
+class FiringRatesPath(PathRuler):
     """Path generation rules used by :class:`FiringRates` data structures."""
 
     def get_path(self, area: str, training: Union[str, bool]) -> Path:
@@ -91,7 +91,7 @@ class FiringRatesPath(PathManager):
         return self.root_data / "processed" / "populations" / f"{area}_{training}"
 
 
-class DecoderPath(PathManager):
+class DecoderPath(PathRuler):
     """Path generation rules used by Decoder data structures."""
 
     def get_path(self, area: str, training: Union[str, bool], model: str) -> Path:
