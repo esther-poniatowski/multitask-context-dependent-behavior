@@ -6,5 +6,6 @@ getcwd
 Liskov
 Multiton
 nargs
+POSIX
 Redeclaration
 subpackage
