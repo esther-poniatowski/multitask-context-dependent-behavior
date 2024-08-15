@@ -47,16 +47,16 @@ class Position(ABC):
     -----
     Any positional information is represented by integers.
     Positions can be compared to each other based on those integer values.
-    The attributes :obj:`_min` and :obj:`_max` (overridden in subclasses)
-    define the boundaries of the positional information (if any).
+    The attributes :obj:`_min` and :obj:`_max` (overridden in subclasses) define the boundaries of
+    the positional information (if any).
 
     Implementation
     --------------
-    This class does not inherit from CoreObject although it represents an experimental quantity.
-    The reason is that representing positional information requires specific logic,
-    and thus a dedicated base class.
-    This base class is inherited by three concrete sub-classes classes
-    used conjointly to describe the full positional information of an experiment.
+    This class does not inherit from CoreObject although it represents an experimental quantity. The
+    reason is that representing positional information requires specific logic, and thus a dedicated
+    base class.
+    This base class is inherited by three concrete sub-classes classes used conjointly to describe
+    the full positional information of an experiment.
     """
 
     _min: Optional[int] = None
