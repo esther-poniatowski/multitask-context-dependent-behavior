@@ -74,7 +74,7 @@ class CoordPosition(Coordinate, Generic[P]):
 
     def __repr__(self) -> str:
         counts = self.count_by_lab()
-        format_counts = ", ".join([f"{pos!r}: {n}" for pos, n in counts.items()])
+        format_counts = ", ".join([f"{pos}: {n}" for pos, n in counts.items()])
         return f"<{self.__class__.__name__}>: {len(self)} samples, {format_counts}."
 
     def count_by_lab(self) -> Dict[P, int]:
