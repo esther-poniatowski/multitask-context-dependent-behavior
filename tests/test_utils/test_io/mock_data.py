@@ -29,11 +29,11 @@ data_dict: Dict[str, Any] = {
 
 data_array: npt.NDArray = np.array(data_list[1:])  # exclude headers
 
-data_array_float: npt.NDArray[np.float_] = data_array.astype(float)
+data_array_float: npt.NDArray[np.float64] = data_array.astype(float)
 
-data_array_int: npt.NDArray[np.float_] = data_array.astype(int)
+data_array_int: npt.NDArray[np.float64] = data_array.astype(int)
 
-data_array_str: npt.NDArray[np.float_] = data_array.astype(str)
+data_array_str: npt.NDArray[np.float64] = data_array.astype(str)
 
 data_df: DataFrame = pd.DataFrame(data_array, columns=data_list[0])
 
