@@ -26,7 +26,7 @@ See Also
 import numpy as np
 import pytest
 
-from test_core.test_io.mock_data import (  # dummy data
+from test_utils.test_io.mock_data import (  # dummy data
     data_list,
     data_dict,
     data_array,

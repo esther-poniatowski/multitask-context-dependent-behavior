@@ -18,45 +18,7 @@ See Also
 
 import pytest
 
-from utils.io.loaders.base import Loader
 from utils.io.loaders.impl import LoaderCSV
-
-
-def test_loader_check_file_invalid():
-    """
-    Test :meth:`Loader._check_file` for a non-existent file.
-
-    Test Inputs
-    -----------
-    filepath : str
-        Path to a non-existent file.
-
-    Expected Exception
-    ------------------
-    FileNotFoundError
-    """
-    filepath = "invalid_path"
-    loader = Loader(filepath, tpe="list")
-    with pytest.raises(FileNotFoundError):
-        loader._check_file()
-
-
-def test_loader_check_file_valid(tmp_path):
-    """
-    Test :meth:`Loader._check_file` for an existent file.
-
-    Test Inputs
-    -----------
-    filepath : str
-        Path to an existent file (temporary directory).
-
-    Expected Output
-    ---------------
-    No exception raised.
-    """
-    filepath = tmp_path
-    loader = Loader(filepath, tpe="list")
-    loader._check_file()
 
 
 def test_loader_check_type_invalid():

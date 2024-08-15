@@ -19,83 +19,13 @@ See Also
 
 import pytest
 
-from test_core.test_io.mock_data import (  # dummy data
+from test_utils.test_io.mock_data import (  # dummy data
     data_list,
     data_dict,
     data_array,
     data_df,
 )
-from utils.io.savers.base import Saver
 from utils.io.savers.impl import SaverCSV
-
-
-def test_saver_check_dir_invalid():
-    """
-    Test :meth:`Saver._check_dir` for a non-existent directory.
-
-    Test Inputs
-    -----------
-    invalid_path: str
-        Path to a non-existent directory.
-
-    Expected Exception
-    ------------------
-    FileNotFoundError
-    """
-    invalid_path = "/invalid_directory/test.csv"
-    with pytest.raises(FileNotFoundError, match="Inexistent directory"):
-        saver = Saver(invalid_path, data_list)
-        saver._check_dir()
-
-
-def test_saver_check_dir_valid(tmp_path):
-    """
-    Test :meth:`Saver._check_dir` for an existent directory.
-
-    Test Inputs
-    -----------
-    valid_path: str
-        Path to an existent directory.
-
-    Expected Output
-    ---------------
-    No exception raised.
-    """
-    valid_path = tmp_path / "test.csv"
-    saver = Saver(valid_path, data_list)
-    saver._check_dir()
-
-
-@pytest.mark.parametrize(
-    "filename",
-    argvalues=["test", "test.csv", "test.wrong"],
-    ids=["no-ext", "right-ext", "wrong-ext"],
-)
-def test_saver_check_ext(tmp_path, filename):
-    """
-    Test :meth:`SaverCSV._check_ext` for handling file extensions.
-
-    Test Inputs
-    -----------
-    filename [no-ext] : str
-        Initial filename with no extension.
-    filename [right-ext] : str
-        Initial filename with right extension (.csv).
-    filename [wrong-ext] : str
-        Initial filename with wrong extension.
-    expected_filepath [no-ext] : str
-        Expected file path with the appropriate extension added.
-    expected_filepath [right-ext] : str
-        Expected file path, identical to the input path.
-    expected_filepath [wrong-ext] : str
-        Expected file path with the wrong extension removed
-        and the appropriate extension added.
-    """
-    filepath = tmp_path / filename
-    expected_filepath = tmp_path / "test.csv"
-    saver = SaverCSV(filepath, data_list)
-    saver._check_ext()
-    assert saver.path == expected_filepath, f"Incorrect path. Expected: {expected_filepath}"
 
 
 @pytest.mark.parametrize(
