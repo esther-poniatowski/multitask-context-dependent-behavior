@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Mapping, Union, TypeVar, Generic
 
 from utils.io.formats import FileExt, TargetType
+from utils.path_system.explorer import check_path, is_file, enforce_ext
 
 
 T = TypeVar("T")
@@ -40,37 +41,36 @@ class Loader(ABC, Generic[T]):
         Path to the file containing the data to load.
     tpe: TargetType
         Target type for the retrieved data.
-        It determines the method used to load the data and the type
-        of the returned object.
+        It determines the method used to load the data and the type of the returned object.
 
     Methods
     -------
     :meth:`load`
     :meth:`_load`
-    :meth:`_check_file`
     :meth:`_check_type`
 
     Raises
     ------
     TypeError
-        If the target type is not valid.
+        If the target type is not valid (:attr:`tpe`).
+    FileNotFoundError
+        If the file to load does not exist.
 
     See Also
     --------
     :class:`utils.io.formats.FileExt`: File extensions.
     :class:`utils.io.formats.TargetType`: Target types.
     :class:`abc.ABC`: Abstract base class.
+    :func:`utils.path_system.explorer.check_path`: Check the existence of a path in the file system.
+    :func:`utils.path_system.explorer.enforce_ext`: Enforce the correct file extension.
 
     Notes
     -----
-    In the constructor parameters, target types are specified by strings,
-    which are more straightforward to manipulate than actual TargetType objects.
-    The string should be one of the values defined in the TargetType enum class.
-    This string is used to instantiate the TargetType object in the constructor.
-    If the string is not a valid target type, a TypeError is raised.
-    To select the appropriate identifier for a target type,
-    inspect the attributes of the class :class:`TargetType`
-    and choose one of the types used by the specific loader subclass.
+    In the constructor parameters, target types are specified by strings identifiers rather than
+    actual TargetType objects, for facilitating the instantiation of the loader. This identifier is
+    used to instantiate the TargetType object in the constructor.
+    To select the appropriate identifier for a target type, inspect the attributes of the class
+    :class:`TargetType` and choose one of the types used by the specific loader subclass.
     """
 
     ext: FileExt
@@ -93,7 +93,9 @@ class Loader(ABC, Generic[T]):
         T
             Data loaded in the target type.
         """
-        self._check_file()
+        check_path(self.path)
+        is_file(self.path)
+        enforce_ext(self.path, self.ext)
         self._check_type()
         return self._load()
 
@@ -110,22 +112,6 @@ class Loader(ABC, Generic[T]):
         load_method = getattr(self, method_name)
         return load_method()
 
-    def _check_file(self):
-        """
-        Check if the specified file exists.
-
-        Raises
-        ------
-        FileNotFoundError
-            If the file is not found.
-
-        See Also
-        --------
-        :func:`pathlib.Path.exists`: Check if a file exists in the file system.
-        """
-        if not self.path.exists():
-            raise FileNotFoundError(f"Inexistent file: {self.path}")
-
     def _check_type(self):
         """
         Check if the target type is supported.
@@ -133,9 +119,9 @@ class Loader(ABC, Generic[T]):
         Raises
         ------
         ValueError
-            If the target type is not supported, it is not a key
-            in the dictionary :obj:`load_methods`, which means that the
-            method to load this format is not implemented in the loader.
+            If the target type is not supported, it is not a key in the dictionary
+            :obj:`load_methods`, which means that the method to load this format is not implemented
+            in the loader.
         """
         if self.tpe not in self.load_methods:
             raise TypeError(f"Unsupported target type: {self.tpe}.")

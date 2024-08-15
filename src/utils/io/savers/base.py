@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any, Mapping, Union
 
 from utils.io.formats import FileExt
+from utils.path_system.explorer import check_parent, enforce_ext
 
 
 class Saver(ABC):
@@ -42,21 +43,30 @@ class Saver(ABC):
     ----------
     data : Any
         Data to save.
-    path_file : Path
-        Path to the file.
+    path : Path
+        Path to the file where the data will be saved.
 
     Methods
     -------
     :meth:`save`
     :meth:`_save`
-    :meth:`_check_dir`
-    :meth:`_check_ext`
     :meth:`_check_data`
+
+    Raises
+    ------
+    FileNotFoundError
+        If the directory in which to save does not exist.
+    TypeError
+        If the data type is not supported.
+    ValueError
+        If the file extension is incorrect.
 
     See Also
     --------
     :class:`utils.io.formats.FileExt`: File extensions.
     :class:`abc.ABC`: Abstract base class.
+    :func:`utils.path_system.explorer.check_parent`: Check the existence of the parent directory.
+    :func:`utils.path_system.explorer.enforce_ext`: Enforce the correct file extension.
     """
 
     ext: FileExt
@@ -70,8 +80,8 @@ class Saver(ABC):
 
     def save(self):
         """Save data to a file."""
-        self._check_dir()
-        self._check_ext()
+        check_parent(self.path)
+        enforce_ext(self.path, self.ext)
         self._check_data()
         self._save()
         print(f"Saved to {self.path}")
@@ -91,47 +101,6 @@ class Saver(ABC):
         save_method = getattr(self, method_name)
         save_method()
 
-    def _check_dir(self):
-        """
-        Check the existence of the saving directory.
-
-        Raises
-        ------
-        FileNotFoundError
-            If the directory in which to save does not exist.
-
-        See Also
-        --------
-        :attr:`pathlib.Path.parent`: Get the parent directory of one file.
-        :meth:`pathlib.Path.exists`: Check if a directory exists in the file system.
-        """
-        if not self.path.parent.exists():
-            raise FileNotFoundError(f"Inexistent directory: {self.path.parent}.")
-
-    def _check_ext(self) -> None:
-        """
-        Check the validity of the file extension for the specific format.
-
-        If the file extension is missing or incorrect, it is added or corrected.
-
-        Implementation
-        --------------
-        The extension is retrieved from the class attribute :attr:`ext`,
-        by calling the :attr:`value` on the enum object.
-
-        See Also
-        --------
-        :attr:`pathlib.Path.suffix`
-            Get the file extension.
-            If there is not extension, the empty string is returned.
-        :meth:`pathlib.Path.with_suffix`
-            Replace the file extension.
-            If there is already an extension, it is replaced.
-            If there is no extension, it is added.
-        """
-        if self.path.suffix != self.ext.value:
-            self.path = self.path.with_suffix(self.ext.value)
-
     def _check_data(self) -> None:
         """
         Check the validity of the data type for the saving format.
@@ -139,9 +108,8 @@ class Saver(ABC):
         Raises
         ------
         ValueError
-            If the data type is not supported, it is not a key
-            in the :attr:`save_methods` dictionary, which means that the
-            method to save this format is not implemented in the saver.
+            If the data type is not supported, i.e. it is not a key in the :attr:`save_methods`
+            dictionary, which means that no method for this format is implemented in the saver.
         """
         if not any(issubclass(type(self.data), tpe) for tpe in self.save_methods):
             raise TypeError(f"Unsupported type for {self.ext.value}: {type(self.data).__name__}.")
