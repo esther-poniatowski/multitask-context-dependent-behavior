@@ -15,26 +15,29 @@
 # See Also
 # --------
 # path.env
-#   Define variables: ENV_VAR_MNG, NAVIGATE_UTILS, PTH_PYTHON, PTH_BIN
+#   Define variables: ENV_VAR_MNG, PTH_PYTHON, PTH_BIN
 # src/tasks/environment/env_var_mng.sh
 #   Define functions: add_from_file, show_paths
-# src/utils/direcotiries/navigate.sh
-#   Define functions: navigate_to_dir
 # ==================================================================================================
 
 echo "======================"
 echo "Post-Activation Script - Environment ${CONDA_DEFAULT_ENV}"
 echo "======================"
 
-# --- Imports --------------------------------------------------------------------------------------
+# --- Navigate to Root -----------------------------------------------------------------------------
 
-# Root directory of the workspace (using the symlink in 'activate.d')
-
+# Determine the root directory of the workspace using the symlink in 'activate.d'
 ACTIVATE_D="${CONDA_PREFIX}/etc/conda/activate.d"
 export ROOT="$(readlink -f "$ACTIVATE_D/root")"
-echo "Root: ${ROOT}"
 
-# Set Environment Variables
+# Navigate to the root directory
+cd "${ROOT}" || {
+    echo "[ERROR] Failed to navigate to ${ROOT}"
+    exit 1
+}
+echo "[SUCCESS] Navigated to ${ROOT}"
+
+# --- Set Environment Variables --------------------------------------------------------------------
 
 ENV_FILE="${ROOT}/path.env"  # path to the path.env file *relative to root*
 if [ -f "${ENV_FILE}" ]; then
@@ -58,26 +61,15 @@ else
     exit 1
 fi
 
-# Import Utils
+# --- Set PATH variables ---------------------------------------------------------------------------
 
+# Import Utils
 if [ -f "${ENV_VAR_MNG}" ]; then
     source "${ENV_VAR_MNG}"
 else
     echo "[ERROR] Utils not found at ${ENV_VAR_MNG}"
     exit 1
 fi
-
-if [ -f "${NAVIGATE_UTILS}" ]; then
-    source "${NAVIGATE_UTILS}"
-else
-    echo "[ERROR] Utils not found at ${NAVIGATE_UTILS}"
-    exit 1
-fi
-
-# --- Main Process ---------------------------------------------------------------------------------
-
-# Navigate to the root directory
-navigate_to_dir "${ROOT}"
 
 # Add paths to the `PYTHONPATH` variable
 add_from_file "${PTH_PYTHON}" "PYTHONPATH"
