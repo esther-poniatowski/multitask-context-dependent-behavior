@@ -10,7 +10,6 @@ See Also
 
 # pyright: reportAttributeAccessIssue=false
 # pyright: reportRedeclaration=false
-# pylint: disable=no-name-in-module
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-module-docstring
 # pylint: disable=missing-class-docstring
@@ -107,7 +106,7 @@ def subclass(request):
     -------
     TestClass:
         Class inheriting from :class:`Data`. It defines the class attributes :attr:`dim2coord`,
-        :attr:`coord2type` and :attr:`path_manager` required by the metaclass :class:`MetaData`. It
+        :attr:`coord2type` and :attr:`path_ruler` required by the metaclass :class:`DataStructMeta`. It
         implements the property :attr:`path` required by the abstract base class :class:`Data`.
 
     See Also
@@ -122,7 +121,7 @@ def subclass(request):
 
         dim2coord = request.getfixturevalue("dim2coord")
         coord2type = request.getfixturevalue("coord2type")
-        path_manager = None
+        path_ruler = None
 
         @property
         def path(self):
@@ -133,7 +132,7 @@ def subclass(request):
 
 def test_class_creation(dim2coord, subclass):
     """
-    Test subclass creation involving :class:`MetaData` and :class:`Data`.
+    Test subclass creation involving :class:`DataStructMeta` and :class:`Data`.
 
     Test Inputs
     -----------
