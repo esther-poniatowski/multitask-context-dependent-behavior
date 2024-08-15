@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`utils.io.saver_base` [module]
+:mod:`utils.io_data.saver_base` [module]
 
 Common interface to save data to files.
 
@@ -22,7 +22,7 @@ from abc import ABC
 from pathlib import Path
 from typing import Any, Mapping, Union
 
-from utils.io.formats import FileExt
+from utils.io_data.formats import FileExt
 from utils.path_system.explorer import check_parent, enforce_ext
 
 
@@ -63,7 +63,7 @@ class Saver(ABC):
 
     See Also
     --------
-    :class:`utils.io.formats.FileExt`: File extensions.
+    :class:`utils.io_data.formats.FileExt`: File extensions.
     :class:`abc.ABC`: Abstract base class.
     :func:`utils.path_system.explorer.check_parent`: Check the existence of the parent directory.
     :func:`utils.path_system.explorer.enforce_ext`: Enforce the correct file extension.

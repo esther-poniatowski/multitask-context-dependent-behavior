@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`utils.io.loaders.base` [module]
+:mod:`utils.io_data.loaders.base` [module]
 
 Common interface to load data from files.
 
@@ -14,7 +14,7 @@ from abc import ABC
 from pathlib import Path
 from typing import Mapping, Union, TypeVar, Generic
 
-from utils.io.formats import FileExt, TargetType
+from utils.io_data.formats import FileExt, TargetType
 from utils.path_system.explorer import check_path, is_file, enforce_ext
 
 
@@ -58,8 +58,8 @@ class Loader(ABC, Generic[T]):
 
     See Also
     --------
-    :class:`utils.io.formats.FileExt`: File extensions.
-    :class:`utils.io.formats.TargetType`: Target types.
+    :class:`utils.io_data.formats.FileExt`: File extensions.
+    :class:`utils.io_data.formats.TargetType`: Target types.
     :class:`abc.ABC`: Abstract base class.
     :func:`utils.path_system.explorer.check_path`: Check the existence of a path in the file system.
     :func:`utils.path_system.explorer.enforce_ext`: Enforce the correct file extension.

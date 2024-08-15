@@ -6,7 +6,7 @@
 See Also
 --------
 :mod:`core.coordinates.bio`: Tested module.
-:class:`core.entities.bio.Depth`
+:class:`core.entities.bio_data.Depth`
 :class:`core.entities.composites.Unit`
 """
 

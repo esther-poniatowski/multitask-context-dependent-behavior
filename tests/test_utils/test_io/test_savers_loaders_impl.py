@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_core.io.test_savers_loaders_impl` [module]
+:mod:`test_core.io_data.test_savers_loaders_impl` [module]
 
 Notes
 -----
 Saver and Loader subclasses are tested together to ensure their consistent interaction.
-Contrary to the tests in :mod:`test_core.io.test_saver_base`
-and :mod:`test_core.io.test_loader_base`, here the focus is on
+Contrary to the tests in :mod:`test_core.io_data.test_saver_base`
+and :mod:`test_core.io_data.test_loader_base`, here the focus is on
 the specific *content* of the data which is saved and loaded, rather than
 on general checks carried out in the base classes.
 
@@ -19,14 +19,14 @@ in order to recover the data manually without redefining the path.
 
 See Also
 --------
-:mod:`utils.io.savers.impl`: Tested module.
-:mod:`utils.io.loaders.impl`: Tested module.
+:mod:`utils.io_data.savers.impl`: Tested module.
+:mod:`utils.io_data.loaders.impl`: Tested module.
 """
 
 import numpy as np
 import pytest
 
-from test_utils.test_io.mock_data import (  # dummy data
+from test_utils.test_io_data.mock_data import (  # dummy data
     data_list,
     data_dict,
     data_array,
@@ -37,8 +37,8 @@ from test_utils.test_io.mock_data import (  # dummy data
     data_obj,
     expected_from_list,
 )
-from utils.io.loaders.impl import LoaderCSV, LoaderNPY, LoaderPKL
-from utils.io.savers.impl import SaverCSV, SaverNPY, SaverPKL
+from utils.io_data.loaders.impl import LoaderCSV, LoaderNPY, LoaderPKL
+from utils.io_data.savers.impl import SaverCSV, SaverNPY, SaverPKL
 
 
 @pytest.mark.parametrize(

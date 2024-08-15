@@ -265,10 +265,10 @@ class Unit(metaclass=Multiton):
     :class:`Multiton`
     :class:`Site`
     :class:`Session`
-    :class:`core.entities.bio.Animal`
-    :class:`core.entities.bio.Area`
-    :class:`core.entities.bio.CorticalDepth`
-    :class:`core.entities.bio.Training`
+    :class:`core.entities.bio_data.Animal`
+    :class:`core.entities.bio_data.Area`
+    :class:`core.entities.bio_data.CorticalDepth`
+    :class:`core.entities.bio_data.Training`
 
     Notes
     -----

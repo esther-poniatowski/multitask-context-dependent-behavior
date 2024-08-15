@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_core.test_io.test_data` [module]
+:mod:`test_core.test_io_data.test_data` [module]
 
 Generate sample data in different formats and structures to test I/O handlers.
 """
