@@ -113,3 +113,6 @@ class Saver(ABC):
         """
         if not any(issubclass(type(self.data), tpe) for tpe in self.save_methods):
             raise TypeError(f"Unsupported type for {self.ext.value}: {type(self.data).__name__}.")
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}> - Path: {self.path}"

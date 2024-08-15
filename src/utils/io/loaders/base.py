@@ -129,3 +129,6 @@ class Loader(ABC, Generic[T]):
             raise TypeError(
                 f"Unsupported target type: {self.tpe} not in {self.load_methods.keys()}"
             )
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}> - {self.tpe.value} - Path: {self.path}"
