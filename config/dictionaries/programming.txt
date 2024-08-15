@@ -2,6 +2,7 @@
 byobu
 configurer
 DEVNULL
+getcwd
 Liskov
 Multiton
 nargs

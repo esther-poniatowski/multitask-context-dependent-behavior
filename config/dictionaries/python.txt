@@ -6,6 +6,7 @@ arange
 argvalues
 astype
 bincount
+capsys
 classmethod
 configparser
 conftest
@@ -31,6 +32,7 @@ isin
 isinstance
 issubclass
 issubdtype
+iterdir
 loadtxt
 makedirs
 matplotlib
