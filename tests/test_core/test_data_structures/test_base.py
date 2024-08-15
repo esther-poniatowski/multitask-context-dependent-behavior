@@ -6,6 +6,9 @@
 See Also
 --------
 :mod:`core.data_structures.base`: Tested module.
+:class:`unittest.mock.MagicMock`: Mocking class.
+    Principle: Create a mock object to replace the loader method.
+
 """
 
 # pyright: reportAttributeAccessIssue=false
@@ -98,7 +101,7 @@ def coords(dim2coord, data) -> Dict[str, np.ndarray]:
 
 
 @pytest.fixture
-def subclass(request):
+def subclass(request, tmp_path):
     """
     Fixture - Define a test class inheriting from :class:`Data`.
 
@@ -125,7 +128,7 @@ def subclass(request):
 
         @property
         def path(self):
-            return "path/to/data"
+            return tmp_path
 
     return TestClass
 
@@ -201,14 +204,60 @@ def test_init_from_scratch(subclass, data, coords, valid):
             obj = subclass(data=data, **invalid_coords)
 
 
-def test_load_data():
+def test_getitem(subclass, data, coords):
     """
-    Test for the initialization of a :class:`Data` subclass in two ways.
+    Test the :meth:`__getitem__` method to retrieve coordinates by name.
 
     Test Inputs
     -----------
-    TestData:
+    subclass:
         Class inheriting from :class:`Data`.
-        It implements its own :meth:`__init__` method.
-        If data is provided, it calls the base class :meth:`__init__`.
+    data:
+        Numpy array that represents the data to be loaded.
+    coords:
+        Coordinate arrays that should be part of the loaded data.
+
+    Expected Output
+    ---------------
+    Coordinates should be correctly retrieved using the bracket notation.
     """
+    obj = subclass(data=data, **coords)
+    # Test retrieving each coordinate
+    for coord_name, coord_value in coords.items():
+        assert np.array_equal(
+            obj[coord_name], coord_value
+        ), f"Coordinate '{coord_name}' not correctly retrieved."
+    # Test retrieving a non-existent coordinate
+    with pytest.raises(KeyError):
+        obj["non_existent_coord"]
+
+
+def test_save_load(subclass, data, coords):
+    """
+    Test the :meth:`save` and :meth:`load` methods.
+
+    Test Inputs
+    -----------
+    subclass:
+        Class inheriting from :class:`Data`.
+    data:
+        Numpy array that represents the data to be loaded.
+    coords:
+        Coordinate arrays that should be part of the loaded data.
+
+    Expected Output
+    ---------------
+    The object is updated with the loaded data and coordinates.
+    """
+    # Save an object of the subclass with data and coordinates
+    obj = subclass(data=data, **coords)
+    obj.save()
+    # Load the object in a different instance (same path)
+    new_data = np.ones_like(data)
+    new_coords = {k: v + 1 for k, v in coords.items()}
+    new_obj = subclass(data=new_data, **new_coords)
+    new_obj.load()
+    # Check that the data and coordinates are the same
+    np.testing.assert_array_equal(new_obj.data, data)
+    for coord_name in obj.coords:
+        np.testing.assert_array_equal(new_obj[coord_name], obj[coord_name])
