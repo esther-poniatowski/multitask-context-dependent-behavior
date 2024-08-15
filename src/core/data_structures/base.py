@@ -5,7 +5,7 @@
 
 Classes
 -------
-:class:`MetaData` (metaclass)
+:class:`DataStructMeta` (metaclass)
 :class:`Data` (abstract base class, generic)
 """
 from abc import ABCMeta, abstractmethod
@@ -17,7 +17,7 @@ from typing import Tuple, List, Dict, FrozenSet, Mapping, Type, TypeVar, Generic
 import numpy as np
 import numpy.typing as npt
 
-from utils.io.path_managers.base import PathManager
+from utils.path_system.storage_rulers.base import PathRuler
 from utils.io.formats import TargetType
 from utils.io.loaders.base import Loader
 from utils.io.loaders.impl import LoaderPKL
@@ -26,7 +26,7 @@ from utils.io.savers.impl import SaverPKL
 from utils.misc.sequences import reverse_dict_container
 
 
-class MetaData(ABCMeta):
+class DataStructMeta(ABCMeta):
     """
     Metaclass to create data structures classes (subclasses of :class:`Data`).
 
@@ -47,7 +47,7 @@ class MetaData(ABCMeta):
     dims: Data.dims
     coords: Data.coords
     coord2dim: Data.coord2dim
-    path_manager: Data.path_manager
+    path_ruler: Data.path_ruler
 
     Methods
     -------
@@ -65,7 +65,7 @@ class MetaData(ABCMeta):
     In a metaclass, the instances are classes themselves (here, subclasses of :class:`Data`).
     """
 
-    required_attributes = ["dim2coord", "coord2type", "path_manager"]
+    required_attributes = ["dim2coord", "coord2type", "path_ruler"]
 
     def __new__(mcs, name, bases, dct):
         """
@@ -105,7 +105,7 @@ class MetaData(ABCMeta):
         ValueError
             If any required attribute is missing in the subclass body.
         """
-        for attr in MetaData.required_attributes:
+        for attr in DataStructMeta.required_attributes:
             if attr not in dct:
                 raise ValueError(f"Missing attribute '{attr}'.")
 
@@ -113,7 +113,7 @@ class MetaData(ABCMeta):
     def set_class_attributes(dct):
         """Set the class-level attributes related to dimensions and coordinates."""
         dct["dims"] = tuple(dct["dim2coord"].keys())
-        dct["coord2dim"] = MetaData.reverse_mapping(dct["dim2coord"])
+        dct["coord2dim"] = DataStructMeta.reverse_mapping(dct["dim2coord"])
         dct["coords"] = tuple(dct["coord2dim"].keys())
 
     @staticmethod
@@ -159,7 +159,7 @@ T = TypeVar("T")
 """Type variable representing the type of data in the generic Data class."""
 
 
-class Data(Generic[T], metaclass=MetaData):
+class Data(Generic[T], metaclass=DataStructMeta):
     """
     Abstract base class for data structures. Define the interface to interact with data.
 
@@ -185,8 +185,8 @@ class Data(Generic[T], metaclass=MetaData):
         Flag indicating if the data attribute has been filled with actual values.
     _has_coords: bool
         Flag indicating if the coordinates attributes have been filled with actual values.
-    path_manager: Type[PathManager]
-        Subclass of :class:`PathManager` used to build paths to data files.
+    path_ruler: Type[PathRuler]
+        Subclass of :class:`PathRuler` used to build paths to data files.
     saver: Type[Saver], default=SaverPKL
         Subclass of :class:`Saver` used to save data to files in a specific format.
     loader: Type[Loader], default=LoaderPKL
@@ -241,17 +241,17 @@ class Data(Generic[T], metaclass=MetaData):
     See Also
     --------
     :meth:`np.ndarray.setflags`: Used to make a numpy array immutable.
-    :class:`MetaData`: Metaclass used to set class-level attributes.
+    :class:`DataStructMeta`: Metaclass used to set class-level attributes.
     :class:`Generic`: Generic class to define a generic type.
     :class:`Coordinate`: Base class for coordinates.
-    :class:`PathManager`: Base class for path managers.
+    :class:`PathRuler`: Base class for path managers.
     :class:`Loader`: Base class for loaders.
     :class:`Saver`: Base class for savers.
     :class:`TargetType`: Class to specify the type of the loaded data.
 
     Notes
     -----
-    Since :class:`MetaData` inherits from :class:`abc.ABCMeta`, it is not necessary to make
+    Since :class:`DataStructMeta` inherits from :class:`abc.ABCMeta`, it is not necessary to make
     :class:`Data` inherit from :class:`abc.ABC`.
     """
 
@@ -259,14 +259,14 @@ class Data(Generic[T], metaclass=MetaData):
     # Required - Set in each subclass
     dim2coord: Mapping[str, FrozenSet[str]] = MappingProxyType({})
     coord2type: Mapping[str, Type] = MappingProxyType({})
-    # Set by :class:`MetaData` automatically
+    # Set by :class:`DataStructMeta` automatically
     dims: Tuple[str, ...] = ()
     coords: Tuple[str, ...] = ()
     coord2dim: Mapping[str, str] = MappingProxyType({})
 
     # --- IO Handlers ---
     # Required - Set in each subclass (here only declared)
-    path_manager = PathManager
+    path_ruler = PathRuler
     # Optional - Overridden in some subclasses (here default values)
     saver: Type[Saver] = SaverPKL
     loader: Type[Loader] = LoaderPKL
@@ -401,7 +401,7 @@ class Data(Generic[T], metaclass=MetaData):
     @abstractmethod
     def path(self) -> Path:
         """Abstract Property - Build the path to the file containing the data."""
-        return self.path_manager().get_path()  # type: ignore[abstract] # pylint: disable=abstract-class-instantiated
+        return self.path_ruler().get_path()  # type: ignore[abstract] # pylint: disable=abstract-class-instantiated
 
     def load(self) -> Self:
         """Retrieve an instance from the file at :attr:`path`."""
