@@ -42,6 +42,17 @@
 			"**/.mypy_cache": true
 		},
 
+		// Search
+		"search.exclude": {
+			"**/.git": true,
+			"**/.DS_Store": true,
+			"**/.pytest_cache": true,
+			"**/__pycache__": true,
+			"**/.mypy_cache": true,
+			"**/docs/build": true,
+			"archive": true,
+		},
+
 		// Copilot
 		"github.copilot.enable": {
 			"*": true,
@@ -104,6 +115,7 @@
 		"esbonio.sphinx.srcDir": "docs/source",
 		//"esbonio.sphinx.buildDir": "build",
 		"esbonio.sphinx.builderName": "html",
+		//"esbonio.server.includedModules": ["./src/core"], // crash
 
 		// Testing
 		"python.testing.pytestEnabled": true,
