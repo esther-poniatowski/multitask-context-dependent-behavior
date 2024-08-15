@@ -76,10 +76,17 @@ class LoaderNPY(Loader):
     """Load data from a NPY file."""
 
     ext = FileExt.NPY
-    tpe = TargetType("ndarray")
-    load_methods = MappingProxyType({tpe: "_load_numpy"})
+    tpe = TargetType.NDARRAY
+    load_methods = MappingProxyType(
+        {
+            TargetType.NDARRAY: "_load_numpy",
+            TargetType.NDARRAY_FLOAT: "_load_numpy",
+            TargetType.NDARRAY_INT: "_load_numpy",
+            TargetType.NDARRAY_STR: "_load_numpy",
+        }
+    )
 
-    def __init__(self, path, tpe=tpe) -> None:
+    def __init__(self, path, tpe=tpe):
         """Override the base class method since the type is fixed."""
         super().__init__(path, tpe=tpe)
 
@@ -106,6 +113,13 @@ class LoaderCSV(Loader):
             TargetType.DATAFRAME: "_load_dataframe",
         }
     )
+    map_data_types = MappingProxyType(
+        {
+            TargetType.NDARRAY_FLOAT: "float",
+            TargetType.NDARRAY_INT: "int",
+            TargetType.NDARRAY_STR: "str",
+        }
+    )
 
     def _load_list(self) -> list:
         """Load a CSV file into a list of lists.
@@ -123,11 +137,13 @@ class LoaderCSV(Loader):
 
         Warning
         -------
-        The attribute :obj:`tpe` should specify not only ``npt.NDArray``,
-        but also the precise *data type* of the array contents.
+        The attribute :obj:`tpe` should specify not only ``npt.NDArray``, but also the precise *data
+        type* of the array contents.
+
         - For float data : npt.NDArray[np.float64]
         - For integer data : npt.NDArray[np.int64]
         - For string data : npt.NDArray[np.str_]
+
         If the data type is not specified, the default type is ``float``:
         - Integer data is converted to ``float`` (default type).
         - String data raise a ValueError.
@@ -135,13 +151,10 @@ class LoaderCSV(Loader):
         See Also
         --------
         :func:`numpy.loadtxt`
+        :attr:`map_data_types`
         """
-        if self.tpe == TargetType.NDARRAY_FLOAT:
-            dtype = "float"
-        elif self.tpe == TargetType.NDARRAY_INT:
-            dtype = "int"
-        elif self.tpe == TargetType.NDARRAY_STR:
-            dtype = "str"
+        if self.tpe in self.map_data_types:
+            dtype = self.map_data_types[self.tpe]
         else:
             dtype = "float"  # default type
         return np.loadtxt(self.path, delimiter=",", dtype=dtype)

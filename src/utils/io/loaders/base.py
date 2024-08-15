@@ -95,7 +95,9 @@ class Loader(ABC, Generic[T]):
         """
         check_path(self.path)
         is_file(self.path)
-        enforce_ext(self.path, self.ext)
+        self.path = enforce_ext(self.path, self.ext)
+        print("Extension: ", self.ext)
+        print(f"Loading data from {self.path}")
         self._check_type()
         return self._load()
 
@@ -124,4 +126,6 @@ class Loader(ABC, Generic[T]):
             in the loader.
         """
         if self.tpe not in self.load_methods:
-            raise TypeError(f"Unsupported target type: {self.tpe}.")
+            raise TypeError(
+                f"Unsupported target type: {self.tpe} not in {self.load_methods.keys()}"
+            )

@@ -81,7 +81,7 @@ class Saver(ABC):
     def save(self):
         """Save data to a file."""
         check_parent(self.path)
-        enforce_ext(self.path, self.ext)
+        self.path = enforce_ext(self.path, self.ext)
         self._check_data()
         self._save()
         print(f"Saved to {self.path}")
