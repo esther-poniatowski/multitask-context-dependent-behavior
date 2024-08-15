@@ -14,11 +14,10 @@ Modules
 
 Sub-Packages
 ------------
-:mod:`coordinates`
 :mod:`entities`
+:mod:`coordinates`
 :mod:`data_structures`
-:mod:`io`
-:mod:`utils`
+:mod:`preprocess`
 
 See Also
 --------

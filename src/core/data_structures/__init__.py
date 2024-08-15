@@ -7,21 +7,24 @@ Classes representing data structures used in the analysis.
 
 **Content and Functionalities of Data Structures**
 
-Data structures are designed to store and manipulate the data sets used in the analysis. Each class
-of data structure represents one family of data, which corresponds to one milestone in the analysis
-(e.g. raw spikes, population firing rates, decoder models...). Each instance of a data class
-represents one specific data set within the family (e.g. raw spikes for one unit in one session).
+Data structures are designed to store and manipulate the data sets used in the analysis.
+
+- Each *class* represents one *family* of data structures, which corresponds to one milestone in the
+  analysis.
+  Examples: raw spikes, population firing rates, decoder models...
+- Each *instance* of such a class represents one *specific* data set within the family.
+  Examples: raw spikes of *one unit* in *one session*.
 
 Each data structure object encapsulates :
 
-- Actual data to analyze
+- Actual data values to analyze
 - Coordinates associated to the dimensions, used to index the data
-- General metadata describing the constraints inherent to the data set family
-- Specific metadata describing the unique properties of the data set instance
+- General metadata describing the constraints inherent to the data set family (e.g. dimension names)
+- Specific metadata describing the unique properties of the data set instance (e.g. session ID)
 - Methods relevant to manipulate the data, specifically to load and save data from/to files
 
 
-**Creating and Loading Data Structures**
+**Create and Load Data Structures**
 
 A data structure object can be obtained via two pathways :
 
@@ -57,7 +60,7 @@ IO-Handling - Strategy Design Pattern
 
 Data structures delegate certain operations to external classes :
 
-- :class:`PathManager` subclasses for path generation.
+- :class:`PathRuler` subclasses for path generation.
 - :class:`Loader` and :class:`Saver` subclasses for loading/saving data in specific file formats.
 
 To interact with those external classes, data classes store instances of the appropriate objects
@@ -69,7 +72,7 @@ Uniform Interface for Data Structures
 All data structures adhere to a *uniform* interface, which is used throughout the package to
 interact with data consistently. This interface is established though a combination of:
 
-- A metaclass :class:`MetaData`:
+- A metaclass :class:`DataStructMeta`:
   Sets *class-level* attributes related to the dimensions and coordinates of any data structure.
 - An abstract base class :class:`Data`:
   Defines methods and attributes shared by all the specific data structures.
@@ -92,9 +95,9 @@ Define Intrinsic Dimensions and Coordinates
 Manage Paths specific to this Data Structure
 ............................................
 
-- In the class-level attribute :attr:`path_manager`, select the appropriate path manager among the
-  :class:`PathManager` subclasses.
-- Implement the abstract property :meth:`get_path`accordingly. It should provide to this path
+- In the class-level attribute :attr:`path_ruler`, select the appropriate path manager among the
+  :class:`PathRuler` subclasses.
+- Implement the abstract property :meth:`path`accordingly. It should provide to this path
   manager method :meth:`get_path` all the arguments it requires from the attributes of the data
   structure.
 
@@ -117,13 +120,16 @@ Responsibilities are shared between the base class and the subclass constructors
 The base class constructor handles the assignment of data and coordinates. It ensures that the
 arguments are consistent and fulfill the constraints specified by the class attributes.
 
-Each subclass constructor extends the base class constructor. It should:
+Each subclass constructor extends the base class constructor. Each subclass constructor should admit
+two types of arguments:
 
-- Admit and set *minimal metadata* required by the specific path loader associated with the data
-  subclass.
-- Admit optional arguments for data and coordinates. Those values should be provided via named
-  arguments corresponding to the coordinates defined in its class attributes. They should be passed
-  to the base class constructor with coordinates as keyword arguments.
+1. *Required* arguments corresponding to the minimal metadata for the path loader associated with
+   the data subclass.
+   Those arguments are set as attributes by the *subclass constructor* itself.
+2. *Optional* arguments for data values (``data``) and coordinates (matching the names defined in
+   the class attributes).
+   Those attributes are set as attributes by the *base class constructor*. Coordinates have to be
+   passed to this base class constructor as keyword arguments.
 
 Examples
 --------
@@ -137,33 +143,39 @@ coordinates: task, context and stimulus.
         "time": frozenset(["time"]),
         "trials": frozenset(['task', 'ctx', 'stim'])
         })
-        coord2type = {
+        coord2type = MappingProxyType({
             'time': CoordTime,
             'task': CoordTask,
             'ctx': CoordCtx,
             'stim': CoordStim,
         }
-        path_manager = PathManagerExample
+        path_ruler = PathRulerExample
 
         def __init__(self,
                     id_: str,
-                    data: npt.NDArray,
-                    time: CoordTime,
-                    task: CoordTask,
-                    ctx: CoordCtx,
-                    stim: CoordStim):
+                    data: Optional[npt.NDArray] = None,
+                    time: Optional[CoordTime] = None,
+                    task: Optional[CoordTask] = None,
+                    ctx: Optional[CoordCtx] = None,
+                    stim: Optional[CoordStim] = None,
+                    ) -> None:
+
+            # Assign subclass-specific metadata
             self.id = id_
+            # Call the base class constructor to handle data and coordinates
             super().__init__(data, time=time, task=task, ctx=ctx, stim=stim)
 
-        def get_path(self):
-            return self.path_manager(self.id).get_path()
+        # Implement the path by calling the path manager method with the required arguments
+        @property
+        def path(self):
+            return self.path_ruler().get_path(self.id)
 
 See Also
 --------
 :mod:`core.coordinates`
     Coordinate classes representing the dimensions of the data structures.
-:mod:`utils.io.path_managers`
-    PathManager classes implementing path generation rules for each data class.
+:mod:`utils.path_system.storage_rulers`
+    PathRuler classes implementing path generation rules for each data class.
 :meth:`utils.io.loaders`
     Loader classes used to load data from files in various formats.
 :meth:`utils.io.saver`
