@@ -24,6 +24,7 @@ from types import MappingProxyType
 from typing import Any
 
 import csv
+import dill
 import numpy as np
 import pandas as pd
 
@@ -38,17 +39,17 @@ class SaverPKL(Saver):
 
     Notes
     -----
-    Any object can be saved in a Pickle file,
-    therefore the class attribute :attr:`save_methods` is not needed.
-    Since it is not possible to enumerate all the types that can
-    be saved in a Pickle file, the method :meth:`_save` is overridden
-    to dodge the checking step of the base method.
+    Any object can be saved in a Pickle file, therefore the class attribute :attr:`save_methods` is
+    not needed.
+    Since it is not possible to enumerate all the types that can be saved in a Pickle file, the
+    method :meth:`_save` is overridden to dodge the checking step of the base method.
     """
 
     ext = FileExt.PKL
 
     def save(self):
-        """Save any Python object to a Pickle file.
+        """
+        Save any Python object to a Pickle file.
 
         Warning
         -------
@@ -65,10 +66,50 @@ class SaverPKL(Saver):
         print(f"Saved to {self.path}")
 
 
+class SaverDILL(Saver):
+    """
+    Save data in the Dill format.
+
+    Notes
+    -----
+    See :class:`SaverPKL` for explanations.
+
+    Objects handled by the Dill format and not by the Pickle format (examples):
+
+    - Functions and classes.
+    - Objects that contain references to functions or classes.
+    - Objects that contain circular references.
+    - Objects that contain lambda functions, nested functions.
+    - Objects that contain NumPy arrays with dtype=object or with numpy.ma module.
+
+    See Also
+    --------
+    :func:`dill.dump`
+    """
+
+    ext = FileExt.PKL
+
+    def save(self):
+        """
+        Save any Python object to a Dill file.
+
+        Warning
+        -------
+        Override the base method to avoid the checking step.
+
+        See Also
+        --------
+        :func:`dill.dump`
+        """
+        check_parent(self.path)
+        self.path = enforce_ext(self.path, self.ext)
+        with self.path.open("wb") as file:
+            dill.dump(self.data, file)
+        print(f"Saved to {self.path}")
+
+
 class SaverNPY(Saver):
-    """
-    Save data in the NPY format.
-    """
+    """Save data in the NPY format."""
 
     ext = FileExt.NPY
     save_methods = MappingProxyType({np.ndarray: "_save_numpy"})
