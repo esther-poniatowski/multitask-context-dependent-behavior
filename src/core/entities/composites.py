@@ -465,24 +465,23 @@ class Trial:
     slot: Slot
         Slot in the block to which the trial belongs.
     stim: Stimulus
-        Stimulus presented to the animal.
+        Stimulus presented during the trial.
     t_start: float
-        Start time within the block (in seconds).
+        Time of trials start within the block (in seconds).
     t_end: float
-        End time within the block (in seconds).
+        Time of trial end within the block (in seconds).
     t_warn: float, optional
-        Warning onset time within the block (in seconds).
+        Time of warning onset within the block (in seconds).
         Only in task CLK.
     t_on: float
-        Stimulus onset time within the block (in seconds).
+        Time of discrimination stimulus onset time within the block (in seconds).
     t_off: float
-        Stimulus offset time within the block (in seconds).
+        Time of discrimination stimulus offset time within the block (in seconds).
     t_shock: float, optional
-        Shock time within the block (in seconds).
-        Only in error trials.
+        Shock time within the block (in seconds). Only in error trials.
     error: bool, optional
-        Whether the animal behaved incorrectly in the response period.
-        Only for target stimuli.
+        Behavioral outcome in the trial, i.e. whether the animal behaved incorrectly in the response
+        period. Only relevant in NoGo trials.
 
     Methods
     -------
