@@ -14,7 +14,7 @@ Functions
 from pathlib import Path
 from typing import Union
 
-from utils.io.formats import FileExt
+from utils.io_data.formats import FileExt
 
 
 def check_path(path: Union[str, Path], raise_error: bool = False) -> bool:

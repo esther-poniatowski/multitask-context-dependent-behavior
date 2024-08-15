@@ -176,8 +176,8 @@ See Also
     Coordinate classes representing the dimensions of the data structures.
 :mod:`utils.path_system.storage_rulers`
     PathRuler classes implementing path generation rules for each data class.
-:meth:`utils.io.loaders`
+:meth:`utils.io_data.loaders`
     Loader classes used to load data from files in various formats.
-:meth:`utils.io.saver`
+:meth:`utils.io_data.saver`
     Saver classes used to save data to files in a format determined by the data type itself.
 """

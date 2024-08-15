@@ -13,8 +13,8 @@ import numpy.typing as npt
 from core.constants import SMPL_RATE
 from core.coordinates.exp_structure import CoordBlock
 from core.data_structures.base import Data
-from utils.io.formats import TargetType
-from utils.io.loaders.impl import LoaderNPY
+from utils.io_data.formats import TargetType
+from utils.io_data.loaders.impl import LoaderNPY
 from utils.path_system.storage_rulers.impl import RawSpkTimesPath
 
 

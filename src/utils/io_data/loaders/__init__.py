@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`utils.io.loaders` [subpackage]
+:mod:`utils.io_data.loaders` [subpackage]
 
 Classes to load files from files.
 

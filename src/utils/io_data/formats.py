@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`utils.io.formats` [module]
+:mod:`utils.io_data.formats` [module]
 
 Classes
 -------

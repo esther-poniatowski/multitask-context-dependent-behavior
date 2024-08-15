@@ -44,7 +44,7 @@ class CoordPopulation(Coordinate, Generic[T]):
     See Also
     --------
     :class:`core.entities.composites.Unit`
-    :class:`core.entities.bio.CorticalDepth`
+    :class:`core.entities.bio_data.CorticalDepth`
     :class:`core.coordinates.base.Coordinate`
     """
 
@@ -128,7 +128,7 @@ class CoordDepth(CoordPopulation[CorticalDepth]):
 
     See Also
     --------
-    :class:`core.entities.bio.CorticalDepth`
+    :class:`core.entities.bio_data.CorticalDepth`
     :class:`core.coordinates.coord_base.Coordinate`
     """
 

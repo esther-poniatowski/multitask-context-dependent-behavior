@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_core.test_io.test_savers_base` [module]
+:mod:`test_core.test_io_data.test_savers_base` [module]
 
 Notes
 -----
@@ -13,19 +13,19 @@ but rather for the correct handling of the file paths and formats.
 
 See Also
 --------
-:mod:`utils.io.savers.base`: Tested module.
-:mod:`utils.io.savers.impl`: Concrete implementations.
+:mod:`utils.io_data.savers.base`: Tested module.
+:mod:`utils.io_data.savers.impl`: Concrete implementations.
 """
 
 import pytest
 
-from test_utils.test_io.mock_data import (  # dummy data
+from test_utils.test_io_data.mock_data import (  # dummy data
     data_list,
     data_dict,
     data_array,
     data_df,
 )
-from utils.io.savers.impl import SaverCSV
+from utils.io_data.savers.impl import SaverCSV
 
 
 @pytest.mark.parametrize(

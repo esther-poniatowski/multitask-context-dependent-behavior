@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`utils.io.savers` [subpackage]
+:mod:`utils.io_data.savers` [subpackage]
 
 Classes to save data to files.
 

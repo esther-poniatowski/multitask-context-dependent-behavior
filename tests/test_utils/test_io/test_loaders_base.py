@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_core.test_io.test_loaders_base` [module]
+:mod:`test_core.test_io_data.test_loaders_base` [module]
 
 Notes
 -----
@@ -12,13 +12,13 @@ rather for the correct handling of the file paths and formats.
 
 See Also
 --------
-:mod:`utils.io.loaders.base`: Tested module.
-:mod:`utils.io.loaders.impl`: Concrete implementations.
+:mod:`utils.io_data.loaders.base`: Tested module.
+:mod:`utils.io_data.loaders.impl`: Concrete implementations.
 """
 
 import pytest
 
-from utils.io.loaders.impl import LoaderCSV
+from utils.io_data.loaders.impl import LoaderCSV
 
 
 def test_loader_check_type_invalid():

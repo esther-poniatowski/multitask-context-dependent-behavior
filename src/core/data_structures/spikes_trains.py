@@ -15,10 +15,10 @@ from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim
 from core.coordinates.exp_structure import CoordRecNum, CoordBlock, CoordSlot
 from core.coordinates.trials import CoordError
 from core.data_structures.base import Data
-from utils.io.formats import TargetType
+from utils.io_data.formats import TargetType
 from utils.path_system.storage_rulers.impl import SpikesTrainsPath
-from utils.io.loaders.impl import LoaderPKL
-from utils.io.savers.impl import SaverPKL
+from utils.io_data.loaders.impl import LoaderPKL
+from utils.io_data.savers.impl import SaverPKL
 
 
 class SpikesTrains(Data):
