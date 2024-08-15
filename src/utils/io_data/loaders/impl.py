@@ -37,6 +37,7 @@ from types import MappingProxyType
 from typing import Any
 
 import csv
+import dill
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
@@ -60,9 +61,8 @@ class LoaderPKL(Loader):
         """
         Load any Python object from a Pickle file.
 
-        Override the abstract method in the base class
-        to load any Python object without requiring a key
-        in the dictionary :obj:`load_methods`.
+        Override the abstract method in the base class to load any Python object without requiring a
+        key in the dictionary :obj:`load_methods`.
 
         See Also
         --------
@@ -70,6 +70,29 @@ class LoaderPKL(Loader):
         """
         with self.path.open("rb") as file:
             return pickle.load(file)
+
+
+class LoaderDILL(Loader):
+    """Load data from a Dill file. See :class:`LoaderPKL` for more details."""
+
+    ext = FileExt.PKL
+    tpe = TargetType("object")
+    load_methods = {tpe: "_load"}
+
+    def __init__(self, path, tpe=tpe):
+        """Override the base class method since the type does not need to be specified."""
+        super().__init__(path, tpe=tpe)
+
+    def _load(self) -> Any:
+        """
+        Load any Python object from a Dill file.
+
+        See Also
+        --------
+        :func:`dill.load`
+        """
+        with self.path.open("rb") as file:
+            return dill.load(file)
 
 
 class LoaderNPY(Loader):
