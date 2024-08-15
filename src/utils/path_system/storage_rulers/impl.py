@@ -8,7 +8,9 @@ Implementations of path generation rules.
 Classes
 -------
 :class:`RawSpkTimesPath`
-:class:`FiringRatesPath`
+:class:`SpikesTrainsPath`
+:class:`FiringRatesUnitPath`
+:class:`FiringRatesPopPath`
 :class:`DecoderPath`
 
 See Also
@@ -64,13 +66,32 @@ class SpikesTrainsPath(PathRuler):
         Returns
         -------
         Path
-            Format: ``{root}/processed/units/{unit}``
+            Format: ``{root}/processed/units/{unit}/spk``
         """
-        return self.root_data / "processed" / "units" / unit
+        return self.root_data / "processed" / "units" / unit / "spk"
 
 
-class FiringRatesPath(PathRuler):
-    """Path generation rules used by :class:`FiringRates` data structures."""
+class FiringRatesUnitPath(PathRuler):
+    """Path generation rules used by :class:`FiringRatesUnit` data structures."""
+
+    def get_path(self, unit: str) -> Path:
+        """
+        Construct the path for a file storing firing rates.
+
+        Parameters
+        ----------
+        unit: str
+
+        Returns
+        -------
+        Path
+            Format: ``{root}/processed/units/{unit}/fr``
+        """
+        return self.root_data / "processed" / "units" / unit / "fr"
+
+
+class FiringRatesPopPath(PathRuler):
+    """Path generation rules used by :class:`FiringRatesPop` data structures."""
 
     def get_path(self, area: str, training: Union[str, bool]) -> Path:
         """
