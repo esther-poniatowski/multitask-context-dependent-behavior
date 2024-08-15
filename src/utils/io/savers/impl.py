@@ -59,7 +59,7 @@ class SaverPKL(Saver):
         :func:`pickle.dump`
         """
         check_parent(self.path)
-        enforce_ext(self.path, self.ext)
+        self.path = enforce_ext(self.path, self.ext)
         with self.path.open("wb") as file:
             pickle.dump(self.data, file)
         print(f"Saved to {self.path}")
