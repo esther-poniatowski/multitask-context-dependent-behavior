@@ -20,9 +20,9 @@ import numpy.typing as npt
 from utils.path_system.storage_rulers.base import PathRuler
 from utils.io_data.formats import TargetType
 from utils.io_data.loaders.base import Loader
-from utils.io_data.loaders.impl import LoaderPKL, LoaderDILL
+from utils.io_data.loaders.impl import LoaderDILL
 from utils.io_data.savers.base import Saver
-from utils.io_data.savers.impl import SaverPKL, SaverDILL
+from utils.io_data.savers.impl import SaverDILL
 from utils.misc.sequences import reverse_dict_container
 
 
