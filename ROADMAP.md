@@ -1,13 +1,11 @@
-# Feature Name: `load-data`
+# Feature Name: `select-trials`
 
 ## Issues
 - Main issue: #48
-- Sub-Issue:  #56
+- Sub-Issue:  #60
 
 ## Current Status
-Finish Data Class
-Test-driven development for both instantiation approaches : loading and creating from scratch.
-
+Implement the concrete data structure class for storing the properties of the trials and their inclusion/exclusion.
 
 ## Notes
 
