@@ -57,4 +57,5 @@ setattr
 setflags
 staticmethod
 sysconfig
+writerows
 xarray
