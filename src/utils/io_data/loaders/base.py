@@ -96,8 +96,7 @@ class Loader(ABC, Generic[T]):
         check_path(self.path)
         is_file(self.path)
         self.path = enforce_ext(self.path, self.ext)
-        print("Extension: ", self.ext)
-        print(f"Loading data from {self.path}")
+        print(f"Load: {self.path}")
         self._check_type()
         return self._load()
 
