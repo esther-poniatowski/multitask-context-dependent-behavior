@@ -96,7 +96,7 @@ class RawSpkTimes(Data):
     def path(self) -> Path:
         return self.path_ruler().get_path(self.unit_id, self.session_id)
 
-    def load(self) -> Self:  # pylint: disable=undefined-variable
+    def load(self) -> None:  # pylint: disable=undefined-variable
         """
         Retrieve data from a file and extract separately the spiking times and the blocks of trials.
 
@@ -122,6 +122,7 @@ class RawSpkTimes(Data):
         """
         # Load numpy array via LoaderNPY
         raw = self.loader(path=self.path, tpe=self.tpe).load()
+        print("RAW", raw.shape)
         # Check shape
         if raw.ndim != 2 or raw.shape[0] != 2:
             raise ValueError(f"Invalid shape: {raw.shape}. Expected (2, nspikes).")
@@ -130,7 +131,7 @@ class RawSpkTimes(Data):
         t_spk = raw[1]
         # Create new instance filled with the loaded data
         obj = self.__class__(self.unit_id, self.session_id, self.smpl_rate, data=t_spk, block=block)
-        return obj
+        self.__dict__.update(obj.__dict__)
 
     @property
     def n_blocks(self) -> int:
