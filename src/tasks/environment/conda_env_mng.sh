@@ -59,6 +59,7 @@ env_exists() {
     }
 }
 
+
 # Function:    activate_env
 # Description: Activate a Conda environment in the current shell.
 #
@@ -214,6 +215,7 @@ remove_env() {
     }
 }
 
+
 # Function:    get_activate_d
 # Description: Get the path to the 'activate.d' directory of the active Conda environment.
 #
@@ -237,6 +239,7 @@ get_activate_d() {
     local activate_d="${CONDA_PREFIX}/etc/conda/activate.d"
     echo "${activate_d}"
 }
+
 
 # Function:    symlink_in_activate_d
 # Description: Create a symlink in the 'activate.d' directory of the active Conda environment.
@@ -291,6 +294,7 @@ symlink_in_activate_d() {
         exit 1
     }
 }
+
 
 # Function:    inspect_env
 # Description: Display information about the active Conda environment.
