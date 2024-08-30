@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.data_structures.spikes_trains` [module]
+:mod:`core.data_structures.trials_properties` [module]
 """
 from pathlib import Path
 from types import MappingProxyType
@@ -21,14 +21,14 @@ from utils.io_data.loaders.impl import LoaderPKL
 from utils.io_data.savers.impl import SaverPKL
 
 
-class SpikesTrains(Data):
+class TrialsProperties(Data):
     """
-    Spikes trains for one unit in a set of trials of the experiment (whole or part).
+    Properties of a set of trials for one unit.
 
     Key Features
     ------------
     Data       : ``data`` (type ``npt.NDArray[np.float64]``)
-    Dimensions : ``time``, ``trials``
+    Dimensions : ``trials``
     Coordinates: ``recnum`` (type ``CoordRecNum``)
                  ``block`` (type ``CoordBlock``)
                  ``slot`` (type ``CoordSlot``)
@@ -39,6 +39,7 @@ class SpikesTrains(Data):
                  ``t_on`` (type ``npt.NDArray[np.float64]``)
                  ``t_off`` (type ``npt.NDArray[np.float64]``)
                  ``t_end`` (type ``npt.NDArray[np.float64]``)
+                 ``selected`` (type ``npt.NDArray[np.bool_]``)
     Metadata   : ``unit_id``, ``smpl_rate``
 
     Attributes
