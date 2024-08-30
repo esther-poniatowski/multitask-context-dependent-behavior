@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+# =================================================================================================
+# Script Name: connect_hub.sh
+# Description: Establish a connection to the remote hub for exploration.
+#
+# Variables
+# ---------
+# CREDENTIALS_HUB
+#   Path to the .env file containing the credentials for the remote hub.
+# CONNECTION_UTILS
+#   Path to the bash script containing the utility functions for managing connections.
+#
+# =================================================================================================
+
+# Load utility functions
+source "$CONNECTION_UTILS" || {
+    echo "[ERROR] Failed to load utility functions."
+    exit 1
+}
+
+# Send SSH key to the remote hub if necessary
+check_key_sent "$CREDENTIALS_HUB" || {
+    send_keys "$CREDENTIALS_HUB"
+}
+
+# Connect to the remote hub
+connect_with_key "$CREDENTIALS_HUB"
