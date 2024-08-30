@@ -102,13 +102,13 @@ show_paths() {
     if [[ -n "$env_value" ]]; then
         echo "$env_value" | sed 's|:|\n|g' | sed 's|^|   - |'
     else
-        echo "Warning: Empty or not set."
+        echo "[WARNING] Empty or not set."
     fi
 }
 
 
 # Function:    add_path
-# Description: Prepend a new path to an environment variable.
+# Description: Prepend a new path to an environment variable. Add execution rights.
 #
 # Arguments
 # ---------
@@ -135,12 +135,17 @@ add_path() {
     elif [[ ":$env_value:" != *":$path_to_add:"* ]]; then # if not already present, prepend new path
         export $env_var="$path_to_add:$env_value"
     fi
+    # Set execution rights to the directory
+    chmod -R +x "$path_to_add" || {
+        echo "[WARNING] Failed to set execution rights to $path_to_add"
+    }
     echo "[SUCCESS] $env_var includes $path_to_add"
 }
 
 
 # Function:    add_from_file
 # Description: Prepend to an environment variable a set of paths stored in a .pth file.
+#              Add execution rights.
 #
 # Arguments
 # ---------
@@ -177,9 +182,13 @@ add_from_file() {
                 expanded_path=$(eval echo "$path_string")
                 # Add path to the environment variable
                 add_path "$expanded_path" "$env_var"
+                # Set execution rights to the directory
+                chmod -R +x "$expanded_path" || {
+                    echo "[WARNING] Failed to set execution rights to $expanded_path"
+                }
             fi
         done < "$file_path"
     else
-        echo "Warning: File not found at $file_path"
+        echo "[WARNING] File not found at $file_path"
     fi
 }
