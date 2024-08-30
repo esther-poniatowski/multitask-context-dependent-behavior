@@ -22,6 +22,7 @@ dependencies:
   - pytest-pylint
   - python-dotenv
   - pyyaml
+  - types-pyyaml # stubs for pyyaml
   - scipy
   - sphinx
   - sphinxcontrib
@@ -30,6 +31,6 @@ dependencies:
   - scikit-learn
   - xarray
   - pip:
-      #- sphinx-test-reports
+      - sphinx-test-reports
       #- distutils
 variables:
