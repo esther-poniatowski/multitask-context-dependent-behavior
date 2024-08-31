@@ -23,6 +23,7 @@ class FileExt(Enum):
     NC = ".nc"
     NPY = ".npy"
     PKL = ".pkl"
+    YAML = ".yml"
 
 
 class TargetType(Enum):

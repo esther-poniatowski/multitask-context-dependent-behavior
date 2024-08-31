@@ -10,8 +10,10 @@ Any object which needs to load data can interact with one Loader subclass.
 Classes
 -------
 :class:`LoaderPKL`
+:class:`LoaderDILL`
 :class:`LoaderNPY`
 :class:`LoaderCSV`
+:class:`LoaderYAML`
 
 See Also
 --------
@@ -21,26 +23,24 @@ See Also
 
 Implementation
 --------------
-When a single target type is supported by a specific loader,
-it is defined as a class attribute in the loader class and set as
-the default value for the :attr:`tpe` parameter in the constructor.
-It should match the identifier of the only key in the dictionary :attr:`load_methods`.
+When a single target type is supported by a specific loader, it is defined as a class attribute in
+the loader class and set as the default value for the :attr:`tpe` parameter in the constructor. It
+should match the identifier of the only key in the dictionary :attr:`load_methods`.
 
-This solution is chosen instead of overriding the constructor of the subclass
-and removing the :attr:`tpe` parameter from the signature.
-Indeed, this would not respect the Liskov Substitution Principle,
-which is problematic especially in the abstract :class:`Data` class.
+This solution is chosen instead of overriding the constructor of the subclass and removing the
+:attr:`tpe` parameter from the signature. Indeed, this would not respect the Liskov Substitution
+Principle, which is problematic especially in the abstract :class:`Data` class.
 """
-
 import pickle
 from types import MappingProxyType
-from typing import Any
+from typing import Any, Union, List, Dict
 
 import csv
 import dill
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+import yaml
 
 from utils.io_data.formats import FileExt, TargetType
 from utils.io_data.loaders.base import Loader
@@ -144,7 +144,7 @@ class LoaderCSV(Loader):
         }
     )
 
-    def _load_list(self) -> list:
+    def _load_list(self) -> List:
         """Load a CSV file into a list of lists.
 
         See Also
@@ -190,3 +190,88 @@ class LoaderCSV(Loader):
         :func:`pandas.read_csv`
         """
         return pd.read_csv(self.path)
+
+
+class LoaderYAML(Loader):
+    """Load data from a YAML file.
+
+    See Also
+    --------
+    :func:`yaml.safe_load`: Parse a YAML file and return the corresponding Python object.
+
+    Notes
+    -----
+    Rules for parsing YAML files:
+
+    - YAML sequences become Python lists
+    - YAML mappings become Python dictionaries
+
+    Format of a YAML Block Style Sequence:
+
+    .. code-block:: yaml
+
+        - Item 1
+        - Item 2
+        - Item 3
+
+    Format of a YAML Block Style Mapping:
+
+    .. code-block:: yaml
+
+        key1: value1
+        key2: value2
+        key3: value3
+
+    Examples
+    --------
+    Sequence of Mappings:
+
+    .. code-block:: yaml
+
+            - key1: value1
+              key2: value2
+            - key1: value3
+              key2: value4
+
+    Python object: List of dictionaries
+
+    .. code-block:: python
+
+        [
+            {'key1': 'value1', 'key2': 'value2'},
+            {'key1': 'value3', 'key2': 'value4'}
+        ]
+
+    Mapping of Sequences:
+
+    .. code-block:: yaml
+
+        key1:
+        - item1
+        - item2
+        key2:
+        - item3
+        - item4
+
+    Python object: Dictionary of lists
+
+    .. code-block:: python
+
+        {
+            'key1': ['item1', 'item2'],
+            'key2': ['item3', 'item4']
+        }
+    """
+
+    ext = FileExt.YAML
+    load_methods = MappingProxyType(
+        {
+            TargetType.DICT: "_load",
+            TargetType.LIST: "_load",
+        }
+    )
+
+    def _load(self) -> Union[Dict, List]:
+        """Load a YAML file into the corresponding Python object."""
+        with self.path.open("r", encoding="utf-8") as file:
+            return yaml.safe_load(file)
