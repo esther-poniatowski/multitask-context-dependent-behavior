@@ -5,12 +5,14 @@
 #
 # .. code-block:: yaml
 #
-#     - local: path/to/source/directory/
-#       remote: path/to/destination/directory/
-#     - local: path/to/source/file.ext
-#       remote: path/to/destination/file.ext
-#     - local: path/to/source/file.ext
-#       remote: path/to/destination/directory/
+#     - source: path/to/source/directory/
+#       destination: path/to/destination/directory/
+#     - source: path/to/source/file.ext
+#       destination: path/to/destination/file.ext
+#     - source: path/to/source/file.ext
+#       destination: path/to/destination/directory/
+#     - source: path/to/source/file.ext
+#       destination: path/to/destination/directory/new_name.ext
 #
 # Rules:
 # - Paths are *relative* to the *root* directory of the workspace in the respective servers.
@@ -20,7 +22,11 @@
 #   specify its destination directory with a trailing slash.
 # =================================================================================
 
-- local: src/mtcdb_hub
-  remote: src/mtcdb
-- local: config/hub
-  remote: config
+- source: setup/hub/path.env
+  destination: ./
+- source: setup/hub/environment.yml
+  destination: setup/
+- source: src/tasks/network/mount_data.sh
+  destination: ops/
+- source: src/ingest
+  destination: src/
