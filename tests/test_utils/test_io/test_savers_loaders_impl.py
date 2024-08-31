@@ -1,32 +1,31 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_core.io_data.test_savers_loaders_impl` [module]
+:mod:`test_utils.test_io.test_savers_loaders_impl` [module]
 
 Notes
 -----
-Saver and Loader subclasses are tested together to ensure their consistent interaction.
-Contrary to the tests in :mod:`test_core.io_data.test_saver_base`
-and :mod:`test_core.io_data.test_loader_base`, here the focus is on
-the specific *content* of the data which is saved and loaded, rather than
-on general checks carried out in the base classes.
+Saver and Loader subclasses are tested together to ensure their consistent interaction. Contrary to
+the tests in :mod:`test_core.io_data.test_saver_base` and :mod:`test_core.io_data.test_loader_base`,
+here the focus is on the specific *content* of the data which is saved and loaded, rather than on
+general checks carried out in the base classes.
 
 Implementation
 --------------
-Although the saver can automatically set appropriate extensions,
-here it is necessary to append paths with appropriate extensions
-in order to recover the data manually without redefining the path.
+Although the saver can automatically set appropriate extensions, here it is necessary to append
+paths with appropriate extensions in order to recover the data manually without redefining the path.
 
 See Also
 --------
 :mod:`utils.io_data.savers.impl`: Tested module.
 :mod:`utils.io_data.loaders.impl`: Tested module.
 """
+from pathlib import Path
 
 import numpy as np
 import pytest
 
-from test_utils.test_io_data.mock_data import (  # dummy data
+from test_utils.test_io.mock_data import (  # dummy data
     data_list,
     data_dict,
     data_array,
@@ -36,9 +35,14 @@ from test_utils.test_io_data.mock_data import (  # dummy data
     data_array_str,
     data_obj,
     expected_from_list,
+    data_list_yml,
+    data_dict_yml,
 )
-from utils.io_data.loaders.impl import LoaderCSV, LoaderNPY, LoaderPKL
-from utils.io_data.savers.impl import SaverCSV, SaverNPY, SaverPKL
+from utils.io_data.loaders.impl import LoaderCSV, LoaderNPY, LoaderPKL, LoaderDILL, LoaderYAML
+from utils.io_data.savers.impl import SaverCSV, SaverNPY, SaverPKL, SaverDILL
+
+# Relative path to the mock data directory based on the script's location
+PATH_MOCK_DATA = Path(__file__).parent / "mock_data"
 
 
 @pytest.mark.parametrize(
@@ -162,3 +166,64 @@ def test_saver_loader_pkl(tmp_path, data, is_custom_class):
     else:
         for key, value in data.items():
             assert np.array_equal(content[key], value), f"Content mismatch for {key}"
+
+
+def test_saver_loader_dill(tmp_path):
+    """
+    Test for :class:`saver_module.SaverDILL` and :class:`loader_module.LoaderDILL`.
+
+    Test Inputs
+    -----------
+    data [dict, custom_class]: dict or MyClass
+        Sample data to be saved.
+
+    Expected Output
+    ---------------
+    expected [dict, custom_class]: dict or MyClass
+        Content of the Dill file identical to the input data.
+
+    Implementation
+    --------------
+    Similar to the Pickle test, the data is saved and loaded back using Dill.
+    If the data is a dictionary, each item should be compared using :func:`np.array_equal`.
+    If the data is a custom class, use the :meth:`__eq__` method for comparison.
+    """
+    filepath = tmp_path / "test.dill"
+    saver = SaverDILL(filepath, data_dict)
+    saver.save()
+    loader = LoaderDILL(filepath)
+    content = loader.load()
+    for key, value in data_dict.items():
+        assert np.array_equal(content[key], value), f"Content mismatch for {key}"
+
+
+@pytest.mark.parametrize(
+    "tpe, expected, filename",
+    argvalues=[
+        ("list", data_list_yml, "data_list.yaml"),
+        ("dict", data_dict_yml, "data_dict.yaml"),
+    ],
+    ids=["list", "dict"],
+)
+def test_loader_yaml(tpe, expected, filename):
+    """
+    Test for :class:`loader_module.LoaderYAML`.
+
+    Test Inputs
+    -----------
+    data [dict, list]: dict or list
+        Sample data to be saved in YAML format.
+
+    Expected Output
+    ---------------
+    expected [dict, list]: dict or list
+        Content of the YAML file identical to the input data.
+
+    Implementation
+    --------------
+    Retrieve data from the mock data directory whose path is relative to the current python file.
+    """
+    filepath = PATH_MOCK_DATA / filename
+    loader = LoaderYAML(filepath, tpe)
+    content = loader.load()
+    assert content == expected, "Content mismatch"
