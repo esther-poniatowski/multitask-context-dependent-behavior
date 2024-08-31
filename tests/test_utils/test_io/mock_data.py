@@ -37,6 +37,10 @@ data_array_str: npt.NDArray[np.float64] = data_array.astype(str)
 
 data_df: DataFrame = pd.DataFrame(data_array, columns=data_list[0])
 
+data_dict_yml: Dict[str, str] = {"key1": "value1", "key2": "value2"}
+
+data_list_yml: List[str] = ["value1", "value2"]
+
 
 class MyClass:
     """Sample class to generate objects with complex data."""

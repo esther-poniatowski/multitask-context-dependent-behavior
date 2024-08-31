@@ -12,6 +12,6 @@ Modules
 
 See Also
 --------
-:mod:`utils.io`: Tested subpackage.
+:mod:`utils.io_data`: Tested subpackage.
 `tmp_path`: Fixture in pytest for temporary directories. Represent paths as `pathlib.Path` objects.
 """

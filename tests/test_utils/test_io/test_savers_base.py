@@ -19,7 +19,7 @@ See Also
 
 import pytest
 
-from test_utils.test_io_data.mock_data import (  # dummy data
+from test_utils.test_io.mock_data import (  # dummy data
     data_list,
     data_dict,
     data_array,
