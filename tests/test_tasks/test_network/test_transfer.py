@@ -1,23 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_utils.test_deployer` [module]
+:mod:`test_utils.test_transfer` [module]
 
-Test the deployment functionality of the `Deployer` class.
-
-Notes
------
-This module tests the loading of environment variables from a `.env` file, the parsing of a sync map
-from a YAML file, and the correct execution of file transfers using `rsync`.
+Test the file transfer functionality of the `TransferManager` class.
 
 Implementation
 --------------
-The tests use mock data for the `.env` file and the sync map, and the `subprocess.run` command is
-mocked to avoid actual file transfers during testing.
+Mock data for the `.env` file and the sync map: `tests/test_tasks/test_network/mock_data`.
 
 See Also
 --------
-:mod:`deploy`: Tested module.
+:mod:`transfer`: Tested module.
 :mod:`socket`: Used to get the IP address of the local machine (standard library).
 """
 from pathlib import Path
@@ -25,7 +19,7 @@ import socket
 
 import pytest
 
-from tasks.network.deploy import Deployer
+from tasks.network.transfer import TransferManager
 
 # Relative path to the mock data directory based on the script's location
 PATH_MOCK_DATA = Path(__file__).parent / "mock_data"
@@ -33,7 +27,7 @@ PATH_MOCK_DATA = Path(__file__).parent / "mock_data"
 
 def test_load_network_config():
     """
-    Test for :meth:`Deployer.load_network_config`.
+    Test for :meth:`TransferManager.load_network_config`.
 
     Test Inputs
     -----------
@@ -42,19 +36,19 @@ def test_load_network_config():
 
     Expected Output
     ---------------
-    Deployer attributes : `user`, `host`, `root_path` loaded from the `.env` file.
+    TransferManager attributes : `user`, `host`, `root_path` loaded from the `.env` file.
     """
     env_path = PATH_MOCK_DATA / ".env"
-    deployer = Deployer()
-    deployer.load_network_config(env_path)
-    assert deployer.user == "test_user", "User not loaded"
-    assert deployer.host == "111.111.1.1", "Host not loaded"
-    assert isinstance(deployer.root_path, Path), "Root path not loaded"
+    transfer_manager = TransferManager()
+    transfer_manager.load_network_config(env_path)
+    assert transfer_manager.user == "test_user", "User not loaded correctly"
+    assert transfer_manager.host == "111.111.1.1", "Host not loaded correctly"
+    assert isinstance(transfer_manager.root_path, Path), "Root path not loaded correctly"
 
 
 def test_load_sync_map():
     """
-    Test for :meth:`Deployer.load_sync_map`.
+    Test for :meth:`TransferManager.load_sync_map`.
 
     Test Inputs
     -----------
@@ -63,26 +57,26 @@ def test_load_sync_map():
 
     Expected Output
     ---------------
-    Deployer attribute : `sync_map` as a list of dictionaries.
+    TransferManager attribute : `sync_map` as a list of dictionaries.
     Keys in each dictionary : `source`, `destination`.
     """
     sync_map_path = PATH_MOCK_DATA / "sync_map.yml"
-    deployer = Deployer()
-    deployer.load_sync_map(sync_map_path)
+    transfer_manager = TransferManager()
+    transfer_manager.load_sync_map(sync_map_path)
     # Check sync map structure
-    assert isinstance(deployer.sync_map, list), "Sync map not loaded as a list"
+    assert isinstance(transfer_manager.sync_map, list), "Sync map not loaded as a list"
     assert all(
-        isinstance(item, dict) for item in deployer.sync_map
+        isinstance(item, dict) for item in transfer_manager.sync_map
     ), "Sync map not containing dictionaries"
     assert all(
-        {"source", "destination"}.issubset(item.keys()) for item in deployer.sync_map
+        {"source", "destination"}.issubset(item.keys()) for item in transfer_manager.sync_map
     ), "Sync map dictionaries missing keys"
 
 
 @pytest.mark.skip(reason="Not working for a local transfer.")
 def test_transfer(tmp_path):
     """
-    Test for :meth:`Deployer.transfer`.
+    Test for :meth:`TransferManager.upload`.
 
     Test Inputs
     -----------
@@ -102,14 +96,14 @@ def test_transfer(tmp_path):
     Destination path: `directory/file.txt` on the remote server.
     Root path on the remote server: Temporary directory created by `pytest`.
     """
-    # Get the current user's name and ip address of the local machine
+    # Get the current user's name and IP address of the local machine
     hostname = socket.gethostname()
     ip_address = socket.gethostbyname(hostname)
     # Set paths for the source and destination files
     source_path = PATH_MOCK_DATA / "file.txt"
     destination_path = "directory/file.txt"
-    # Create a Deployer instance and transfer the file
-    deployer = Deployer(user=hostname, host=ip_address, root_path=tmp_path)
-    deployer.transfer(source_path, destination_path)
+    # Create a TransferManager instance and transfer the file
+    transfer_manager = TransferManager(user=hostname, host=ip_address, root_path=tmp_path)
+    transfer_manager.upload(source_path, destination_path)
     # Check that the file was transferred to the correct location
-    assert (tmp_path / destination_path).exists(), "File not transferred"
+    assert (tmp_path / destination_path).exists(), "File not transferred correctly"
