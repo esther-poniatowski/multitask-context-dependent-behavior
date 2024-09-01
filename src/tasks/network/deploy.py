@@ -49,12 +49,11 @@ Structure of the output sync map processed by the :class:`Deployer` class:
 
 """
 import argparse
-import os
 from pathlib import Path
 import subprocess
 from typing import Dict, List, Union, Optional
 
-from dotenv import load_dotenv, dotenv_values
+from dotenv import dotenv_values
 
 from utils.io_data.loaders.impl import LoaderYAML
 from utils.io_data.formats import TargetType
@@ -187,8 +186,9 @@ class Deployer:
 
         See Also
         --------
-        :func:`load_dotenv`
-            Load environment variables from a file in a dictionary of the variables.
+        :func:`dotenv_values`
+            Load environment variables from a .env file into a python dictionary, whose keys are the
+            variable names and values are the values specified in the file.
         """
         path = Path(path).resolve()  # absolute path
         env_content = dotenv_values(path)
