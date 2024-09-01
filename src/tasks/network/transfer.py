@@ -1,28 +1,42 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`deploy` [module]
+:mod:`transfer` [module]
 
-Deploy a part of the workspace to a remote server.
+Transfers files and directories between a local workspace and a remote server.
 
-Transfer a set of files and directories and organize the new directory structure.
+Functionalities:
 
-Usage
------
-.. code-block:: bash
-
-    python deploy.py --env-path path/to/.env --sync-map-path path/to/sync-map.yml
+- Transfer in both directions (upload and download).
+- Organizing the new directory structure.
 
 Arguments
 ---------
 --env-path : str
-    Path to the `.env` file storing the network credentials (see :meth:`load_network_config`).
+    Path to the `.env` file storing the remote server's credentials (see :meth:`load_network_config`).
 --sync-map-path : str
     Path to the `sync-map.yml` file where the sync map is defined (see :meth:`load_sync_map`).
+--direction : str
+    Direction of the transfer: "upload" to send files to the remote server, "download" to retrieve
+    files from the remote server.
+
+Usage
+-----
+To upload files to the remote server:
+
+.. code-block:: bash
+
+    python transfer.py --env-path path/to/.env --sync-map-path path/to/sync_map.yml --direction upload
+
+To download files from the remote server:
+
+.. code-block:: bash
+
+    python transfer.py --env-path path/to/.env --sync-map-path path/to/sync_map.yml --direction download
 
 Notes
 -----
-Structure of the input sync map in the `sync-map.yml` file:
+Structure of the input sync map in the `sync_map.yml` file:
 
 .. code-block:: yaml
 
@@ -35,8 +49,7 @@ Structure of the input sync map in the `sync-map.yml` file:
      - source: path/to/source/file.ext
        destination: path/to/destination/directory/new_name.ext
 
-
-Structure of the output sync map processed by the :class:`Deployer` class:
+Structure of the output sync map processed by the :class:`TransferManager` class:
 
 .. code-block:: python
 
@@ -46,6 +59,14 @@ Structure of the output sync map processed by the :class:`Deployer` class:
         {"source": "path/to/source/file.ext", "destination": "path/to/destination/directory/"},
         {"source": "path/to/source/file.ext", "destination": "path/to/destination/directory/new_name.ext"}
     ]
+
+Rules for the paths in the sync map:
+
+- Paths are *relative* to the *root* directory of the workspace in the respective servers.
+- To copy the *contents* of a directory, add a trailing slash to the source path.
+- To copy the *directory itself*, do not add a trailing slash to the source path.
+- To copy a single file, either specify its name in the destination (e.g. for renaming) or only
+  specify its destination directory with a trailing slash.
 
 """
 import argparse
@@ -59,15 +80,15 @@ from utils.io_data.loaders.impl import LoaderYAML
 from utils.io_data.formats import TargetType
 
 
-class Deployer:
+class TransferManager:
     """
-    Deploy files to a remote server using a sync map.
+    Transfer files and directories to and from a remote server using a sync map.
 
     Class Attributes
     ----------------
-    env_keys : Dict[str, str]
+    remote_cred : Dict[str, str]
         Mapping of the class attributes to the corresponding environment variables in the `.env`
-        file.
+        file containing the remote server's credentials.
     attr_types : Dict[str, type]
         Mapping of the class attributes to their respective types.
 
@@ -82,13 +103,11 @@ class Deployer:
     sync_map : List of Dict[str, str]
         Mapping of local paths (files and directories) to the corresponding remote paths as
         specified in the `sync-map.yml` file.
-        Structure: List of dictionaries, each representing a pair of source and destination paths.
-        Each dictionary holds two keys: `source` and `destination`, to specify the respective paths.
 
     Methods
     -------
-    :meth:`deploy`
-    :meth:`transfer`
+    :meth:`upload`
+    :meth:`download`
     :meth:`load_sync_map`
     :meth:`load_network_config`
 
@@ -98,7 +117,7 @@ class Deployer:
     :mod:`subprocess`
     """
 
-    env_keys = {"user": "USER", "host": "HOST", "root_path": "ROOT"}
+    remote_cred = {"user": "USER", "host": "HOST", "root_path": "ROOT"}
     attr_types = {"user": str, "host": str, "root_path": Path}
 
     def __init__(
@@ -115,21 +134,46 @@ class Deployer:
         self.root_path = root_path
         self.sync_map = sync_map if sync_map is not None else []  # avoid TypeError
 
-    def deploy(self):
-        """Transfer files and directories to the remote server based on the sync map."""
-        for paths in self.sync_map:
-            self.transfer(paths["source"], paths["destination"])
-
-    def transfer(self, source_path, destination_path):
+    def upload(self, source_path, destination_path):
         """
-        Transfer one file or directory to the remote server though remote synchronization.
+        Upload files or directories to the remote server.
 
         Arguments
         ---------
         source_path : str
-            Path to the file or directory to transfer.
+            Path to the file or directory to upload.
         destination_path : str
             Path to the destination file or directory on the remote server.
+        """
+        source_full_path = str(Path(source_path).resolve())
+        destination_full_path = f"{self.user}@{self.host}:{self.root_path}/{destination_path}"
+        self._run_rsync(source_full_path, destination_full_path)
+
+    def download(self, source_path, destination_path):
+        """
+        Download files or directories from the remote server to the local machine.
+
+        Arguments
+        ---------
+        source_path : str
+            Path to the file or directory on the remote server.
+        destination_path : str
+            Path to the destination file or directory on the local machine.
+        """
+        source_full_path = f"{self.user}@{self.host}:{self.root_path}/{source_path}"
+        destination_full_path = str(Path(destination_path).resolve())
+        self._run_rsync(source_full_path, destination_full_path)
+
+    def _run_rsync(self, source: str, destination: str):
+        """
+        Transfer one file or directory though remote synchronization.
+
+        Arguments
+        ---------
+        source : str
+            Path to the file or directory to transfer.
+        destination : str
+            Path to the destination file or directory.
 
         See Also
         --------
@@ -149,14 +193,12 @@ class Deployer:
             `-v` (verbose)  : Display the progress of the transfer
             `-z`            : Compress data during the transfer
         """
-        source_full_path = str(Path(source_path).resolve())
-        destination_full_path = f"{self.user}@{self.host}:{self.root_path}/{destination_path}"
-        command = ["rsync", "-avz", source_full_path, destination_full_path]
+        command = ["rsync", "-avz", source, destination]
         subprocess.run(command, check=True)
 
     def load_sync_map(self, path: Union[Path, str]):
         """
-        Load the sync map from a YAML in the attribute :attr:`Deployer.sync_map`.
+        Load the sync map from a YAML in the attribute :attr:`TransferManager.sync_map`.
 
         Arguments
         ---------
@@ -192,7 +234,7 @@ class Deployer:
         """
         path = Path(path).resolve()  # absolute path
         env_content = dotenv_values(path)
-        connection_settings = {attr: env_content[var] for attr, var in self.env_keys.items()}
+        connection_settings = {attr: env_content[var] for attr, var in self.remote_cred.items()}
         for key, value in connection_settings.items():
             if not value:
                 raise ValueError(f"Missing network setting in .env file: {key}")
@@ -200,8 +242,8 @@ class Deployer:
 
 
 def main():
-    """Execute the deployment process."""
-    parser = argparse.ArgumentParser(description="Deploy files to a remote server.")
+    """Execute the file transfer process."""
+    parser = argparse.ArgumentParser(description="Transfer files to and from a remote server.")
     parser.add_argument(
         "--env-path",
         type=str,  # expect a string path
@@ -214,13 +256,27 @@ def main():
         required=True,
         help="Path to the sync-map.yml file storing path correspondences local-remote.",
     )
+    parser.add_argument(
+        "--direction",
+        type=str,
+        choices=["upload", "download"],
+        required=True,
+        help="Direction of transfer: 'upload' to send files to the server, 'download' to retrieve files from the server.",
+    )
     args = parser.parse_args()
-    deployer = Deployer()
+
+    transfer_manager = TransferManager()
     # Load configurations from files
-    deployer.load_network_config(args.env_path)
-    deployer.load_sync_map(args.sync_map_path)
-    # Deploy files to the remote server
-    deployer.deploy()
+    transfer_manager.load_network_config(args.env_path)
+    transfer_manager.load_sync_map(args.sync_map_path)
+
+    # Perform the transfer based on direction
+    if args.direction == "upload":
+        for paths in transfer_manager.sync_map:
+            transfer_manager.upload(paths["source"], paths["destination"])
+    elif args.direction == "download":
+        for paths in transfer_manager.sync_map:
+            transfer_manager.download(paths["source"], paths["destination"])
 
 
 if __name__ == "__main__":
