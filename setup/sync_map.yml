@@ -1,25 +1,7 @@
 # =================================================================================
 # Mapping between paths in local and remote servers for deployment (transfer).
 #
-# Format of the mapping for directories and files:
-#
-# .. code-block:: yaml
-#
-#     - source: path/to/source/directory/
-#       destination: path/to/destination/directory/
-#     - source: path/to/source/file.ext
-#       destination: path/to/destination/file.ext
-#     - source: path/to/source/file.ext
-#       destination: path/to/destination/directory/
-#     - source: path/to/source/file.ext
-#       destination: path/to/destination/directory/new_name.ext
-#
-# Rules:
-# - Paths are *relative* to the *root* directory of the workspace in the respective servers.
-# - To copy the *contents* of a directory, add a trailing slash to the source path.
-# - To copy the *directory itself*, do not add a trailing slash to the source path.
-# - To copy a single file, either specify its name in the destination (e.g. for renaming) or only
-#   specify its destination directory with a trailing slash.
+# Structure and Format: See conventions in `tasks.network.transfer`.
 # =================================================================================
 
 - source: setup/hub/path.env
