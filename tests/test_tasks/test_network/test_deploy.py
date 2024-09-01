@@ -47,8 +47,8 @@ def test_load_network_config():
     env_path = PATH_MOCK_DATA / ".env"
     deployer = Deployer()
     deployer.load_network_config(env_path)
-    assert deployer.user is not None, "User not loaded"
-    assert deployer.host is not None, "Host not loaded"
+    assert deployer.user == "test_user", "User not loaded"
+    assert deployer.host == "111.111.1.1", "Host not loaded"
     assert isinstance(deployer.root_path, Path), "Root path not loaded"
 
 

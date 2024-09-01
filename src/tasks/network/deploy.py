@@ -54,7 +54,7 @@ from pathlib import Path
 import subprocess
 from typing import Dict, List, Union, Optional
 
-from dotenv import load_dotenv
+from dotenv import load_dotenv, dotenv_values
 
 from utils.io_data.loaders.impl import LoaderYAML
 from utils.io_data.formats import TargetType
@@ -132,11 +132,6 @@ class Deployer:
         destination_path : str
             Path to the destination file or directory on the remote server.
 
-        Raises
-        ------
-        RuntimeError
-            If the rsync command fails.
-
         See Also
         --------
         :meth:`Path.resolve`:
@@ -196,8 +191,8 @@ class Deployer:
             Load environment variables from a file in a dictionary of the variables.
         """
         path = Path(path).resolve()  # absolute path
-        load_dotenv(path)
-        connection_settings = {key: os.getenv(value) for key, value in self.env_keys.items()}
+        env_content = dotenv_values(path)
+        connection_settings = {attr: env_content[var] for attr, var in self.env_keys.items()}
         for key, value in connection_settings.items():
             if not value:
                 raise ValueError(f"Missing network setting in .env file: {key}")
@@ -209,27 +204,21 @@ def main():
     parser = argparse.ArgumentParser(description="Deploy files to a remote server.")
     parser.add_argument(
         "--env-path",
-        type=argparse.FileType("r"),  # check if the file exists and is readable
+        type=str,  # expect a string path
         required=True,
         help="Path to the .env file storing the credentials for the remote server.",
     )
     parser.add_argument(
         "--sync-map-path",
-        type=argparse.FileType("r"),
+        type=str,
         required=True,
         help="Path to the sync-map.yml file storing path correspondences local-remote.",
     )
     args = parser.parse_args()
-
     deployer = Deployer()
-    # Load configurations from the files
+    # Load configurations from files
     deployer.load_network_config(args.env_path)
     deployer.load_sync_map(args.sync_map_path)
-    # Close files explicitly after loading configurations
-    with args.env_path as env_file:
-        deployer.load_network_config(env_file.name)
-    with args.sync_map_path as sync_map_file:
-        deployer.load_sync_map(sync_map_file.name)
     # Deploy files to the remote server
     deployer.deploy()
 
