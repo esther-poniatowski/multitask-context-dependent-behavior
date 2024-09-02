@@ -37,7 +37,7 @@ def mock_credentials():
     return {
         "user": "test_user",
         "host": "111.111.1.1",
-        "root_path": "/remote/root",
+        "root_path": Path("/remote/root"),
     }
 
 
@@ -106,18 +106,32 @@ def test_ensure_remote_dir_exists(mock_credentials, mocker):
 
     Expected Output
     ---------------
-    Check the execution of the appropriate SSH command to create the directory.
+    Execution of the appropriate SSH commands to first check if the directory exists, and then
+    create it.
 
     Implementation
     --------------
-    Mock the `subprocess.run` method to check the execution of the SSH command.
+    1. Simulate the scenario where the directory does not exist.
+       `side_effect`: List of return values for each call to the mocked method.
+       First value: `returncode=1` to simulate the directory not existing.
+       Second value: `returncode=0` to simulate the successful creation of the directory.
+    2. Mock the `subprocess.run` method to check the execution of the SSH commands.
     """
     mock_run = mocker.patch("subprocess.run")
     transfer_manager = TransferManager(**mock_credentials)
-    destination_path = "/remote/root/directory/file.txt"
-    expected_dir = "/remote/root/directory"
-    transfer_manager.ensure_remote_dir_exists(destination_path)
-    mock_run.assert_called_once_with(
+    destination_path = "directory/file.txt"
+    expected_dir = mock_credentials["root_path"] / "directory"
+    mock_run.side_effect = [mocker.Mock(returncode=1), mocker.Mock(returncode=0)]
+    transfer_manager.ensure_remote_dir_exists(Path(destination_path))
+    mock_run.assert_any_call(  # check call to test if the directory exists
+        [
+            "ssh",
+            f"{mock_credentials['user']}@{mock_credentials['host']}",
+            f"test -d {expected_dir}",
+        ],
+        check=False,
+    )
+    mock_run.assert_any_call(  # check call to create the directory since it did not exist
         [
             "ssh",
             f"{mock_credentials['user']}@{mock_credentials['host']}",
@@ -125,27 +139,36 @@ def test_ensure_remote_dir_exists(mock_credentials, mocker):
         ],
         check=True,
     )
+    assert mock_run.call_count == 2  # ensure that both calls were made
 
 
-def test_ensure_local_dir_exists(tmp_path):
+@pytest.mark.parametrize(
+    "destination_subpath, directory_exists",
+    argvalues=[("existing_dir/file.txt", True), ("new_dir/file.txt", False)],
+    ids=["existing_directory", "new_directory"],
+)
+def test_ensure_local_dir_exists(tmp_path, destination_subpath, directory_exists):
     """
     Test for :meth:`TransferManager.ensure_local_dir_exists`.
 
     Test Inputs
     -----------
-    destination_path : str
-        Full path to the directory on the local machine where the files will be downloaded.
+    destination_subpath : str
+        Subpath to the file in the directory structure that may or may not exist.
+    directory_exists : bool
+        Whether the directory structure already exists.
 
     Expected Output
     ---------------
-    Check that the directory structure is created locally.
+    Check that the directory structure is created locally if it does not exist.
     """
     transfer_manager = TransferManager()
-    destination_path = "directory/file.txt"
-    expected_dir = tmp_path / "directory"
-    local_path = tmp_path / destination_path
-    transfer_manager.ensure_local_dir_exists(str(local_path))
-    assert expected_dir.exists(), "Local directory not created"
+    destination_path = tmp_path / destination_subpath  # full path, converted to Path object
+    expected_dir = destination_path.parent
+    if directory_exists:  # pre-create the directory if it should already exist
+        expected_dir.mkdir(parents=True, exist_ok=True)
+    transfer_manager.ensure_local_dir_exists(destination_path)
+    assert expected_dir.exists(), f"Directory {expected_dir} was not correctly created"
 
 
 def test_run_rsync(mocker):
