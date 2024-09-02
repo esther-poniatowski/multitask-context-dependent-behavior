@@ -8,7 +8,7 @@ Transfers files and directories between a local workspace and a remote server.
 Functionalities:
 
 - Transfer in both directions (upload and download).
-- Organizing the new directory structure.
+- Organize the new directory structure.
 
 Arguments
 ---------
@@ -108,13 +108,19 @@ class TransferManager:
     -------
     :meth:`upload`
     :meth:`download`
+    :meth:`ensure_dest_dir_exists`
     :meth:`load_sync_map`
     :meth:`load_network_config`
 
     See Also
     --------
     :class:`pathlib.Path`
-    :mod:`subprocess`
+        Object-oriented interface to the filesystem paths.
+    :meth:`Path.resolve`:
+        Resolve the full path of a file or directory, i.e., expand the path.
+        Used here to get the full path of source files or directories.
+    :meth:`subprocess.run`
+        Execute a command in a subprocess.
     """
 
     remote_cred = {"user": "USER", "host": "HOST", "root_path": "ROOT"}
@@ -136,17 +142,18 @@ class TransferManager:
 
     def upload(self, source_path, destination_path):
         """
-        Upload files or directories to the remote server.
+        Upload files or directories to the remote server from the local machine.
 
         Arguments
         ---------
         source_path : str
-            Path to the file or directory to upload.
+            Path to the file or directory to upload on the local machine.
         destination_path : str
             Path to the destination file or directory on the remote server.
         """
         source_full_path = str(Path(source_path).resolve())
         destination_full_path = f"{self.user}@{self.host}:{self.root_path}/{destination_path}"
+        self.ensure_remote_dir_exists(destination_full_path)
         self._run_rsync(source_full_path, destination_full_path)
 
     def download(self, source_path, destination_path):
@@ -156,13 +163,52 @@ class TransferManager:
         Arguments
         ---------
         source_path : str
-            Path to the file or directory on the remote server.
+            Path to the file or directory to download on the remote server.
         destination_path : str
             Path to the destination file or directory on the local machine.
         """
         source_full_path = f"{self.user}@{self.host}:{self.root_path}/{source_path}"
         destination_full_path = str(Path(destination_path).resolve())
+        self.ensure_local_dir_exists(destination_full_path)
         self._run_rsync(source_full_path, destination_full_path)
+
+    def ensure_remote_dir_exists(self, destination_path: str):
+        """
+        Ensure that a destination directory structure exists on the remote server.
+
+        Arguments
+        ---------
+        destination_path : str
+            Full path to a destination directory.
+
+        See Also
+        --------
+        :command:`mkdir`
+            Create a directory at the given path if it does not exist.
+            Option `-p`: Create parent directories as needed.
+        """
+        directory = Path(destination_path).parent  # extract directory path
+        command = ["ssh", f"{self.user}@{self.host}", f"mkdir -p {directory}"]
+        subprocess.run(command, check=True)
+
+    def ensure_local_dir_exists(self, destination_path: str):
+        """
+        Ensure that a destination directory structure exists on the local machine.
+
+        Arguments
+        ---------
+        destination_path : str
+            Full path to a destination directory.
+
+        See Also
+        --------
+        :meth:`Path.mkdir`
+            Create a directory at the given path if it does not exist.
+            Option `parents=True`: Create parent directories as needed.
+            Option `exist_ok=True`: Do not raise an error if the directory already exists.
+        """
+        directory = Path(destination_path).parent
+        directory.mkdir(parents=True, exist_ok=True)
 
     def _run_rsync(self, source: str, destination: str):
         """
@@ -177,12 +223,6 @@ class TransferManager:
 
         See Also
         --------
-        :meth:`Path.resolve`:
-            Resolve the full path of a file or directory, i.e., expand the path.
-            Used here to get the full path of the source file or directory.
-        :meth:`subprocess.run`
-            Execute a command in a subprocess.
-            Used here to run the rsync command.
         :command:`rsync`
             Command-line utility to synchronize files and directories between two locations.
             Syntax (here): `rsync -avz <source_path> <destination_path>`
