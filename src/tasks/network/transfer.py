@@ -13,9 +13,11 @@ Functionalities:
 Arguments
 ---------
 --env-path : str
-    Path to the `.env` file storing the remote server's credentials (see :meth:`load_network_config`).
+    Path to the `.env` file storing the remote server's credentials.
+    See :meth:`load_network_config`.
 --sync-map-path : str
-    Path to the `sync-map.yml` file where the sync map is defined (see :meth:`load_sync_map`).
+    Path to the `sync-map.yml` file where the sync map is defined.
+    See :meth:`load_sync_map`.
 --direction : str
     Direction of the transfer: "upload" to send files to the remote server, "download" to retrieve
     files from the remote server.
