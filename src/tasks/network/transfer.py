@@ -102,7 +102,7 @@ class TransferManager:
         IP address or hostname of the remote server.
     root_path : Path
         Path of the root directory of the workspace on the remote server.
-    sync_map : List of Dict[str, str]
+    sync_map : List of Dict[str, Path]
         Mapping of local paths (files and directories) to the corresponding remote paths as
         specified in the `sync-map.yml` file.
 
@@ -133,84 +133,104 @@ class TransferManager:
         user: Optional[str] = None,
         host: Optional[str] = None,
         root_path: Optional[Union[Path, str]] = None,
-        sync_map: Optional[List[Dict[str, str]]] = None,
+        sync_map: Optional[List[Dict[str, Path]]] = None,
     ):
         self.user = user
         self.host = host
         if root_path is not None:
             root_path = Path(root_path).resolve()  # absolute path
+        else:
+            root_path = Path.cwd()
         self.root_path = root_path
         self.sync_map = sync_map if sync_map is not None else []  # avoid TypeError
 
-    def upload(self, source_path, destination_path):
+    def upload(self, source_path: Path, destination_path: Path):
         """
         Upload files or directories to the remote server from the local machine.
 
         Arguments
         ---------
-        source_path : str
+        source_path : Path
             Path to the file or directory to upload on the local machine.
-        destination_path : str
+        destination_path : Path
             Path to the destination file or directory on the remote server.
         """
-        source_full_path = str(Path(source_path).resolve())
-        destination_full_path = f"{self.user}@{self.host}:{self.root_path}/{destination_path}"
+        source_full_path = source_path.resolve()  # local path
+        destination_full_path = self.root_path / destination_path  # remote path
         self.ensure_remote_dir_exists(destination_full_path)
-        self._run_rsync(source_full_path, destination_full_path)
+        self._run_rsync(str(source_full_path), f"{self.user}@{self.host}:{destination_full_path}")
 
-    def download(self, source_path, destination_path):
+    def download(self, source_path: Path, destination_path: Path):
         """
         Download files or directories from the remote server to the local machine.
 
         Arguments
         ---------
-        source_path : str
+        source_path : Path
             Path to the file or directory to download on the remote server.
-        destination_path : str
+        destination_path : Path
             Path to the destination file or directory on the local machine.
         """
-        source_full_path = f"{self.user}@{self.host}:{self.root_path}/{source_path}"
-        destination_full_path = str(Path(destination_path).resolve())
+        source_full_path = self.root_path / source_path  # remote path
+        destination_full_path = destination_path.resolve()  # local path
         self.ensure_local_dir_exists(destination_full_path)
-        self._run_rsync(source_full_path, destination_full_path)
+        self._run_rsync(f"{self.user}@{self.host}:{source_full_path}", str(destination_full_path))
 
-    def ensure_remote_dir_exists(self, destination_path: str):
+    def ensure_remote_dir_exists(self, destination_path: Path):
         """
         Ensure that a destination directory structure exists on the remote server.
 
         Arguments
         ---------
-        destination_path : str
+        destination_path : Path
             Full path to a destination directory.
 
         See Also
         --------
+        :command:`test`
+            Check file types and compare values.
+            Option `-d`: Check if the path is a directory.
+            Syntax: `test -d <path>` to check if the path is a directory.
         :command:`mkdir`
             Create a directory at the given path if it does not exist.
             Option `-p`: Create parent directories as needed.
         """
-        directory = Path(destination_path).parent  # extract directory path
-        command = ["ssh", f"{self.user}@{self.host}", f"mkdir -p {directory}"]
-        subprocess.run(command, check=True)
+        directory = destination_path.parent  # extract directory path (parent)
+        full_path = self.root_path / directory
+        check_command = ["ssh", f"{self.user}@{self.host}", f"test -d {full_path}"]
+        result = subprocess.run(check_command, check=False)
+        if result.returncode == 0:
+            print(f"Existing directory: {full_path} on {self.host}")
+        else:
+            create_command = ["ssh", f"{self.user}@{self.host}", f"mkdir -p {full_path}"]
+            subprocess.run(create_command, check=True)
+            print(f"Created directory: {full_path} on {self.host}")
 
-    def ensure_local_dir_exists(self, destination_path: str):
+    def ensure_local_dir_exists(self, destination_path: Path):
         """
         Ensure that a destination directory structure exists on the local machine.
 
         Arguments
         ---------
-        destination_path : str
+        destination_path : Path
             Full path to a destination directory.
 
         See Also
         --------
+        :meth:`Path.exists`
+            Check if the path exists.
         :meth:`Path.mkdir`
             Create a directory at the given path if it does not exist.
             Option `parents=True`: Create parent directories as needed.
             Option `exist_ok=True`: Do not raise an error if the directory already exists.
         """
-        directory = Path(destination_path).parent
-        directory.mkdir(parents=True, exist_ok=True)
+        directory = destination_path.parent  # extract directory path (parent)
+        full_path = directory.resolve()
+        if directory.exists():
+            print(f"Existing directory: {full_path} on the local machine")
+        else:
+            directory.mkdir(parents=True, exist_ok=True)
+            print(f"Created directory: {full_path} on the local machine")
 
     def _run_rsync(self, source: str, destination: str):
         """
@@ -234,6 +254,10 @@ class TransferManager:
             `-a` (archive)  : Preserve file attributes (e.g., timestamps, permissions...)
             `-v` (verbose)  : Display the progress of the transfer
             `-z`            : Compress data during the transfer
+
+        Warning
+        -------
+        Paths should be strings to be passed to the subprocess command.
         """
         command = ["rsync", "-avz", source, destination]
         subprocess.run(command, check=True)
@@ -244,15 +268,18 @@ class TransferManager:
 
         Arguments
         ---------
-        path : str
+        path : Union[Path, str]
             Path to the YAML file containing the sync map.
 
         See Also
         --------
         :class:`utils.io_data.loaders.impl.LoaderYAML`
         """
+        path = Path(path).resolve()  # absolute path
         loader = LoaderYAML(path, tpe=TargetType.DICT)
-        self.sync_map = loader.load()
+        raw_map = loader.load()
+        # Set paths in the dictionary self.syn_map as Path objects
+        self.sync_map = [{key: Path(value) for key, value in paths.items()} for paths in raw_map]
 
     def load_network_config(self, path: Union[Path, str]):
         """
