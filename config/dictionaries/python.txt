@@ -25,6 +25,7 @@ frozenset
 getattr
 getenv
 getfixturevalue
+gethostname
 getitem
 getsitepackages
 hasattr
@@ -32,6 +33,7 @@ isin
 isinstance
 issubclass
 issubdtype
+issubset
 iterdir
 loadtxt
 makedirs
