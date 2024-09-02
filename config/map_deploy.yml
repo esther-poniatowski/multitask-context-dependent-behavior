@@ -1,5 +1,6 @@
 # =================================================================================
-# Mapping between paths in local and remote servers for deployment (transfer).
+# map_deploy.yml
+# Map paths in local and remote servers to deploy a part of the codebase to the data hub.
 #
 # Structure and Format: See conventions in `tasks.network.transfer`.
 # =================================================================================
@@ -10,5 +11,5 @@
   destination: setup/
 - source: src/tasks/network/mount_data.sh
   destination: ops/
-- source: src/ingest
+- source: src/ingest/
   destination: src/

@@ -1,0 +1,9 @@
+# =================================================================================
+# map_retrieve.yml
+# Map paths in local and remote servers to retrieve data from the data hub.
+#
+# Structure and Format: See conventions in `tasks.network.transfer`.
+# =================================================================================
+
+- source:
+  destination:
