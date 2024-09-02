@@ -19,6 +19,7 @@ dependencies:
   - pylint
   - pyright
   - pytest
+  - pytest-mock
   - pytest-pylint
   - python-dotenv
   - pyyaml
