@@ -15,7 +15,6 @@ See Also
 :mod:`socket`: Used to get the IP address of the local machine (standard library).
 """
 from pathlib import Path
-import socket
 
 import pytest
 
@@ -25,7 +24,24 @@ from tasks.network.transfer import TransferManager
 PATH_MOCK_DATA = Path(__file__).parent / "mock_data"
 
 
-def test_load_network_config():
+@pytest.fixture
+def mock_credentials():
+    """
+    Fixture - Provide the credentials corresponding to the mock `.env` file.
+
+    Returns
+    -------
+    dict
+        Dictionary containing the user, host, and root path for the remote server.
+    """
+    return {
+        "user": "test_user",
+        "host": "111.111.1.1",
+        "root_path": "/remote/root",
+    }
+
+
+def test_load_network_config(mock_credentials):
     """
     Test for :meth:`TransferManager.load_network_config`.
 
@@ -33,6 +49,9 @@ def test_load_network_config():
     -----------
     env_path : str
         Path to a mock `.env` file containing network credentials.
+    mock_credentials : dict
+        Dictionary containing the expected user, host, and root path, provided by the fixture,
+        corresponding to the content of the `.env` file.
 
     Expected Output
     ---------------
@@ -41,9 +60,9 @@ def test_load_network_config():
     env_path = PATH_MOCK_DATA / ".env"
     transfer_manager = TransferManager()
     transfer_manager.load_network_config(env_path)
-    assert transfer_manager.user == "test_user", "User not loaded correctly"
-    assert transfer_manager.host == "111.111.1.1", "Host not loaded correctly"
-    assert isinstance(transfer_manager.root_path, Path), "Root path not loaded correctly"
+    assert transfer_manager.user == mock_credentials["user"], "User not loaded"
+    assert transfer_manager.host == mock_credentials["host"], "Host not loaded"
+    assert transfer_manager.root_path == Path(mock_credentials["root_path"]), "Root path not loaded"
 
 
 def test_load_sync_map():
@@ -73,37 +92,84 @@ def test_load_sync_map():
     ), "Sync map dictionaries missing keys"
 
 
-@pytest.mark.skip(reason="Not working for a local transfer.")
-def test_transfer(tmp_path):
+def test_ensure_remote_dir_exists(mock_credentials, mocker):
     """
-    Test for :meth:`TransferManager.upload`.
+    Test for :meth:`TransferManager.ensure_remote_dir_exists`.
 
     Test Inputs
     -----------
-    source_path : str
-        Path to the source file or directory to transfer.
     destination_path : str
-        Path to the destination on the remote server.
+        Full path to the directory on the remote server where the files will be uploaded.
+        Here: `/remote/root/directory/file.txt`.
+    mock_credentials : dict
+        Dictionary containing the user, host, and root path for the remote server.
 
     Expected Output
     ---------------
-    Check that the file is transferred to the correct location on the simulated remote server.
+    Check the execution of the appropriate SSH command to create the directory.
 
     Implementation
     --------------
-    Here, a local transfer is simulated by using the local machine's IP address as the remote host.
-    Source file: `file.txt` in the mock data directory.
-    Destination path: `directory/file.txt` on the remote server.
-    Root path on the remote server: Temporary directory created by `pytest`.
+    Mock the `subprocess.run` method to check the execution of the SSH command.
     """
-    # Get the current user's name and IP address of the local machine
-    hostname = socket.gethostname()
-    ip_address = socket.gethostbyname(hostname)
-    # Set paths for the source and destination files
-    source_path = PATH_MOCK_DATA / "file.txt"
+    mock_run = mocker.patch("subprocess.run")
+    transfer_manager = TransferManager(**mock_credentials)
+    destination_path = "/remote/root/directory/file.txt"
+    expected_dir = "/remote/root/directory"
+    transfer_manager.ensure_remote_dir_exists(destination_path)
+    mock_run.assert_called_once_with(
+        [
+            "ssh",
+            f"{mock_credentials['user']}@{mock_credentials['host']}",
+            f"mkdir -p {expected_dir}",
+        ],
+        check=True,
+    )
+
+
+def test_ensure_local_dir_exists(tmp_path):
+    """
+    Test for :meth:`TransferManager.ensure_local_dir_exists`.
+
+    Test Inputs
+    -----------
+    destination_path : str
+        Full path to the directory on the local machine where the files will be downloaded.
+
+    Expected Output
+    ---------------
+    Check that the directory structure is created locally.
+    """
+    transfer_manager = TransferManager()
     destination_path = "directory/file.txt"
-    # Create a TransferManager instance and transfer the file
-    transfer_manager = TransferManager(user=hostname, host=ip_address, root_path=tmp_path)
-    transfer_manager.upload(source_path, destination_path)
-    # Check that the file was transferred to the correct location
-    assert (tmp_path / destination_path).exists(), "File not transferred correctly"
+    expected_dir = tmp_path / "directory"
+    local_path = tmp_path / destination_path
+    transfer_manager.ensure_local_dir_exists(str(local_path))
+    assert expected_dir.exists(), "Local directory not created"
+
+
+def test_run_rsync(mocker):
+    """
+    Test for :meth:`TransferManager._run_rsync`.
+
+    Test Inputs
+    -----------
+    source : str
+        Path to the file or directory to transfer.
+    destination : str
+        Path to the destination file or directory.
+
+    Expected Output
+    ---------------
+    Check that the rsync command is called with the correct arguments.
+
+    Implementation
+    --------------
+    Mock the `subprocess.run` method to check the execution of the rsync command.
+    """
+    mock_run = mocker.patch("subprocess.run")
+    transfer_manager = TransferManager()
+    source = "/source/path/file.txt"
+    destination = "/destination/path/file.txt"
+    transfer_manager._run_rsync(source, destination)
+    mock_run.assert_called_once_with(["rsync", "-avz", source, destination], check=True)
