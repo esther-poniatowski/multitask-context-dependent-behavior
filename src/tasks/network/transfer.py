@@ -36,6 +36,13 @@ To download files from the remote server:
 
     python transfer.py --env-path path/to/.env --sync-map-path path/to/sync_map.yml --direction download
 
+To simulate an upload:
+
+.. code-block:: bash
+
+    python transfer.py --env-path path/to/.env --sync-map-path path/to/sync_map.yml --direction upload --dry-run
+
+
 Notes
 -----
 Structure of the input sync map in the `sync_map.yml` file:
@@ -105,6 +112,8 @@ class TransferManager:
     sync_map : List of Dict[str, Path]
         Mapping of local paths (files and directories) to the corresponding remote paths as
         specified in the `sync-map.yml` file.
+    dry_run : bool, default=False
+        If True, operations are only simulated rather than executed.
 
     Methods
     -------
@@ -134,15 +143,17 @@ class TransferManager:
         host: Optional[str] = None,
         root_path: Optional[Union[Path, str]] = None,
         sync_map: Optional[List[Dict[str, Path]]] = None,
+        dry_run: bool = False,
     ):
         self.user = user
         self.host = host
         if root_path is not None:
             root_path = Path(root_path).resolve()  # absolute path
         else:
-            root_path = Path.cwd()
+            root_path = Path("~/mtcdb").resolve()  # default: user home directory + project name
         self.root_path = root_path
         self.sync_map = sync_map if sync_map is not None else []  # avoid TypeError
+        self.dry_run = dry_run
 
     def upload(self, source_path: Path, destination_path: Path):
         """
@@ -201,7 +212,7 @@ class TransferManager:
         result = subprocess.run(check_command, check=False)
         if result.returncode == 0:
             print(f"Existing directory: {full_path} on {self.host}")
-        else:
+        elif not self.dry_run:
             create_command = ["ssh", f"{self.user}@{self.host}", f"mkdir -p {full_path}"]
             subprocess.run(create_command, check=True)
             print(f"Created directory: {full_path} on {self.host}")
@@ -228,7 +239,7 @@ class TransferManager:
         full_path = directory.resolve()
         if directory.exists():
             print(f"Existing directory: {full_path} on the local machine")
-        else:
+        elif not self.dry_run:
             directory.mkdir(parents=True, exist_ok=True)
             print(f"Created directory: {full_path} on the local machine")
 
@@ -254,12 +265,16 @@ class TransferManager:
             `-a` (archive)  : Preserve file attributes (e.g., timestamps, permissions...)
             `-v` (verbose)  : Display the progress of the transfer
             `-z`            : Compress data during the transfer
+            `-n` (dry-run)  : Simulate the transfer without executing it
 
         Warning
         -------
         Paths should be strings to be passed to the subprocess command.
         """
-        command = ["rsync", "-avz", source, destination]
+        command = ["rsync", "-avz"]
+        if self.dry_run:
+            command.append("--dry-run")
+        command.extend([source, destination])
         subprocess.run(command, check=True)
 
     def load_sync_map(self, path: Union[Path, str]):
@@ -332,9 +347,15 @@ def main():
         required=True,
         help="Direction of transfer: 'upload' to send files to the server, 'download' to retrieve files from the server.",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",  # flag to set the dry_run attribute to True
+        help="Simulate the operations without executing them.",
+    )
     args = parser.parse_args()
 
-    transfer_manager = TransferManager()
+    # Initialize the transfer manager
+    transfer_manager = TransferManager(dry_run=args.dry_run)
     # Load configurations from files
     transfer_manager.load_network_config(args.env_path)
     transfer_manager.load_sync_map(args.sync_map_path)
