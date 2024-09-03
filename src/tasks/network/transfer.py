@@ -21,6 +21,8 @@ Arguments
 --direction : str
     Direction of the transfer: "upload" to send files to the remote server, "download" to retrieve
     files from the remote server.
+--dry-run : flag
+    Simulate the operations without executing them.
 
 Usage
 -----
