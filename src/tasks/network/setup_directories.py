@@ -48,9 +48,9 @@ To simulate the directory organization:
 
 Notes
 -----
-Directory tree are specified by nested dictionaries in the YAML file and python objects.
-Each key represents a directory name. Each value can be another dictionary (indicating
-subdirectories) or an empty dictionary if the directory has no subdirectories.
+Directory tree are specified by nested dictionaries in the YAML file and python objects. Each key
+represents a directory name. Each value can be another dictionary (indicating subdirectories) or an
+empty dictionary if the directory has no subdirectories.
 
 Example directory structure:
 
@@ -256,6 +256,9 @@ class DirectoryOrganizer(RemoteServerMixin):
             with open(path, "r", encoding="utf-8") as file:
                 print(f"[SUCCESS] Load directory structure from YAML file at: {path}")
                 self.directory_structure = yaml.safe_load(file)
+            # Ensure the structure is a dictionary
+            if not isinstance(self.directory_structure, dict):
+                raise ValueError("[ERROR] Directory structure must be a dictionary.")
         except yaml.YAMLError as e:
             print(f"[ERROR] Failed loading YAML file: {e}")
             raise e
@@ -293,7 +296,9 @@ def main():
     if remote:
         organizer.load_network_config(args.env_path)
     # Load the directory structure from the YAML file
-    organizer.load_directory_structure(args.structure_path)
+    organizer.load_directory_structure(args.yml_dirstruct_path)
+    print(f"[INFO] Directory structure: {organizer.directory_structure}")
+    print(f"[INFO] Path: {args.yml_dirstruct_path}")
     # Create the directory structure (locally or remotely)
     organizer.create_directories()
 
