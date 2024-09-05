@@ -17,42 +17,36 @@ from typing import Union
 from utils.io_data.formats import FileExt
 
 
-def check_path(path: Union[str, Path], raise_error: bool = False) -> bool:
+def is_dir(path: Union[str, Path]) -> bool:
     """
-    Check the existence of a path in the file system.
+    Check whether a path corresponds to a directory in the file system.
 
     Parameters
     ----------
     path: str or Path
-    raise_error: bool, default=False
-        Whether to raise an error if the path does not exist.
 
     Returns
     -------
     bool
-        True if the path exists, False otherwise.
-
-    Raises
-    ------
-    FileNotFoundError
-        If the path does not exist and `raise_error` is True.
+        True if the path exists and is a directory, False otherwise.
 
     See Also
     --------
-    :func:`pathlib.exists`
+    :func:`pathlib.is_dir`
     """
     if isinstance(path, str):
         path = Path(path)
-    if not path.exists():
-        if raise_error:
-            raise FileNotFoundError(f"Inexistent path: {path}")
+    if not path.is_dir():
+        print(f"[WARNING] Missing directory: {path}")
         return False
-    return True
+    else:
+        print(f"[VALID] Existing directory: {path}")
+        return True
 
 
 def is_file(path: Union[str, Path]) -> bool:
     """
-    Check if a path corresponds to a file.
+    Check whether a path corresponds to a file in the file system.
 
     Parameters
     ----------
@@ -61,6 +55,7 @@ def is_file(path: Union[str, Path]) -> bool:
     Returns
     -------
     bool
+        True if the path exists and is a file, False otherwise.
 
     See Also
     --------
@@ -68,7 +63,12 @@ def is_file(path: Union[str, Path]) -> bool:
     """
     if isinstance(path, str):
         path = Path(path)
-    return path.is_file()
+    if not path.is_file():
+        print(f"[WARNING] Missing file: {path}")
+        return False
+    else:
+        print(f"[VALID] Existing file: {path}")
+        return True
 
 
 def check_parent(path: Union[str, Path]) -> bool:
@@ -89,10 +89,10 @@ def check_parent(path: Union[str, Path]) -> bool:
     """
     if isinstance(path, str):
         path = Path(path)
-    return check_path(path.parent)
+    return is_dir(path.parent)
 
 
-def create_dir(path: Union[str, Path]) -> Path:
+def create_dir(path: Union[str, Path]) -> None:
     """
     Create a directory at a given path if it does not exist.
 
@@ -108,12 +108,10 @@ def create_dir(path: Union[str, Path]) -> Path:
     """
     if isinstance(path, str):
         path = Path(path)
-    if not path.exists():
+    exists = is_dir(path)
+    if not exists:
         path.mkdir(parents=True, exist_ok=True)
-        print(f"Directory created: {path}")
-    else:
-        print(f"Pre-existing directory: {path}")
-    return path
+        print(f"[SUCCESS] Directory created: {path}")
 
 
 def enforce_ext(path: Union[str, Path], ext: Union[str, FileExt]) -> Path:
@@ -176,7 +174,6 @@ def display_tree(path: Union[str, Path], level: int = 0, limit: int = 5) -> None
     """
     if isinstance(path, str):
         path = Path(path)
-    check_path(path, raise_error=False)
     items = list(path.iterdir())
     display_items = items[:limit]
     for item in display_items:
