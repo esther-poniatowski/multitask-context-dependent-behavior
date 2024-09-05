@@ -1,0 +1,176 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+:mod:`test_tasks.test_network.test_setup_directories` [module]
+
+Test the directory setup functionality of the `DirectoryOrganizer` class.
+
+Implementation
+--------------
+Mock data for YAML directory structure and `.env` files.
+
+See Also
+--------
+:mod:`tasks.network.setup_directories`: Tested module.
+:mod:`dotenv`: Used to load environment variables (local or remote).
+"""
+import os
+from pathlib import Path
+from typing import Dict, Union
+
+import pytest
+
+from tasks.network.setup_directories import DirectoryOrganizer
+
+# Path to mock data
+PATH_MOCK_DATA = Path(__file__).parent / "mock_data"
+PATH_MOCK_YAML = PATH_MOCK_DATA / "structure.yml"
+
+# Type alias for the directory structure
+StructureType = Dict[str, Union[Dict, str]]
+
+
+@pytest.fixture
+def mock_structure() -> StructureType:
+    """
+    Fixture - Provide the python dictionary corresponding to the mock `.yml` file.
+
+    Returns
+    -------
+    dict
+        Nested dictionary.
+    """
+    return {"dir": {"subdir1": {}, "subdir2": {"subsubdir": {}}}}
+
+
+@pytest.fixture
+def expected_paths(tmp_path):
+    """
+    Fixture - Provide the list of expected paths based on the directory structure in `mock_structure`.
+
+    Returns
+    -------
+    list
+        List of pathlib.Path objects.
+    """
+    paths = [
+        tmp_path / "dir",
+        tmp_path / "dir/subdir1",
+        tmp_path / "dir/subdir2",
+        tmp_path / "dir/subdir2/subsubdir",
+    ]
+    return paths
+
+
+@pytest.mark.parametrize("root_set", [True, False], ids=["env_var", "working_dir"])
+def test_get_root_path(root_set, tmp_path):
+    """
+    Test for :meth:`DirectoryOrganizer.get_root_path`.
+
+    Test Inputs
+    -----------
+    root_set : bool
+        Whether to set the ROOT environment variable.
+    tmp_path : pathlib.Path
+        Temporary directory path used as the root directory if `root_set` is False.
+
+    Expected Output
+    ---------------
+    Root path from the environment or defaults to the current working directory.
+    """
+    # Save the previous value of ROOT environment variable to restore it after the test
+    save_root = os.environ.get("ROOT")
+    # Arrange the test by configuring the ROOT environment variable
+    if root_set:  # export the ROOT environment variable in the current shell session
+        os.environ["ROOT"] = str(tmp_path)
+    else:  # unset the ROOT environment variable
+        os.environ.pop("ROOT", None)
+    # Test the function
+    root_path = DirectoryOrganizer.get_root_path()
+    if root_set:
+        assert root_path == tmp_path, "Root path not set from environment variable"
+    else:
+        assert root_path == Path.cwd(), "Root path not set to the current working directory"
+    # Restore the previous value of ROOT environment variable
+    if save_root is not None:
+        os.environ["ROOT"] = save_root
+    else:
+        os.environ.pop("ROOT", None)
+
+
+@pytest.mark.parametrize("remote", argvalues=[False, True], ids=["local", "remote"])
+def test_init_directory_organizer(remote):
+    """
+    Test for :meth:`DirectoryOrganizer.__init__`.
+
+    Expected Output
+    ---------------
+    DirectoryOrganizer attributes:
+    - `dry_run` as a boolean.
+    - `remote` as a boolean.
+    - `root_path` as a Path object.
+    - `directory_structure` as None.
+    """
+    organizer = DirectoryOrganizer(dry_run=True, remote=remote)
+    assert organizer.dry_run is True
+    assert organizer.remote == remote
+    assert isinstance(organizer.root_path, Path)
+    assert isinstance(organizer.directory_structure, dict)
+
+
+def test_load_directory_structure(mock_structure):
+    """
+    Test for :meth:`DirectoryOrganizer.load_directory_structure`.
+
+    Test Inputs
+    -----------
+    yaml_path : str
+        Path to a mock YAML file containing the directory structure.
+    mock_structure : dict
+        See :func:`mock_structure`.
+
+    Expected Output
+    ---------------
+    DirectoryOrganizer attribute : `directory_structure` should be a dictionary.
+    """
+    yml_path = PATH_MOCK_YAML
+    organizer = DirectoryOrganizer(dry_run=False, remote=False)
+    organizer.load_directory_structure(yml_path)
+    assert isinstance(
+        organizer.directory_structure, dict
+    ), "Directory structure not loaded as a dictionary"
+    assert organizer.directory_structure == mock_structure
+
+
+@pytest.mark.parametrize("dry_run", argvalues=[True, False], ids=["dry_run", "normal"])
+def test_create_directories(mock_structure, tmp_path, expected_paths, dry_run):
+    """
+    Test for :meth:`DirectoryOrganizer.create_directories`.
+
+    Test Inputs
+    -----------
+    mock_structure : dict
+        Directory structure to create. See :func:`mock_structure`.
+    tmp_path : pathlib.Path
+        Temporary directory path used as the root directory.
+    expected_paths : list
+        List of expected paths based on the directory structure. See :func:`expected_paths`.
+    dry_run : bool
+        Whether operations should be simulated or performed.
+
+    Expected Output
+    ---------------
+    Creation of the directory structure locally, unless in dry-run mode.
+    """
+    organizer = DirectoryOrganizer(
+        root_path=tmp_path, directory_structure=mock_structure, dry_run=dry_run, remote=False
+    )
+    organizer.create_directories()  # no arguments to use the attributes as defaults
+    if not dry_run:  # check directories' creation
+        for path in expected_paths:
+            assert path.exists(), f"Directory {path} not created"
+    else:  # check directories' simulation
+        for path in expected_paths:
+            assert (
+                not path.exists()
+            ), f"Directory {path} should not have been created in dry-run mode"
