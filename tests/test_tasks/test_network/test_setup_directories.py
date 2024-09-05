@@ -21,6 +21,7 @@ from typing import Dict, Union
 import pytest
 
 from tasks.network.setup_directories import DirectoryOrganizer
+from tasks.network.manage_remote import RemoteServerMixin
 
 # Path to mock data
 PATH_MOCK_DATA = Path(__file__).parent / "mock_data"
@@ -116,6 +117,43 @@ def test_init_directory_organizer(remote):
     assert organizer.remote == remote
     assert isinstance(organizer.root_path, Path)
     assert isinstance(organizer.directory_structure, dict)
+
+
+@pytest.mark.parametrize(
+    "root_path_provided, remote",
+    argvalues=[(True, True), (False, True), (False, False)],
+    ids=["root_path_provided", "remote_default", "local_default"],
+)
+def test_root_path(root_path_provided, remote, tmp_path):
+    """
+    Test for correct assignment of the attribute :attr:`root_path` depending on the case.
+
+    Test Inputs
+    -----------
+    root_path_provided : bool
+        Whether the `root_path` argument is provided.
+    remote : bool
+        Whether the `remote` argument is True.
+    tmp_path : pathlib.Path
+        Temporary directory path, used as the argument `root_path` in the test.
+
+    Expected Output
+    ---------------
+    If the argument `root_path` is provided, it should be set in the attribute.
+    If it is not provided, then its values depends on the mode (remote or local).
+    If `remote` is False, it is set to the default value defined as the class attribute
+    :attr:`default_root` in the class :class:`RemoteServerMixin`.
+    If `remote` is True, it should be set by the method :meth:`get_root_path` in the class.
+    """
+    if root_path_provided:
+        organizer = DirectoryOrganizer(root_path=tmp_path, remote=remote)
+        assert organizer.root_path == tmp_path
+    else:
+        organizer = DirectoryOrganizer(remote=remote)
+        if remote:
+            assert organizer.root_path == RemoteServerMixin.default_root
+        else:
+            assert organizer.root_path == DirectoryOrganizer.get_root_path()
 
 
 def test_load_directory_structure(mock_structure):
