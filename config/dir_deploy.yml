@@ -1,0 +1,10 @@
+# =================================================================================
+# dir_deploy.yml
+# Directory structure to deploy on the data hub.
+#
+# Structure and Format: See conventions in `tasks.network.setup_directories`.
+# =================================================================================
+
+setup: {}
+ops: {}
+src: {}
