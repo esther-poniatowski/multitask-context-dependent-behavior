@@ -93,13 +93,13 @@ Classes
 """
 
 import argparse
+import os
 from pathlib import Path
 from typing import Dict, Union, Optional
 
-from dotenv import dotenv_values
 import yaml
 
-from manage_remote import RemoteServerMixin
+from tasks.network.manage_remote import RemoteServerMixin
 from utils.path_system.explorer import is_dir, create_dir
 
 # Type alias for the directory structure
@@ -162,7 +162,7 @@ class DirectoryOrganizer(RemoteServerMixin):
         Path
             Root path for directory organization.
         """
-        root_value = dotenv_values().get("ROOT")
+        root_value = os.environ.get("ROOT")
         return Path(root_value) if root_value is not None else Path.cwd()
 
     def create_directories(
@@ -296,5 +296,5 @@ def main():
     organizer.create_directories()
 
 
-# if __name__ == "__main__":
-# main()
+if __name__ == "__main__":
+    main()
