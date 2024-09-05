@@ -10,6 +10,7 @@ Sub-Packages
 See Also
 --------
 :mod:`network`: Tested package.
+:mod:`mocker`: Pytest plugin for mocking objects.
 
 Notes
 -----
