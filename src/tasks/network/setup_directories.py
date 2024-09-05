@@ -141,6 +141,8 @@ class DirectoryOrganizer(RemoteServerMixin):
         super().__init__()  # initialize RemoteServerMixin
         self.remote = remote
         self.dry_run = dry_run
+        if root_path is not None:  # set root_path manually if provided
+            self.root_path = root_path
         if root_path is None:
             if not remote:  # local server: set root_path from environment variable (or cwd)
                 self.root_path = self.get_root_path()
