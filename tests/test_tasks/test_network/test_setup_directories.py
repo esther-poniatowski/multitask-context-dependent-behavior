@@ -72,7 +72,9 @@ def test_get_root_path(root_set, tmp_path):
     root_set : bool
         Whether to set the ROOT environment variable.
     tmp_path : pathlib.Path
-        Temporary directory path used as the root directory if `root_set` is False.
+        Temporary directory path.
+        If `root_set` is False, used as the current working directory.
+        If `root_set` is True, used as the root path environment variable.
 
     Expected Output
     ---------------
@@ -83,14 +85,12 @@ def test_get_root_path(root_set, tmp_path):
     # Arrange the test by configuring the ROOT environment variable
     if root_set:  # export the ROOT environment variable in the current shell session
         os.environ["ROOT"] = str(tmp_path)
-    else:  # unset the ROOT environment variable
+    else:  # unset the ROOT environment variable and change the current working directory
         os.environ.pop("ROOT", None)
-    # Test the function
+        os.chdir(tmp_path)
+    # Check the root path (same in both test cases)
     root_path = DirectoryOrganizer.get_root_path()
-    if root_set:
-        assert root_path == tmp_path, "Root path not set from environment variable"
-    else:
-        assert root_path == Path.cwd(), "Root path not set to the current working directory"
+    assert root_path == tmp_path, "Root path not set"
     # Restore the previous value of ROOT environment variable
     if save_root is not None:
         os.environ["ROOT"] = save_root
@@ -165,7 +165,7 @@ def test_create_directories(mock_structure, tmp_path, expected_paths, dry_run):
     organizer = DirectoryOrganizer(
         root_path=tmp_path, directory_structure=mock_structure, dry_run=dry_run, remote=False
     )
-    organizer.create_directories()  # no arguments to use the attributes as defaults
+    organizer.create_directories()  # no arguments, to use the attributes as defaults
     if not dry_run:  # check directories' creation
         for path in expected_paths:
             assert path.exists(), f"Directory {path} not created"
