@@ -20,7 +20,7 @@ See Also
 
 import pytest
 
-from test_utils.test_io.mock_data import (  # dummy data
+from mock_data.python_objects import (
     data_list,
     data_dict,
     data_array,

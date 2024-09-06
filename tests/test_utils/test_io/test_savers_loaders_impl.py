@@ -25,7 +25,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from test_utils.test_io.mock_data import (  # dummy data
+from mock_data.python_objects import (
     data_list,
     data_dict,
     data_array,
@@ -35,12 +35,13 @@ from test_utils.test_io.mock_data import (  # dummy data
     data_array_str,
     data_obj,
     expected_from_list,
-    data_list_yml,
-    data_dict_yml,
-    PATH_MOCK_DATA,
 )
+from mock_data.match_content import PATH_MOCK_DATA, data_list_yml, data_dict_yml
 from utils.io_data.loaders.impl import LoaderCSV, LoaderNPY, LoaderPKL, LoaderDILL, LoaderYAML
 from utils.io_data.savers.impl import SaverCSV, SaverNPY, SaverPKL, SaverDILL
+
+
+PATH_MOCK_DATA = Path(__file__).parent / "mock_data"
 
 
 @pytest.mark.parametrize(
