@@ -41,9 +41,6 @@ from utils.io_data.loaders.impl import LoaderCSV, LoaderNPY, LoaderPKL, LoaderDI
 from utils.io_data.savers.impl import SaverCSV, SaverNPY, SaverPKL, SaverDILL
 
 
-PATH_MOCK_DATA = Path(__file__).parent / "mock_data"
-
-
 @pytest.mark.parametrize(
     "data, expected, tpe",
     argvalues=[
@@ -199,8 +196,8 @@ def test_saver_loader_dill(tmp_path):
 @pytest.mark.parametrize(
     "tpe, expected, filename",
     argvalues=[
-        ("list", data_list_yml, "data_list.yaml"),
-        ("dict", data_dict_yml, "data_dict.yaml"),
+        ("list", data_list_yml, "data_list.yml"),
+        ("dict", data_dict_yml, "data_dict.yml"),
     ],
     ids=["list", "dict"],
 )
