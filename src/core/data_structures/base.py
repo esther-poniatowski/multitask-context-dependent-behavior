@@ -17,7 +17,7 @@ from typing import Tuple, List, Dict, FrozenSet, Mapping, Type, TypeVar, Generic
 import numpy as np
 import numpy.typing as npt
 
-from utils.path_system.storage_rulers.base import PathRuler
+from utils.storage_rulers.base import PathRuler
 from utils.io_data.formats import TargetType
 from utils.io_data.loaders.base import Loader
 from utils.io_data.loaders.impl import LoaderDILL
