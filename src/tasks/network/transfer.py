@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`transfer` [module]
+:mod:`tasks.network.transfer` [module]
 
 Transfers files and directories between a local workspace and a remote server.
 
 Functionalities:
 
-- Transfer in both directions (upload and download).
-- Organize the new directory structure.
+- Transfer in both directions: upload (from local to remote) and download (from remote to local).
+- Process a sync map to transfer multiple files and directories at once.
 
 Arguments
 ---------
@@ -54,8 +54,6 @@ Structure of the input sync map in the `sync_map.yml` file:
      - source: path/to/source/directory/
        destination: path/to/destination/directory/
      - source: path/to/source/file.ext
-       destination: path/to/destination/file.ext
-     - source: path/to/source/file.ext
        destination: path/to/destination/directory/
      - source: path/to/source/file.ext
        destination: path/to/destination/directory/new_name.ext
@@ -66,7 +64,6 @@ Structure of the output sync map processed by the :class:`TransferManager` class
 
     [
         {"source": "path/to/source/directory/", "destination": "path/to/destination/directory/"},
-        {"source": "path/to/source/file.ext", "destination": "path/to/destination/file.ext"},
         {"source": "path/to/source/file.ext", "destination": "path/to/destination/directory/"},
         {"source": "path/to/source/file.ext", "destination": "path/to/destination/directory/new_name.ext"}
     ]
@@ -85,10 +82,16 @@ from pathlib import Path
 import subprocess
 from typing import Dict, List, Union, Optional
 
-from dotenv import dotenv_values
+import yaml
 
 from utils.io_data.loaders.impl import LoaderYAML
 from utils.io_data.formats import TargetType
+from utils.path_system.local_server import LocalServer
+from utils.path_system.remote_server import RemoteServer
+
+
+SyncMapType = List[Dict[str, Path]]
+"""Type alias for the sync map: list of dictionaries with string keys and Path values. """
 
 
 class TransferManager:
@@ -97,11 +100,8 @@ class TransferManager:
 
     Class Attributes
     ----------------
-    remote_cred : Dict[str, str]
-        Mapping of the class attributes to the corresponding environment variables in the `.env`
-        file containing the remote server's credentials.
-    attr_types : Dict[str, type]
-        Mapping of the class attributes to their respective types.
+    valid_directions : List[str]
+        List of valid directions for the transfer: "upload" and "download".
 
     Attributes
     ----------
@@ -109,21 +109,30 @@ class TransferManager:
         Username on the remote server.
     host : str
         IP address or hostname of the remote server.
-    root_path : Path
-        Path of the root directory of the workspace on the remote server.
+    root_remote : Path
+        Custom path of the root directory of the workspace on the remote server.
+    root_local : Path
+        Custom path of the root directory of the workspace on the local machine.
+    remote_server : :class:`RemoteServer`
+        Remote server instance.
+    local_server : :class:`LocalServer`
+        Local server instance.
     sync_map : List of Dict[str, Path]
         Mapping of local paths (files and directories) to the corresponding remote paths as
         specified in the `sync-map.yml` file.
+    direction : {"upload", "download"}
+        Direction of the transfer: "upload" to send files to the remote server, "download" to
+        retrieve files from the remote server.
     dry_run : bool, default=False
         If True, operations are only simulated rather than executed.
 
     Methods
     -------
-    :meth:`upload`
-    :meth:`download`
-    :meth:`ensure_dest_dir_exists`
+    :meth:`transfer`
+    :meth:`process_map`
+    :meth:`_check_direction`
+    :meth:`_run_rsync`
     :meth:`load_sync_map`
-    :meth:`load_network_config`
 
     See Also
     --------
@@ -136,114 +145,87 @@ class TransferManager:
         Execute a command in a subprocess.
     """
 
-    remote_cred = {"user": "USER", "host": "HOST", "root_path": "ROOT"}
-    attr_types = {"user": str, "host": str, "root_path": Path}
+    valid_directions = ["upload", "download"]
 
     def __init__(
         self,
         user: Optional[str] = None,
         host: Optional[str] = None,
-        root_path: Optional[Union[Path, str]] = None,
-        sync_map: Optional[List[Dict[str, Path]]] = None,
+        root_remote: Optional[Union[Path, str]] = None,
+        root_local: Optional[Union[Path, str]] = None,
+        sync_map: Optional[SyncMapType] = None,
+        direction: str = "upload",
         dry_run: bool = False,
     ):
         self.user = user
         self.host = host
-        if root_path is not None:
-            root_path = Path(root_path).resolve()  # absolute path
-        else:
-            root_path = Path("~/mtcdb").resolve()  # default: user home directory + project name
-        self.root_path = root_path
+        self.remote_server = RemoteServer(user=user, host=host, root_path=root_remote)
+        self.local_server = LocalServer(root_path=root_local)
         self.sync_map = sync_map if sync_map is not None else []  # avoid TypeError
+        self._check_direction(direction)
+        self.direction = direction
         self.dry_run = dry_run
 
-    def upload(self, source_path: Path, destination_path: Path):
+    def transfer(self, local_path: Path, remote_path: Path):
         """
-        Upload files or directories to the remote server from the local machine.
+        Upload or download one file or directory between the local machine and the remote server.
 
         Arguments
         ---------
-        source_path : Path
-            Path to the file or directory to upload on the local machine.
-        destination_path : Path
-            Path to the destination file or directory on the remote server.
+        local_path : Path
+            Path to the file or directory to transfer on the local machine.
+        remote_path : Path
+            Path to the destination file or directory to transfer on the remote server.
         """
-        source_full_path = source_path.resolve()  # local path
-        destination_full_path = self.root_path / destination_path  # remote path
-        self.ensure_remote_dir_exists(destination_full_path)
-        self._run_rsync(str(source_full_path), f"{self.user}@{self.host}:{destination_full_path}")
+        # Build full paths
+        local_full_path = self.local_server.build_path(local_path)
+        remote_full_path = self.remote_server.build_path(remote_path)
+        # Set source and destination paths based on the transfer direction
+        if self.direction == "upload":
+            self.remote_server.is_dir(remote_full_path)
+            source = str(local_full_path)
+            destination = f"{self.user}@{self.host}:{remote_full_path}"
+        elif self.direction == "download":
+            self.local_server.is_dir(local_full_path)
+            source = f"{self.user}@{self.host}:{remote_full_path}"
+            destination = str(local_full_path)
+        # Transfer files or directories
+        print(f"[INFO] Transfer from {source} to {destination}")
+        self._run_rsync(source, destination)
 
-    def download(self, source_path: Path, destination_path: Path):
+    def process_map(self):
         """
-        Download files or directories from the remote server to the local machine.
-
-        Arguments
-        ---------
-        source_path : Path
-            Path to the file or directory to download on the remote server.
-        destination_path : Path
-            Path to the destination file or directory on the local machine.
-        """
-        source_full_path = self.root_path / source_path  # remote path
-        destination_full_path = destination_path.resolve()  # local path
-        self.ensure_local_dir_exists(destination_full_path)
-        self._run_rsync(f"{self.user}@{self.host}:{source_full_path}", str(destination_full_path))
-
-    def ensure_remote_dir_exists(self, destination_path: Path):
-        """
-        Ensure that a destination directory structure exists on the remote server.
+        Transfer all files or directories specified in the sync map.
 
         Arguments
         ---------
-        destination_path : Path
-            Full path to a destination directory.
+        direction : str, {"upload", "download"}
+            Direction of the transfer: see :meth:`_check_direction`.
 
         See Also
         --------
-        :command:`test`
-            Check file types and compare values.
-            Option `-d`: Check if the path is a directory.
-            Syntax: `test -d <path>` to check if the path is a directory.
-        :command:`mkdir`
-            Create a directory at the given path if it does not exist.
-            Option `-p`: Create parent directories as needed.
+        :meth:`transfer`
         """
-        directory = destination_path.parent  # extract directory path (parent)
-        full_path = self.root_path / directory
-        check_command = ["ssh", f"{self.user}@{self.host}", f"test -d {full_path}"]
-        result = subprocess.run(check_command, check=False)
-        if result.returncode == 0:
-            print(f"Existing directory: {full_path} on {self.host}")
-        elif not self.dry_run:
-            create_command = ["ssh", f"{self.user}@{self.host}", f"mkdir -p {full_path}"]
-            subprocess.run(create_command, check=True)
-            print(f"Created directory: {full_path} on {self.host}")
+        print(f"[INFO] Process sync map. Direction: {self.direction}.")
+        for paths in self.sync_map:
+            self.transfer(paths["source"], paths["destination"])
 
-    def ensure_local_dir_exists(self, destination_path: Path):
+    def _check_direction(self, direction: str):
         """
-        Ensure that a destination directory structure exists on the local machine.
+        Check if the direction of the transfer is valid.
 
         Arguments
         ---------
-        destination_path : Path
-            Full path to a destination directory.
+        direction : {"upload", "download"}
+            Direction of the transfer.
 
-        See Also
-        --------
-        :meth:`Path.exists`
-            Check if the path exists.
-        :meth:`Path.mkdir`
-            Create a directory at the given path if it does not exist.
-            Option `parents=True`: Create parent directories as needed.
-            Option `exist_ok=True`: Do not raise an error if the directory already exists.
+        Raises
+        ------
+        ValueError
+            If the direction is not valid.
         """
-        directory = destination_path.parent  # extract directory path (parent)
-        full_path = directory.resolve()
-        if directory.exists():
-            print(f"Existing directory: {full_path} on the local machine")
-        elif not self.dry_run:
-            directory.mkdir(parents=True, exist_ok=True)
-            print(f"Created directory: {full_path} on the local machine")
+        if direction not in self.valid_directions:
+            raise ValueError(f"[ERROR] Invalid direction: {direction} ('upload'/'download')")
 
     def _run_rsync(self, source: str, destination: str):
         """
@@ -273,6 +255,7 @@ class TransferManager:
         -------
         Paths should be strings to be passed to the subprocess command.
         """
+        print(f"[INFO] Rsync from {source} to {destination}")
         command = ["rsync", "-avz"]
         if self.dry_run:
             command.append("--dry-run")
@@ -288,43 +271,31 @@ class TransferManager:
         path : Union[Path, str]
             Path to the YAML file containing the sync map.
 
+        Raises
+        ------
+        yaml.YAMLError
+            If the YAML file cannot be loaded.
+        ValueError
+            If the sync map is not a list of dictionaries.
+
         See Also
         --------
         :class:`utils.io_data.loaders.impl.LoaderYAML`
         """
         path = Path(path).resolve()  # absolute path
-        loader = LoaderYAML(path, tpe=TargetType.DICT)
-        raw_map = loader.load()
-        # Set paths in the dictionary self.syn_map as Path objects
-        self.sync_map = [{key: Path(value) for key, value in paths.items()} for paths in raw_map]
-
-    def load_network_config(self, path: Union[Path, str]):
-        """
-        Extract user, host, and root path from a `.env` file and set corresponding attributes.
-
-        Arguments
-        ---------
-        path : str
-            Path to the `.env` file containing the network settings.
-
-        Raises
-        ------
-        ValueError
-            If the `.env` file does not contain the required network settings.
-
-        See Also
-        --------
-        :func:`dotenv_values`
-            Load environment variables from a .env file into a python dictionary, whose keys are the
-            variable names and values are the values specified in the file.
-        """
-        path = Path(path).resolve()  # absolute path
-        env_content = dotenv_values(path)
-        connection_settings = {attr: env_content[var] for attr, var in self.remote_cred.items()}
-        for key, value in connection_settings.items():
-            if not value:
-                raise ValueError(f"Missing network setting in .env file: {key}")
-            setattr(self, key, self.attr_types[key](value))
+        try:
+            loader = LoaderYAML(path, tpe=TargetType.DICT)
+            raw_map = loader.load()
+            print(f"[SUCCESS] Load directory structure from YAML file at: {path}")
+            if not isinstance(raw_map, list):  # ensure correct structure
+                raise ValueError(f"[ERROR] Invalid type: {type(raw_map)} (expected List[Dict])")
+            # If correct, set paths in the dictionary self.syn_map as Path objects
+            self.sync_map = [
+                {key: Path(value) for key, value in paths.items()} for paths in raw_map
+            ]
+        except yaml.YAMLError as exc:
+            print(f"[ERROR] Failed loading YAML file: {exc}")
+            raise exc
 
 
 def main():
@@ -352,23 +323,17 @@ def main():
     parser.add_argument(
         "--dry-run",
         action="store_true",  # flag to set the dry_run attribute to True
-        help="Simulate the operations without executing them.",
+        help="Simulate operations without executing them.",
     )
     args = parser.parse_args()
 
     # Initialize the transfer manager
-    transfer_manager = TransferManager(dry_run=args.dry_run)
+    transfer_manager = TransferManager(direction=args.direction, dry_run=args.dry_run)
     # Load configurations from files
-    transfer_manager.load_network_config(args.env_path)
+    transfer_manager.remote_server.load_network_config(args.env_path)
     transfer_manager.load_sync_map(args.sync_map_path)
-
     # Perform the transfer based on direction
-    if args.direction == "upload":
-        for paths in transfer_manager.sync_map:
-            transfer_manager.upload(paths["source"], paths["destination"])
-    elif args.direction == "download":
-        for paths in transfer_manager.sync_map:
-            transfer_manager.download(paths["source"], paths["destination"])
+    transfer_manager.process_map()
 
 
 if __name__ == "__main__":
