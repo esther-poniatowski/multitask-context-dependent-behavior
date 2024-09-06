@@ -101,9 +101,12 @@ import yaml
 
 from tasks.network.manage_remote import RemoteServerMixin
 from utils.path_system.explorer import is_dir, create_dir
+from utils.io_data.loaders.impl import LoaderYAML
+from utils.io_data.formats import TargetType
 
-# Type alias for the directory structure
+
 StructureType = Dict[str, Union[Dict, str]]
+"""Type alias for the directory structure: Nested dictionary representing the directory tree."""
 
 
 class DirectoryOrganizer(RemoteServerMixin):
@@ -251,14 +254,19 @@ class DirectoryOrganizer(RemoteServerMixin):
         ------
         yaml.YAMLError
             If an error occurs while loading the YAML file.
+
+        See Also
+        --------
+        :class:`utils.io_data.loaders.impl.LoaderYAML`
         """
+        path = Path(path).resolve()  # absolute path
         try:
-            with open(path, "r", encoding="utf-8") as file:
-                print(f"[SUCCESS] Load directory structure from YAML file at: {path}")
-                self.directory_structure = yaml.safe_load(file)
-            # Ensure the structure is a dictionary
-            if not isinstance(self.directory_structure, dict):
+            loader = LoaderYAML(path, tpe=TargetType.DICT)
+            directory_structure = loader.load()
+            print(f"[SUCCESS] Load directory structure from YAML file at: {path}")
+            if not isinstance(directory_structure, dict):  # ensure correct structure
                 raise ValueError("[ERROR] Directory structure must be a dictionary.")
+            self.directory_structure = directory_structure  # update instance attribute if correct
         except yaml.YAMLError as e:
             print(f"[ERROR] Failed loading YAML file: {e}")
             raise e
@@ -297,8 +305,6 @@ def main():
         organizer.load_network_config(args.env_path)
     # Load the directory structure from the YAML file
     organizer.load_directory_structure(args.yml_dirstruct_path)
-    print(f"[INFO] Directory structure: {organizer.directory_structure}")
-    print(f"[INFO] Path: {args.yml_dirstruct_path}")
     # Create the directory structure (locally or remotely)
     organizer.create_directories()
 
