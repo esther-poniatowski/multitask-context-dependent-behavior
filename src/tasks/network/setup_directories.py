@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`setup_directories` [module]
+:mod:`tasks.network.setup_directories` [module]
 
 Organize directory structures on a server (local or remote) based on a YAML configuration.
 
