@@ -33,14 +33,16 @@ def test_load_network_config(mock_credentials):
 
     Expected Output
     ---------------
-    RemoteServerMixin attributes : `user`, `host`, `root_path` loaded from the `.env` file.
+    RemoteServerMixin attributes : `user`, `host`, `root_remote` loaded from the `.env` file.
     """
     env_path = PATH_MOCK_ENV
     remote_manager = RemoteServerMixin()
     remote_manager.load_network_config(env_path)
     assert remote_manager.user == mock_credentials["user"], "User not loaded"
     assert remote_manager.host == mock_credentials["host"], "Host not loaded"
-    assert remote_manager.root_path == Path(mock_credentials["root_path"]), "Root path not loaded"
+    assert remote_manager.root_remote == Path(
+        mock_credentials["root_remote"]
+    ), "Root path not loaded"
 
 
 @pytest.mark.parametrize(
@@ -72,7 +74,7 @@ def test_is_dir_remote(directory_exists, mock_credentials, mocker):
     """
     remote_manager = RemoteServerMixin(**mock_credentials)
     directory_path = "/path/to/directory"
-    directory_full_path = mock_credentials["root_path"] / directory_path
+    directory_full_path = mock_credentials["root_remote"] / directory_path
     mock_run = mocker.patch("subprocess.run")
     mock_run.return_value = mocker.Mock(returncode=0 if directory_exists else 1)
     result = remote_manager.is_dir_remote(Path(directory_path))
