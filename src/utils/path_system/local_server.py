@@ -34,9 +34,9 @@ class LocalServer(ServerInterface):
     """
 
     def __init__(self, root_path: Optional[Union[str, Path]] = None):
-        if root_path is not None:  # set using get_root()
+        if root_path is None:  # if no custom path, set using get_root()
             root_path = self.get_root()
-        super().__init__(root_path=root_path)  # if still None, set to default_root
+        super().__init__(root_path=root_path)  # if still None: `ServerInterface.default_root`
 
     def get_root(self) -> Union[Path, None]:
         """
