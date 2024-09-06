@@ -13,9 +13,59 @@ Notes
 This test suite is focused on the methods of the :class:`LocalServer` concrete subclass, but some
 methods are inherited from the :class:`ServerInterface` abstract class.
 """
+import os
+from pathlib import Path
 import pytest
 
 from utils.path_system.local_server import LocalServer
+
+
+@pytest.mark.parametrize(
+    "root_mode", argvalues=["custom", "env", "default"], ids=["custom", "env", "default"]
+)
+def test_get_root(root_mode, tmp_path):
+    """
+    Test for :meth:.get_root`.
+
+    Test Inputs
+    -----------
+    root_mode : {"custom", "env", "default"}
+        Mode according to which the root path is set.
+    tmp_path : pathlib.Path
+        If `root_set` is True, used as the root path environment variable.
+
+    Expected Output
+    ---------------
+    If `root_mode` is "custom": Set to `custom_root`.
+    If `root_mode` is "env": Set to `env_root`.
+    If `root_mode` is "default": Set to the default root path defined in :class:`ServerInterface`,
+    i.e. Path("~/mtcdb").
+    """
+    # Change the current working directory to avoid trivial cases
+    saved_dir = os.getcwd()
+    os.chdir(tmp_path)
+    # Configure the ROOT environment variable
+    saved_root = os.environ.get("ROOT")
+    if root_mode == "custom":
+        expected_root = "custom_root"
+        root_arg = expected_root
+    elif root_mode == "env":  # export the ROOT environment variable in the current shell session
+        expected_root = "env_root"
+        root_arg = None
+        os.environ["ROOT"] = expected_root
+    elif root_mode == "default":  # unset the ROOT environment variable
+        expected_root = LocalServer.default_root
+        root_arg = None
+        os.environ.pop("ROOT", None)
+    # Check the root path (same in both test cases)
+    server = LocalServer(root_path=root_arg)
+    assert server.root_path == Path(expected_root), "Root path not set"
+    # Restore the previous state of the environment
+    os.chdir(saved_dir)
+    if saved_root is not None:
+        os.environ["ROOT"] = saved_root
+    else:
+        os.environ.pop("ROOT", None)
 
 
 @pytest.mark.parametrize("exists", argvalues=[True, False], ids=["existing", "non-existing"])
