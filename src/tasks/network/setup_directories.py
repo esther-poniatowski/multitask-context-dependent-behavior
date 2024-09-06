@@ -99,8 +99,8 @@ from typing import Dict, Union, Optional
 
 import yaml
 
-from tasks.network.manage_remote import RemoteServerMixin
-from utils.path_system.explorer import is_dir, create_dir
+from utils.path_system.local_server import LocalServer
+from utils.path_system.remote_server import RemoteServer
 from utils.io_data.loaders.impl import LoaderYAML
 from utils.io_data.formats import TargetType
 
@@ -109,22 +109,25 @@ StructureType = Dict[str, Union[Dict, str]]
 """Type alias for the directory structure: Nested dictionary representing the directory tree."""
 
 
-class DirectoryOrganizer(RemoteServerMixin):
+class DirectoryOrganizer:
     """
     Organize directory structures on a server (local or remote) based on a YAML file.
 
+    Parameters
+    ----------
+    remote : bool, default=False
+        Whether the directories are being organized on a remote server.
+    root_path : Optional[Path], optional
+        Custom root path for the directory structure to provide to the server.
+
     Attributes
     ----------
-    root_path : Path, optional
-        Root path for directory organization on the server.
-        If not provided and :attr:`remote` is True, it is set to :attr:`root_remote` from the mixin class.
-        If not provided and :attr:`remote` is False, it is set by :meth:`get_root_local`.
+    server : Union[LocalServer, RemoteServer]
+        Server instance to organize the directory structure.
     directory_structure : Dict[str, Union[Dict, List[str]]], optional
         Directory structure to organize as specified in the YAML file.
     dry_run : bool, default=False
         If True, operations are only simulated rather than executed.
-    remote : bool, default=False
-        Whether the directories are being organized on a remote server.
 
     Methods
     -------
@@ -136,40 +139,19 @@ class DirectoryOrganizer(RemoteServerMixin):
 
     def __init__(
         self,
+        remote: bool = False,
         root_path: Optional[Path] = None,
         directory_structure: Optional[StructureType] = None,
         dry_run: bool = False,
-        remote: bool = False,
     ):
-        super().__init__()  # initialize RemoteServerMixin
-        self.remote = remote
-        self.dry_run = dry_run
-        if root_path:  # set root_path manually
-            self.root_path = root_path
+        if remote:
+            self.server = RemoteServer(root_path=root_path)
         else:
-            if not remote:  # local server: set root_path from environment variable (or cwd)
-                self.root_path = self.get_root_local()
-            else:  # remote server: set form root_remote from RemoteServerMixin
-                if not hasattr(self, "root_remote"):
-                    raise ValueError("[ERROR] Attribute `RemoteServerMixin.root_remote` not set.")
-                self.root_path = self.root_remote
+            self.server = LocalServer(root_path=root_path)
+        if not hasattr(self.server, "root_path"):
+            raise ValueError("[ERROR] Attribute `root_path` not set.")
+        self.dry_run = dry_run
         self.directory_structure = directory_structure if directory_structure is not None else {}
-
-    @staticmethod
-    def get_root_local() -> Path:
-        """
-        Get the root path for directory organization on the local server.
-
-        - If the `ROOT` environment variable is set, it is used as the root path.
-        - Otherwise, the root path defaults to the current working directory.
-
-        Returns
-        -------
-        Path
-            Root path for directory organization.
-        """
-        root_value = os.environ.get("ROOT")
-        return Path(root_value) if root_value is not None else Path.cwd()
 
     def create_directories(
         self, current_path: Optional[Path] = None, structure: Optional[StructureType] = None
@@ -202,45 +184,21 @@ class DirectoryOrganizer(RemoteServerMixin):
         - If the directory already exists, skip the creation and continue with the next directory.
         """
         if current_path is None:
-            current_path = self.root_path
+            current_path = self.server.root_path
         if structure is None:
             structure = self.directory_structure
-        for key, value in structure.items():
-            dir_path = current_path / key
-            if not self.check_dir_exists(dir_path):
+        for new_dir, new_struct in structure.items():
+            dir_path = current_path / new_dir
+            if not self.server.is_dir(dir_path):
                 try:
                     if not self.dry_run:
-                        if self.remote:
-                            self.create_dir_remote(dir_path)  # method from RemoteServerMixin
-                        else:
-                            create_dir(dir_path)  # utility function from utils.path_system.explorer
-                    else:  # simulate directory creation
+                        self.server.create_dir(dir_path)
+                    else:
                         print(f"[DRY-RUN] Would create directory: {dir_path}")
-                except Exception as e:
-                    print(f"[ERROR] Failed to create directory {dir_path}: {e}")
-            if isinstance(value, dict):  # recursively create subdirectories
-                self.create_directories(dir_path, value)
-
-    def check_dir_exists(self, path: Path):
-        """
-        Determines whether a directory exists on the server.
-
-        Run the appropriate method based on the server type (local or remote).
-
-        Arguments
-        ---------
-        path : Path
-            Full path to a directory on the server.
-
-        Returns
-        -------
-        bool
-            True if the directory exists, False otherwise.
-        """
-        if self.remote:
-            return self.is_dir_remote(path)  # method from RemoteServerMixin
-        else:
-            return is_dir(path)  # utility function from utils.path_system.explorer
+                except Exception as exc:
+                    print(f"[ERROR] Failed to create directory {dir_path}: {exc}")
+            if isinstance(new_struct, dict):  # recursively create subdirectories
+                self.create_directories(dir_path, new_struct)
 
     def load_directory_structure(self, path: Union[Path, str]):
         """
@@ -268,9 +226,9 @@ class DirectoryOrganizer(RemoteServerMixin):
             if not isinstance(directory_structure, dict):  # ensure correct structure
                 raise ValueError("[ERROR] Directory structure must be a dictionary.")
             self.directory_structure = directory_structure  # update instance attribute if correct
-        except yaml.YAMLError as e:
-            print(f"[ERROR] Failed loading YAML file: {e}")
-            raise e
+        except yaml.YAMLError as exc:
+            print(f"[ERROR] Failed loading YAML file: {exc}")
+            raise exc
 
 
 def main():
@@ -300,10 +258,10 @@ def main():
     remote = args.env_path is not None
 
     # Initialize the directory organizer
-    organizer = DirectoryOrganizer(dry_run=args.dry_run, remote=remote)
+    organizer = DirectoryOrganizer(remote=remote, dry_run=args.dry_run)
     # Load remote network configuration if env-path is provided
     if remote:
-        organizer.load_network_config(args.env_path)
+        organizer.server.load_network_config(args.env_path)
     # Load the directory structure from the YAML file
     organizer.load_directory_structure(args.yml_dirstruct_path)
     # Create the directory structure (locally or remotely)
