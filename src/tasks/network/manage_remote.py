@@ -39,7 +39,7 @@ class RemoteServerMixin:
         Username on the remote server.
     host : str
         IP address or hostname of the remote server.
-    root_path : Path
+    root_remote : Path
         Root directory path on the remote server.
 
     Methods
@@ -56,19 +56,19 @@ class RemoteServerMixin:
     mixin class is inherited by a class which also manages local directories.
     """
 
-    remote_cred = {"user": "USER", "host": "HOST", "root_path": "ROOT"}
-    attr_types = {"user": str, "host": str, "root_path": Path}
+    remote_cred = {"user": "USER", "host": "HOST", "root_remote": "ROOT"}
+    attr_types = {"user": str, "host": str, "root_remote": Path}
     default_root = Path("~/mtcdb").expanduser()
 
     def __init__(
         self,
         user: Optional[str] = None,
         host: Optional[str] = None,
-        root_path: Union[Path, str] = default_root,
+        root_remote: Union[Path, str] = default_root,
     ):
         self.user = user
         self.host = host
-        self.root_path = Path(root_path).resolve()
+        self.root_remote = Path(root_remote).resolve()
 
     def load_network_config(self, path: Union[Path, str]) -> None:
         """
@@ -93,7 +93,7 @@ class RemoteServerMixin:
                 raise ValueError(f"Missing network setting in .env file: {key}")
             setattr(self, key, self.attr_types[key](value))
         print(f"Credentials for the remote server: {self.user}@{self.host}")
-        print(f"Root path: {self.root_path}")
+        print(f"Root path: {self.root_remote}")
 
     def build_path_remote(self, path: Path) -> Path:
         """
@@ -109,7 +109,7 @@ class RemoteServerMixin:
         full_path: Path
             Full path on the remote server, encompassing the root path.
         """
-        return self.root_path / path
+        return self.root_remote / path
 
     def is_dir_remote(self, path: Path) -> bool:
         """

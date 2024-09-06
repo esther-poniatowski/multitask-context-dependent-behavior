@@ -117,8 +117,8 @@ class DirectoryOrganizer(RemoteServerMixin):
     ----------
     root_path : Path, optional
         Root path for directory organization on the server.
-        If not provided and :attr:`remote` is True, it is set when the mixin class is initialized.
-        If not provided and :attr:`remote` is False, see :meth:`get_root_path`.
+        If not provided and :attr:`remote` is True, it is set to :attr:`root_remote` from the mixin class.
+        If not provided and :attr:`remote` is False, it is set by :meth:`get_root_local`.
     directory_structure : Dict[str, Union[Dict, List[str]]], optional
         Directory structure to organize as specified in the YAML file.
     dry_run : bool, default=False
@@ -128,7 +128,7 @@ class DirectoryOrganizer(RemoteServerMixin):
 
     Methods
     -------
-    :meth:`get_root_path` (static method)
+    :meth:`get_root_local` (static method)
     :meth:`create_directories`
     :meth:`check_dir_exists`
     :meth:`load_directory_structure`
@@ -144,18 +144,19 @@ class DirectoryOrganizer(RemoteServerMixin):
         super().__init__()  # initialize RemoteServerMixin
         self.remote = remote
         self.dry_run = dry_run
-        if root_path is not None:  # set root_path manually if provided
+        if root_path:  # set root_path manually
             self.root_path = root_path
-        if root_path is None:
+        else:
             if not remote:  # local server: set root_path from environment variable (or cwd)
-                self.root_path = self.get_root_path()
-            else:  # remote server: check if root_path is set by RemoteServerMixin
-                if not hasattr(self, "root_path"):
-                    raise ValueError("[ERROR] Attribute `root_path` not set.")
+                self.root_path = self.get_root_local()
+            else:  # remote server: set form root_remote from RemoteServerMixin
+                if not hasattr(self, "root_remote"):
+                    raise ValueError("[ERROR] Attribute `RemoteServerMixin.root_remote` not set.")
+                self.root_path = self.root_remote
         self.directory_structure = directory_structure if directory_structure is not None else {}
 
     @staticmethod
-    def get_root_path() -> Path:
+    def get_root_local() -> Path:
         """
         Get the root path for directory organization on the local server.
 
