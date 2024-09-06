@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Mapping, Union, TypeVar, Generic
 
 from utils.io_data.formats import FileExt, TargetType
-from utils.path_system.explorer import check_path, is_file, enforce_ext
+from utils.path_system.explorer import is_file, enforce_ext
 
 
 T = TypeVar("T")
@@ -61,7 +61,7 @@ class Loader(ABC, Generic[T]):
     :class:`utils.io_data.formats.FileExt`: File extensions.
     :class:`utils.io_data.formats.TargetType`: Target types.
     :class:`abc.ABC`: Abstract base class.
-    :func:`utils.path_system.explorer.check_path`: Check the existence of a path in the file system.
+    :func:`utils.path_system.explorer.is_file`: Check the existence of a file at a path in the system.
     :func:`utils.path_system.explorer.enforce_ext`: Enforce the correct file extension.
 
     Notes
@@ -93,7 +93,6 @@ class Loader(ABC, Generic[T]):
         T
             Data loaded in the target type.
         """
-        check_path(self.path)
         is_file(self.path)
         self.path = enforce_ext(self.path, self.ext)
         print(f"Load: {self.path}")

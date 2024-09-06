@@ -37,12 +37,10 @@ from test_utils.test_io.mock_data import (  # dummy data
     expected_from_list,
     data_list_yml,
     data_dict_yml,
+    PATH_MOCK_DATA,
 )
 from utils.io_data.loaders.impl import LoaderCSV, LoaderNPY, LoaderPKL, LoaderDILL, LoaderYAML
 from utils.io_data.savers.impl import SaverCSV, SaverNPY, SaverPKL, SaverDILL
-
-# Relative path to the mock data directory based on the script's location
-PATH_MOCK_DATA = Path(__file__).parent / "mock_data"
 
 
 @pytest.mark.parametrize(

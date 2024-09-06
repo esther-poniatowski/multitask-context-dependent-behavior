@@ -4,13 +4,19 @@
 :mod:`test_core.test_io_data.test_data` [module]
 
 Generate sample data in different formats and structures to test I/O handlers.
+Provide expected data to compare with the loaded data from files in the directory `mock_data`.
 """
+from pathlib import Path
 from typing import List, Any, Dict, Union
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 from pandas import DataFrame
+
+
+# Relative path to the mock data directory based on the script's location
+PATH_MOCK_DATA = Path(__file__).parent / "mock_data"
 
 
 # --- INPUT DATA ---

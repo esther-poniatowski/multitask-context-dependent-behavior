@@ -5,10 +5,12 @@
 
 Notes
 -----
-Although those tests aim to cover the method defined in the abstract base class, sometimes the
-LoaderCSV subclass is used for concrete implementation. It is chosen for simplicity and because it
-offers more options to test. Those tests do not check for the concents of the data loaded, but
-rather for the correct handling of the file paths and formats.
+Although those tests aim to cover the method defined in the abstract base class, the concrete
+LoaderCSV implementation subclass is used. It is chosen for simplicity and because it offers more
+options to test.
+
+Those tests do not check for the concents of the data loaded, but rather for the correct handling of
+the file paths and formats.
 
 See Also
 --------
