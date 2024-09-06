@@ -15,7 +15,7 @@ from core.coordinates.exp_structure import CoordBlock
 from core.data_structures.base import Data
 from utils.io_data.formats import TargetType
 from utils.io_data.loaders.impl import LoaderNPY
-from utils.path_system.storage_rulers.impl import RawSpkTimesPath
+from utils.storage_rulers.impl import RawSpkTimesPath
 
 
 class RawSpkTimes(Data):
