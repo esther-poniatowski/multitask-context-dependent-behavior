@@ -1,31 +1,27 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_utils.test_path_system.test_explorer` [module]
+:mod:`test_utils.test_path_system.test_local` [module]
 
 See Also
 --------
-:mod:`utils.path_system.explorer`: Tested module.
-"""
-import os
-from pathlib import Path
+:mod:`utils.path_system.base`: Tested module.
+:mod:`utils.path_system.local_server`: Tested module.
 
+Notes
+-----
+This test suite is focused on the methods of the :class:`LocalServer` concrete subclass, but some
+methods are inherited from the :class:`ServerInterface` abstract class.
+"""
 import pytest
 
-from utils.path_system.explorer import (
-    is_dir,
-    is_file,
-    check_parent,
-    create_dir,
-    enforce_ext,
-    display_tree,
-)
+from utils.path_system.local_server import LocalServer
 
 
 @pytest.mark.parametrize("exists", argvalues=[True, False], ids=["existing", "non-existing"])
 def test_is_dir(tmp_path, exists):
     """
-    Test :func:`is_dir` for an existing and a non-existing directory.
+    Test :meth:`is_dir` for an existing and a non-existing directory.
 
     Test Inputs
     -----------
@@ -42,12 +38,12 @@ def test_is_dir(tmp_path, exists):
         path = tmp_path
     else:
         path = "non_existing_path"
-    assert is_dir(path) is exists, f"Check failed for path: {path}"
+    assert LocalServer().is_dir(path) is exists, f"Check failed for path: {path}"
 
 
 def test_is_dir_with_file(tmp_path):
     """
-    Test :func:`is_dir` for a file path.
+    Test :meth:`is_dir` for a file path.
 
     Test Inputs
     -----------
@@ -60,12 +56,12 @@ def test_is_dir_with_file(tmp_path):
     """
     test_file = tmp_path / "test_file.txt"
     test_file.write_text("test content")
-    assert is_dir(test_file) is False, "Check failed for file path"
+    assert LocalServer().is_dir(test_file) is False, "Check failed for file path"
 
 
 def test_is_file(tmp_path):
     """
-    Test :func:`is_file` to verify a file path.
+    Test :meth:`is_file` to verify a file path.
 
     Test Inputs
     -----------
@@ -78,13 +74,13 @@ def test_is_file(tmp_path):
     """
     test_file = tmp_path / "test_file.txt"
     test_file.write_text("test content")
-    assert is_file(test_file) is True, "Check failed for file path"
-    assert is_file(tmp_path) is False, "Check failed for directory path"
+    assert LocalServer().is_file(test_file) is True, "Check failed for file path"
+    assert LocalServer().is_file(tmp_path) is False, "Check failed for directory path"
 
 
 def test_is_file_with_dir(tmp_path):
     """
-    Test :func:`is_file` for a directory path.
+    Test :meth:`is_file` for a directory path.
 
     Test Inputs
     -----------
@@ -95,12 +91,12 @@ def test_is_file_with_dir(tmp_path):
     ---------------
     False for a directory.
     """
-    assert is_file(tmp_path) is False, "Check failed for directory path"
+    assert LocalServer().is_file(tmp_path) is False, "Check failed for directory path"
 
 
 def test_check_parent(tmp_path):
     """
-    Test :func:`check_parent` for the parent directory of a file.
+    Test :meth:`check_parent` for the parent directory of a file.
 
     Test Inputs
     -----------
@@ -112,12 +108,12 @@ def test_check_parent(tmp_path):
     True (no error)
     """
     test_file = tmp_path / "test_file.txt"
-    assert check_parent(test_file) is True, "Check failed for parent directory"
+    assert LocalServer().check_parent(test_file) is True, "Check failed for parent directory"
 
 
 def test_create_dir(tmp_path):
     """
-    Test :func:`create_dir` for creating a new directory.
+    Test :meth:`create_dir` for creating a new directory.
 
     Test Inputs
     -----------
@@ -129,7 +125,7 @@ def test_create_dir(tmp_path):
     Directory created and correct path returned.
     """
     new_dir = tmp_path / "new_directory"
-    create_dir(new_dir)
+    LocalServer().create_dir(new_dir)
     assert new_dir.exists(), "Directory not created"
 
 
@@ -140,7 +136,7 @@ def test_create_dir(tmp_path):
 )
 def test_enforce_ext(tmp_path, filename):
     """
-    Test :func:`enforce_ext` for handling file extensions.
+    Test :meth:`enforce_ext` for handling file extensions.
 
     Test Inputs
     -----------
@@ -160,13 +156,13 @@ def test_enforce_ext(tmp_path, filename):
     """
     filepath = tmp_path / filename
     expected_filepath = tmp_path / "test.csv"
-    enforced_path = enforce_ext(filepath, ".csv")
+    enforced_path = LocalServer().enforce_ext(filepath, ".csv")
     assert enforced_path == expected_filepath, f"Incorrect path. Expected: {expected_filepath}"
 
 
 def test_display_tree(tmp_path, capsys):
     """
-    Test :func:`display_tree` to verify directory structure display.
+    Test :meth:`display_tree` to verify directory structure display.
 
     Test Inputs
     -----------
@@ -183,7 +179,7 @@ def test_display_tree(tmp_path, capsys):
     (tmp_path / "subdir1").mkdir()
     (tmp_path / "subdir2").mkdir()
     (tmp_path / "subdir2" / "file1.txt").write_text("content")
-    display_tree(tmp_path, limit=2)
+    LocalServer().display_tree(tmp_path, limit=2)
     captured = capsys.readouterr()
     assert "|-- subdir1" in captured.out, "Directory tree structure not displayed correctly"
     assert "|-- subdir2" in captured.out, "Directory tree structure not displayed correctly"
