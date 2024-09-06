@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`utils.path_system.storage_rulers.impl` [module]
+:mod:`utils.storage_rulers.impl` [module]
 
 Implementations of path generation rules.
 
@@ -15,7 +15,7 @@ Classes
 
 See Also
 --------
-:class:`utils.path_system.storage_rulers.base.PathRuler` : Interface to manage file paths.
+:class:`utils.storage_rulers.base.PathRuler` : Interface to manage file paths.
 
 Notes
 -----
@@ -29,7 +29,7 @@ structure associated to each path manager.
 from pathlib import Path
 from typing import Union
 
-from utils.path_system.storage_rulers.base import PathRuler
+from utils.storage_rulers.base import PathRuler
 
 
 class RawSpkTimesPath(PathRuler):

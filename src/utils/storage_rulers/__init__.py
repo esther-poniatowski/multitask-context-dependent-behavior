@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`utils.path_system.storage_rulers` [subpackage]
+:mod:`utils.storage_rulers` [subpackage]
 
 Classes to define file path rules and generate paths.
 

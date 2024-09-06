@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`utils.path_system.storage_rulers.base` [module]
+:mod:`utils.storage_rulers.base` [module]
 
 Manage the file system paths centrally.
 
@@ -31,8 +31,6 @@ from pathlib import Path
 from typing import Union, Optional
 import os
 
-from utils.path_system.explorer import is_dir
-
 
 class PathRuler(ABC):
     """
@@ -55,7 +53,7 @@ class PathRuler(ABC):
         if root_data is None:
             root_data = self.get_root()
         root_data = Path(root_data)
-        if not is_dir(root_data):
+        if not root_data.is_dir():
             raise FileNotFoundError(f"[ERROR] Invalid root directory: {root_data}")
         self.root_data = root_data
 

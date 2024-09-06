@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any, Mapping, Union
 
 from utils.io_data.formats import FileExt
-from utils.path_system.explorer import check_parent, enforce_ext
+from path_system.local_server import LocalServer
 
 
 class Saver(ABC):
@@ -45,6 +45,8 @@ class Saver(ABC):
         Data to save.
     path : Path
         Path to the file where the data will be saved.
+    server : LocalServer
+        Instance of the local server manager which provides utility file system operations.
 
     Methods
     -------
@@ -65,8 +67,7 @@ class Saver(ABC):
     --------
     :class:`utils.io_data.formats.FileExt`: File extensions.
     :class:`abc.ABC`: Abstract base class.
-    :func:`utils.path_system.explorer.check_parent`: Check the existence of the parent directory.
-    :func:`utils.path_system.explorer.enforce_ext`: Enforce the correct file extension.
+    :class:`utils.path_system.manage_local.LocalServer`: Utility class.
     """
 
     ext: FileExt
@@ -77,14 +78,24 @@ class Saver(ABC):
             path = Path(path)
         self.path = path
         self.data = data
+        self.server = LocalServer()
 
     def save(self):
-        """Save data to a file."""
-        check_parent(self.path)
-        self.path = enforce_ext(self.path, self.ext)
+        """
+        Save data to a file.
+
+        See Also
+        --------
+        :meth:`utils.path_system.manage_local.LocalServer.check_parent`
+            Check the existence of the parent directory.
+        :meth:`utils.path_system.manage_local.LocalServer.enforce_ext`
+            Enforce the correct file extension.
+        """
+        self.server.check_parent(self.path)
+        self.path = self.server.enforce_ext(self.path, self.ext)
         self._check_data()
         self._save()
-        print(f"Saved to {self.path}")
+        print(f"[SUCCESS] Saved to {self.path}")
 
     def _save(self):
         """
@@ -112,7 +123,9 @@ class Saver(ABC):
             dictionary, which means that no method for this format is implemented in the saver.
         """
         if not any(issubclass(type(self.data), tpe) for tpe in self.save_methods):
-            raise TypeError(f"Unsupported type for {self.ext.value}: {type(self.data).__name__}.")
+            raise TypeError(
+                f"[ERROR] Unsupported type for {self.ext.value}: {type(self.data).__name__}."
+            )
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}> - Path: {self.path}"
