@@ -30,7 +30,6 @@ import pandas as pd
 
 from utils.io_data.formats import FileExt
 from utils.io_data.savers.base import Saver
-from utils.path_system.explorer import check_parent, enforce_ext
 
 
 class SaverPKL(Saver):
@@ -59,11 +58,11 @@ class SaverPKL(Saver):
         --------
         :func:`pickle.dump`
         """
-        check_parent(self.path)
-        self.path = enforce_ext(self.path, self.ext)
+        self.server.check_parent(self.path)
+        self.path = self.server.enforce_ext(self.path, self.ext)
         with self.path.open("wb") as file:
             pickle.dump(self.data, file)
-        print(f"Saved to {self.path}")
+        print(f"[SUCCESS] Saved to {self.path}")
 
 
 class SaverDILL(Saver):
@@ -101,11 +100,11 @@ class SaverDILL(Saver):
         --------
         :func:`dill.dump`
         """
-        check_parent(self.path)
-        self.path = enforce_ext(self.path, self.ext)
+        self.server.check_parent(self.path)
+        self.path = self.server.enforce_ext(self.path, self.ext)
         with self.path.open("wb") as file:
             dill.dump(self.data, file)
-        print(f"Saved to {self.path}")
+        print(f"[SUCCESS] Saved to {self.path}")
 
 
 class SaverNPY(Saver):

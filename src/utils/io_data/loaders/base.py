@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Mapping, Union, TypeVar, Generic
 
 from utils.io_data.formats import FileExt, TargetType
-from utils.path_system.explorer import is_file, enforce_ext
+from path_system.local_server import LocalServer
 
 
 T = TypeVar("T")
@@ -61,8 +61,7 @@ class Loader(ABC, Generic[T]):
     :class:`utils.io_data.formats.FileExt`: File extensions.
     :class:`utils.io_data.formats.TargetType`: Target types.
     :class:`abc.ABC`: Abstract base class.
-    :func:`utils.path_system.explorer.is_file`: Check the existence of a file at a path in the system.
-    :func:`utils.path_system.explorer.enforce_ext`: Enforce the correct file extension.
+    :class:`utils.path_system.manage_local.LocalServer`: Utility class.
 
     Notes
     -----
@@ -83,6 +82,7 @@ class Loader(ABC, Generic[T]):
             tpe = TargetType(tpe)
         self.path = path
         self.tpe = tpe
+        self.server = LocalServer()
 
     def load(self) -> T:
         """
@@ -90,14 +90,22 @@ class Loader(ABC, Generic[T]):
 
         Returns
         -------
-        T
+        data: T
             Data loaded in the target type.
+
+        See Also
+        --------
+        :meth:`utils.path_system.manage_local.LocalServer.enforce_ext`
+            Enforce the correct file extension.
+        :meth:`utils.path_system.manage_local.LocalServer.is_file`
+            Check the existence of a file at a path in the system.
         """
-        is_file(self.path)
-        self.path = enforce_ext(self.path, self.ext)
-        print(f"Load: {self.path}")
+        self.server.is_file(self.path)
+        self.path = self.server.enforce_ext(self.path, self.ext)
         self._check_type()
-        return self._load()
+        data = self._load()
+        print(f"[SUCCESS] Loaded: {self.path} Type: {self.tpe.value}")
+        return data
 
     def _load(self) -> T:
         """
@@ -125,7 +133,7 @@ class Loader(ABC, Generic[T]):
         """
         if self.tpe not in self.load_methods:
             raise TypeError(
-                f"Unsupported target type: {self.tpe} not in {self.load_methods.keys()}"
+                f"[ERROR] Unsupported target type: {self.tpe} not in {self.load_methods.keys()}"
             )
 
     def __repr__(self) -> str:
