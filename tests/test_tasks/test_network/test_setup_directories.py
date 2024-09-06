@@ -14,51 +14,13 @@ See Also
 :mod:`tasks.network.setup_directories`: Tested module.
 :mod:`dotenv`: Used to load environment variables (local or remote).
 """
-import os
 from pathlib import Path
-from typing import Dict, Union
 
 import pytest
 
+from mock_data.match_content import PATH_MOCK_YAML, mock_structure, expected_paths
 from tasks.network.setup_directories import DirectoryOrganizer
-from tasks.network.manage_remote import RemoteServerMixin
-from test_tasks.test_network.mock_data import PATH_MOCK_YAML, mock_structure, expected_paths
-
-
-@pytest.mark.parametrize("root_set", [True, False], ids=["env_var", "working_dir"])
-def test_get_root_local(root_set, tmp_path):
-    """
-    Test for :meth:`DirectoryOrganizer.get_root_local`.
-
-    Test Inputs
-    -----------
-    root_set : bool
-        Whether to set the ROOT environment variable.
-    tmp_path : pathlib.Path
-        Temporary directory path.
-        If `root_set` is False, used as the current working directory.
-        If `root_set` is True, used as the root path environment variable.
-
-    Expected Output
-    ---------------
-    Root path from the environment or defaults to the current working directory.
-    """
-    # Save the previous value of ROOT environment variable to restore it after the test
-    save_root = os.environ.get("ROOT")
-    # Arrange the test by configuring the ROOT environment variable
-    if root_set:  # export the ROOT environment variable in the current shell session
-        os.environ["ROOT"] = str(tmp_path)
-    else:  # unset the ROOT environment variable and change the current working directory
-        os.environ.pop("ROOT", None)
-        os.chdir(tmp_path)
-    # Check the root path (same in both test cases)
-    root_path = DirectoryOrganizer.get_root_local()
-    assert root_path == tmp_path, "Root path not set"
-    # Restore the previous value of ROOT environment variable
-    if save_root is not None:
-        os.environ["ROOT"] = save_root
-    else:
-        os.environ.pop("ROOT", None)
+from utils.path_system.remote_server import RemoteServer
 
 
 @pytest.mark.parametrize("remote", argvalues=[False, True], ids=["local", "remote"])
@@ -76,8 +38,7 @@ def test_init_directory_organizer(remote):
     """
     organizer = DirectoryOrganizer(dry_run=True, remote=remote)
     assert organizer.dry_run is True
-    assert organizer.remote == remote
-    assert isinstance(organizer.root_path, Path)
+    assert isinstance(organizer.server.root_path, Path)
     assert isinstance(organizer.directory_structure, dict)
 
 
@@ -95,27 +56,31 @@ def test_root_path(root_path_provided, remote, tmp_path):
     root_path_provided : bool
         Whether the `root_path` argument is provided.
     remote : bool
-        Whether the `remote` argument is True.
+        Value of the `remote` argument.
     tmp_path : pathlib.Path
         Temporary directory path, used as the argument `root_path` in the test.
 
     Expected Output
     ---------------
-    If the argument `root_path` is provided, it should be set in the attribute.
-    If it is not provided, then its values depends on the mode (remote or local).
-    If `remote` is False, it is set to the default value defined as the class attribute
-    :attr:`default_root` in the class :class:`RemoteServerMixin`.
-    If `remote` is True, it should be set by the method :meth:`get_root_local` in the class.
+    Set the attribute :attr:`root_path` depending on the case:
+
+    - If `root_path` is provided: Use it as the value.
+    - Otherwise, if `remote` is True: Use the default value defined as the class attribute
+      :attr:`default_root` in the base class :class:`ServerInterface`.
+    - Otherwise, if `remote` is False: Use the method :meth:`get_root` in the class
+      :class:`LocalServer`.
     """
     if root_path_provided:
-        organizer = DirectoryOrganizer(root_path=tmp_path, remote=remote)
-        assert organizer.root_path == tmp_path
+        root_arg = "test_root"
+        expected_attr = Path(root_arg)
+        organizer = DirectoryOrganizer(root_path=root_arg, remote=remote)
+        assert organizer.server.root_path == expected_attr
     else:
         organizer = DirectoryOrganizer(remote=remote)
         if remote:
-            assert organizer.root_path == RemoteServerMixin.default_root
+            assert organizer.server.root_path == RemoteServer.default_root
         else:
-            assert organizer.root_path == DirectoryOrganizer.get_root_local()
+            assert organizer.server.root_path == organizer.server.get_root()
 
 
 def test_load_directory_structure(mock_structure):
