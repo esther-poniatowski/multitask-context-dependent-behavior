@@ -11,31 +11,13 @@ Implementation
 --------------
 Mock data for the `.env` file and directories: `tests/test_tasks/test_network/mock_data`.
 """
+# pylint: disable=redefined-outer-name
+
 from pathlib import Path
 import pytest
 
 from tasks.network.manage_remote import RemoteServerMixin
-
-# Relative path to mock data based on the script's location
-PATH_MOCK_DATA = Path(__file__).parent / "mock_data"
-PATH_MOCK_ENV = PATH_MOCK_DATA / ".env"
-
-
-@pytest.fixture
-def mock_credentials():
-    """
-    Fixture - Provide the credentials corresponding to the mock `.env` file.
-
-    Returns
-    -------
-    dict
-        Dictionary containing the user, host, and root path for the remote server.
-    """
-    return {
-        "user": "test_user",
-        "host": "111.111.1.1",
-        "root_path": Path("/remote/root"),
-    }
+from test_tasks.test_network.mock_data import PATH_MOCK_ENV, mock_credentials
 
 
 def test_load_network_config(mock_credentials):

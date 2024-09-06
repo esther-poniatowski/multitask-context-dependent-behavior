@@ -22,45 +22,7 @@ import pytest
 
 from tasks.network.setup_directories import DirectoryOrganizer
 from tasks.network.manage_remote import RemoteServerMixin
-
-# Path to mock data
-PATH_MOCK_DATA = Path(__file__).parent / "mock_data"
-PATH_MOCK_YAML = PATH_MOCK_DATA / "structure.yml"
-
-# Type alias for the directory structure
-StructureType = Dict[str, Union[Dict, str]]
-
-
-@pytest.fixture
-def mock_structure() -> StructureType:
-    """
-    Fixture - Provide the python dictionary corresponding to the mock `.yml` file.
-
-    Returns
-    -------
-    dict
-        Nested dictionary.
-    """
-    return {"dir": {"subdir1": {}, "subdir2": {"subsubdir": {}}}}
-
-
-@pytest.fixture
-def expected_paths(tmp_path):
-    """
-    Fixture - Provide the list of expected paths based on the directory structure in `mock_structure`.
-
-    Returns
-    -------
-    list
-        List of pathlib.Path objects.
-    """
-    paths = [
-        tmp_path / "dir",
-        tmp_path / "dir/subdir1",
-        tmp_path / "dir/subdir2",
-        tmp_path / "dir/subdir2/subsubdir",
-    ]
-    return paths
+from test_tasks.test_network.mock_data import PATH_MOCK_YAML, mock_structure, expected_paths
 
 
 @pytest.mark.parametrize("root_set", [True, False], ids=["env_var", "working_dir"])
