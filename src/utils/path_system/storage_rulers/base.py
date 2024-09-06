@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Union, Optional
 import os
 
-from utils.path_system.explorer import check_path
+from utils.path_system.explorer import is_dir
 
 
 class PathRuler(ABC):
@@ -55,7 +55,8 @@ class PathRuler(ABC):
         if root_data is None:
             root_data = self.get_root()
         root_data = Path(root_data)
-        check_path(root_data, raise_error=True)
+        if not is_dir(root_data):
+            raise FileNotFoundError(f"[ERROR] Invalid root directory: {root_data}")
         self.root_data = root_data
 
     @abstractmethod
@@ -86,7 +87,7 @@ class PathRuler(ABC):
         """
         root_data = os.environ.get("DATA_DIR")
         if root_data is None:
-            raise EnvironmentError("Environment variable 'DATA_DIR' is not set.")
+            raise EnvironmentError("[ERROR] Environment variable 'DATA_DIR' is not set.")
         return Path(root_data)
 
     def __repr__(self) -> str:

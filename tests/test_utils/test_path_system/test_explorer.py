@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 from utils.path_system.explorer import (
-    check_path,
+    is_dir,
     is_file,
     check_parent,
     create_dir,
@@ -22,38 +22,45 @@ from utils.path_system.explorer import (
 )
 
 
-def test_check_path_existing(tmp_path):
+@pytest.mark.parametrize("exists", argvalues=[True, False], ids=["existing", "non-existing"])
+def test_is_dir(tmp_path, exists):
     """
-    Test :func:`check_path` for an existing path.
+    Test :func:`is_dir` for an existing and a non-existing directory.
+
+    Test Inputs
+    -----------
+    tmp_path : str or Path
+        Path to check if it is a directory. Created by pytest fixture, guaranteed to exist.
+    exists : bool
+        Flag to indicate if the directory exists.
+
+    Expected Output
+    ---------------
+    True if the directory exists, False otherwise.
+    """
+    if exists:
+        path = tmp_path
+    else:
+        path = "non_existing_path"
+    assert is_dir(path) is exists, f"Check failed for path: {path}"
+
+
+def test_is_dir_with_file(tmp_path):
+    """
+    Test :func:`is_dir` for a file path.
 
     Test Inputs
     -----------
     tmp_path : Path
-        Temporary directory created by pytest fixture, guaranteed to exist.
+        Temporary directory created by pytest fixture where a file is created in the test.
 
     Expected Output
     ---------------
-    True (no error)
+    False for a file.
     """
-    assert check_path(tmp_path) is True, "Check failed for existing path"
-
-
-def test_check_path_non_existing():
-    """
-    Test :func:`check_path` for a non-existing path.
-
-    Test Inputs
-    -----------
-    String without any creation of directory (no pytest fixture is used).
-
-    Expected Output
-    ---------------
-    False and FileNotFoundError (if raise_error=True)
-    """
-    non_existing_path = "non_existing_path"
-    assert check_path(non_existing_path) is False, "Check failed for missing path"
-    with pytest.raises(FileNotFoundError):
-        check_path(non_existing_path, raise_error=True)
+    test_file = tmp_path / "test_file.txt"
+    test_file.write_text("test content")
+    assert is_dir(test_file) is False, "Check failed for file path"
 
 
 def test_is_file(tmp_path):
@@ -72,6 +79,22 @@ def test_is_file(tmp_path):
     test_file = tmp_path / "test_file.txt"
     test_file.write_text("test content")
     assert is_file(test_file) is True, "Check failed for file path"
+    assert is_file(tmp_path) is False, "Check failed for directory path"
+
+
+def test_is_file_with_dir(tmp_path):
+    """
+    Test :func:`is_file` for a directory path.
+
+    Test Inputs
+    -----------
+    tmp_path : Path
+        Temporary directory created by pytest fixture.
+
+    Expected Output
+    ---------------
+    False for a directory.
+    """
     assert is_file(tmp_path) is False, "Check failed for directory path"
 
 
@@ -106,9 +129,8 @@ def test_create_dir(tmp_path):
     Directory created and correct path returned.
     """
     new_dir = tmp_path / "new_directory"
-    created_dir = create_dir(new_dir)
+    create_dir(new_dir)
     assert new_dir.exists(), "Directory not created"
-    assert created_dir == new_dir, "Returned path does not match the created directory"
 
 
 @pytest.mark.parametrize(

@@ -5,10 +5,11 @@
 
 Functions
 ---------
-:func:`check_path`
+:func:`is_dir`
 :func:`is_file`
 :func:`check_parent`
 :func:`create_dir`
+:func:`enforce_ext`
 :func:`display_tree`
 """
 from pathlib import Path
