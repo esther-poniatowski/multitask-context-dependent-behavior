@@ -14,7 +14,7 @@ See Also
 :mod:`tasks.network.transfer`: Tested module.
 :mod:`socket`: Used to get the IP address of the local machine (standard library).
 """
-from pathlib import Path
+# pylint: disable=protected-access
 
 import pytest
 
