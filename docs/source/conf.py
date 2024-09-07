@@ -15,9 +15,16 @@ Configuration settings for the Sphinx documentation builder.
 import os
 import sys
 
+# Define paths relative to the current file
+source_dir = os.path.dirname(os.path.abspath(__file__))
+docs_dir = os.path.dirname(source_dir)
+project_root = os.path.abspath(os.path.dirname(docs_dir))
+src_dir = os.path.join(project_root, 'src')
+tests_dir = os.path.join(project_root, 'tests')
+
 # Add source code directory to locations accessible for import
-sys.path.insert(0, os.path.abspath('../src'))
-sys.path.insert(0, os.path.abspath('../tests'))
+sys.path.insert(0, os.path.abspath(src_dir))
+sys.path.insert(0, os.path.abspath(tests_dir))
 
 
 # -- Project information -----------------------------------------------------
