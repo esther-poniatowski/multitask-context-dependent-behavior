@@ -16,7 +16,7 @@ Multi-Task Context-Dependent Behavior - Documentation
    :maxdepth: 2
    :caption: Results
 
-   results/baseline
+   results/index
 
 
 .. toctree::

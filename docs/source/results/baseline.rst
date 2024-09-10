@@ -1,4 +1,0 @@
-Baseline Encoding
-=================
-
-

@@ -21,10 +21,15 @@ docs_dir = os.path.dirname(source_dir)
 project_root = os.path.abspath(os.path.dirname(docs_dir))
 src_dir = os.path.join(project_root, 'src')
 tests_dir = os.path.join(project_root, 'tests')
+license_path = os.path.join(project_root, 'LICENSE')
 
 # Add source code directory to locations accessible for import
 sys.path.insert(0, os.path.abspath(src_dir))
 sys.path.insert(0, os.path.abspath(tests_dir))
+
+rst_prolog = f"""
+.. |LICENSE_FILE| replace:: {license_path}
+"""
 
 
 # -- Project information -----------------------------------------------------
