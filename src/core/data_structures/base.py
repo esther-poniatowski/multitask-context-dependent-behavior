@@ -161,14 +161,14 @@ T = TypeVar("T")
 
 class Data(Generic[T], metaclass=DataStructMeta):
     """
-    Abstract base class for data structures. Define the interface to interact with data.
+    Abstract base class for data structures, defining the interface to interact with data.
 
     Class Attributes
     ----------------
     dims: Tuple[str]
         Names of the dimensions (order matters).
     coords : Tuple[str]
-        Names of the coordinates. Each name specifies the attribute which stores the coordinate.
+        Names of each coordinate, specifying the attribute which stores the coordinate object.
     dim2coord: Dict[str, FrozenSet[str]]
         Mapping from dimensions to their associated coordinates.
         Keys: Dimension names.
