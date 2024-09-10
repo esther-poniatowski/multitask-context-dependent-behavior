@@ -8,70 +8,91 @@ Base classes for data structure builders.
 Classes
 -------
 :class:`DataBuilder`
+
+Examples
+--------
+Implementation of a concrete builder class:
+
+.. code-block:: python
+
+    class ConcreteBuilder(DataBuilder):
+        product_class = ConcreteDataStructure
+
+        def __init__(self):
+            super().__init__()
+
+        def build(self,
+                  input_for_data: np.ndarray,
+                  input_for_coord: np.ndarray,
+                  input_metadata: str
+        ) -> ConcreteDataStructure:
+            data_pipeline = DataPipeline()
+            coord_pipeline = CoordPipeline()
+            data = data_pipeline.process(input_for_data)
+            coord = coord_pipeline.process(input_for_coord)
+            return self.product_class(data=data, coord=coord, metadata=input_metadata)
+
+Usage of the concrete builder:
+
+.. code-block:: python
+
+        builder = ConcreteBuilder()
+        data_structure = builder.build(input_for_data, input_for_coord, input_metadata)
+
 """
 from abc import ABC, abstractmethod
+from typing import TypeVar, Generic, Type
+
+from core.data_structures.base import Data
 
 
-class DataBuilder(ABC):
+D = TypeVar("D", bound=Data)
+"""Type variable representing the Data structure class associated with each builder."""
+
+
+class DataBuilder(Generic[D], ABC):
     """
     Abstract base class for building data structures.
 
-    Attributes
-    ----------
-    components : dict
-        Dictionary to store components of the data structure (data, metadata...).
+    Class Attributes
+    ----------------
+    product_class : type
+        Class of the data structure to build.
 
     Methods
     -------
-    :meth:`add_data`
-    :meth:`add_metadata`(metadata)`
     :meth:`build`
+
+    See Also
+    --------
+    :class:`core.data_structures.base.Data`
+        Abstract base class for data structures.
+
+    Implementation
+    --------------
+    The inputs are passed to the `build()` method rather than to the constructor, which allows to
+    reuse the same builder instance for building different instances of the product with different
+    inputs.
     """
 
+    product_class: Type[D]
+
     def __init__(self):
-        self.components = {}
-
-    @abstractmethod
-    def add_data(self, data):
-        """
-        Add data to the builder.
-
-        Parameters
-        ----------
-        data : Any
-            Data to be added to the builder.
-        """
         pass
 
     @abstractmethod
-    def add_metadata(self, metadata):
+    def build(self, **inputs) -> D:
         """
-        Add metadata to the builder.
+        Finalize the creation of the data structure by processing inputs through pipelines.
 
-        Parameters
-        ----------
-        metadata : Any
-            Metadata to be added to the builder.
-        """
-        pass
-
-    @abstractmethod
-    def build(self):
-        """
-        Finalize the creation of the data structure.
+        Arguments
+        ---------
+        inputs : Dict[str, Any]
+            Specific input objects required to build the product (data, metadata, etc.).
 
         Returns
         -------
-        Any
-            The data structure built by the builder.
+        product_type
+            Data structure instance built by this builder.
         """
         pass
-
-    def _validate(self):
-        """
-        Validate that all necessary components are present before building the object.
-        """
-        if "data" not in self.components:
-            raise ValueError("Data is missing.")
-        if "metadata" not in self.components:
-            raise ValueError("Metadata is missing.")
