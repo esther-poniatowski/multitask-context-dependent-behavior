@@ -19,6 +19,7 @@ Notes
 -----
 Distinct object types are represented by either Enum classes or regular classes.
 Enum classes are customized to provide additional information about the objects.
+
 Here, an enum class may define :
 
 - Attributes, to specify the authorized values of an instance.
@@ -28,6 +29,7 @@ Here, an enum class may define :
 Examples
 --------
 Get the valid labels for Context objects :
+
 .. code-block:: python
 
     from core.entities import Context

@@ -55,14 +55,16 @@ class Multiton(type):
     Implementation
     --------------
     The metaclass implements the Multiton Pattern.
+
     For each class using the metaclass:
+
     - Each instance is unique based on its ID.
     - When a new instance is created, its ID is stored in the class attribute :attr:`_instances`.
     - If an instance with the same ID is requested, the existing instance is returned.
 
-    The metaclass also defines equality and hash methods to be consistent
-    with the uniqueness of the instances based on their IDs.
-    This is necessary to avoid duplicates in bidirectional associations.
+    The metaclass also defines equality and hash methods to be consistent with the uniqueness of the
+    instances based on their IDs. This is necessary to avoid duplicates in bidirectional
+    associations.
     """
 
     _instances: Dict[Type, Dict[Any, Any]] = {}
@@ -85,14 +87,14 @@ class Multiton(type):
 
         Notes
         -----
-        This method is called each time the class is *instantiated*,
-        (i.e. when the class is *called* as a function).
+        This method is called each time the class is *instantiated*, (i.e. when the class is
+        *called* as a function).
 
         Implementation
         --------------
         Each class using the metaclass has its own instance repertoire within :attr:`_instances`.
-        This allows each class to maintain its own set of instances,
-        while sharing the instance management logic provided by the metaclass.
+        This allows each class to maintain its own set of instances, while sharing the instance
+        management logic provided by the metaclass.
         """
         if cls not in cls._instances:
             cls._instances[cls] = {}
@@ -118,8 +120,8 @@ class Multiton(type):
 
         Notes
         -----
-        This method is called when a class using the metaclass is *defined*
-        (i.e. instantiated, as an *instance* of the metaclass).
+        This method is called when a class using the metaclass is *defined* (i.e. instantiated, as
+        an *instance* of the metaclass).
         """
         # Initialize the class as an instance of the metaclass
         super().__init__(name, bases, dct)
@@ -141,9 +143,8 @@ class Site(metaclass=Multiton):
     """
     Recording site, location where several sessions were performed.
 
-    Each site leads to a set of units (neurons)
-    and a set of sessions (recordings).
-    It is used to assess artifacts in units' activity at the same site.
+    Each site leads to a set of units (neurons) and a set of sessions (recordings). It is used to
+    assess artifacts in units' activity at the same site.
 
     Attributes
     ----------
@@ -192,11 +193,12 @@ class Site(metaclass=Multiton):
 
         Implementation
         --------------
-        Bidirectional association pattern
-        - To ensure the consistency of the relationship, when a unit is added to a site,
-        the site of the unit should also be set if it is not already done.
-        - To avoid infinite recursion, the first condition checks
-        whether the unit is already recorded in the site.
+        Bidirectional association pattern:
+
+        - To ensure the consistency of the relationship, when a unit is added to a site, the site of
+          the unit should also be set if it is not already done.
+        - To avoid infinite recursion, the first condition checks whether the unit is already
+          recorded in the site.
 
         See Also
         --------
@@ -332,11 +334,12 @@ class Unit(metaclass=Multiton):
 
         Implementation
         --------------
-        Bidirectional association pattern
-        - To ensure the consistency of the relationship, when a site is set to a unit,
-        the unit should be added to the site's units list if it is not already done.
-        - To avoid infinite recursion, the first condition checks
-        whether the unit is already recorded in the site.
+        Bidirectional association pattern:
+
+        - To ensure the consistency of the relationship, when a site is set to a unit, the unit
+          should be added to the site's units list if it is not already done.
+        - To avoid infinite recursion, the first condition checks whether the unit is already
+          recorded in the site.
 
         See Also
         --------
@@ -414,9 +417,9 @@ class Session(metaclass=Multiton):
 
         Notes
         -----
-        For the animal Lemon, the site uses the full name 'lemon'.
-        Therefore, Sites' IDs should be obtained FROM THE END of the string:
-        site[:-1] instead of site[:5] (which would not be valid for 'lemon').
+        For the animal Lemon, the site uses the full name ``'lemon'``. Therefore, Sites' IDs should
+        be obtained FROM THE END of the string: ``site[:-1]`` instead of ``site[:5]`` (which would
+        not be valid for ``'lemon'``).
         """
         s = self.id.split("_")
         site = s[0][:-2]
@@ -448,11 +451,9 @@ class Trial:
 
     Notes
     -----
-    This object is mainly used for data pre-processing,
-    where trials's structure still differ from each other.
-    Afterwards, in the majority of the analyses,
-    trials's epochs are uniformly and their properties are
-    directly stored in the data coordinates.
+    This object is mainly used for data pre-processing, where trials's structure still differ from
+    each other. Afterwards, in the majority of the analyses, trials's epochs are uniformly and their
+    properties are directly stored in the data coordinates.
 
     Attributes
     ----------
