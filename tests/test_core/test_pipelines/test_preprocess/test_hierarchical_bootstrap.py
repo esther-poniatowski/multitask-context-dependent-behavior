@@ -5,14 +5,14 @@
 
 See Also
 --------
-:mod:`core.preprocess.hierarchical_bootstrap`: Tested module.
+:mod:`core.pipelines.preprocess.hierarchical_bootstrap`: Tested module.
 """
 
 import numpy as np
 from numpy.testing import assert_array_almost_equal as assert_array_eq
 import pytest
 
-from core.preprocess.hierarchical_bootstrap import (
+from core.pipelines.preprocess.hierarchical_bootstrap import (
     pick_trials,
     hierarchical_bootstrap,
 )

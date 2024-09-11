@@ -1,5 +1,5 @@
 """
-:mod:`core.preprocess.firing_rates` [module]
+:mod:`core.pipelines.preprocess.firing_rates` [module]
 
 Convert raw spike times to firing rates.
 

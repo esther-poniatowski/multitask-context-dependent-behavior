@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_core.test_preprocess.test_firing_rates` [module]
+:mod:`test_core.test_pipelines.test_preprocess.test_firing_rates` [module]
 
-Tests for the module :mod:`core.preprocess.firing_rates`.
+Tests for the module :mod:`core.pipelines.preprocess.firing_rates`.
 
 See Also
 --------
@@ -18,11 +18,11 @@ import numpy.typing as npt
 from numpy.testing import assert_array_almost_equal as assert_array_eq
 import pytest
 
-from core.preprocess.firing_rates import extract_trial
-from core.preprocess.firing_rates import slice_epoch
-from core.preprocess.firing_rates import join_epochs
-from core.preprocess.firing_rates import spikes_to_rates
-from core.preprocess.firing_rates import smooth
+from core.pipelines.preprocess.firing_rates import extract_trial
+from core.pipelines.preprocess.firing_rates import slice_epoch
+from core.pipelines.preprocess.firing_rates import join_epochs
+from core.pipelines.preprocess.firing_rates import spikes_to_rates
+from core.pipelines.preprocess.firing_rates import smooth
 
 
 spikes: npt.NDArray[np.float64] = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6])
@@ -37,7 +37,7 @@ expected: npt.NDArray[np.float64] = np.array([0.3, 0.4])
 )
 def test_extract_trial(spikes, trials, expected):
     """
-    Tests for :func:`core.preprocess.firing_rates.extract_trial`.
+    Tests for :func:`core.pipelines.preprocess.firing_rates.extract_trial`.
 
     Parametrized for the argument ``data``.
 
@@ -70,7 +70,7 @@ t_start, t_end = 0.2, 0.5
 )
 def test_slice_epoch(spk, expected):
     """
-    Test for :func:`core.preprocess.firing_rates.slice_epoch`.
+    Test for :func:`core.pipelines.preprocess.firing_rates.slice_epoch`.
 
     Parametrized for the argument ``spk``.
 
@@ -113,7 +113,7 @@ t_start2, t_end2 = 1.3, 1.7
 )
 def test_join_epochs(spk, expected):
     """
-    Test for :func:`core.preprocess.firing_rates.join_epochs`.
+    Test for :func:`core.pipelines.preprocess.firing_rates.join_epochs`.
 
     Parametrized for the argument ``spk``.
 
@@ -163,7 +163,7 @@ t_bin = 0.1
 )
 def test_spikes_to_rates(spk, expected):
     """
-    Test for :func:`core.preprocess.firing_rates.spikes_to_rates`.
+    Test for :func:`core.pipelines.preprocess.firing_rates.spikes_to_rates`.
 
     Parametrized for the argument ``spk``.
 
@@ -200,7 +200,7 @@ expected = np.full(shape=(9, 2), fill_value=0.5)
 
 def test_smooth():
     """
-    Test for :func:`core.preprocess.firing_rates.smooth`.
+    Test for :func:`core.pipelines.preprocess.firing_rates.smooth`.
 
     Test Inputs
     -----------
