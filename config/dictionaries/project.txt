@@ -26,6 +26,7 @@ sampl
 smpl
 spikefile
 Stim
+stratifier
 t_bin
 T_SHOCK
 Telesto
