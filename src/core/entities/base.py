@@ -11,15 +11,16 @@ Classes
 
 Implementation
 --------------
-The base class defines a common interface for all classes representing
-the entities in the package. It should be inherited by subclasses
-that represent specific types of objects, which correspond to concrete
-quantities or categories in the experiment.
-Each subclass stands as a type in itself and provides a central documentation
-for the object it represents. It stores :
+The base class defines a common interface for all classes representing the entities in the package.
+It should be inherited by subclasses that represent specific types of objects, which correspond to
+concrete quantities or categories in the experiment. Each subclass stands as a type in itself and
+provides a central documentation for the object it represents.
+
+Each subclass should define:
+
 - A set of valid values for the object it represents.
-- Metadata (optional) about the type of object, often used to filter
-  the valid objects based on various criteria.
+- Metadata (optional) about the type of object, often used to filter the valid objects based on
+  various criteria.
 
 See Also
 --------
@@ -63,18 +64,24 @@ class CoreObject(ABC, Generic[T]):
     Examples
     --------
     Assuming a subclass :class:`ConcreteObject` with valid values "a" and "b":
+
     .. code-block:: python
+
         class ConcreteObject(CoreObject):
             _options = ["a", "b"]
             _full_labels = {"a": "Alpha", "b": "Beta"}
 
     Instantiate an object and get its full label:
+
     .. code-block:: python
+
         obj = ConcreteObject("a")
         print(obj.full_label)  # "Alpha"
 
     Check if two objects are equal:
+
     .. code-block:: python
+
         obj1 = ConcreteObject("a")
         obj2 = ConcreteObject("a")
         obj3 = ConcreteObject("b")
@@ -82,10 +89,13 @@ class CoreObject(ABC, Generic[T]):
         print(obj1 == obj3)  # False
 
     Check if an object belongs to a list:
+
     .. code-block:: python
+
         items = [ConcreteObject("a"), ConcreteObject("a")]
         print(obj1 in items)  # True
         print(obj3 in items)  # False
+
     """
 
     _options: FrozenSet[T] = frozenset()
@@ -116,15 +126,14 @@ class CoreObject(ABC, Generic[T]):
         """Provide a hash based on the value.
 
         Usages :
+
         - Set the object as a key in a dictionary.
         - Include the object in a set.
-        - Check containment:
-          The hash value is used to quickly locate the possible match in the collection,
-          and then the method :meth:`__eq__` is used to verify equality.
+        - Check containment: The hash value is used to quickly locate the possible match in the
+          collection, and then the method :meth:`__eq__` is used to verify equality.
 
-        If two objects are considered equal (via :meth:`__eq__`),
-        they must have the same hash value to ensures that they will be treated
-        as the same object in hash-based collections.
+        If two objects are considered equal (via :meth:`__eq__`), they must have the same hash value
+        to ensures that they will be treated as the same object in hash-based collections.
         Therefore, the hash value should be based on the value of the object.
         """
         return hash(self.value)

@@ -97,9 +97,8 @@ class Recording(Position):
     """
     Recording number.
 
-    It corresponds to the order of one session among all the
-    sessions performed at one recording site on the same day.
-    It is used to order the sessions chronologically.
+    It corresponds to the order of one session among all the sessions performed at one recording
+    site on the same day. It is used to order the sessions chronologically.
 
     Minimal value: 1.
     Maximal value: None (no upper bound a priori).
@@ -123,13 +122,14 @@ class Block(Position):
     """
     Position of one block of trials within one session.
 
-    Each block of trials corresponds to a sequence of stimuli presentations.
-    It includes :
+    Each block of trials corresponds to a sequence of stimuli presentations. It includes :
+
     - At least 1 reference stimulus.
     - At most 7 stimuli in total.
     - At most 1 target stimulus in the sequence, occurring in last position.
-    The end of a sequence is usually marked by the occurrence of the target stimulus,
-    except in "catch" trials where it is also a reference stimulus.
+
+    The end of a sequence is usually marked by the occurrence of the target stimulus, except in
+    "catch" trials where it is also a reference stimulus.
 
     The number of blocks presented in a session may vary across sessions.
     Usually, it is of the order of 30-40 blocks.
@@ -153,8 +153,9 @@ class Slot(Position):
     """
     Slot within one block.
 
-    Each slot marks one period centered around one stimulus presentation.
-    It encompasses several epochs:
+    Each slot marks one period centered around one stimulus presentation. It encompasses several
+    epochs:
+
     - Pre-stimulus baseline
     - Warning period (only in task CLK)
     - Stimulus presentation
