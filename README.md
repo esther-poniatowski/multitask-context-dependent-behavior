@@ -75,6 +75,30 @@ in separate modules/classes within the `tasks/` directory. This way, the `ops/` 
 and execute these tasks without mingling the concerns of task execution and task definition.
 
 
+## Data
+
+### Storage
+
+```plaintext
+    data/
+    ├── samples/                    # Sample data for tests and examples
+    ├── raw/                        # Raw data (immutable)
+    │   ├── ath011b-c1/             # Data from one unit (neuron)
+    │   └── ...
+    ├── meta/                       # Metadata about experimental events, trials, units
+    ├── interim/                    # Intermediate data which has been transformed
+    └── processed/                  # Final data sets for modeling
+```
+
+### Data types
+
+Raw data consists of the following types:
+
+- `.spk.mat`: Spiking times (in seconds) of one unit in one recording session (MATLAB format).
+- `.csv`: Idem in CSV format.
+- `.m`: Metadata about a recording session (MATLAB format).
+
+
 ## Initializing the Workspace
 
 1. Clone the repository into a local directory:
@@ -283,3 +307,37 @@ Warning: Any new directory to exclude must be explicitly added in multiple confi
 Before, the relevant directories "src" and "tests" were passed to the extensions,
 but now I pass the whole workspace and exclude
 Conclusion : Use the "exclusion" strategy.
+
+## Code Organization
+
+### Source Code
+
+Strutcutre of the `src/` directory :
+
+```plaintext
+    src/
+    ├── core/                       # Main package for analysis, modeling, visualization
+    │   ├── __init__.py
+    │   ├── entities/               # Entities defining basic objects manipulated in the analysis
+    │   ├── data_structures/        # Data structures for analysis
+    │   ├── coordinates/            # Coordinates for data structures (along dimensions)
+    │   ├── builders/               # Builders for data structures
+    │   ├── pipelines/              # Pipelines for processing data or generating models
+    │   └── constants.py            # Constants used in the analysis
+    ├── ingest/                     # Data ingestion and preprocessing
+    │   ├── __init__.py
+    │   └── ...
+    ├── tasks/                      # Administration tasks
+    │   ├── environment/            # Environment setup tasks
+    │   ├── network/                # Networking tasks
+    │   └── ...
+    └── utils/                      # Helper utilities
+        ├── __init__.py
+        ├── io_data/                # Input/output functionalities
+        │   ├── loaders/            # Data loaders
+        │   ├── savers/             # Data savers
+        │   └── formats.py          # Data formats
+        ├── path_system/            # Path management in local and remote servers
+        ├── storage_rulers/         # Path generation rules for storing data
+        └── misc/                   # Miscellaneous (handling data structures, collections...)
+```
