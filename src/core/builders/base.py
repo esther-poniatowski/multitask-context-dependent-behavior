@@ -18,9 +18,6 @@ Implementation of a concrete builder class:
     class ConcreteBuilder(DataBuilder):
         product_class = ConcreteDataStructure
 
-        def __init__(self):
-            super().__init__()
-
         def build(self,
                   input_for_data: np.ndarray,
                   input_for_coord: np.ndarray,
@@ -76,9 +73,6 @@ class DataBuilder(Generic[D], ABC):
     """
 
     product_class: Type[D]
-
-    def __init__(self):
-        pass
 
     @abstractmethod
     def build(self, **inputs) -> D:
