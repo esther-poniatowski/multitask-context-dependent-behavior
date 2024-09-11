@@ -7,6 +7,7 @@ argvalues
 astype
 bincount
 capsys
+chdir
 classmethod
 configparser
 conftest
@@ -20,6 +21,7 @@ divmod
 doctest
 dotenv
 dtype
+expanduser
 fftconvolve
 frozenset
 getattr
@@ -52,6 +54,7 @@ pytest
 PYTHONPATH
 pyyaml
 repr
+returncode
 savetxt
 scikit
 scipy
