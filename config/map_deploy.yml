@@ -5,6 +5,8 @@
 # Structure and Format: See conventions in `tasks.network.transfer`.
 # =================================================================================
 
+- source: setup/hub/meta.env
+  destination: ./
 - source: setup/hub/path.env
   destination: ./
 - source: setup/hub/environment.yml
