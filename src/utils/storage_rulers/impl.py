@@ -52,6 +52,25 @@ class RawSpkTimesPath(PathRuler):
         return self.root_data / "raw" / unit / session
 
 
+class TrialsPropertiesPath(PathRuler):
+    """Path generation rules used by :class:`TrialsProperties` data structures."""
+
+    def get_path(self, site: str) -> Path:
+        """
+        Construct the path for the properties of the trials recorded in one site.
+
+        Parameters
+        ----------
+        site: str
+
+        Returns
+        -------
+        Path
+            Format: ``{root}/meta/trials/{site}``
+        """
+        return self.root_data / "meta" / "trials" / site
+
+
 class SpikesTrainsPath(PathRuler):
     """Path generation rules used by :class:`SpikesTrains` data structures."""
 
