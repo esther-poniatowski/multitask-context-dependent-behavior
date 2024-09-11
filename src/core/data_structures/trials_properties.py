@@ -15,19 +15,18 @@ from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim
 from core.coordinates.exp_structure import CoordRecNum, CoordBlock, CoordSlot
 from core.coordinates.trials import CoordError
 from core.data_structures.base import Data
-from utils.io_data.formats import TargetType
-from utils.storage_rulers.impl import SpikesTrainsPath
+from utils.storage_rulers.impl import TrialsPropertiesPath
 from utils.io_data.loaders.impl import LoaderPKL
 from utils.io_data.savers.impl import SaverPKL
 
 
 class TrialsProperties(Data):
     """
-    Properties of a set of trials for one unit.
+    Properties of a set of trials from one session or several sessions recorded at the same site.
 
     Key Features
     ------------
-    Data       : ``data`` (type ``npt.NDArray[np.float64]``)
+    Data       : ``data`` (type ``npt.NDArray[np.int64]``)
     Dimensions : ``trials``
     Coordinates: ``recnum`` (type ``CoordRecNum``)
                  ``block`` (type ``CoordBlock``)
@@ -39,15 +38,14 @@ class TrialsProperties(Data):
                  ``t_on`` (type ``npt.NDArray[np.float64]``)
                  ``t_off`` (type ``npt.NDArray[np.float64]``)
                  ``t_end`` (type ``npt.NDArray[np.float64]``)
-                 ``selected`` (type ``npt.NDArray[np.bool_]``)
-    Metadata   : ``unit_id``, ``smpl_rate``
+    Metadata   : ``smpl_rate``, ``site_id``, ``sessions_ids``
 
     Attributes
     ----------
-    data: npt.NDArray[np.float64]
-        Spiking times of the unit in each trial (in seconds).
-        Shape: ``(n_trials, n_spk_max)``
-        with ``n_spk_max`` the maximal number of spikes across trials.
+    data: npt.NDArray[np.int64]
+        Trial identifiers. Shape: ``(n_trials, )``
+        Boundaries: From 1 to the total number of trials across all the sessions recorded at one
+        site (to ensure unique identifiers and consistency when merging sessions).
     rec: CoordRecNum
         Coordinate for dimension `trials`.
     block: CoordBlock
@@ -69,35 +67,13 @@ class TrialsProperties(Data):
     t_end: npt.NDArray[float]
         Coordinate for dimension `trials`, container for :attr:`t_end` in :class:`Trials`.
         Usually longer than the time of the last spike.
-    unit_id: str
-        Unit's identifier.
     smpl_rate: float
         Sampling time for the recording (in seconds).
         Default: :obj:`core.constants.SMPL_RATE`
-
-    Warning
-    -------
-    In each trial, the spiking times are reset at 0 relative to the beginning of the *slot*,
-    instead of the beginning of the block.
-
-    Notes
-    -----
-    The shape ``n_spk_max`` of the data array is determined by the maximal number of spikes across trials.
-    If the ith trial contains ``n_spk`` spikes, then the row ``data[i]`` associated to this trial has :
-
-    - ``n_spk`` cells storing the spiking times (from index 0 to ``n_spk-1``)
-    - ``n_spk_max - n_spk`` remaining cells filled with ``NaN``.
-
-    This data structure represents an intermediary step between :class:`RawSpkTimes` and :class:`FiringRates`.
-    It centralizes information about spikes and trials to avoid repeating expensive computations.
-    Indeed, most coordinates have to be built by parsing the raw ``expt_events`` files of the sessions.
-
-    This data structure can be used for the following purposes :
-
-    - Visualizing raster plots before firing rate are computed.
-    - Selecting trials and units for the final analyses.
-      To assess several criteria, additional processing is required on each separate trial.
-      New coordinates can be added to store the filtering metrics.
+    site_id: str
+        Identifier of the recording site.
+    sessions_ids: List[str]
+        Identifiers of the session(s) used to build the data structure.
 
     See Also
     --------
@@ -108,6 +84,7 @@ class TrialsProperties(Data):
     :class:`core.coordinates.exp_condition.CoordCtx`
     :class:`core.coordinates.exp_condition.CoordStim`
     :class:`core.coordinates.trials.CoordError`
+    :class:`core.
     """
 
     dim2coord = MappingProxyType(
@@ -127,16 +104,16 @@ class TrialsProperties(Data):
             "t_end": npt.NDArray[np.float64],
         }
     )
-    path_ruler = SpikesTrainsPath
+    path_ruler = TrialsPropertiesPath
     loader = LoaderPKL
     saver = SaverPKL
-    tpe = TargetType("ndarray_float")
 
     def __init__(
         self,
-        unit_id: str,
+        site_id: str,
+        sessions_ids: list[str],
         smpl_rate: float = SMPL_RATE,
-        data: Optional[npt.NDArray[np.float64]] = None,
+        data: Optional[npt.NDArray[np.int64]] = None,
         recnum: Optional[CoordRecNum] = None,
         block: Optional[CoordBlock] = None,
         slot: Optional[CoordSlot] = None,
@@ -149,7 +126,8 @@ class TrialsProperties(Data):
         t_end: Optional[npt.NDArray[np.float64]] = None,
     ) -> None:
         # Set sub-class specific metadata
-        self.unit_id = unit_id
+        self.site_id = site_id
+        self.sessions_ids = sessions_ids
         self.smpl_rate = smpl_rate
         # Declare data and coordinate attributes (avoid type errors)
         self.data: npt.NDArray[np.float64]
@@ -179,8 +157,8 @@ class TrialsProperties(Data):
         )
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}>: Unit {self.unit_id}\n" + super().__repr__()
+        return f"<{self.__class__.__name__}>: Site {self.site_id}\n" + super().__repr__()
 
     @property
     def path(self) -> Path:
-        return self.path_ruler().get_path(self.unit_id)
+        return self.path_ruler().get_path(self.site_id)
