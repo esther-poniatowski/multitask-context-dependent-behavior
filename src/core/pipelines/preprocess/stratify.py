@@ -70,8 +70,11 @@ class Stratifier:
     valid_types = (np.int64, np.float64, np.str_)
 
     def __init__(self, features: List[npt.NDArray]):
-        self._strata: Optional[npt.NDArray[np.int64]] = None  # declare type of _strata
-        self.features = features  # call property-setter automatically
+        # Initialize the cache
+        self._strata: Optional[npt.NDArray[np.int64]] = None
+        # Declare types for private attributes set by property setters
+        self._features: List[npt.NDArray]
+        self.features = features  # call property setter automatically
 
     @property
     def features(self) -> List[npt.NDArray]:
