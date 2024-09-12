@@ -11,18 +11,20 @@ Notes
 -----
 Folds correspond to subsets of samples (trials) used to train and test a model in cross-validation.
 
-In this module, the class :class:`FoldsAssigner` is only responsible of assigning each sample to one
-fold. The splitting into training and testing sets is carried out in the :class:`CoordFold` class
-itself by selecting the samples based on their fold assignment (see methods :meth:`get_train` and
-:meth:`get_test`). This allows direct access to the samples in each set without resorting to an
-external cross-validation tool or class.
+The class :class:`FoldsAssigner` is only responsible of assigning each sample to one fold. Actual
+splitting samples into training and testing sets is carried out in the :class:`CoordFold` class
+itself based on these fold assignments (methods :meth:`get_train` and :meth:`get_test`). This allows
+direct access to the samples in each set through the coordinate, without resorting to external
+cross-validation tools.
 
-The assignment of trials to folds should be performed *by unit*, before constructing pseudo-trials
-via hierarchical bootstrap. This ensures that trials are combined within each folds and prevents
-data leakage across folds.
+Warning
+-------
+For data analysis:
 
-The assignment of trials should also be *stratified* by condition (task, context, stimulus, error),
-to balance the distribution of the distinct types of trials across folds.
+- Assign trials to folds *by unit*, before constructing pseudo-trials via hierarchical bootstrap.
+  This ensures that trials are combined within each fold and prevents data leakage across folds.
+- Use *stratified* assignment by condition (task, context, stimulus, error) to balance trial types
+  across folds.
 
 Implementation
 --------------
@@ -34,10 +36,8 @@ Procedure for fold assignment:
 3. Assign each trial to a fold by selecting the corresponding group.
 
 Shuffling before splitting aims to balance across folds the task variables which have not been
-considered in the stratification process, namely the positional information (recording number, block
-number, slot number). This precaution avoids to include in the models any misleading temporal drift
-of the neuronal activity.
-
+considered in stratification (i.e. positional information: recording number, block number, slot
+number). This prevents models to capture misleading temporal drift in neuronal activity.
 """
 from typing import Optional
 
@@ -51,25 +51,38 @@ class FoldsAssigner:
 
     Attributes
     ----------
-    k: int
+    k : int
         Number of folds in which the samples will be divided.
     n_samples : int
         Number of samples to assign to folds.
     strata : npt.NDArray[np.int64], default=None
-        Labels of strata to stratify the samples. Shape: ``(n_samples,)``.
+        Labels of strata for stratified assignment. Shape: ``(n_samples,)``.
         If None, all samples are treated as belonging to a single stratum.
     seed : int, default=0
         Random state for reproducibility in shuffling samples before fold assignment.
     _folds : npt.NDArray[np.int64]
-        Fold assignment for each sample. Shape: ``(n_samples,)``.
-        It is computed lazily on first access and cached for subsequent accesses.
+        (Internal attribute) Fold assignment for each sample. Shape: ``(n_samples,)``.
+        Computed lazily on first access and cached for subsequent accesses.
     folds : npt.NDArray[np.int64]
-        Access to the fold assignment via the property.
+        (Property) Access to the fold assignments of the samples.
 
     Methods
     -------
     :meth:`set_seed`
     :meth:`assign`
+
+    Examples
+    --------
+    Assign 10 samples to 3 folds, stratified in 3 conditions:
+
+    >>> n_samples = 10
+    >>> k = 3
+    >>> strata = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2], dtype=np.int64)
+    >>> assigner = FoldsAssigner(k, n_samples, strata)
+    >>> folds = assigner.folds  # access the cached fold assignment via the property
+    >>> print(folds)
+    [0 0 1 1 2 2 0 1 2 0]
+
     """
 
     def __init__(
