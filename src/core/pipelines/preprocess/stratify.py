@@ -26,12 +26,13 @@ class Stratifier:
     ----------
     features : list of npt.NDArray
         Features to consider to stratify the samples (e.g., task, context, stimulus).
-        Shape of each feature: ``(n_samples,)``.
+        Length: ``n_features``.
+        Shape of each element (feature): ``(n_samples,)``.
     _strata : npt.NDArray[np.int64]
-        Stratum labels for each sample. Shape: ``(n_samples,)``.
-        It is computed lazily on first access and cached for subsequent accesses.
+        (Internal attribute) Stratum labels for each sample. Shape: ``(n_samples,)``.
+        Computed lazily on first access and cached for subsequent accesses.
     strata : npt.NDArray[np.int64]
-        Access to the stratum labels via the property.
+        (Property) Access to the stratum labels of the samples.
 
     Methods
     -------
@@ -47,7 +48,7 @@ class Stratifier:
     ...             np.array([0.1, 0.1, 0.2], dtype=np.float64),
     ...             np.array(["A", "A", "B"], dtype=np.str_)]
     >>> stratifier = Stratifier(features)
-    >>> strata = stratifier.strata  # Access the cached strata via the property
+    >>> strata = stratifier.strata  # access the cached strata via the property
     >>> print(strata)
     [0 0 1]
 

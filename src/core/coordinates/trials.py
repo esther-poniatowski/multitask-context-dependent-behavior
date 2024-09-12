@@ -80,7 +80,7 @@ class CoordError(Coordinate):
 
 class CoordFold(Coordinate):
     """
-    Coordinate labels for the samples' folds in cross-validation.
+    Coordinate labels for the fold assignment of each sample in cross-validation.
 
     Methods
     -------
@@ -93,16 +93,43 @@ class CoordFold(Coordinate):
     values: npt.NDArray[np.int64]
         Fold identifiers, starting from 0.
     k: int
-        Number of folds.
+        Number of folds. If not provided at initialization, it is inferred from the maximal value in
+        ``values``.
 
     Notes
     -----
-    The number of folds is computed from the unique values in the coordinate.
+    Cross-validation with a leave-one-out strategy
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    For each fold, the samples are divided into disjoint test and training sets. To withhold a minor
+    subset of samples for testing and the broadest subset for training, the samples are distributed
+    as follows:
 
-    The test set for a fold contains the samples labelled *with* the fold, whereas the training set
-    contains the samples *not* labelled with the fold. This convention for cross-validation ensures
-    that the training and testing sets of samples are disjoint. The test set withholds a minor
-    subset of samples while the training set withholds the broad subset.
+    - Test set: Samples assigned to the considered fold.
+    - Training set: Samples assigned to any other fold.
+
+    Representation of fold assignments
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    Fold assignments are stored as a *coordinate* rather than a list of numpy arrays containing the
+    indices of the samples in each fold. Thereby, the fold assignments are inherently tied to their
+    associated data structure. This allows to extract subsets of data while preserving the correct
+    fold assignments, since the corresponding subset of the CoordFold coordinate is automatically
+    extracted in parallel. In contrast, an approach using using a list of numpy arrays for each fold
+    would require re-indexing after any data extraction.
+
+    Warning
+    -------
+    The output arrays of :meth:`get_test` and :meth:`get_train` are *boolean* masks. If they
+    contained ``1`` and ``0`` values instead, they would be interpreted as the *indices* of the
+    trials to select, which would lead to pick only trials 0 and 1 multiple times.
+
+    Examples
+    --------
+    Assume that the data structure `ds` has a dimension `trials` in the first axis and stores a
+    CoordFold object in the attribute ``folds``. To select the test samples for fold 2:
+
+    >>> mask_test = ds.folds.get_test(fold=2)
+    >>> ds_test_2 = ds[mask_test, ...] # index by the boolean mask along the first axis
+
     """
 
     def __init__(self, values: npt.NDArray[np.int64], k: Optional[int] = None):
@@ -110,7 +137,7 @@ class CoordFold(Coordinate):
         if k is not None:
             self.k = k
         else:
-            self.k = len(np.unique(values))
+            self.k = int(np.max(values)) + 1  # indices start from 0
 
     def __repr__(self) -> str:
         counts = self.count_by_lab()
