@@ -5,7 +5,7 @@
 
 See Also
 --------
-:mod:`core.pipelines.preprocess.hierarchical_bootstrap`: Tested module.
+:mod:`core.pipelines.preprocess.bootstrap`: Tested module.
 :func:`assert_array_equal`: Numpy testing function for array equality.
 """
 
@@ -13,7 +13,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 import pytest
 
-from core.pipelines.preprocess.hierarchical_bootstrap import Bootstrapper
+from pipelines.preprocess.bootstrap import Bootstrapper
 
 
 def test_pick_trials_equal():
@@ -116,7 +116,7 @@ def test_pick_trials_smaller():
 
 def test_hierarchical_bootstrap():
     """
-    Tests for :func:`hierarchical_bootstrap`.
+    Tests for :func:`bootstrap`.
 
     Test Inputs
     -----------
