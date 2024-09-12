@@ -20,7 +20,7 @@ class Stratifier:
     Class Attributes
     ----------------
     valid_types : tuple
-        Valid types for the feature values.
+        Valid NumPy data types (dtype) for the feature arrays (int64, float64, str_).
 
     Attributes
     ----------
@@ -28,16 +28,12 @@ class Stratifier:
         Features to consider to stratify the samples (e.g., task, context, stimulus).
         Length: ``n_features``.
         Shape of each element (feature): ``(n_samples,)``.
-    _strata : npt.NDArray[np.int64]
-        (Internal attribute) Stratum labels for each sample. Shape: ``(n_samples,)``.
-        Computed lazily on first access and cached for subsequent accesses.
     strata : npt.NDArray[np.int64]
-        (Property) Access to the stratum labels of the samples.
+        Stratum labels of the samples. Shape: ``(n_samples,)``.
 
     Methods
     -------
     :meth:`_validate_features`
-
     :meth:`stratify`
 
     Examples
@@ -52,18 +48,46 @@ class Stratifier:
     >>> print(strata)
     [0 0 1]
 
+    Update the features and recompute strata:
+
+    >>> new_features = [np.array([1, 2, 2], dtype=np.int64),
+    ...                 np.array([0.2, 0.2, 0.2], dtype=np.float64),
+    ...                 np.array(["X", "Y", "Y"], dtype=np.str_)]
+    >>> stratifier.features = new_features  # automatically resets strata cache
+    >>> print(stratifier.strata)
+    [0 1 1]
+
+    Implementation
+    --------------
+    Private attributes are used to enforce control and validation:
+
+    - `_features`: Accessed via the property `features` and set by the property setter. It validates
+      the input features and resets the cache `_strata` if features are updated.
+    - `_strata`:  Accessed and set via the property `strata`. It computes this attribute lazily on
+      first access and caches it for subsequent accesses.
     """
 
     valid_types = (np.int64, np.float64, np.str_)
 
     def __init__(self, features: List[npt.NDArray]):
-        self._validate_features(features)
-        self.features = features
-        self._strata: Optional[npt.NDArray[np.int64]] = None
+        self._strata: Optional[npt.NDArray[np.int64]] = None  # declare type of _strata
+        self.features = features  # call property-setter automatically
+
+    @property
+    def features(self) -> List[npt.NDArray]:
+        """Access to the private attribute `_features`."""
+        return self._features
+
+    @features.setter
+    def features(self, new_features: List[npt.NDArray]):
+        """Validate and set `_features`, reset the cache `_strata`."""
+        self._validate_features(new_features)
+        self._features = new_features
+        self._strata = None
 
     @property
     def strata(self) -> npt.NDArray[np.int64]:
-        """Stratum labels for each sample."""
+        """Access to the cache `_strata`. Compute it if empty."""
         if self._strata is None:
             self._strata = self.stratify()
         return self._strata
@@ -81,16 +105,16 @@ class Stratifier:
             If the number of samples in each feature array is not equal.
         """
         if not all(isinstance(feat, np.ndarray) for feat in features):
-            raise ValueError("[ERROR] All features must be NumPy arrays.")
+            raise ValueError(f"Feature(s) not numpy arrays: {features}")
         types = [feat.dtype.type for feat in features]
         if not all(tpe in self.valid_types for tpe in types):
-            raise ValueError(f"[ERROR] Invalid feature types: {types}")
+            raise ValueError(f"Invalid feature types: {types}")
         dims = [feat.ndim for feat in features]
         if not all(dim == 1 for dim in dims):
-            raise ValueError(f"[ERROR] Invalid feature dimensions: {dims}")
+            raise ValueError(f"Invalid feature dimensions: {dims}")
         n_samples = [len(feat) for feat in features]
         if not all(n == n_samples[0] for n in n_samples):
-            raise ValueError(f"[ERROR] Unequal number of samples across features: {n_samples}")
+            raise ValueError(f"Unequal number of samples across features: {n_samples}")
 
     def stratify(self) -> npt.NDArray[np.int64]:
         """
