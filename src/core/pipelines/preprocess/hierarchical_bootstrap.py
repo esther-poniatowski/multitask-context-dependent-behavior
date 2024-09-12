@@ -128,11 +128,9 @@ class Bootstrapper:
     def counts(self, new_counts: npt.NDArray[np.int_]) -> None:
         """Validate and set the `_counts` attribute, and reset the cache."""
         if not isinstance(new_counts, np.ndarray) or new_counts.ndim != 1:
-            raise ValueError(f"`counts` must be a 1D numpy array, got {new_counts.ndim}D array.")
-        if np.any(new_counts <= 0):
-            raise ValueError("Trial counts must be positive integers.")
+            raise ValueError(f"Invalid dimensions: {new_counts.ndim}D array.")
         self._counts = new_counts
-        self._pseudo_trials = None  # Reset pseudo-trials when counts change
+        self._pseudo_trials = None
 
     @property
     def n_pseudo(self) -> int:
