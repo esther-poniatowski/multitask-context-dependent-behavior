@@ -7,10 +7,15 @@ Classes
 -------
 :class:`Stratifier`
 """
-from typing import List, Optional
+from typing import List, Optional, TypeAlias, Union
 
 import numpy as np
 import numpy.typing as npt
+
+Strata: TypeAlias = npt.NDArray[np.int64]
+"""Type alias for stratum labels."""
+Features = List[npt.NDArray[Union[np.int64, np.float64, np.str_]]]
+"""Type alias for a list of feature arrays."""
 
 
 class Stratifier:
@@ -69,33 +74,33 @@ class Stratifier:
 
     valid_types = (np.int64, np.float64, np.str_)
 
-    def __init__(self, features: List[npt.NDArray]):
+    def __init__(self, features: Features):
         # Initialize the cache
-        self._strata: Optional[npt.NDArray[np.int64]] = None
+        self._strata: Optional[Strata] = None
         # Declare types for private attributes set by property setters
-        self._features: List[npt.NDArray]
+        self._features: Features
         self.features = features  # call property setter automatically
 
     @property
-    def features(self) -> List[npt.NDArray]:
+    def features(self) -> Features:
         """Access to the private attribute `_features`."""
         return self._features
 
     @features.setter
-    def features(self, new_features: List[npt.NDArray]):
+    def features(self, new_features: Features):
         """Validate and set `_features`, reset the cache `_strata`."""
         self._validate_features(new_features)
         self._features = new_features
         self._strata = None
 
     @property
-    def strata(self) -> npt.NDArray[np.int64]:
+    def strata(self) -> Strata:
         """Access to the cache `_strata`. Compute it if empty."""
         if self._strata is None:
             self._strata = self.stratify()
         return self._strata
 
-    def _validate_features(self, features: List[npt.NDArray]) -> None:
+    def _validate_features(self, features: Features) -> None:
         """
         Validate the features to be used for stratification.
 
@@ -119,7 +124,7 @@ class Stratifier:
         if not all(n == n_samples[0] for n in n_samples):
             raise ValueError(f"Unequal number of samples across features: {n_samples}")
 
-    def stratify(self) -> npt.NDArray[np.int64]:
+    def stratify(self) -> Strata:
         """
         Compute stratum labels based on unique combinations of features.
 
