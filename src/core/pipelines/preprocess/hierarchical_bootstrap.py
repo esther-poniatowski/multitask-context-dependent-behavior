@@ -1,170 +1,229 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.pipelines.preprocess.hierarchical_bootstrap` [module]
+:mod:`core.pipelines.preprocess.pipelines.hierarchical_bootstrap` [module]
 
-Build pseudo-trials through an algorithm inspired from the "hierarchical bootstrap" method.
+Classes
+-------
+:class:`Bootstrapper`
 
-Reconstructing a pseudo-population of units consists in associating their respective trials which
-were not recorded simultaneously during the experiment.
-To augment the resulting data set, the current approach inspires from the "hierarchical bootstrap"
-method, which leverages multiple combinations of trials. Thereby, the data set size is less
-limited by the minimum minimum number of trials across neurons.
+Notes
+-----
+Pseudo-populations of units are constructed by associating their respective trials which
+were not recorded simultaneously during the experiment. To augment the resulting data set, the
+current approach inspires from the "hierarchical bootstrap" method, which leverages multiple
+combinations of trials. Thereby, the size of the final data set is less limited by the minimum
+number of trials across neurons.
+
+Dealing with imbalanced trial counts across units
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+1. Determination of the final number of pseudo-trials: The algorithm aims to balance the
+   representation of trials across units with extreme trial counts while still maintaining a minimal
+   threshold number of pseudo-trials for statistical robustness. Specifically, the goal is to avoid
+   discarding too many trials from the units with numerous trials and overly duplicating those from
+   the units with fewer trials.
+
+2. Trial selection for each unit: The algorithm maximizes the diversity of the trials occurrences at
+   the single unit level by ensuring that each trial is selected the maximum number of times
+   possible.
+
+3. Mitigating redundancies in trials' pairings: Trials are shuffled to obtain diverse combinations
+   at the level of the pseudo-population.
 
 Warning
 -------
-*Prior* to the bootstrap process, for each unit independently, trials should be gathered in sets:
-- By task, context, stimulus
-- By folds
-Hierarchical bootstrap can be applied on each set of trials.
+For data analysis:
+
+- Assign trials to folds *by unit*.
+- Assign units to batches.
+- Use *stratified* assignment by condition (task, context, stimulus, error, fold, batch).
 
 Implementation
 --------------
-Input data is a list of trials' counts for each unit.
-Output data is an array of shape ``(n_units, n_pseudo)``, which contain the trial numbers selected
-for each unit to form each pseudo-trial.
-Processing steps:
-1. Determine the number of pseudo-trials to generate.
+
+1. Determine the number of pseudo-trials to generate based on the number of trials available for
+   each unit.
 2. Pick trials for each unit independently for future inclusion in the data set.
-3. Combine trials across units to form actual pseudo-trials.
+3. Combine trials across units to form actual pseudo-trials by shuffling the trials retained for
+   each unit.
 """
+from typing import Optional
+
 import numpy as np
 import numpy.typing as npt
 
 from core.constants import N_PSEUDO_MIN, ALPHA_BOOTSTRAP
 
 
-def determine_pseudo_trial_number(
-    counts: npt.NDArray[np.int_],
-    n_pseudo_min=N_PSEUDO_MIN,
-    alpha=ALPHA_BOOTSTRAP,
-) -> int:
+class Bootstrapper:
     """
-    Determine the number of pseudo-trials to generate based on the counts of trials for each unit.
+    Generate pseudo-trials through an algorithm inspired by the hierarchical bootstrap method.
 
-    Rules:
-    The number of pseudo-trials is based on:
-    - A balance between the minimum and maximum number of trials across units, to avoid
-      over-representing units with numerous trials and under-representing those with fewer trials.
-    - A Variability Factor (alpha) to adjust the number of trials to achieve sufficient diversity.
-      For example, setting ``alpha = 0.5`` is equivalent to choosing the average of the minimum and
-      maximum number of trials across units, which promotes a moderate level of variability.
-
-    Parameters
+    Attributes
     ----------
     counts : npt.NDArray[np.int_]
-        Counts of trials' numbers for each unit.
-    n_pseudo_min : int, optional
-        Minimum number of pseudo-trials in a condition and fold.
+        Numbers of trials for each unit in the pseudo-population. Shape: ``(n_units,)``.
+    n_pseudo_min : int, default=N_PSEUDO_MIN
+        Minimum number of pseudo-trials required in a strata.
     alpha : float, default=ALPHA_BOOTSTRAP
-        Variability factor to adjust the number of pseudo-trials.
+        Variability factor to adjust the number of pseudo-trials to achieve sufficient diversity in
+        the combinations of trials.
+        Example: Setting ``alpha = 0.5`` will generate a number of pseudo-trials equal to the
+        average of the minimum and maximum number of trials across units, which promotes a moderate
+        level of variability.
+    pseudo_trials : npt.NDArray[np.int_]
+        Pseudo-trials obtained by pairing trials across units. Shape: ``(n_units, n_pseudo)``.
 
-    Returns
+    Methods
     -------
-    n_pseudo : int
-        Number of pseudo-trials to generate.
-    """
-    n_min = np.min(counts)
-    n_max = np.max(counts)
-    n_pseudo = int(alpha * (n_min + n_max))
-    n_pseudo = max(n_pseudo, n_pseudo_min)  # at least `n_pseudo_min`
-    return n_pseudo
+    :meth:`_pick_trials`
+    :meth:`set_seed`
+    :meth:`bootstrap`
 
+    Example
+    -------
+    Generate pseudo-trials for three units with 10, 8, and 12 trials respectively, using a custom
+    seed for reproducibility:
 
-def pick_trials(n: int, n_pseudo: int) -> np.ndarray:
-    """
-    Pick trials for a single unit for future inclusion in the pseudo-trials.
+    >>> counts = np.array([10, 8, 12])
+    >>> bootstrapper = Bootstrapper(counts, n_pseudo_min=5, alpha=0.5, seed=42)
+    >>> pseudo_trials = bootstrapper.pseudo_trials # automatically computes pseudo-trials
+    >>> print(pseudo_trials)
+    [[ 0  1  2  3  4  5  6  7  8  9]
 
     Implementation
     --------------
-    The selection process aims to maximize the diversity of trials occurrences for each unit. Each
-    trial might occur multiple times or not at all depending on the number of available trials for
-    the unit (``n``) compared to the required number pseudo-trials to generate (``n_pseudo``).
-    Several cases are distinguished:
+    Private attributes are used to enforce control and validation:
 
-    - `n >= n_pseudo``: Trials are randomly selected without replacement. It includes the case
-      ``n == n_pseudo``, where all trials are selected once.
-    - ``n < n_pseudo``: Each trial is selected at least ``n_pseudo // n`` times. To reach the
-      required number of trials, ``n_pseudo % n`` remaining trials are randomly selected without
-      replacement.
-
-    Parameters
-    ----------
-    n : int
-        Number of trials for the unit.
-    n_pseudo : int
-        Required number of pseudo-trials to generate.
-
-    Returns
-    -------
-    trials : np.ndarray
-        Trials selected for the unit.
-
-    See Also
-    --------
-    :func:`np.random.choice` :func:`np.repeat`
+    - `_counts`: Accessed via the property `counts` and set by the property setter. It validates the
+      input counts and resets the cache `_pseudo_trials` if counts are updated.
+    - `_pseudo_trials`: Accessed and set via the property `pseudo_trials`. It computes this
+      attribute lazily on first access and caches it for subsequent accesses.
     """
-    if n >= n_pseudo:
-        trials = np.random.choice(n, size=n_pseudo, replace=False)
-    else:
-        q = n_pseudo // n
-        r = n_pseudo % n
-        trials = np.repeat(np.arange(n), q)
-        trials = np.concatenate((trials, np.random.choice(n, size=r, replace=False)))
-    return trials
 
+    def __init__(
+        self,
+        counts: npt.NDArray[np.int_],
+        n_pseudo_min: int = N_PSEUDO_MIN,
+        alpha: float = ALPHA_BOOTSTRAP,
+        seed: int = 0,
+    ):
+        # Set simple attributes
+        self.n_pseudo_min = n_pseudo_min
+        self.alpha = alpha
+        self.seed = seed
+        # Initialize cache
+        self._pseudo_trials: Optional[npt.NDArray[np.int_]] = None
+        # Declare types for private attributes set by property setters
+        self._counts: npt.NDArray[np.int_]
+        self.counts = counts  # call property setter automatically
 
-def combine_trials(trials: npt.NDArray) -> npt.NDArray:
-    """
-    Combine the trials which were retained across units to form pseudo-trials.
+    @property
+    def counts(self) -> npt.NDArray[np.int_]:
+        """Access the private attribute `_counts`."""
+        return self._counts
 
-    Implementation
-    --------------
-    To mitigate redundancies in trials' pairings, combinations are built by randomly shuffling the
-    trials for each unit. This approach is more straightforward than specifying an algorithm to
-    maximize the diversity of mutual trials combinations across units.
+    @counts.setter
+    def counts(self, new_counts: npt.NDArray[np.int_]) -> None:
+        """Validate and set the `_counts` attribute, and reset the cache."""
+        if not isinstance(new_counts, np.ndarray) or new_counts.ndim != 1:
+            raise ValueError(f"`counts` must be a 1D numpy array, got {new_counts.ndim}D array.")
+        if np.any(new_counts <= 0):
+            raise ValueError("Trial counts must be positive integers.")
+        self._counts = new_counts
+        self._pseudo_trials = None  # Reset pseudo-trials when counts change
 
-    Parameters
-    ----------
-    trials : npt.NDArray
-        Trials selected for each unit. Shape: ``(n_units, n_pseudo)``.
+    @property
+    def n_pseudo(self) -> int:
+        """
+        Final number of pseudo-trials to generate.
 
-    Returns
-    -------
-    pseudo : npt.NDArray
-        Pseudo-trials formed by combining trials across units.
-        Shape: ``(n_units, n_pseudo)`` (same as input).
+        Implementation
+        --------------
+        1. Compute a preliminary number of pseudo-trials:
+           ``n_pseudo = alpha * (min_trials + max_trials)``
 
-    See Also
-    --------
-    :func:`np.random.shuffle`
-    """
-    for unit in trials:
-        np.random.shuffle(unit)
-    return trials
+            - min_trials, max_trials: Minimum and maximum numbers of trials across all units
+            - alpha: Variability factor to control the balance between units with few and many
+              trials.
 
+        2. Ensure the number of pseudo-trials is at least the minimum required:
+           ``n_pseudo = max(n_pseudo, min_pseudo_trials)``
+        """
+        return max(int(self.alpha * (np.min(self.counts) + np.max(self.counts))), self.n_pseudo_min)
 
-def hierarchical_bootstrap(
-    counts: npt.NDArray[np.int_],
-    n_pseudo_min=N_PSEUDO_MIN,
-    alpha=ALPHA_BOOTSTRAP,
-) -> npt.NDArray:
-    """
-    Execute the complete pipeline to generate pseudo-trials through hierarchical bootstrap.
+    @property
+    def pseudo_trials(self) -> npt.NDArray[np.int_]:
+        """Access the cache `_pseudo-trials` and compute it if empty."""
+        if self._pseudo_trials is None:
+            self._pseudo_trials = self.bootstrap()
+        return self._pseudo_trials
 
-    Parameters
-    ----------
-    counts : npt.NDArray[np.int_]
-        Counts of available trials for each unit.
-        Shape: ``(n_units,)``.
+    def _pick_trials(self, n: int) -> npt.NDArray[np.int_]:
+        """
+        Pick trials from a single unit for future inclusion among the pseudo-trials.
 
-    Returns
-    -------
-    pseudo : npt.NDArray
-        Pseudo-trials formed by combining trials across units.
-        Shape: ``(n_units, n_pseudo)``.
-    """
-    n_pseudo = determine_pseudo_trial_number(counts, n_pseudo_min=n_pseudo_min, alpha=alpha)
-    trials = np.array([pick_trials(n, n_pseudo) for n in counts])  # rows: units, columns: trials
-    pseudo = combine_trials(trials)
-    return pseudo
+        Parameters
+        ----------
+        n : int
+            Number of trials available for the considered unit.
+
+        Returns
+        -------
+        trials : np.ndarray
+            Trials selected for the considered unit.
+
+        Notes
+        -----
+        Each trial might occur multiple times or not at all depending on the number of available
+        trials for the unit (``n``) compared to the required number pseudo-trials to generate
+        (``n_pseudo``).
+
+        - If `n >= n_pseudo``: Trials are randomly selected without replacement. It includes the
+          case ``n == n_pseudo``, where each trial is selected only once.
+        - If ``n < n_pseudo``: Each trial is selected at least ``n_pseudo // n`` times. To reach the
+          required number of trials, ``n_pseudo % n`` remaining trials are randomly selected without
+          replacement.
+
+        See Also
+        --------
+        :func:`numpy.random.choice`
+            Randomly select elements from an array.
+            Parameter `replace=False`: Prevent duplicates.
+        :func:`numpy.repeat`
+            Repeat elements of an array, here used to selected each trial at least ``q`` times.
+        """
+        if n >= self.n_pseudo:
+            trials = np.random.choice(n, size=self.n_pseudo, replace=False)
+        else:
+            q = self.n_pseudo // n  # minimal number of times each trial is selected
+            r = self.n_pseudo % n  # number of trials selected additionally once
+            trials = np.repeat(np.arange(n), q)
+            trials = np.concatenate((trials, np.random.choice(n, size=r, replace=False)))
+        return trials
+
+    def set_seed(self) -> None:
+        """
+        Set the random seed for reproducibility.
+
+        See Also
+        --------
+        :func:`np.random.seed`: Set the random seed for reproducibility.
+        """
+        np.random.seed(self.seed)
+
+    def bootstrap(self) -> npt.NDArray:
+        """
+        Combine trials across units to form pseudo-trials.
+
+        Returns
+        -------
+        pseudo : npt.NDArray
+            See :attr:`pseudo_trials`.
+        """
+        self.set_seed()
+        pseudo_trials = np.array([self._pick_trials(n) for n in self.counts])
+        for trials_unit in pseudo_trials:
+            np.random.shuffle(trials_unit)  # shuffle within each unit for diversity
+        return pseudo_trials
