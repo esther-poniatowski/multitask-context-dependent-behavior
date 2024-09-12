@@ -1,4 +1,5 @@
 # Words used in the experiment
+Bootstrapper
 D_CLK
 D_POST
 D_PRE
