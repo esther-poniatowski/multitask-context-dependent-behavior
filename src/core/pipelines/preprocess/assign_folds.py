@@ -52,73 +52,139 @@ class FoldsAssigner:
     Attributes
     ----------
     k : int
-        Number of folds in which the samples will be divided.
+        Number of folds in which the samples will be divided. Read-only.
     n_samples : int
         Number of samples to assign to folds.
-    strata : npt.NDArray[np.int64], default=None
+    strata : npt.NDArray[np.int64]
         Labels of strata for stratified assignment. Shape: ``(n_samples,)``.
         If None, all samples are treated as belonging to a single stratum.
+    folds : npt.NDArray[np.int64]
+        Fold assignment for each sample. Shape: ``(n_samples,)``.
     seed : int, default=0
         Random state for reproducibility in shuffling samples before fold assignment.
-    _folds : npt.NDArray[np.int64]
-        (Internal attribute) Fold assignment for each sample. Shape: ``(n_samples,)``.
-        Computed lazily on first access and cached for subsequent accesses.
-    folds : npt.NDArray[np.int64]
-        (Property) Access to the fold assignments of the samples.
 
     Methods
     -------
+    :meth:`_validate_n_samples`
+    :meth:`_validate_strata`
+    :meth:`_create_strata`
     :meth:`set_seed`
     :meth:`assign`
 
     Examples
     --------
-    Assign 10 samples to 3 folds, stratified in 3 conditions:
+    Assign 10 samples to 3 folds:
 
-    >>> n_samples = 10
-    >>> k = 3
-    >>> strata = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2], dtype=np.int64)
-    >>> assigner = FoldsAssigner(k, n_samples, strata)
-    >>> folds = assigner.folds  # access the cached fold assignment via the property
-    >>> print(folds)
+    >>> assigner = FoldsAssigner(k=3, n_samples=10)
+    >>> print(assigner.folds)
     [0 0 1 1 2 2 0 1 2 0]
 
+    Update to 6 samples and reassign the folds:
+
+    >>> assigner.n_samples = 6
+    >>> print(assigner.folds)
+    [0 0 1 1 2 2]
+
+    Use stratified fold assignment:
+
+    >>> strata = np.array([0, 0, 1, 1, 2, 2], dtype=np.int64)
+    >>> assigner.strata = strata
+    >>> print(assigner.folds)
+    [0 0 1 1 2 2]
+
+    Implementation
+    --------------
+    Private attributes are used to enforce control and validation:
+
+    - `_k`: Accessed via the property `k`, set during instantiation. It is read-only to ensure that
+      the same parameter will be used consistently for various sets of samples.
+    - `_n_samples`: Accessed via the property `n_samples`, set by the property setter. It validates
+      the input number of samples and resets the cache `_folds` if the number of samples is updated.
+    - `_strata`: Accessed via the property `strata` and set by the property setter. It validates the
+      input strata and resets the cache `_folds` if strata are updated.
+    - `_folds`: Accessed and set via the property `folds`. It computes this attribute lazily on
+      first access and caches it for subsequent accesses.
     """
 
     def __init__(
-        self, k: int, n_samples: int, strata: Optional[npt.NDArray[np.int64]] = None, seed: int = 0
+        self,
+        k: int,
+        n_samples: Optional[int] = None,
+        strata: Optional[npt.NDArray[np.int64]] = None,
+        seed: int = 0,
     ):
-        self.n_samples = n_samples
-        self._validate_k(k)
-        self.k = k
+        self._k = k  # read-only
         self.seed = seed
-        if strata is None:
-            strata = self.create_strata()
-        else:
-            self._validate_strata(strata)
-        self.strata = strata
+        # Declare types
         self._folds: Optional[npt.NDArray[np.int64]] = None
+        self._strata: npt.NDArray[np.int64]
+        self._n_samples: int
+        # Set attributes based on input
+        if strata is not None:
+            if n_samples is not None and n_samples != len(strata):
+                raise ValueError(f"Mismatch: len(strata): {len(strata)} != n_samples: {n_samples}")
+            self.strata = strata  # set n_samples automatically
+        elif n_samples is not None:
+            self.n_samples = n_samples  # set strata automatically
+        else:
+            raise ValueError("Missing argument: neither n_samples nor strata.")
+
+    @property
+    def k(self) -> int:
+        """Read-only property for `k` to ensure it cannot be modified after instantiation."""
+        return self._k
+
+    @property
+    def n_samples(self) -> int:
+        """Access to the private attribute :attr:`_n_samples`."""
+        return self._n_samples
+
+    @n_samples.setter
+    def n_samples(self, n: int) -> None:
+        """Validate and set the `_n_samples`, reset the cache `_folds` and `_strata`.
+
+        Create default strata labels, treating all samples as belonging to a single stratum by
+        setting `_strata` to an array of zeros with the same length as the number of samples.
+        """
+        self._validate_n_samples(n)
+        self._n_samples = n
+        self._strata = np.zeros(n, dtype=np.int64)
+        self._folds = None
+
+    @property
+    def strata(self) -> npt.NDArray[np.int64]:
+        """Access to the private attribute `_strata`."""
+        return self._strata
+
+    @strata.setter
+    def strata(self, new_strata: npt.NDArray[np.int64]):
+        """Validate and set `_strata`, reset the cache `_folds` and `_n_samples`.
+
+        Set the number of samples to the length of the strata array..
+        """
+        self._validate_strata(new_strata)
+        self._strata = new_strata
+        self._n_samples = len(new_strata)
+        self._folds = None
 
     @property
     def folds(self) -> npt.NDArray[np.int64]:
-        """Fold assignment for each sample."""
+        """Access to the cache :attr:`_folds`. Compute it if empty."""
         if self._folds is None:
             self._folds = self.assign()
         return self._folds
 
-    def _validate_k(self, k: int) -> None:
+    def _validate_n_samples(self, n: int) -> None:
         """
-        Validate the number of folds.
+        Validate the number of samples compared to the number of folds.
 
         Raises
         ------
         ValueError
-            If the number of folds is larger than the number of samples.
+            If the number of samples is lower than the number of folds.
         """
-        if k > self.n_samples:
-            raise ValueError(
-                f"[ERROR] Number of folds: {k}, expected <= number of samples: {self.n_samples}"
-            )
+        if n < self._k:
+            raise ValueError(f"n_samples: {n} < k: {self._k}")
 
     def _validate_strata(self, strata: npt.NDArray[np.int64]) -> None:
         """
@@ -127,23 +193,16 @@ class FoldsAssigner:
         Raises
         ------
         ValueError
-            If the strata are not provided or not of the correct shape.
+            If the strata is not 1D.
+            If the strata dtype is not int64.
+            If the number of samples in the strata is lower than the number of folds.
         """
-        if strata.shape != (self.n_samples,):
-            raise ValueError(
-                f"[ERROR] Length of `strata`: {strata.shape}, expected `n_samples`: {(self.n_samples,)}"
-            )
-
-    def create_strata(self) -> npt.NDArray[np.int64]:
-        """
-        Create default strata labels, treating all samples as belonging to a single stratum.
-
-        Returns
-        -------
-        strata : npt.NDArray[np.int64]
-            Array of zeros with the same length as the number of samples.
-        """
-        return np.zeros(self.n_samples, dtype=np.int64)
+        if strata.ndim != 1:
+            raise ValueError(f"Invalid strata dimension: {strata.ndim}")
+        if not np.issubdtype(strata.dtype, np.integer):
+            raise ValueError(f"Invalid strata dtype: {strata.dtype}")
+        if len(strata) < self._k:
+            raise ValueError(f"len(strata): {len(strata)} < k: {self._k}")
 
     def set_seed(self) -> None:
         """
