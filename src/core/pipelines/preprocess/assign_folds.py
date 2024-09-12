@@ -39,10 +39,16 @@ Shuffling before splitting aims to balance across folds the task variables which
 considered in stratification (i.e. positional information: recording number, block number, slot
 number). This prevents models to capture misleading temporal drift in neuronal activity.
 """
-from typing import Optional
+from typing import Optional, TypeAlias
 
 import numpy as np
 import numpy.typing as npt
+
+
+Strata: TypeAlias = npt.NDArray[np.int64]
+"""Type alias for stratum labels."""
+Folds: TypeAlias = npt.NDArray[np.int64]
+"""Type alias for fold assignments."""
 
 
 class FoldsAssigner:
@@ -110,16 +116,16 @@ class FoldsAssigner:
         self,
         k: int,
         n_samples: Optional[int] = None,
-        strata: Optional[npt.NDArray[np.int64]] = None,
+        strata: Optional[Strata] = None,
         seed: int = 0,
     ):
         # Set simple attributes
         self._k = k  # read-only
         self.seed = seed
         # Initialize the cache
-        self._folds: Optional[npt.NDArray[np.int64]] = None
+        self._folds: Optional[Folds] = None
         # Declare types for private attributes set by property setters
-        self._strata: npt.NDArray[np.int64]
+        self._strata: Strata
         self._n_samples: int
         # Set attributes based on input
         if strata is not None:
@@ -154,12 +160,12 @@ class FoldsAssigner:
         self._folds = None
 
     @property
-    def strata(self) -> npt.NDArray[np.int64]:
+    def strata(self) -> Strata:
         """Access to the private attribute `_strata`."""
         return self._strata
 
     @strata.setter
-    def strata(self, new_strata: npt.NDArray[np.int64]):
+    def strata(self, new_strata: Strata) -> None:
         """Validate and set `_strata`, set `_n_samples` accordingly, reset the cache `_folds`.
 
         Set the number of samples to the length of the strata array..
@@ -170,7 +176,7 @@ class FoldsAssigner:
         self._folds = None
 
     @property
-    def folds(self) -> npt.NDArray[np.int64]:
+    def folds(self) -> Folds:
         """Access the cache `_folds`, compute it if empty."""
         if self._folds is None:
             self._folds = self.assign()
@@ -188,7 +194,7 @@ class FoldsAssigner:
         if n < self._k:
             raise ValueError(f"n_samples: {n} < k: {self._k}")
 
-    def _validate_strata(self, strata: npt.NDArray[np.int64]) -> None:
+    def _validate_strata(self, strata: Strata) -> None:
         """
         Validate the strata used for stratification if provided.
 
@@ -216,7 +222,7 @@ class FoldsAssigner:
         """
         np.random.seed(self.seed)
 
-    def assign(self) -> npt.NDArray[np.int64]:
+    def assign(self) -> Folds:
         """
         Assign folds to trials, stratified by condition.
 
