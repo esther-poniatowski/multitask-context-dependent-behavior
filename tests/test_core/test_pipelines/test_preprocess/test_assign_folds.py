@@ -9,7 +9,7 @@ See Also
 """
 
 import numpy as np
-from numpy.testing import assert_array_equal as assert_array_eq
+from numpy.testing import assert_array_equal
 import pytest
 
 from core.pipelines.preprocess.assign_folds import FoldsAssigner
@@ -38,8 +38,8 @@ def test_assign_folds_no_stratification():
 
 def test_assign_folds_stratified_divisible():
     """
-    Test :meth:`FoldsAssigner.assign` with stratification where the number of samples
-    in each stratum is divisible by the number of folds.
+    Test :meth:`FoldsAssigner.assign` with stratification where the number of samples in each
+    stratum is divisible by the number of folds.
 
     Test Inputs
     -----------
@@ -63,8 +63,8 @@ def test_assign_folds_stratified_divisible():
 
 def test_assign_folds_stratified_non_divisible():
     """
-    Test :meth:`FoldsAssigner.assign` with stratification where the number of samples
-    in each stratum is not divisible by the number of folds.
+    Test :meth:`FoldsAssigner.assign` with stratification where the number of samples in each
+    stratum is not divisible by the number of folds.
 
     Test Inputs
     -----------
@@ -129,12 +129,12 @@ def test_folds_property_cache():
     assigner = FoldsAssigner(k, n_samples)
     folds_first = assigner.folds
     folds_second = assigner.folds
-    assert_array_eq(folds_first, folds_second), "Folds are not cached properly."
+    assert_array_equal(folds_first, folds_second), "Folds are not cached properly."
 
 
-def test_invalid_k_value():
+def test_invalid_n_samples():
     """
-    Test :meth:`FoldsAssigner.assign` raises ValueError if k > n_samples.
+    Test :meth:`FoldsAssigner.assign` raises ValueError if n_samples < k.
 
     Test Inputs
     -----------
@@ -143,9 +143,58 @@ def test_invalid_k_value():
 
     Expected Outputs
     ----------------
-    ValueError is raised as k cannot be greater than n_samples.
+    ValueError is raised as n_samples cannot be less than k.
     """
     n_samples = 4
     k = 5
     with pytest.raises(ValueError):
         assigner = FoldsAssigner(k, n_samples)
+
+
+def test_dynamic_n_samples_update():
+    """
+    Test dynamic update of `n_samples` and recomputation of folds.
+
+    Test Inputs
+    -----------
+    Initial n_samples = 6
+    Updated n_samples = 4
+
+    Expected Outputs
+    ----------------
+    The folds should be recomputed when `n_samples` is updated.
+    """
+    # Initial fold assignment
+    n_samples = 6
+    k = 3
+    assigner = FoldsAssigner(k, n_samples)
+    initial_folds = assigner.folds
+    assert len(initial_folds) == n_samples
+    # Update n_samples and ensure folds are recomputed
+    assigner.n_samples = 4
+    updated_folds = assigner.folds
+    assert len(updated_folds) == 4, "Folds were not updated after changing n_samples"
+
+
+def test_seed_consistency():
+    """
+    Test fold assignment consistency when a seed is provided.
+
+    Test Inputs
+    -----------
+    n_samples = 6
+    k = 3
+    seed = 42
+
+    Expected Outputs
+    ----------------
+    Fold assignments should be consistent across runs with the same seed.
+    """
+    n_samples = 6
+    k = 3
+    seed = 42
+    assigner_1 = FoldsAssigner(k, n_samples, seed=seed)
+    assigner_2 = FoldsAssigner(k, n_samples, seed=seed)
+    folds_1 = assigner_1.folds
+    folds_2 = assigner_2.folds
+    assert_array_equal(folds_1, folds_2), "Fold assignments are not consistent with the same seed"
