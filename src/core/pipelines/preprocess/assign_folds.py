@@ -113,10 +113,12 @@ class FoldsAssigner:
         strata: Optional[npt.NDArray[np.int64]] = None,
         seed: int = 0,
     ):
+        # Set simple attributes
         self._k = k  # read-only
         self.seed = seed
-        # Declare types
+        # Initialize the cache
         self._folds: Optional[npt.NDArray[np.int64]] = None
+        # Declare types for private attributes set by property setters
         self._strata: npt.NDArray[np.int64]
         self._n_samples: int
         # Set attributes based on input
@@ -141,7 +143,7 @@ class FoldsAssigner:
 
     @n_samples.setter
     def n_samples(self, n: int) -> None:
-        """Validate and set the `_n_samples`, reset the cache `_folds` and `_strata`.
+        """Validate and set `_n_samples`, create new `_strata`, reset the cache `_folds`.
 
         Create default strata labels, treating all samples as belonging to a single stratum by
         setting `_strata` to an array of zeros with the same length as the number of samples.
@@ -158,7 +160,7 @@ class FoldsAssigner:
 
     @strata.setter
     def strata(self, new_strata: npt.NDArray[np.int64]):
-        """Validate and set `_strata`, reset the cache `_folds` and `_n_samples`.
+        """Validate and set `_strata`, set `_n_samples` accordingly, reset the cache `_folds`.
 
         Set the number of samples to the length of the strata array..
         """
@@ -169,7 +171,7 @@ class FoldsAssigner:
 
     @property
     def folds(self) -> npt.NDArray[np.int64]:
-        """Access to the cache :attr:`_folds`. Compute it if empty."""
+        """Access the cache `_folds`, compute it if empty."""
         if self._folds is None:
             self._folds = self.assign()
         return self._folds
