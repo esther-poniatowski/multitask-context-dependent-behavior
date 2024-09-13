@@ -32,13 +32,15 @@ class DataStructMeta(ABCMeta):
 
     Responsibilities:
 
-    - Ensure that the required class-level attributes are set in each subclass.
+    - Ensure that the required class-level attributes are set in each data structure class it
+      creates.
     - Set other class-level attributes to ensure their consistency with the provided values.
 
     Class Attributes
     ----------------
     required_attributes: List[str]
-        Names of the class-level attributes which have to be defined in each subclass.
+        Names of the class-level attributes which have to be defined in each data structure
+        subclass.
 
     Attributes
     ----------
@@ -75,8 +77,8 @@ class DataStructMeta(ABCMeta):
         ----------
         dct: Dict[str, ...]
             Dictionary of class attributes. Initially, it contains the attributes defined in the
-            body of the subclass being created. After the operations performed by the metaclass, it
-            is updated with new attributes.
+            body of the class being create by the metaclass. After the operations performed by the
+            metaclass, it is updated with new attributes.
 
         Returns
         -------
@@ -119,7 +121,15 @@ class DataStructMeta(ABCMeta):
     @staticmethod
     def check_consistency(dct):
         """
-        Check that the class-level attributes are consistent with each other.
+        Check that the class-level attributes related to coordinates are consistent with each other.
+
+        Implementation
+        --------------
+        To check that the keys in :attr:`Data.coord2type` (dict) match the strings in
+        :attr:`Data.coords` (tuple).
+        - Compare the sets of keys in the dictionary :attr:`Data.coord2type` and the content of
+          the tuple :attr:`Data.coords` by converting the latter to sets.
+        - Use the `dct` parameter to access those class-level attributes.
 
         Raise
         -----
