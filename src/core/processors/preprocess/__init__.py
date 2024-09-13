@@ -16,14 +16,14 @@ Output
 
 Modules
 -------
-core.pipelines.preprocess.firing_rates
+core.processors.preprocess.firing_rates
     Convert spikes to firing rates.
     Align trials and epochs.
-core.pipelines.preprocess.validate
+core.processors.preprocess.validate
     Select the valid trials and units to analyze.
-core.pipelines.preprocess.pseudo
+core.processors.preprocess.pseudo
     Build pseudo-trials and pseudo-populations.
-core.pipelines.preprocess.zscores
+core.processors.preprocess.zscores
     Compute Z-scores statistics.
 
 See Also

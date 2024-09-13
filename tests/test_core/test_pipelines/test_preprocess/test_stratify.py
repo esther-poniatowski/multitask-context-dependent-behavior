@@ -5,14 +5,14 @@
 
 See Also
 --------
-:mod:`core.pipelines.preprocess.stratify`: Tested module.
+:mod:`core.processors.preprocess.stratify`: Tested module.
 """
 
 import numpy as np
 from numpy.testing import assert_array_equal
 import pytest
 
-from core.pipelines.preprocess.stratify import Stratifier
+from core.processors.preprocess.stratify import Stratifier
 
 
 def test_stratify():
