@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.pipelines.preprocess.pipelines.bootstrap` [module]
+:mod:`core.processors.preprocess.pipelines.bootstrap` [module]
 
 Classes
 -------

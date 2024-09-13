@@ -5,7 +5,7 @@
 
 See Also
 --------
-:mod:`core.pipelines.preprocess.bootstrap`: Tested module.
+:mod:`core.processors.preprocess.bootstrap`: Tested module.
 :func:`assert_array_equal`: Numpy testing function for array equality.
 """
 
@@ -13,7 +13,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 import pytest
 
-from pipelines.preprocess.bootstrap import Bootstrapper
+from processors.preprocess.bootstrap import Bootstrapper
 
 
 def test_pick_trials_equal():

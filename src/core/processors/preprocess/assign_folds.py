@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.pipelines.preprocess.assign_folds` [module]
+:mod:`core.processors.preprocess.assign_folds` [module]
 
 Classes
 -------

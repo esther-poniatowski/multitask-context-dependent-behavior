@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.pipelines.preprocess.align_spikes` [module]
+:mod:`core.processors.preprocess.align_spikes` [module]
 
 Classes
 -------

@@ -42,6 +42,6 @@ See Also
 --------
 :mod:`core.data_structures`
     Data structure classes which are constructed by the builders.
-:mod:`core.pipelines`
+:mod:`core.processors`
     Pipelines used to process and transform data before final assembly by the builders.
 """

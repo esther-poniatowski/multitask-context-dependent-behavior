@@ -9,5 +9,5 @@ Sub-Packages
 
 See Also
 --------
-:mod:`core.pipelines`: Tested package.
+:mod:`core.processors`: Tested package.
 """

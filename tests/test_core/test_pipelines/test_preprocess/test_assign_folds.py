@@ -5,14 +5,14 @@
 
 See Also
 --------
-:mod:`core.pipelines.preprocess.assign_folds`: Tested module.
+:mod:`core.processors.preprocess.assign_folds`: Tested module.
 """
 
 import numpy as np
 from numpy.testing import assert_array_equal
 import pytest
 
-from core.pipelines.preprocess.assign_folds import FoldsAssigner
+from core.processors.preprocess.assign_folds import FoldsAssigner
 
 
 def test_assign_folds_no_stratification():

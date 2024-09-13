@@ -5,7 +5,13 @@
 - Sub-Issue:  #60
 
 ## Current Status
-Implement the concrete data structure class for storing the properties of the trials and their inclusion/exclusion.
+- Turn firing rate utilities to class.
+- Use stratify in hierarchical bootstrap.
+- Take into account units' batches in hierarchical bootstrap.
+- Gather the trials of all the sessions for one recording site in TrialsProperties.
+- Implement the concrete data structure class for storing the neuron-specific properties of the
+  trials and their inclusion/exclusion in the analysis.
+- Recover experimental info dataframes to convert it in a new data structure.
 
 ## Notes
 
