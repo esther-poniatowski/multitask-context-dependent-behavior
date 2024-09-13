@@ -27,6 +27,7 @@ sampl
 smpl
 spikefile
 Stim
+stims
 stratifier
 t_bin
 T_SHOCK
