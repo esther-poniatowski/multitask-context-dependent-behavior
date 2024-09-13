@@ -5,11 +5,14 @@
 
 Classes
 -------
+:class:`ProcessorMeta`
 :class:`Processor`
 """
 from abc import ABCMeta, abstractmethod
 from types import MappingProxyType
-from typing import Tuple, Mapping, Dict, Type, Self, Any
+from typing import Tuple, Mapping, Dict, Type, Any
+
+import numpy as np
 
 
 class ProcessorMeta(ABCMeta):
@@ -25,17 +28,12 @@ class ProcessorMeta(ABCMeta):
     - Check the consistency of certain class-level attributes.
     - Validate the types of the dynamic attributes specified in the class-level attribute.
 
-    Class Attributes
-    ----------------
-    dynamic_attributes_names: Tuple[str]
-        Names of the class-level attributes which should be defined in each processor class to
-        specify the names of the dynamic attributes.
-
     Attributes
     ----------
     input_attrs: Processor.input_attrs
     output_attrs: Processor.output_attrs
     intermediate_attrs: Processor.intermediate_attrs
+    dynattr_type: Processor.dynattr_type
 
     Methods
     -------
@@ -77,8 +75,6 @@ class ProcessorMeta(ABCMeta):
     attribute. The inner function `prop_getter` captures the attribute name as a default argument.
     """
 
-    dynamic_attributes_names = ("input_attrs", "output_attrs", "intermediate_attrs")
-
     def __new__(mcs, name, bases, dct):
         """
         Create a subclass of :class:`Processor` after ensuring its consistency.
@@ -106,15 +102,19 @@ class ProcessorMeta(ABCMeta):
            the attribute name (see "Late Binding Issue").
         """
         # Get class attributes declared in the class dictionary
-        dynattr2type = dct.get("dynattr2type", {})
-        dynamic_attrs = sum([dct.get(attr, ()) for attr in mcs.dynamic_attributes_names])
-        # Validate the types specified for the dynamic attributes
-        mcs.validate_types(dynattr2type)
+        dynattr_type = dct.get("dynattr_type", {})
+        dynamic_attrs = (
+            dct.get("input_attrs", ())
+            + dct.get("output_attrs", ())
+            + dct.get("intermediate_attrs", ())
+        )
+        # Generate the default empty attributes
+        dct["dynattr_empty"] = mcs.generate_empty_by_type(dynattr_type)
         # Define a property to access each dynamic attribute
         for attr in dynamic_attrs:
             dct[attr] = mcs.make_property(attr)
         # Check the consistency of the class-level attributes
-        mcs.check_consistency(dct)
+        mcs.check_consistency(dynamic_attrs, dynattr_type)
         # Create the new processor class
         return super().__new__(mcs, name, bases, dct)
 
@@ -140,57 +140,61 @@ class ProcessorMeta(ABCMeta):
         return property(prop_getter)
 
     @staticmethod
-    def validate_types(dynattr2type):
+    def generate_empty_by_type(dynattr_type):
         """
-        Validate the types of the dynamic attributes specified in the class-level attribute
-        `dynattr2type`.
+        Generate the default empty attributes corresponding to the types specified in the
+        class-level attribute `dynattr_type`.
 
-        Types are considered valid if they can be initialized without arguments.
+        In general, the default empty value for a type is the result of calling the type without any
+        arguments.
+        When the type is a numpy array, the special numpy function is called explicitly.
 
         Parameters
         ----------
         dynamic_attrs: Dict[str, ...]
             Mapping of dynamic attributes to their corresponding type.
 
-        Raises
-        ------
-        ValueError
-            If the dynamic attributes are not defined as tuples.
+        Returns
+        -------
+        dynattr_empty: Dict[str, Any]
+            Mapping of dynamic attributes to their corresponding empty instance.
         """
-        for attr, tpe in dynattr2type.items():
-            try:
-                tpe()  # initialize without arguments
-            except TypeError as exc:
-                raise TypeError(
-                    f"Type {tpe} for attribute '{attr}' cannot be initialized without arguments."
-                ) from exc
+        dynattr_empty = {}
+        for attr, tpe in dynattr_type.items():
+            if tpe == np.ndarray:
+                dynattr_empty[attr] = np.empty(0)
+            else:
+                dynattr_empty[attr] = tpe()
+        return dynattr_empty
 
     @staticmethod
-    def check_consistency(dct):
+    def check_consistency(dynamic_attrs, dynattr_type):
         """
         Check that the class-level attributes are consistent with each other.
 
-        Specifically, check that the keys in :attr:`Data.dynattr2type` (dict) match the strings in
+        Specifically, check that the keys in :attr:`Data.dynattr_type` (dict) match the strings in
         :attr:`Processor.input_attrs`, :attr:`Processor.output_attrs` and
         :attr:`Processor.intermediate_attrs` (tuples).
 
         Parameters
         ----------
-        dct: Dict[str, ...]: See :meth:`__new__`.
+        dynamic_attrs: Tuple[str, ...]
+            Names of the dynamic attributes.
+        dynattr_type: Dict[str, Type]
+            Mapping of dynamic attributes to their corresponding type.
 
         Implementation
         --------------
-        Compare the sets of keys in the dictionary :attr:`Processor.dynattr2type` and the content of
+        Compare the sets of keys in the dictionary :attr:`Processor.dynattr_type` and the content of
         the tuples by converting the latter to sets.
 
         Raise
         -----
         ValueError
-            If the keys in :attr:`Processor.dynattr2type` do not match those in the tuples which
+            If the keys in :attr:`Processor.dynattr_type` do not match those in the tuples which
             indicate the dynamic attributes.
         """
-        set_dynattrs = set(dct["input_attrs"] + dct["output_attrs"] + dct["intermediate_attrs"])
-        if set(dct["dynattr2type"].keys()) != set_dynattrs:
+        if set(dynattr_type.keys()) != set(dynamic_attrs):
             raise ValueError("Inconsistent dynamic attributes")
 
 
@@ -206,8 +210,10 @@ class Processor(metaclass=ProcessorMeta):
         Names of the outputs, i.e. results of the processing.
     intermediate_attrs: Tuple[str], default=()
         Names of the intermediate data which should be stored for some processing steps.
-    dynattr2type: Mapping[str, Type], default={}
+    dynattr_type: Mapping[str, Type], default={}
         Mapping of dynamic attributes to their corresponding type.
+    dynattr_empty: Mapping[str, Any], default={}
+        Mapping of dynamic attributes to their corresponding empty instance.
 
     Attributes
     ----------
@@ -268,7 +274,8 @@ class Processor(metaclass=ProcessorMeta):
     input_attrs: Tuple[str, ...] = ()
     output_attrs: Tuple[str, ...] = ()
     intermediate_attrs: Tuple[str, ...] = ()
-    dynattr2type: Mapping[str, Type] = MappingProxyType({})
+    dynattr_type: Mapping[str, Type] = MappingProxyType({})
+    dynattr_empty: Mapping[str, Any] = MappingProxyType({})
 
     def __init__(self, **config):
         # Initialize configuration attributes
@@ -301,19 +308,19 @@ class Processor(metaclass=ProcessorMeta):
         ValueError
             If the attribute name is invalid.
         TypeError
-            If the type of the value does not match the expected type specified in `dynattr2type`.
+            If the type of the value does not match the expected type specified in `dynattr_type`.
         """
-        if attr not in self.dynattr2type:
+        if attr not in self.dynattr_type:
             raise ValueError(f"Invalid dynamic attribute: '{attr}'")
-        tpe = self.dynattr2type[attr]  # expected type
+        tpe = self.dynattr_type[attr]  # expected type
         if not isinstance(value, tpe):
             raise TypeError(f"Invalid type: type({attr}) = {type(value)} != {tpe}")
         setattr(self, f"_{attr}", value)  # leading underscore
 
     def set_empty_data(self):
         """Reset the dynamic attributes to their default empty state."""
-        for attr, tpe in self.dynattr2type.items():
-            self.set_dynamic_attr(attr, tpe())
+        for attr, value in self.dynattr_empty.items():
+            self.set_dynamic_attr(attr, value)
         self._has_data = False  # reset flag
 
     def process(self, **input_data) -> Dict[str, Any]:
@@ -366,7 +373,6 @@ class Processor(metaclass=ProcessorMeta):
         input_data: Mapping[str, Any]
             Input data to process.
         """
-        pass
 
     @abstractmethod
     def _process(self, **input_data) -> Dict[str, Any]:
@@ -400,10 +406,20 @@ class Processor(metaclass=ProcessorMeta):
         ValueError
             If an invalid input attribute is provided.
             If a required input attribute is missing.
+        TypeError
+            If the input data type does not match the expected type in `dynattr_type`.
         """
+        # Check for missing or invalid input attributes
         for input_name in input_data:
             if input_name not in self.input_attrs:
                 raise ValueError(f"Invalid input attribute: '{input_name}'")
         for input_name in self.input_attrs:
             if input_name not in input_data:
                 raise ValueError(f"Missing input attribute: '{input_name}'")
+        # Check for correct data types
+        for input_name, input_value in input_data.items():
+            expected_type = self.dynattr_type.get(input_name)
+            if expected_type and not isinstance(input_value, expected_type):
+                raise TypeError(
+                    f"Invalid type: type({input_name}) = {type(input_value)} != {expected_type}"
+                )
