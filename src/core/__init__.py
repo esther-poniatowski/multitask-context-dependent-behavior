@@ -62,7 +62,7 @@ Define a processor subclass which performs a basic data transformation:
     class ExampleProcessor(Processor):
         input_attrs = ("input_arr",)
         output_attrs = ("output_arr",)
-        dynattr2type = {
+        dynattr_type = {
             "input_arr": np.ndarray,
             "output_arr": np.ndarray,
         }
