@@ -99,9 +99,9 @@ def subclass(request):
         output_attrs = request.getfixturevalue("output_attrs")
         proc_data_empty = request.getfixturevalue("proc_data_empty")
 
-        def _process(self, **input_data):
-            result1 = input_data["input1"] * 2
-            result2 = input_data["input2"] + 3
+        def _process(self):
+            result1 = self.input1 * 2
+            result2 = self.input2 + 3
             return {"output1": result1, "output2": result2}
 
     return TestClass
