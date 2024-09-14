@@ -31,6 +31,7 @@ class ProcessorMeta(ABCMeta):
     input_attrs: Processor.input_attrs
     output_attrs: Processor.output_attrs
     intermediate_attrs: Processor.intermediate_attrs
+    proc_data_empty: Processor.proc_data_empty
     proc_data_type: Processor.proc_data_type
 
     Methods
@@ -197,6 +198,8 @@ class Processor(metaclass=ProcessorMeta):
 
     Class Attributes
     ----------------
+    config_attrs: Tuple[str], default=()
+        Names of the configuration parameters (fixed for each processor instance).
     input_attrs: Tuple[str], default=()
         Names of the inputs to process.
     output_attrs: Tuple[str], default=()
@@ -204,7 +207,8 @@ class Processor(metaclass=ProcessorMeta):
     intermediate_attrs: Tuple[str], default=()
         Names of the intermediate data which should be stored for some processing steps.
     proc_data_type: Mapping[str, Type], default={}
-        Mapping of attributes names to their corresponding type.
+        Mapping of attributes names to their corresponding type. Automatically inferred from the
+        default empty instances in `proc_data_empty` by the metaclass.
     proc_data_empty: Mapping[str, Any], default={}
         Mapping of attributes names to their corresponding empty instance.
 

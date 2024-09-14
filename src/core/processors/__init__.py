@@ -60,16 +60,22 @@ Define a processor subclass which performs a basic data transformation:
 .. code-block:: python
 
     class ExampleProcessor(Processor):
+
+        # Define processor class-level attributes
+
+        config_attrs = ()
         input_attrs = ("input_arr",)
         output_attrs = ("output_arr",)
-        proc_data_type = {
-            "input_arr": np.ndarray,
-            "output_arr": np.ndarray,
+        proc_data_empty = {
+            "input_arr": np.empty(0),
+            "output_arr": np.empty(0)
         }
 
-        def _validate_data(self, **input_data):
+        # Define processor methods
+
+        def _validate_inputs(self, **input_data):
             if not input_data["input_arr"].ndim == 1:
-                raise ValueError(f"Invalid dimension for input data: {input_data['input_arr'].ndim}")
+                raise ValueError(f"Invalid dim. for input data: {input_data['input_arr'].ndim}")
 
         def _process(self, **input_data):
             result = input_data["input_arr"] * 2
