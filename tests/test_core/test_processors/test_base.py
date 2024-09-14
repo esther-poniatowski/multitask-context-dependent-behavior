@@ -207,15 +207,13 @@ def test_check_consistency():
             }
 
 
-def test_set_empty_data_init(subclass):
+def test_init_empty_data(subclass):
     """
-    Test the :meth:`set_empty_data` method to ensure that it correctly resets dynamic attributes
-    to their default empty state.
+    Ensure that the data attributes are initializex with default empty state.
 
     Expected Output
     ---------------
-    Dynamic attributes should be set to their empty state (e.g., empty arrays) after calling
-    `set_empty_data`.
+    Dynamic attributes should be set to their empty state (e.g., empty arrays).
     """
     expected_empty_array = np.empty(0)  # empty array to compare with reset attributes
     processor = subclass()
@@ -226,9 +224,40 @@ def test_set_empty_data_init(subclass):
     assert processor._has_data is False
 
 
-def test_set_dynamic_attr(subclass):
+def test_validate_data(subclass, proc_data_type, proc_data_empty):
     """
-    Test the :meth:`set_dynamic_attr` method for assigning dynamic data to internal attributes.
+    Test the :meth:`_validate_data` method for checking the data types of dynamic attributes.
+
+    Test Inputs
+    -----------
+    subclass:
+        Class inheriting from :class:`Processor`.
+    proc_data_type: Mapping[str, type]
+        Mapping of dynamic attributes to their corresponding types.
+    proc_data_empty: Mapping[str, np.ndarray]
+        Mapping of dynamic attributes to their corresponding empty state.
+
+    Expected Output
+    ---------------
+    ValueError raised for invalid data types in dynamic attributes.
+    """
+    processor = subclass()
+    # Test valid data types
+    for attr, value in proc_data_empty.items():
+        processor._validate_data(attr, value)
+    # Test invalid data type
+    with pytest.raises(TypeError):
+        for attr, _ in proc_data_empty.items():
+            processor._validate_data(attr, "invalid_type")
+    # Test invalid setting of dynamic attribute (wrong name)
+    with pytest.raises(ValueError):
+        for attr, _ in proc_data_empty.items():
+            processor._validate_data("invalid_name", value)
+
+
+def test_set_data(subclass):
+    """
+    Test the :meth:`set_data` method for assigning dynamic data to internal attributes.
 
     Test Inputs
     -----------
@@ -241,35 +270,24 @@ def test_set_dynamic_attr(subclass):
     """
     input_arr = np.array([1, 2, 3])
     processor = subclass()
-    # Test valid setting of dynamic attribute
-    processor.set_dynamic_attr("input1", input_arr)
+    processor._set_data("input1", input_arr)
     np.testing.assert_array_equal(processor._input1, input_arr)
-    # Test invalid setting of dynamic attribute (wrong name)
-    with pytest.raises(ValueError):
-        processor.set_dynamic_attr("invalid_attr", input_arr)
-    # Test invalid setting of dynamic attribute (wrong type)
-    with pytest.raises(TypeError):
-        processor.set_dynamic_attr("input1", "invalid_type")
 
 
-def test_input_validation(subclass, input_data):
+def test_check_missing(subclass, input_data):
     """
-    Test the method :meth:`check_inputs` for validation logic.
+    Test the method :meth:`_check_missing` for validation logic.
 
     Expected Output
     ---------------
-    ValueError raised for missing or invalid input attributes.
+    ValueError raised for missing input attributes.
     """
     processor = subclass()
     # Test missing input: remove one required element from input_data
     key1 = list(input_data.keys())[0]
     input_data_invalid = {k: v for k, v in input_data.items() if k != key1}
     with pytest.raises(ValueError):
-        processor.check_inputs(**input_data_invalid)
-    # Test invalid input type: pass string values instead of arrays
-    input_data_invalid_type = {k: "invalid_type" for k in input_data}
-    with pytest.raises(TypeError):
-        processor.check_inputs(**input_data_invalid_type)
+        processor._check_missing_data(input_data_invalid, processor.input_attrs)
 
 
 def test_process(subclass, input_data, output_data):
