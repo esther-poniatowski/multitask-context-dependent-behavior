@@ -33,7 +33,7 @@ class ProcessorMeta(ABCMeta):
     input_attrs: Processor.input_attrs
     output_attrs: Processor.output_attrs
     intermediate_attrs: Processor.intermediate_attrs
-    dynattr_type: Processor.dynattr_type
+    proc_data_type: Processor.proc_data_type
 
     Methods
     -------
@@ -102,19 +102,19 @@ class ProcessorMeta(ABCMeta):
            the attribute name (see "Late Binding Issue").
         """
         # Get class attributes declared in the class dictionary
-        dynattr_type = dct.get("dynattr_type", {})
+        proc_data_type = dct.get("proc_data_type", {})
         dynamic_attrs = (
             dct.get("input_attrs", ())
             + dct.get("output_attrs", ())
             + dct.get("intermediate_attrs", ())
         )
         # Generate the default empty attributes
-        dct["dynattr_empty"] = mcs.generate_empty_by_type(dynattr_type)
+        dct["proc_data_empty"] = mcs.generate_empty_by_type(proc_data_type)
         # Define a property to access each dynamic attribute
         for attr in dynamic_attrs:
             dct[attr] = mcs.make_property(attr)
         # Check the consistency of the class-level attributes
-        mcs.check_consistency(dynamic_attrs, dynattr_type)
+        mcs.check_consistency(dynamic_attrs, proc_data_type)
         # Create the new processor class
         return super().__new__(mcs, name, bases, dct)
 
@@ -140,10 +140,10 @@ class ProcessorMeta(ABCMeta):
         return property(prop_getter)
 
     @staticmethod
-    def generate_empty_by_type(dynattr_type):
+    def generate_empty_by_type(proc_data_type):
         """
         Generate the default empty attributes corresponding to the types specified in the
-        class-level attribute `dynattr_type`.
+        class-level attribute `proc_data_type`.
 
         In general, the default empty value for a type is the result of calling the type without any
         arguments.
@@ -156,23 +156,23 @@ class ProcessorMeta(ABCMeta):
 
         Returns
         -------
-        dynattr_empty: Dict[str, Any]
+        proc_data_empty: Dict[str, Any]
             Mapping of dynamic attributes to their corresponding empty instance.
         """
-        dynattr_empty = {}
-        for attr, tpe in dynattr_type.items():
+        proc_data_empty = {}
+        for attr, tpe in proc_data_type.items():
             if tpe == np.ndarray:
-                dynattr_empty[attr] = np.empty(0)
+                proc_data_empty[attr] = np.empty(0)
             else:
-                dynattr_empty[attr] = tpe()
-        return dynattr_empty
+                proc_data_empty[attr] = tpe()
+        return proc_data_empty
 
     @staticmethod
-    def check_consistency(dynamic_attrs, dynattr_type):
+    def check_consistency(dynamic_attrs, proc_data_type):
         """
         Check that the class-level attributes are consistent with each other.
 
-        Specifically, check that the keys in :attr:`Data.dynattr_type` (dict) match the strings in
+        Specifically, check that the keys in :attr:`Data.proc_data_type` (dict) match the strings in
         :attr:`Processor.input_attrs`, :attr:`Processor.output_attrs` and
         :attr:`Processor.intermediate_attrs` (tuples).
 
@@ -180,21 +180,21 @@ class ProcessorMeta(ABCMeta):
         ----------
         dynamic_attrs: Tuple[str, ...]
             Names of the dynamic attributes.
-        dynattr_type: Dict[str, Type]
+        proc_data_type: Dict[str, Type]
             Mapping of dynamic attributes to their corresponding type.
 
         Implementation
         --------------
-        Compare the sets of keys in the dictionary :attr:`Processor.dynattr_type` and the content of
+        Compare the sets of keys in the dictionary :attr:`Processor.proc_data_type` and the content of
         the tuples by converting the latter to sets.
 
         Raise
         -----
         ValueError
-            If the keys in :attr:`Processor.dynattr_type` do not match those in the tuples which
+            If the keys in :attr:`Processor.proc_data_type` do not match those in the tuples which
             indicate the dynamic attributes.
         """
-        if set(dynattr_type.keys()) != set(dynamic_attrs):
+        if set(proc_data_type.keys()) != set(dynamic_attrs):
             raise ValueError("Inconsistent dynamic attributes")
 
 
@@ -210,9 +210,9 @@ class Processor(metaclass=ProcessorMeta):
         Names of the outputs, i.e. results of the processing.
     intermediate_attrs: Tuple[str], default=()
         Names of the intermediate data which should be stored for some processing steps.
-    dynattr_type: Mapping[str, Type], default={}
+    proc_data_type: Mapping[str, Type], default={}
         Mapping of dynamic attributes to their corresponding type.
-    dynattr_empty: Mapping[str, Any], default={}
+    proc_data_empty: Mapping[str, Any], default={}
         Mapping of dynamic attributes to their corresponding empty instance.
 
     Attributes
@@ -274,8 +274,8 @@ class Processor(metaclass=ProcessorMeta):
     input_attrs: Tuple[str, ...] = ()
     output_attrs: Tuple[str, ...] = ()
     intermediate_attrs: Tuple[str, ...] = ()
-    dynattr_type: Mapping[str, Type] = MappingProxyType({})
-    dynattr_empty: Mapping[str, Any] = MappingProxyType({})
+    proc_data_type: Mapping[str, Type] = MappingProxyType({})
+    proc_data_empty: Mapping[str, Any] = MappingProxyType({})
 
     def __init__(self, **config):
         # Initialize configuration attributes
@@ -286,13 +286,48 @@ class Processor(metaclass=ProcessorMeta):
                 setattr(self, attr, config[attr])
         # Initialize internal attributes to empty instances of expected types
         self._has_data = False
-        self.set_empty_data()
+        self._set_empty_data()
 
     def __repr__(self):
         config_values = {attr: getattr(self, attr) for attr in self.config_attrs}
         return f"<{self.__class__.__name__}(status={self._has_data}, config={config_values})>"
 
-    def set_dynamic_attr(self, attr, value):
+    def _validate_data(self, attr: str, value: Any) -> None:
+        """
+        Validate a dynamic attribute name and value.
+
+        Parameters
+        ----------
+        attr: str
+            Name of the dynamic attribute.
+        value: Any
+            Value to validate.
+
+        Raises
+        ------
+        ValueError
+            If the attribute name is invalid.
+        TypeError
+            If the type of the value does not match the expected type specified in `proc_data_type`.
+        """
+        if attr not in self.proc_data_type:
+            raise ValueError(f"Invalid name: '{attr}'")
+        tpe = self.proc_data_type[attr]  # expected type
+        if not isinstance(value, tpe):
+            raise TypeError(f"Invalid type: type({attr}) = {type(value)} != {tpe}")
+
+    def _validate_inputs(self, **input_data) -> None:
+        """
+        Perform more specific validation of inputs (structure, datatype... ). To be implemented in
+        concrete subclasses.
+
+        Parameters
+        ----------
+        input_data: Mapping[str, Any]
+            Input data to process.
+        """
+
+    def _set_data(self, attr, value):
         """
         Set a value in the internal attribute to store dynamic data.
 
@@ -302,25 +337,14 @@ class Processor(metaclass=ProcessorMeta):
             Name of the dynamic attribute.
         value: Any
             Value to set.
-
-        Raises
-        ------
-        ValueError
-            If the attribute name is invalid.
-        TypeError
-            If the type of the value does not match the expected type specified in `dynattr_type`.
         """
-        if attr not in self.dynattr_type:
-            raise ValueError(f"Invalid dynamic attribute: '{attr}'")
-        tpe = self.dynattr_type[attr]  # expected type
-        if not isinstance(value, tpe):
-            raise TypeError(f"Invalid type: type({attr}) = {type(value)} != {tpe}")
+        self._validate_data(attr, value)
         setattr(self, f"_{attr}", value)  # leading underscore
 
-    def set_empty_data(self):
+    def _set_empty_data(self):
         """Reset the dynamic attributes to their default empty state."""
-        for attr, value in self.dynattr_empty.items():
-            self.set_dynamic_attr(attr, value)
+        for attr, value in self.proc_data_empty.items():
+            self._set_data(attr, value)
         self._has_data = False  # reset flag
 
     def process(self, **input_data) -> Dict[str, Any]:
@@ -351,28 +375,17 @@ class Processor(metaclass=ProcessorMeta):
         """
         # Set input data
         self.check_inputs(**input_data)
-        self.set_empty_data()
+        self._set_empty_data()
         for input_name, input_value in input_data.items():
-            self.set_dynamic_attr(input_name, input_value)
+            self._set_data(input_name, input_value)
         # Execute subclass-specific processing logic
-        self._validate(**input_data)  # optional
+        self._validate_inputs(**input_data)  # optional
         output_data = self._process(**input_data)  # required
         # Store the results and return them
         for attr, value in output_data.items():
-            self.set_dynamic_attr(attr, value)
+            self._set_data(attr, value)
         self._has_data = True
         return output_data
-
-    def _validate(self, **input_data) -> None:
-        """
-        Perform more specific validation of inputs (structure, datatype... ). To be implemented in
-        concrete subclasses.
-
-        Parameters
-        ----------
-        input_data: Mapping[str, Any]
-            Input data to process.
-        """
 
     @abstractmethod
     def _process(self, **input_data) -> Dict[str, Any]:
@@ -392,34 +405,34 @@ class Processor(metaclass=ProcessorMeta):
         attributes in the base class `process` method.
         """
 
-    def check_inputs(self, **input_data: Mapping[str, Any]) -> None:
+    def _check_data(
+        self, data: Mapping[str, Any], expected_attrs: Tuple[str, ...], data_type: str
+    ) -> None:
         """
-        Check the input data passed to the processor.
+        General method to check the validity of data (inputs or outputs).
 
         Parameters
         ----------
-        input_data: Mapping[str, Any]
-            Input data to process.
+        data: Mapping[str, Any]
+            Data to check (either inputs or outputs).
+        expected_attrs: Tuple[str, ...]
+            Tuple of expected attribute names (e.g., `input_attrs` or `output_attrs`).
+        data_type: str
+            Type of data being checked (e.g., 'input' or 'output'). Used for error messages.
 
         Raises
         ------
         ValueError
-            If an invalid input attribute is provided.
-            If a required input attribute is missing.
+            If a required attribute is missing or if an invalid attribute name is provided.
         TypeError
-            If the input data type does not match the expected type in `dynattr_type`.
+            If the data type of any attribute does not match the expected type in `proc_data_type`.
         """
-        # Check for missing or invalid input attributes
-        for input_name in input_data:
-            if input_name not in self.input_attrs:
-                raise ValueError(f"Invalid input attribute: '{input_name}'")
-        for input_name in self.input_attrs:
-            if input_name not in input_data:
-                raise ValueError(f"Missing input attribute: '{input_name}'")
-        # Check for correct data types
-        for input_name, input_value in input_data.items():
-            expected_type = self.dynattr_type.get(input_name)
-            if expected_type and not isinstance(input_value, expected_type):
-                raise TypeError(
-                    f"Invalid type: type({input_name}) = {type(input_value)} != {expected_type}"
-                )
+        # Check for missing or invalid attribute names
+        for attr in expected_attrs:
+            if attr not in data:
+                raise ValueError(f"Missing {data_type} attribute: '{attr}'")
+
+        for attr_name, attr_value in data.items():
+            if attr_name not in expected_attrs:
+                raise ValueError(f"Invalid {data_type} attribute: '{attr_name}'")
+            self._validate_data(attr_name, attr_value)
