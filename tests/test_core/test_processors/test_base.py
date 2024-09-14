@@ -97,7 +97,7 @@ def subclass(request):
 
         input_attrs = request.getfixturevalue("input_attrs")
         output_attrs = request.getfixturevalue("output_attrs")
-        proc_data_type = request.getfixturevalue("proc_data_type")
+        proc_data_empty = request.getfixturevalue("proc_data_empty")
 
         def _process(self, **input_data):
             result1 = input_data["input1"] * 2
@@ -209,7 +209,7 @@ def test_check_consistency():
 
 def test_init_empty_data(subclass):
     """
-    Ensure that the data attributes are initializex with default empty state.
+    Ensure that the data attributes are initialize with default empty state.
 
     Expected Output
     ---------------
@@ -224,7 +224,7 @@ def test_init_empty_data(subclass):
     assert processor._has_data is False
 
 
-def test_validate_data(subclass, proc_data_type, proc_data_empty):
+def test_validate_data(subclass, proc_data_empty):
     """
     Test the :meth:`_validate_data` method for checking the data types of dynamic attributes.
 
@@ -232,8 +232,6 @@ def test_validate_data(subclass, proc_data_type, proc_data_empty):
     -----------
     subclass:
         Class inheriting from :class:`Processor`.
-    proc_data_type: Mapping[str, type]
-        Mapping of dynamic attributes to their corresponding types.
     proc_data_empty: Mapping[str, np.ndarray]
         Mapping of dynamic attributes to their corresponding empty state.
 
@@ -251,7 +249,7 @@ def test_validate_data(subclass, proc_data_type, proc_data_empty):
             processor._validate_data(attr, "invalid_type")
     # Test invalid setting of dynamic attribute (wrong name)
     with pytest.raises(ValueError):
-        for attr, _ in proc_data_empty.items():
+        for attr, value in proc_data_empty.items():
             processor._validate_data("invalid_name", value)
 
 
