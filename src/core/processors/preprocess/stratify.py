@@ -7,10 +7,13 @@ Classes
 -------
 :class:`Stratifier`
 """
-from typing import List, Optional, TypeAlias, Union
+from types import MappingProxyType
+from typing import List, TypeAlias, Union, Dict, Any
 
 import numpy as np
 import numpy.typing as npt
+
+from core.processors.base import Processor
 
 Strata: TypeAlias = npt.NDArray[np.int64]
 """Type alias for stratum labels."""
@@ -18,12 +21,13 @@ Features = List[npt.NDArray[Union[np.int64, np.float64, np.str_]]]
 """Type alias for a list of feature arrays."""
 
 
-class Stratifier:
+class Stratifier(Processor):
     """
     Divide a set of samples in strata (groups) based on combinations of experimental features.
 
     Class Attributes
     ----------------
+    See :class:`Processor` for inherited class attributes.
     valid_types : tuple
         Valid NumPy data types (dtype) for the feature arrays (int64, float64, str_).
 
@@ -48,7 +52,8 @@ class Stratifier:
     >>> features = [np.array([1, 1, 2], dtype=np.int64),
     ...             np.array([0.1, 0.1, 0.2], dtype=np.float64),
     ...             np.array(["A", "A", "B"], dtype=np.str_)]
-    >>> stratifier = Stratifier(features)
+    >>> stratifier = Stratifier()
+    >>> stratifier.process(features=features)
     >>> strata = stratifier.strata  # access the cached strata via the property
     >>> print(strata)
     [0 0 1]
@@ -58,47 +63,29 @@ class Stratifier:
     >>> new_features = [np.array([1, 2, 2], dtype=np.int64),
     ...                 np.array([0.2, 0.2, 0.2], dtype=np.float64),
     ...                 np.array(["X", "Y", "Y"], dtype=np.str_)]
-    >>> stratifier.features = new_features  # automatically resets strata cache
+    >>> stratifier.process(features=new_features) # automatically resets strata cache
     >>> print(stratifier.strata)
     [0 1 1]
 
     Implementation
     --------------
-    Private attributes are used to enforce control and validation:
-
-    - `_features`: Accessed via the property `features` and set by the property setter. It validates
-      the input features and resets the cache `_strata` if features are updated.
-    - `_strata`:  Accessed and set via the property `strata`. It computes this attribute lazily on
-      first access and caches it for subsequent accesses.
+    Private attributes are used to enforce control and validation: `_features`, `_strata`.
+    Those private attributes are accessed via the corresponding public properties (with no
+    underscore) which are automatically created by the metaclass `ProcessorMeta`.
     """
 
+    config_attrs = ()
+    input_attrs = ("features",)
+    output_attrs = ("strata",)
+    proc_data_empty = MappingProxyType({"features": [], "strata": np.array([], dtype=np.int64)})
     valid_types = (np.int64, np.float64, np.str_)
 
-    def __init__(self, features: Features):
-        # Initialize the cache
-        self._strata: Optional[Strata] = None
-        # Declare types for private attributes set by property setters
-        self._features: Features
-        self.features = features  # call property setter automatically
+    def __init__(self):
+        super().__init__()  # call the parent class constructor (no config attributes)
 
-    @property
-    def features(self) -> Features:
-        """Access to the private attribute `_features`."""
-        return self._features
-
-    @features.setter
-    def features(self, new_features: Features):
-        """Validate and set `_features`, reset the cache `_strata`."""
-        self._validate_features(new_features)
-        self._features = new_features
-        self._strata = None
-
-    @property
-    def strata(self) -> Strata:
-        """Access to the cache `_strata`. Compute it if empty."""
-        if self._strata is None:
-            self._strata = self.stratify()
-        return self._strata
+    def _validate_inputs(self, **input_data) -> None:
+        """Implement the template method called in the base class :meth:`process` method."""
+        self._validate_features(input_data["features"])
 
     def _validate_features(self, features: Features) -> None:
         """
@@ -123,6 +110,11 @@ class Stratifier:
         n_samples = [len(feat) for feat in features]
         if not all(n == n_samples[0] for n in n_samples):
             raise ValueError(f"Unequal number of samples across features: {n_samples}")
+
+    def _process(self) -> Dict[str, Any]:
+        """Implement the template method called in the base class :meth:`process` method."""
+        strata = self.stratify()
+        return {"strata": strata}
 
     def stratify(self) -> Strata:
         """

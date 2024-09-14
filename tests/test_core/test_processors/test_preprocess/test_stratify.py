@@ -34,7 +34,8 @@ def test_stratify():
         np.array(["A", "A", "B"], dtype=np.str_),
     ]
     expected_strata = np.array([0, 0, 1], dtype=np.int64)
-    stratifier = Stratifier(features)
+    stratifier = Stratifier()
+    stratifier.process(features=features)
     strata = stratifier.strata
     assert_array_equal(strata, expected_strata), f"Expected {expected_strata}, Got {strata}"
 
@@ -52,8 +53,9 @@ def test_invalid_feature_dimensions():
     ValueError is raised due to invalid feature dimensions.
     """
     features = [np.array([[1, 2], [3, 4]], dtype=np.int64)]  # 2D array, invalid
+    stratifier = Stratifier()
     with pytest.raises(ValueError):
-        Stratifier(features)
+        stratifier._validate_features(features)
 
 
 def test_invalid_feature_types():
@@ -69,8 +71,9 @@ def test_invalid_feature_types():
     ValueError is raised due to invalid feature types.
     """
     features = [np.array([1, 2, 3], dtype=object)]  # Invalid type
+    stratifier = Stratifier()
     with pytest.raises(ValueError):
-        Stratifier(features)
+        stratifier._validate_features(features)
 
 
 def test_unequal_number_of_samples():
@@ -89,8 +92,9 @@ def test_unequal_number_of_samples():
         np.array([1, 2, 3], dtype=np.int64),
         np.array([1, 2], dtype=np.int64),
     ]
+    stratifier = Stratifier()
     with pytest.raises(ValueError):
-        Stratifier(features)
+        stratifier._validate_features(features)
 
 
 def test_dynamic_attribute_update():
@@ -105,15 +109,16 @@ def test_dynamic_attribute_update():
     ----------------
     Strata are updated correctly when `features` are changed dynamically.
     """
+    stratifier = Stratifier()
     # Create Stratifier and check initial strata
     features_1 = [np.array([1, 1, 1], dtype=np.int64)]
     expected_1 = np.array([0, 0, 0], dtype=np.int64)
-    stratifier = Stratifier(features_1)
+    stratifier.process(features=features_1)
     strata_1 = stratifier.strata
     assert_array_equal(strata_1, expected_1), f"Expected {expected_1}, Got {strata_1}"
     # Update features
     features_2 = [np.array([1, 1, 2, 2], dtype=np.int64)]
     expected_2 = np.array([0, 0, 1, 1], dtype=np.int64)
-    stratifier.features = features_2
+    stratifier.process(features=features_2)
     strata_2 = stratifier.strata
     assert_array_equal(strata_2, expected_2), f"Expected {expected_2}, Got {strata_2}"
