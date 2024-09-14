@@ -11,6 +11,9 @@ Classes
 from abc import ABCMeta, abstractmethod
 from types import MappingProxyType
 from typing import Tuple, Mapping, Dict, Type, Any
+import warnings
+
+import numpy as np
 
 
 class ProcessorMeta(ABCMeta):
@@ -227,6 +230,7 @@ class Processor(metaclass=ProcessorMeta):
     _set_data
     _process (to be implemented in concrete subclasses, required)
     process
+    set_seed
 
     Notes
     -----
@@ -431,3 +435,24 @@ class Processor(metaclass=ProcessorMeta):
             self._set_data(output_name, output_value)
         self._has_data = True  # update flag
         return output_data
+
+    def set_seed(self) -> None:
+        """
+        Set the random seed for reproducibility.
+
+        See Also
+        --------
+        :func:`np.random.seed`
+
+        Notes
+        -----
+        This method is included in the base class as a utility which is commonly used in processors
+        which involve random number generation.
+
+        If no 'seed' attribute is set in the processor instance, a warning is raised and the random
+        state initialization is skipped.
+        """
+        if hasattr(self, "seed"):
+            np.random.seed(self.seed)
+        else:
+            warnings.warn("No 'seed' set. Skip random state initialization.", UserWarning)
