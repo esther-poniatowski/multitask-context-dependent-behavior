@@ -12,8 +12,6 @@ from abc import ABCMeta, abstractmethod
 from types import MappingProxyType
 from typing import Tuple, Mapping, Dict, Type, Any
 
-import numpy as np
-
 
 class ProcessorMeta(ABCMeta):
     """
@@ -38,8 +36,8 @@ class ProcessorMeta(ABCMeta):
     Methods
     -------
     :meth:`__new__`
+    :meth:`infer_types`
     :meth:`make_property`
-    :meth:`validate_types`
     :meth:`check_consistency`
 
     See Also
@@ -103,14 +101,15 @@ class ProcessorMeta(ABCMeta):
            capture the attribute name (see "Late Binding Issue").
         """
         # Get class attributes declared in the class dictionary
-        proc_data_type = dct.get("proc_data_type", {})
+        proc_data_empty = dct.get("proc_data_empty", {})
         proc_data = (
             dct.get("input_attrs", ())
             + dct.get("output_attrs", ())
             + dct.get("intermediate_attrs", ())
         )
-        # Generate the default empty attributes
-        dct["proc_data_empty"] = mcs.generate_empty_by_type(proc_data_type)
+        # Assign data types automatically based on the default empty instances
+        proc_data_type = mcs.infer_types(proc_data_empty)
+        dct["proc_data_type"] = proc_data_type
         # Define a property to access each internal attribute
         for attr in proc_data:
             dct[attr] = mcs.make_property(attr)
@@ -118,6 +117,23 @@ class ProcessorMeta(ABCMeta):
         mcs.check_consistency(proc_data, proc_data_type)
         # Create the new processor class
         return super().__new__(mcs, name, bases, dct)
+
+    @staticmethod
+    def infer_types(proc_data_empty):
+        """
+        Infer the types of the processing attributes from the default empty instances.
+
+        Parameters
+        ----------
+        proc_data_empty: Dict[str, Any]
+            Mapping of attributes names to their corresponding empty instance.
+
+        Returns
+        -------
+        proc_data_type: Dict[str, Type]
+            Mapping of attributes names to their corresponding type.
+        """
+        return {attr: type(value) for attr, value in proc_data_empty.items()}
 
     @staticmethod
     def make_property(attr):
@@ -139,34 +155,6 @@ class ProcessorMeta(ABCMeta):
             return self.__dict__.get(f"_{attr}")  # leading underscore
 
         return property(prop_getter)
-
-    @staticmethod
-    def generate_empty_by_type(proc_data_type):
-        """
-        Generate the default empty attributes corresponding to the types specified in the
-        class-level attribute `proc_data_type`.
-
-        In general, the default empty value for a type is the result of calling the type without any
-        arguments.
-        When the type is a numpy array, the special numpy function is called explicitly.
-
-        Parameters
-        ----------
-        proc_data: Dict[str, ...]
-            Mapping of attributes names to their corresponding type.
-
-        Returns
-        -------
-        proc_data_empty: Dict[str, Any]
-            Mapping of attributes names to their corresponding empty instance.
-        """
-        proc_data_empty = {}
-        for attr, tpe in proc_data_type.items():
-            if tpe == np.ndarray:
-                proc_data_empty[attr] = np.empty(0)
-            else:
-                proc_data_empty[attr] = tpe()
-        return proc_data_empty
 
     @staticmethod
     def check_consistency(proc_data, proc_data_type):
@@ -279,8 +267,8 @@ class Processor(metaclass=ProcessorMeta):
     input_attrs: Tuple[str, ...] = ()
     output_attrs: Tuple[str, ...] = ()
     intermediate_attrs: Tuple[str, ...] = ()
-    proc_data_type: Mapping[str, Type] = MappingProxyType({})
     proc_data_empty: Mapping[str, Any] = MappingProxyType({})
+    proc_data_type: Mapping[str, Type] = MappingProxyType({})
 
     def __init__(self, **config):
         # Initialize configuration attributes
@@ -367,7 +355,7 @@ class Processor(metaclass=ProcessorMeta):
         setattr(self, f"_{attr}", value)  # leading underscore
 
     @abstractmethod
-    def _process(self, **input_data) -> Dict[str, Any]:
+    def _process(self) -> Dict[str, Any]:
         """
         Orchestrate the specific processing logic. To be implemented in concrete subclasses.
 
@@ -418,9 +406,8 @@ class Processor(metaclass=ProcessorMeta):
         # Reset data after complete validation
         for attr, value in self.proc_data_empty.items():
             self._set_data(attr, value)
-        self._has_data = False
-        # Store new inputs
         self._has_data = False  # reset flag
+        # Store new inputs
         for input_name, input_value in input_data.items():
             self._set_data(input_name, input_value)
         # Process
