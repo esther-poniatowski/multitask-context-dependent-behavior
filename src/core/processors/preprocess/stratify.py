@@ -138,12 +138,13 @@ class Stratifier(Processor):
         :func:`numpy.column_stack`
             Stack 1-D arrays as columns into a 2-D array. If the feature arrays are of mixed types,
             the resulting stacked array will upcast data types to an array of `str`.
+            Resulting shape (here): ``(n_samples, n_features)``.
         :func:`numpy.unique`
             Find the unique elements of an array.
             Output: ``(unique_combinations, strata)``
             Parameter `return_inverse=True`: Return the indices of the unique combinations in the
             original array, which are used to assign the stratum labels to the samples.
         """
-        feature_stack = np.column_stack(self.features)  # shape: (n_samples, n_features)
+        feature_stack = np.column_stack(self.features)  # type: ignore[attr-defined]
         _, strata = np.unique(feature_stack, axis=0, return_inverse=True)  # shape: (n_samples,)
         return strata
