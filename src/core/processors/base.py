@@ -24,9 +24,9 @@ class ProcessorMeta(ABCMeta):
 
     Responsibilities:
 
-    - Create a property for each "dynamic attribute".
+    - Create a property for each "processing attribute".
     - Check the consistency of certain class-level attributes.
-    - Validate the types of the dynamic attributes specified in the class-level attribute.
+    - Validate the types of the processing attributes specified in the class-level attribute.
 
     Attributes
     ----------
@@ -71,8 +71,9 @@ class ProcessorMeta(ABCMeta):
     To capture the value of the variable in each closure at the time of its definition, the value of
     the variable can be passed as a *default argument* to the closure.
 
-    This is performed via the method `make_property` which creates a property to access the dynamic
-    attribute. The inner function `prop_getter` captures the attribute name as a default argument.
+    This is performed via the method `make_property` which creates a property to access the
+    processing attribute. The inner function `prop_getter` captures the attribute name as a default
+    argument.
     """
 
     def __new__(mcs, name, bases, dct):
@@ -97,9 +98,9 @@ class ProcessorMeta(ABCMeta):
 
         Implementation
         --------------
-        1. Get the dynamic attributes declared in the class dictionary.
-        2. Define a property for each dynamic attribute. Use a closure (inner function) to capture
-           the attribute name (see "Late Binding Issue").
+        1. Get the attributes names to store processing data declared in the class dictionary.
+        2. Define a property to access each internal attribute. Use a closure (inner function) to
+           capture the attribute name (see "Late Binding Issue").
         """
         # Get class attributes declared in the class dictionary
         proc_data_type = dct.get("proc_data_type", {})
@@ -110,7 +111,7 @@ class ProcessorMeta(ABCMeta):
         )
         # Generate the default empty attributes
         dct["proc_data_empty"] = mcs.generate_empty_by_type(proc_data_type)
-        # Define a property to access each dynamic attribute
+        # Define a property to access each internal attribute
         for attr in proc_data:
             dct[attr] = mcs.make_property(attr)
         # Check the consistency of the class-level attributes
@@ -121,17 +122,17 @@ class ProcessorMeta(ABCMeta):
     @staticmethod
     def make_property(attr):
         """
-        Create a property to access an internal dynamic attribute.
+        Create a property to access an internal attribute storing processing data.
 
         Parameters
         ----------
         attr: str
-            Name of the dynamic attribute (without leading underscore).
+            Name of the future internal attribute (without leading underscore).
 
         Returns
         -------
         property
-            Property to access the internal dynamic attribute.
+            Property to access the internal attribute.
         """
 
         def prop_getter(self):
@@ -152,12 +153,12 @@ class ProcessorMeta(ABCMeta):
         Parameters
         ----------
         proc_data: Dict[str, ...]
-            Mapping of dynamic attributes to their corresponding type.
+            Mapping of attributes names to their corresponding type.
 
         Returns
         -------
         proc_data_empty: Dict[str, Any]
-            Mapping of dynamic attributes to their corresponding empty instance.
+            Mapping of attributes names to their corresponding empty instance.
         """
         proc_data_empty = {}
         for attr, tpe in proc_data_type.items():
@@ -179,23 +180,27 @@ class ProcessorMeta(ABCMeta):
         Parameters
         ----------
         proc_data: Tuple[str, ...]
-            Names of the dynamic attributes.
+            Names of the attributes storing processing data.
         proc_data_type: Dict[str, Type]
-            Mapping of dynamic attributes to their corresponding type.
+            Mapping of attributes names to their corresponding type.
 
         Implementation
         --------------
-        Compare the sets of keys in the dictionary :attr:`Processor.proc_data_type` and the content of
-        the tuples by converting the latter to sets.
+        Compare the sets of keys in the dictionary :attr:`Processor.proc_data_type` and the content
+        of the tuples by converting the latter to sets.
 
         Raise
         -----
         ValueError
             If the keys in :attr:`Processor.proc_data_type` do not match those in the tuples which
-            indicate the dynamic attributes.
+            indicate the names of the attributes storing processing data.
         """
-        if set(proc_data_type.keys()) != set(proc_data):
-            raise ValueError("Inconsistent dynamic attributes")
+        missing_in_types = set(proc_data) - set(proc_data_type.keys())
+        if missing_in_types:
+            raise ValueError(f"Missing types: {missing_in_types}")
+        missing_in_data = set(proc_data_type.keys()) - set(proc_data)
+        if missing_in_data:
+            raise ValueError(f"Missing data: {missing_in_data}")
 
 
 class Processor(metaclass=ProcessorMeta):
@@ -211,44 +216,44 @@ class Processor(metaclass=ProcessorMeta):
     intermediate_attrs: Tuple[str], default=()
         Names of the intermediate data which should be stored for some processing steps.
     proc_data_type: Mapping[str, Type], default={}
-        Mapping of dynamic attributes to their corresponding type.
+        Mapping of attributes names to their corresponding type.
     proc_data_empty: Mapping[str, Any], default={}
-        Mapping of dynamic attributes to their corresponding empty instance.
+        Mapping of attributes names to their corresponding empty instance.
 
     Attributes
     ----------
     _has_data: bool
-        Flag indicating whether the class instance currently stores dynamic data.
+        Flag indicating whether the class instance currently stores processing data.
 
     Methods
     -------
     __init__
     __repr__
-    set_dynamic_attr
-    set_empty_data
+    _validate_data
+    _validate_inputs (to be implemented in concrete subclasses, optional)
+    _check_missing_data
+    _set_data
+    _process (to be implemented in concrete subclasses, required)
     process
-    _validate
-    _process
-    check_inputs
 
     Notes
     -----
-    Configuration vs. Dynamic Attributes
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    Configuration vs. Processing Attributes
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     Processor classes operate on data of two distinct nature:
 
     - "Configuration parameters" define the fixed behavior of each class instance throughout its
       lifecycle (Examples: model parameters, tuning settings...). They are initialized in the
       constructor for each processor instance. Those parameters apply homogeneously on all
       subsequent calls of the main processing method.
-    - "Dynamic data" is processed by one single call to the main method of the class instance
-      (examples: input data, output result of the processing...). They are passed as arguments to
-      the main processing method, stored transiently, and reset when new data is provided. The
-      initial state of those attributes is set empty in the constructor. They are marked as internal
-      attributes with a leading underscore, and are accessed through read-only properties (to
-      prevent arbitrary modifications which would break the consistency among dependent attributes).
+    - "Processing data" is processed at runtime by one single call to the main method of the class
+      instance (examples: input data, output result...). They are passed as arguments to the main
+      processing method, stored temporarily, and reset when new data is provided. The initial state
+      of those attributes is set empty in the constructor. They are marked as internal attributes
+      with a leading underscore, and are accessed through read-only properties (to prevent arbitrary
+      modifications which would break the consistency among dependent attributes).
 
-    Storing dynamic data as transient attributes has several purposes:
+    Storing processing data as transient attributes has several purposes:
 
     - It facilitates the access to those attributes across multiple methods for different processing
       steps.
@@ -300,7 +305,7 @@ class Processor(metaclass=ProcessorMeta):
         Parameters
         ----------
         name: str
-            Name of the dynamic attribute.
+            Name of the attribute to store one piece of processing data.
         value: Any
             Value to validate.
 
@@ -370,7 +375,7 @@ class Processor(metaclass=ProcessorMeta):
         -------
         output_data: Dict[str, Any]
             Processed output, target results of the operations performed by the concrete processor.
-            Keys: Same as the dynamic attributes specified in the class attribute `output_attrs`.
+            Keys: Names specified in the class attribute `output_attrs`.
             Values: Results of the processing.
 
         Notes
