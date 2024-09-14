@@ -372,6 +372,8 @@ class Processor(metaclass=ProcessorMeta):
 
         Notes
         -----
+        No input arguments are passed to this method since input data is stored in the class
+        instance after validation.
         The return format is a dictionary in order to automatically map the output to the internal
         attributes in the base class `process` method.
         """
@@ -401,6 +403,13 @@ class Processor(metaclass=ProcessorMeta):
         -----
         This main method orchestrates the processing logic by calling the subclass-specific methods
         through a "template method" design pattern.
+
+        Example
+        -------
+        Pass input data to the processor and retrieve the output data:
+
+        >>> processor = ConcreteProcessor()
+        >>> output_data = processor.process(input1=..., input2=...)
         """
         # Validate inputs
         self._check_missing_data(input_data, self.input_attrs)
@@ -415,7 +424,7 @@ class Processor(metaclass=ProcessorMeta):
         for input_name, input_value in input_data.items():
             self._set_data(input_name, input_value)
         # Process
-        output_data = self._process(**input_data)  # subclass-specific logic (required)
+        output_data = self._process()  # subclass-specific logic (required)
         self._check_missing_data(output_data, self.output_attrs)
         # Store outputs
         for output_name, output_value in output_data.items():
