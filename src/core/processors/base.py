@@ -103,7 +103,7 @@ class ProcessorMeta(ABCMeta):
         """
         # Get class attributes declared in the class dictionary
         proc_data_type = dct.get("proc_data_type", {})
-        dynamic_attrs = (
+        proc_data = (
             dct.get("input_attrs", ())
             + dct.get("output_attrs", ())
             + dct.get("intermediate_attrs", ())
@@ -111,10 +111,10 @@ class ProcessorMeta(ABCMeta):
         # Generate the default empty attributes
         dct["proc_data_empty"] = mcs.generate_empty_by_type(proc_data_type)
         # Define a property to access each dynamic attribute
-        for attr in dynamic_attrs:
+        for attr in proc_data:
             dct[attr] = mcs.make_property(attr)
         # Check the consistency of the class-level attributes
-        mcs.check_consistency(dynamic_attrs, proc_data_type)
+        mcs.check_consistency(proc_data, proc_data_type)
         # Create the new processor class
         return super().__new__(mcs, name, bases, dct)
 
@@ -151,7 +151,7 @@ class ProcessorMeta(ABCMeta):
 
         Parameters
         ----------
-        dynamic_attrs: Dict[str, ...]
+        proc_data: Dict[str, ...]
             Mapping of dynamic attributes to their corresponding type.
 
         Returns
@@ -168,7 +168,7 @@ class ProcessorMeta(ABCMeta):
         return proc_data_empty
 
     @staticmethod
-    def check_consistency(dynamic_attrs, proc_data_type):
+    def check_consistency(proc_data, proc_data_type):
         """
         Check that the class-level attributes are consistent with each other.
 
@@ -178,7 +178,7 @@ class ProcessorMeta(ABCMeta):
 
         Parameters
         ----------
-        dynamic_attrs: Tuple[str, ...]
+        proc_data: Tuple[str, ...]
             Names of the dynamic attributes.
         proc_data_type: Dict[str, Type]
             Mapping of dynamic attributes to their corresponding type.
@@ -194,7 +194,7 @@ class ProcessorMeta(ABCMeta):
             If the keys in :attr:`Processor.proc_data_type` do not match those in the tuples which
             indicate the dynamic attributes.
         """
-        if set(proc_data_type.keys()) != set(dynamic_attrs):
+        if set(proc_data_type.keys()) != set(proc_data):
             raise ValueError("Inconsistent dynamic attributes")
 
 
@@ -285,20 +285,21 @@ class Processor(metaclass=ProcessorMeta):
             else:
                 setattr(self, attr, config[attr])
         # Initialize internal attributes to empty instances of expected types
-        self._has_data = False
-        self._set_empty_data()
+        for attr, value in self.proc_data_empty.items():
+            self._set_data(attr, value)
+        self._has_data = False  # set the flag to indicate
 
     def __repr__(self):
         config_values = {attr: getattr(self, attr) for attr in self.config_attrs}
         return f"<{self.__class__.__name__}(status={self._has_data}, config={config_values})>"
 
-    def _validate_data(self, attr: str, value: Any) -> None:
+    def _validate_data(self, name: str, value: Any) -> None:
         """
-        Validate a dynamic attribute name and value.
+        Validate the name and value of a runtime processing data.
 
         Parameters
         ----------
-        attr: str
+        name: str
             Name of the dynamic attribute.
         value: Any
             Value to validate.
@@ -310,16 +311,16 @@ class Processor(metaclass=ProcessorMeta):
         TypeError
             If the type of the value does not match the expected type specified in `proc_data_type`.
         """
-        if attr not in self.proc_data_type:
-            raise ValueError(f"Invalid name: '{attr}'")
-        tpe = self.proc_data_type[attr]  # expected type
+        if name not in self.proc_data_type:
+            raise ValueError(f"Invalid name: '{name}'")
+        tpe = self.proc_data_type[name]  # expected type
         if not isinstance(value, tpe):
-            raise TypeError(f"Invalid type: type({attr}) = {type(value)} != {tpe}")
+            raise TypeError(f"Invalid type: type({name}) = {type(value)} != {tpe}")
 
     def _validate_inputs(self, **input_data) -> None:
         """
-        Perform more specific validation of inputs (structure, datatype... ). To be implemented in
-        concrete subclasses.
+        Perform sub-class specific validation of inputs (structure, datatype... ). To be implemented
+        in concrete subclasses.
 
         Parameters
         ----------
@@ -327,25 +328,56 @@ class Processor(metaclass=ProcessorMeta):
             Input data to process.
         """
 
+    def _check_missing_data(self, data: Mapping[str, Any], expected: Tuple[str, ...]) -> None:
+        """
+        Check missing inputs or outputs provided or recovered by the processor.
+
+        Parameters
+        ----------
+        data: Mapping[str, Any]
+            Data to check (either inputs or outputs).
+        expected: Tuple[str, ...]
+            Expected attribute names (e.g., `input_attrs` or `output_attrs`).
+
+        Raises
+        ------
+        ValueError
+            If a required attribute is missing or if an invalid attribute name is provided.
+        """
+        for attr in expected:
+            if attr not in data:
+                raise ValueError(f"Missing data: '{attr}'")
+
     def _set_data(self, attr, value):
         """
-        Set a value in the internal attribute to store dynamic data.
+        Set the value of an attribute containing runtime processing data.
 
         Parameters
         ----------
         attr: str
-            Name of the dynamic attribute.
+            Name of the internal attribute (without leading underscore).
         value: Any
             Value to set.
         """
-        self._validate_data(attr, value)
         setattr(self, f"_{attr}", value)  # leading underscore
 
-    def _set_empty_data(self):
-        """Reset the dynamic attributes to their default empty state."""
-        for attr, value in self.proc_data_empty.items():
-            self._set_data(attr, value)
-        self._has_data = False  # reset flag
+    @abstractmethod
+    def _process(self, **input_data) -> Dict[str, Any]:
+        """
+        Orchestrate the specific processing logic. To be implemented in concrete subclasses.
+
+        Returns
+        -------
+        output_data: Dict[str, Any]
+            Processed output, target results of the operations performed by the concrete processor.
+            Keys: Same as the dynamic attributes specified in the class attribute `output_attrs`.
+            Values: Results of the processing.
+
+        Notes
+        -----
+        The return format is a dictionary in order to automatically map the output to the internal
+        attributes in the base class `process` method.
+        """
 
     def process(self, **input_data) -> Dict[str, Any]:
         """
@@ -373,66 +405,24 @@ class Processor(metaclass=ProcessorMeta):
         This main method orchestrates the processing logic by calling the subclass-specific methods
         through a "template method" design pattern.
         """
-        # Set input data
-        self.check_inputs(**input_data)
-        self._set_empty_data()
+        # Validate inputs
+        self._check_missing_data(input_data, self.input_attrs)
+        for input_name, input_value in input_data.items():
+            self._validate_data(input_name, input_value)
+        self._validate_inputs(**input_data)  # subclass-specific validation (optional)
+        # Reset data after complete validation
+        for attr, value in self.proc_data_empty.items():
+            self._set_data(attr, value)
+        self._has_data = False
+        # Store new inputs
+        self._has_data = False  # reset flag
         for input_name, input_value in input_data.items():
             self._set_data(input_name, input_value)
-        # Execute subclass-specific processing logic
-        self._validate_inputs(**input_data)  # optional
-        output_data = self._process(**input_data)  # required
-        # Store the results and return them
-        for attr, value in output_data.items():
-            self._set_data(attr, value)
-        self._has_data = True
+        # Process
+        output_data = self._process(**input_data)  # subclass-specific logic (required)
+        self._check_missing_data(output_data, self.output_attrs)
+        # Store outputs
+        for output_name, output_value in output_data.items():
+            self._set_data(output_name, output_value)
+        self._has_data = True  # update flag
         return output_data
-
-    @abstractmethod
-    def _process(self, **input_data) -> Dict[str, Any]:
-        """
-        Orchestrate the specific processing logic. To be implemented in concrete subclasses.
-
-        Returns
-        -------
-        output_data: Dict[str, Any]
-            Processed output, target results of the operations performed by the concrete processor.
-            Keys: Same as the dynamic attributes specified in the class attribute `output_attrs`.
-            Values: Results of the processing.
-
-        Notes
-        -----
-        The return format is a dictionary in order to automatically map the output to the internal
-        attributes in the base class `process` method.
-        """
-
-    def _check_data(
-        self, data: Mapping[str, Any], expected_attrs: Tuple[str, ...], data_type: str
-    ) -> None:
-        """
-        General method to check the validity of data (inputs or outputs).
-
-        Parameters
-        ----------
-        data: Mapping[str, Any]
-            Data to check (either inputs or outputs).
-        expected_attrs: Tuple[str, ...]
-            Tuple of expected attribute names (e.g., `input_attrs` or `output_attrs`).
-        data_type: str
-            Type of data being checked (e.g., 'input' or 'output'). Used for error messages.
-
-        Raises
-        ------
-        ValueError
-            If a required attribute is missing or if an invalid attribute name is provided.
-        TypeError
-            If the data type of any attribute does not match the expected type in `proc_data_type`.
-        """
-        # Check for missing or invalid attribute names
-        for attr in expected_attrs:
-            if attr not in data:
-                raise ValueError(f"Missing {data_type} attribute: '{attr}'")
-
-        for attr_name, attr_value in data.items():
-            if attr_name not in expected_attrs:
-                raise ValueError(f"Invalid {data_type} attribute: '{attr_name}'")
-            self._validate_data(attr_name, attr_value)
