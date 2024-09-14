@@ -55,9 +55,9 @@ def output_attrs():
 
 
 @pytest.fixture
-def dynattr_type(input_attrs, output_attrs) -> Mapping[str, type]:
+def proc_data_type(input_attrs, output_attrs) -> Mapping[str, type]:
     """
-    Fixture - Generate the class attribute :attr:`dynattr_type`.
+    Fixture - Generate the class attribute :attr:`proc_data_type`.
 
     Returns
     -------
@@ -68,9 +68,9 @@ def dynattr_type(input_attrs, output_attrs) -> Mapping[str, type]:
 
 
 @pytest.fixture
-def dynattr_empty(input_attrs, output_attrs) -> Mapping[str, np.ndarray]:
+def proc_data_empty(input_attrs, output_attrs) -> Mapping[str, np.ndarray]:
     """
-    Fixture - Generate the class attribute :attr:`dynattr_empty`.
+    Fixture - Generate the class attribute :attr:`proc_data_empty`.
 
     Returns
     -------
@@ -89,7 +89,7 @@ def subclass(request):
     -------
     TestClass:
         Class inheriting from :class:`Processor`. It defines the class attributes `input_attrs`,
-        `output_attrs`, and `dynattr_type` required by the metaclass :class:`ProcessorMeta`. It
+        `output_attrs`, and `proc_data_type` required by the metaclass :class:`ProcessorMeta`. It
         implements the abstract method `_process`.
     """
 
@@ -97,7 +97,7 @@ def subclass(request):
 
         input_attrs = request.getfixturevalue("input_attrs")
         output_attrs = request.getfixturevalue("output_attrs")
-        dynattr_type = request.getfixturevalue("dynattr_type")
+        proc_data_type = request.getfixturevalue("proc_data_type")
 
         def _process(self, **input_data):
             result1 = input_data["input1"] * 2
@@ -156,7 +156,7 @@ def test_class_creation(input_attrs, output_attrs, subclass):
     assert hasattr(subclass, "input_attrs")
     assert hasattr(subclass, "output_attrs")
     assert hasattr(subclass, "intermediate_attrs")  # not explicitly defined in concrete subclass
-    assert hasattr(subclass, "dynattr_type")
+    assert hasattr(subclass, "proc_data_type")
     # Check the content of class input/output attributes
     assert subclass.input_attrs == input_attrs
     assert subclass.output_attrs == output_attrs
@@ -185,22 +185,22 @@ def test_properties(subclass):
 def test_check_consistency():
     """
     Test that :meth:`ProcessorMeta.check_consistency` detects inconsistencies between dynamic
-    attributes and `dynattr_type`.
+    attributes and `proc_data_type`.
 
     Define an invalid test class inheriting from :class:`Processor`, where the class attributes
-    `input_attrs` and `output_attrs` do not match the `dynattr_type` mapping.
+    `input_attrs` and `output_attrs` do not match the `proc_data_type` mapping.
 
     Expected Output
     ---------------
     ValueError raised for a mismatch between the dynamic attributes in `input_attrs`,
-    `output_attrs`, and the keys in `dynattr_type`.
+    `output_attrs`, and the keys in `proc_data_type`.
     """
     with pytest.raises(ValueError):
 
         class InconsistentProcessor(Processor):
             input_attrs = ("input1", "input2")
             output_attrs = ("output1",)
-            dynattr_type = {  # missing 'input2', extra 'output2'
+            proc_data_type = {  # missing 'input2', extra 'output2'
                 "input1": np.ndarray,
                 "output1": np.ndarray,
                 "output2": np.ndarray,

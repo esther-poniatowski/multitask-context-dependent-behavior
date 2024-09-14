@@ -8,8 +8,8 @@ D_SHOCK
 D_STIM
 D_WARN
 DPEG
-dynattr
-dynattrs
+proc_data
+proc_datas
 exptevents
 firingrates
 frates
