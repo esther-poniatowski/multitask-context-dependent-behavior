@@ -125,24 +125,24 @@ class ProcessorMeta(ABCMeta):
         return super().__new__(mcs, name, bases, dct)
 
     @staticmethod
-    def infer_types(proc_data_empty):
+    def infer_types(proc_data_empty: Mapping[str, Any]) -> Mapping[str, Type]:
         """
         Infer the types of the processing attributes from the default empty instances.
 
         Parameters
         ----------
-        proc_data_empty: Dict[str, Any]
+        proc_data_empty: Mapping[str, Any]
             Mapping of attributes names to their corresponding empty instance.
 
         Returns
         -------
-        proc_data_type: Dict[str, Type]
+        proc_data_type: Mapping[str, Type]
             Mapping of attributes names to their corresponding type.
         """
-        return {attr: type(value) for attr, value in proc_data_empty.items()}
+        return MappingProxyType({attr: type(value) for attr, value in proc_data_empty.items()})
 
     @staticmethod
-    def make_property(attr):
+    def make_property(attr: str) -> property:
         """
         Create a property to access an internal attribute storing processing data.
 
@@ -153,7 +153,7 @@ class ProcessorMeta(ABCMeta):
 
         Returns
         -------
-        property
+        property: property
             Property to access the internal attribute.
         """
 
@@ -163,7 +163,7 @@ class ProcessorMeta(ABCMeta):
         return property(prop_getter)
 
     @staticmethod
-    def check_consistency(proc_data, proc_data_type):
+    def check_consistency(proc_data: Tuple[str, ...], proc_data_type: Mapping[str, Type]) -> None:
         """
         Check that the class-level attributes are consistent with each other.
 
@@ -175,13 +175,13 @@ class ProcessorMeta(ABCMeta):
         ----------
         proc_data: Tuple[str, ...]
             Names of the attributes storing processing data.
-        proc_data_type: Dict[str, Type]
+        proc_data_type: Mapping[str, Type]
             Mapping of attributes names to their corresponding type.
 
         Implementation
         --------------
-        Compare the sets of keys in the dictionary :attr:`Processor.proc_data_type` and the content
-        of the tuples by converting the latter to sets.
+        Compare the sets of keys in the mapping :attr:`Processor.proc_data_type` and the content of
+        the tuples by converting the latter to sets.
 
         Raise
         -----
@@ -289,7 +289,7 @@ class Processor(metaclass=ProcessorMeta):
     proc_data_empty: Mapping[str, Any] = MappingProxyType({})
     proc_data_type: Mapping[str, Type] = MappingProxyType({})
 
-    def __init__(self, **config: Mapping[str, Any]):
+    def __init__(self, **config: Any):
         # Initialize configuration attributes
         for attr in self.config_attrs:
             if attr not in config:
@@ -299,14 +299,14 @@ class Processor(metaclass=ProcessorMeta):
         # Initialize internal attributes to empty instances of expected types
         for attr, value in self.proc_data_empty.items():
             self._set_data(attr, value)
-        self._has_output = False  # set the flag
+        self._has_output: bool = False  # set the flag
         self._seed: Optional[int] = None  # seed for random state
 
     def __repr__(self):
         config_values = {attr: getattr(self, attr) for attr in self.config_attrs}
         return f"<{self.__class__.__name__}(status={self._has_output}, config={config_values})>"
 
-    def _validate(self, **input_data) -> None:
+    def _validate(self, **input_data: Any) -> None:
         """
         Validate inputs with a default implementation. To be overridden in concrete subclasses for
         more specific validation logic if necessary.
@@ -426,13 +426,13 @@ class Processor(metaclass=ProcessorMeta):
         attributes in the base class `process` method.
         """
 
-    def process(self, **input_data) -> Dict[str, Any]:
+    def process(self, **input_data: Any) -> Dict[str, Any]:
         """
         Main processing method which receives input data and execute the processing logic.
 
         Parameters
         ----------
-        input_data: Mapping[str, Any]
+        input_data: Any
             Input data to process. It should be passed as keyword arguments (i.e. by name).
             Each argument name must be included in the `input_attrs` class-level attribute
             and its value must match the expected types defined in the `proc_data_type`
