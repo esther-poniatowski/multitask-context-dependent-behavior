@@ -63,22 +63,27 @@ Define a processor subclass which performs a basic data transformation:
 
         # Define processor class-level attributes
 
-        config_attrs = ()
-        input_attrs = ("input_arr",)
+        config_attrs = () # processing parameters fixed for the processor instance
+        input_attrs = ("input_arr",) # required inputs
+        optional_attrs = ("opt_list")  # optional inputs
         output_attrs = ("output_arr",)
         proc_data_empty = {
             "input_arr": np.empty(0),
+            "opt_list": [],
             "output_arr": np.empty(0)
         }
 
         # Define processor methods
 
-        def _validate_inputs(self, **input_data):
+        def _validate(self, **input_data):
             if not input_data["input_arr"].ndim == 1:
                 raise ValueError(f"Invalid dim. for input data: {input_data['input_arr'].ndim}")
 
-        def _process(self, **input_data):
-            result = input_data["input_arr"] * 2
+        def _process(self):
+            result = self.input_arr * 2
+            if self.opt_list:
+                for item in self.opt_list:
+                    result = result + item
             return {"output_arr": result}
 
 Use the processor on actual input data:
