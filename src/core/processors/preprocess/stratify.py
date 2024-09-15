@@ -83,7 +83,7 @@ class Stratifier(Processor):
     def __init__(self):
         super().__init__()  # call the parent class constructor (no config attributes)
 
-    def _validate_inputs(self, **input_data) -> None:
+    def _validate(self, **input_data) -> None:
         """Implement the template method called in the base class :meth:`process` method."""
         self._validate_features(input_data["features"])
 
