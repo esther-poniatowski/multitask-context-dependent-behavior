@@ -10,7 +10,7 @@ Classes
 """
 from abc import ABCMeta, abstractmethod
 from types import MappingProxyType
-from typing import Tuple, Mapping, Dict, Type, Any
+from typing import Tuple, Mapping, Dict, Type, Any, Optional
 import warnings
 
 import numpy as np
@@ -32,6 +32,7 @@ class ProcessorMeta(ABCMeta):
     Attributes
     ----------
     input_attrs: Processor.input_attrs
+    optional_attrs: Processor.optional_attrs
     output_attrs: Processor.output_attrs
     intermediate_attrs: Processor.intermediate_attrs
     proc_data_empty: Processor.proc_data_empty
@@ -108,6 +109,7 @@ class ProcessorMeta(ABCMeta):
         proc_data_empty = dct.get("proc_data_empty", {})
         proc_data = (
             dct.get("input_attrs", ())
+            + dct.get("optional_attrs", ())
             + dct.get("output_attrs", ())
             + dct.get("intermediate_attrs", ())
         )
@@ -204,7 +206,9 @@ class Processor(metaclass=ProcessorMeta):
     config_attrs: Tuple[str], default=()
         Names of the configuration parameters (fixed for each processor instance).
     input_attrs: Tuple[str], default=()
-        Names of the inputs to process.
+        Names of the required inputs to process.
+    optional_attrs: Tuple[str], default=()
+        Names of the optional inputs to process.
     output_attrs: Tuple[str], default=()
         Names of the outputs, i.e. results of the processing.
     intermediate_attrs: Tuple[str], default=()
@@ -217,8 +221,9 @@ class Processor(metaclass=ProcessorMeta):
 
     Attributes
     ----------
-    _has_data: bool
-        Flag indicating whether the class instance currently stores processing data.
+    _has_output: bool
+        Flag indicating whether the class instance currently stores processed data (output results).
+        False if the instance only stores input data but the computation failed.
 
     Methods
     -------
@@ -273,30 +278,74 @@ class Processor(metaclass=ProcessorMeta):
 
     config_attrs: Tuple[str, ...] = ()
     input_attrs: Tuple[str, ...] = ()
+    optional_attrs: Tuple[str, ...] = ()
     output_attrs: Tuple[str, ...] = ()
     intermediate_attrs: Tuple[str, ...] = ()
     proc_data_empty: Mapping[str, Any] = MappingProxyType({})
     proc_data_type: Mapping[str, Type] = MappingProxyType({})
 
-    def __init__(self, **config):
+    def __init__(self, **config: Mapping[str, Any]):
         # Initialize configuration attributes
         for attr in self.config_attrs:
             if attr not in config:
-                raise ValueError(f"Missing configuration attribute: '{attr}'")
+                raise ValueError(f"Missing configuration in '{self.__class__.__name__}': '{attr}'")
             else:
                 setattr(self, attr, config[attr])
         # Initialize internal attributes to empty instances of expected types
         for attr, value in self.proc_data_empty.items():
             self._set_data(attr, value)
-        self._has_data = False  # set the flag to indicate
+        self._has_output = False  # set the flag
+        self._seed: Optional[int] = None  # seed for random state
 
     def __repr__(self):
         config_values = {attr: getattr(self, attr) for attr in self.config_attrs}
-        return f"<{self.__class__.__name__}(status={self._has_data}, config={config_values})>"
+        return f"<{self.__class__.__name__}(status={self._has_output}, config={config_values})>"
 
-    def _validate_data(self, name: str, value: Any) -> None:
+    def _validate(self, **input_data) -> None:
         """
-        Validate the name and value of a runtime processing data.
+        Validate inputs with a default implementation. To be overridden in concrete subclasses for
+        more specific validation logic if necessary.
+
+        Parameters
+        ----------
+        input_data: Mapping[str, Any]
+            Input data to process.
+
+        Raises
+        ------
+        ValueError
+            If a required attribute is missing.
+            If an invalid attribute name is provided.
+        TypeError
+            If the type of an attribute does not match the expected type.
+
+        Notes
+        -----
+        Default checks performed by this base method:
+
+        - Check the presence of all required inputs specified in the class attribute `input_attrs`.
+        - Check the name and type of each input against the expected type specified in the class
+          attribute `proc_data_type`.
+
+        Examples of flexible subclass-specific validation:
+
+        - Enforce the consistency of related inputs.
+        - Check the structure or inner datatype for nested objects (e.g., lists, dictionaries).
+
+        For partial checks targeting only a subset of inputs, a subclass can still use the base
+        methods involved here (`_check_missing`, `_check_name_type`) but with a restricted set of
+        inputs passed as arguments or in the loop.
+        """
+        self._check_missing(input_data, self.input_attrs)  # required inputs
+        for input_name, input_value in input_data.items():  # required and optional inputs
+            if input_name in self.input_attrs or input_name in self.optional_attrs:
+                self._check_name_type(input_name, input_value)
+            else:
+                raise ValueError(f"Unexpected input: '{input_name}'")
+
+    def _check_name_type(self, name: str, value: Any) -> None:
+        """
+        Validate the name and type of a runtime processing data.
 
         Parameters
         ----------
@@ -318,18 +367,7 @@ class Processor(metaclass=ProcessorMeta):
         if not isinstance(value, tpe):
             raise TypeError(f"Invalid type: type({name}) = {type(value)} != {tpe}")
 
-    def _validate_inputs(self, **input_data) -> None:
-        """
-        Perform sub-class specific validation of inputs (structure, datatype... ). To be implemented
-        in concrete subclasses.
-
-        Parameters
-        ----------
-        input_data: Mapping[str, Any]
-            Input data to process.
-        """
-
-    def _check_missing_data(self, data: Mapping[str, Any], expected: Tuple[str, ...]) -> None:
+    def _check_missing(self, data: Mapping[str, Any], expected: Tuple[str, ...]) -> None:
         """
         Check missing inputs or outputs provided or recovered by the processor.
 
@@ -376,8 +414,9 @@ class Processor(metaclass=ProcessorMeta):
 
         Notes
         -----
-        No input arguments are passed to this method since input data is stored in the class
-        instance after validation.
+        No input arguments are passed to this method since it operates on input data stored in the
+        class instance after validation.
+
         The return format is a dictionary in order to automatically map the output to the internal
         attributes in the base class `process` method.
         """
@@ -389,56 +428,86 @@ class Processor(metaclass=ProcessorMeta):
         Parameters
         ----------
         input_data: Mapping[str, Any]
-            Input data to process.
-
-        Raises
-        ------
-        TypeError
-            If the input data does not match the expected types.
-        ValueError
-            If invalid input attribute names are provided.
+            Input data to process. It should be passed as keyword arguments (i.e. by name).
+            Each argument name must be included in the `input_attrs` class-level attribute
+            and its value must match the expected types defined in the `proc_data_type`
+            class-level attribute.
+            Optionally, a 'seed' parameter can be passed to control random state initialization.
 
         Returns
         -------
         output_data: Dict[str, Any]
-            Processed output, target results of the operations performed by the concrete processor.
+            Output data, i.e. target results of the operations performed by the concrete processor.
 
         Notes
         -----
-        This main method orchestrates the processing logic by calling the subclass-specific methods
-        through a "template method" design pattern.
+        This main method is the entry point to pass data to process. It orchestrates the processing
+        logic by calling the subclass-specific methods through a "template method" design pattern.
+
+        The seed is treated as a separate input: it is extracted from the input data early so that
+        it is not validated as part of the other processing attributes.
 
         Example
         -------
         Pass input data to the processor and retrieve the output data:
 
         >>> processor = ConcreteProcessor()
-        >>> output_data = processor.process(input1=..., input2=...)
+        >>> output_data = processor.process(input1=..., input2=..., seed=42)
         """
+        # Set the seed if provided
+        seed = input_data.pop("seed", None)  # use pop to extract the seed from other inputs
+        if seed is not None:
+            self.seed = seed  # call the setter
         # Validate inputs
-        self._check_missing_data(input_data, self.input_attrs)
-        for input_name, input_value in input_data.items():
-            self._validate_data(input_name, input_value)
-        self._validate_inputs(**input_data)  # subclass-specific validation (optional)
+        self._validate(**input_data)  # subclass-specific or default validation
         # Reset data after complete validation
         for attr, value in self.proc_data_empty.items():
             self._set_data(attr, value)
-        self._has_data = False  # reset flag
+        self._has_output = False  # reset flag
         # Store new inputs
         for input_name, input_value in input_data.items():
             self._set_data(input_name, input_value)
         # Process
         output_data = self._process()  # subclass-specific logic (required)
-        self._check_missing_data(output_data, self.output_attrs)
-        # Store outputs
+        self._check_missing(output_data, self.output_attrs)
+        # Store outputs after validation
         for output_name, output_value in output_data.items():
             self._set_data(output_name, output_value)
-        self._has_data = True  # update flag
+        self._has_output = True  # update flag
         return output_data
 
-    def set_seed(self) -> None:
+    @property
+    def seed(self) -> Optional[int]:
         """
-        Set the random seed for reproducibility.
+        Property for accessing the internal seed.
+
+        Returns
+        -------
+        Optional[int]
+            Current seed value.
+        """
+        return self._seed
+
+    @seed.setter
+    def seed(self, value: int) -> None:
+        """
+        Property setter for the seed.
+
+        When the seed is modified, clear the output data and reset the `_has_output` flag.
+
+        Parameters
+        ----------
+        value : int
+            New seed value to set.
+        """
+        self._seed = value  # store the new seed in the internal attribute
+        for output_attr in self.output_attrs:  # reset each output to its empty state
+            self._set_data(output_attr, self.proc_data_empty[output_attr])
+        self._has_output = False  # reset flag
+
+    def set_random_state(self) -> None:
+        """
+        Set the random state for reproducibility, based on the current seed attribute.
 
         See Also
         --------
@@ -455,4 +524,7 @@ class Processor(metaclass=ProcessorMeta):
         if hasattr(self, "seed"):
             np.random.seed(self.seed)
         else:
-            warnings.warn("No 'seed' set. Skip random state initialization.", UserWarning)
+            warnings.warn(
+                f"No 'seed' set in {self.__class__.__name__}. Skip random state initialization.",
+                UserWarning,
+            )
