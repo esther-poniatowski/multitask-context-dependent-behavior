@@ -308,13 +308,13 @@ class Processor(metaclass=ProcessorMeta):
 
     def _validate(self, **input_data: Any) -> None:
         """
-        Validate inputs with a default implementation. To be overridden in concrete subclasses for
-        more specific validation logic if necessary.
+        Validate inputs passed to the `process` method. To be overridden in concrete subclasses for
+        more specific validation steps if necessary.
 
         Parameters
         ----------
-        input_data: Mapping[str, Any]
-            Input data to process.
+        input_data: Any
+            Input data to process, received as keyword arguments in the `process` method.
 
         Raises
         ------
@@ -392,6 +392,29 @@ class Processor(metaclass=ProcessorMeta):
             if attr not in data:
                 raise ValueError(f"Missing data: '{attr}'")
 
+    def _compute_defaults(self, **input_data: Any) -> Dict[str, Any]:
+        """
+        Compute default values for optional inputs which depend on other inputs. To be implemented
+        in concrete subclasses if necessary.
+
+        Parameters
+        ----------
+        input_data: Any
+            Input data to process, received as keyword arguments in the `process` method.
+
+        Returns
+        -------
+        input_data: Dict[str, Any]
+            Input data with updated default values for optional inputs if necessary.
+
+        Notes
+        -----
+        Modify the `input_data` dictionary directly or return a modified copy. This dictionary is
+        used by the base class `process` method to set the final values for input data after the
+        validation steps and before running the processing operations.
+        """
+        return input_data
+
     def _set_data(self, attr, value):
         """
         Set the value of an attribute containing runtime processing data.
@@ -463,8 +486,9 @@ class Processor(metaclass=ProcessorMeta):
         seed = input_data.pop("seed", None)  # use pop to extract the seed from other inputs
         if seed is not None:
             self.seed = seed  # call the setter
-        # Validate inputs
+        # Validate inputs and compute default values if necessary
         self._validate(**input_data)  # subclass-specific or default validation
+        input_data = self._compute_defaults(**input_data)
         # Reset data after complete validation
         for attr, value in self.proc_data_empty.items():
             self._set_data(attr, value)
