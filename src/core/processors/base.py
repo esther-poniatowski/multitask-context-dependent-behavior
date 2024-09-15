@@ -224,6 +224,8 @@ class Processor(metaclass=ProcessorMeta):
     _has_output: bool
         Flag indicating whether the class instance currently stores processed data (output results).
         False if the instance only stores input data but the computation failed.
+    _seed: Optional[int]
+        Seed for random state initialization.
 
     Methods
     -------
@@ -244,29 +246,32 @@ class Processor(metaclass=ProcessorMeta):
     Processor classes operate on data of two distinct nature:
 
     - "Configuration parameters" define the fixed behavior of each class instance throughout its
-      lifecycle (Examples: model parameters, tuning settings...). They are initialized in the
-      constructor for each processor instance. Those parameters apply homogeneously on all
-      subsequent calls of the main processing method.
+    lifecycle (Examples: model parameters, tuning settings...). They are initialized in the
+    constructor for each processor instance. Those parameters apply homogeneously on all
+    subsequent calls of the main processing method.
     - "Processing data" is processed at runtime by one single call to the main method of the class
-      instance (examples: input data, output result...). They are passed as arguments to the main
-      processing method, stored temporarily, and reset when new data is provided. The initial state
-      of those attributes is set empty in the constructor. They are marked as internal attributes
-      with a leading underscore, and are accessed through read-only properties (to prevent arbitrary
-      modifications which would break the consistency among dependent attributes).
+    instance (examples: input data, output result...). They are passed as arguments to the main
+    processing method, stored temporarily, and reset when new data is provided. The initial state
+    of those attributes is set empty in the constructor. They are marked as internal attributes
+    with a leading underscore, and are accessed through read-only properties (to prevent arbitrary
+    modifications which would break the consistency among dependent attributes).
 
     Storing processing data as transient attributes has several purposes:
 
     - It facilitates the access to those attributes across multiple methods for different processing
-      steps.
+    steps.
     - It maintains the link between the inputs and the outputs within the class instance if they
-      need to be manipulated in the client code.
+    need to be manipulated in the client code.
     - It allows to centralize the documentation of this data as attributes in the class docstring
-      rather than as parameters in each method.
+    rather than as parameters in each method.
 
     Passing input data to a class instance
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     Input data should be passed to the `process` method, which is common across all processor
     subclasses. It will be validated and stored it in the dedicated internal attributes.
+
+    Subclasses do not need to manually define the seed as an optional input, it can be passed
+    directly to the base `process` method as an extra input.
 
     Recovering output results
     ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -521,7 +526,7 @@ class Processor(metaclass=ProcessorMeta):
         If no 'seed' attribute is set in the processor instance, a warning is raised and the random
         state initialization is skipped.
         """
-        if hasattr(self, "seed"):
+        if self.seed is not None:
             np.random.seed(self.seed)
         else:
             warnings.warn(
