@@ -55,6 +55,19 @@ def output_attrs():
 
 
 @pytest.fixture
+def optional_attrs():
+    """
+    Fixture - Generate the class attribute :attr:`optional_attrs`.
+
+    Returns
+    -------
+    Tuple[str, ...]:
+        Names of the optional attributes.
+    """
+    return ("optional_input",)
+
+
+@pytest.fixture
 def proc_data_type(input_attrs, output_attrs) -> Mapping[str, type]:
     """
     Fixture - Generate the class attribute :attr:`proc_data_type`.
@@ -220,13 +233,13 @@ def test_init_empty_data(subclass):
     # Check initial empty state
     for input_attr in subclass.input_attrs:
         np.testing.assert_array_equal(getattr(processor, f"_{input_attr}"), expected_empty_array)
-    # Check that the flag `_has_data` has been reset to False
-    assert processor._has_data is False
+    # Check that the flag has been reset to False
+    assert processor._has_output is False
 
 
-def test_validate_data(subclass, proc_data_empty):
+def test_check_name_type(subclass, proc_data_empty):
     """
-    Test the :meth:`_validate_data` method for checking the data types of dynamic attributes.
+    Test the :meth:`_check_name_type` method for checking inputs data names and types.
 
     Test Inputs
     -----------
@@ -242,15 +255,15 @@ def test_validate_data(subclass, proc_data_empty):
     processor = subclass()
     # Test valid data types
     for attr, value in proc_data_empty.items():
-        processor._validate_data(attr, value)
+        processor._check_name_type(attr, value)
     # Test invalid data type
     with pytest.raises(TypeError):
         for attr, _ in proc_data_empty.items():
-            processor._validate_data(attr, "invalid_type")
+            processor._check_name_type(attr, "invalid_type")
     # Test invalid setting of dynamic attribute (wrong name)
     with pytest.raises(ValueError):
         for attr, value in proc_data_empty.items():
-            processor._validate_data("invalid_name", value)
+            processor._check_name_type("invalid_name", value)
 
 
 def test_set_data(subclass):
@@ -285,10 +298,10 @@ def test_check_missing(subclass, input_data):
     key1 = list(input_data.keys())[0]
     input_data_invalid = {k: v for k, v in input_data.items() if k != key1}
     with pytest.raises(ValueError):
-        processor._check_missing_data(input_data_invalid, processor.input_attrs)
+        processor._check_missing(input_data_invalid, processor.input_attrs)
 
 
-def test_process(subclass, input_data, output_data):
+def test_process(subclass, input_data, output_data, optional_attrs):
     """
     Test the :meth:`process` method in the concrete subclass.
 
@@ -313,4 +326,55 @@ def test_process(subclass, input_data, output_data):
         np.testing.assert_array_equal(output[key], expected_output[key])
         np.testing.assert_array_equal(getattr(processor, f"_{key}"), expected_output[key])
     # Validate the internal data flag
-    assert processor._has_data is True
+    assert processor._has_output is True
+
+
+def test_seed_property(subclass, input_data, output_data):
+    """
+    Test the behavior of setting and getting the seed property.
+
+    Expected Output
+    ---------------
+    - Getting the seed returns the correct value.
+    - Setting the seed clears the output data.
+    """
+    new_seed = 42
+    processor = subclass()
+    processor.process(**input_data)
+    # Ensure outputs are initially populated
+    assert processor._has_output is True
+    for output_attr, expected_value in output_data.items():
+        np.testing.assert_array_equal(getattr(processor, f"_{output_attr}"), expected_value)
+    # Set seed manually
+    processor.seed = new_seed
+    assert processor.seed == new_seed
+    # Ensure output data is cleared and flag is reset
+    assert processor._has_output is False
+    for output_attr in processor.output_attrs:
+        np.testing.assert_array_equal(
+            getattr(processor, f"_{output_attr}"), processor.proc_data_empty[output_attr]
+        )
+
+
+def test_set_random_state(subclass, input_data):
+    """
+    Test the method :meth:`set_random_state` for setting the random state.
+
+    Test Inputs
+    -----------
+    subclass:
+        Class inheriting from :class:`Processor`.
+    input_data: Dict[str, np.ndarray]
+        Input data passed to the processor.
+    seed: int
+        Random seed value.
+
+    Expected Output
+    ---------------
+    Seed should be stored in the processor.
+    """
+    processor = subclass()
+    seed = 42
+    processor.process(**input_data, seed=seed)  # run process with a specific seed
+    assert processor.seed == seed
+    assert processor._has_output is True
