@@ -7,6 +7,12 @@ Classes
 -------
 :class:`Stratifier`
 """
+# Disable error codes for attributes which are not detected by the type checker:
+# - Configuration attributes are defined by the base class constructor.
+# - Public properties for internal attributes are defined in the metaclass.
+# mypy: disable-error-code="attr-defined"
+# pylint: disable=no-member
+
 from types import MappingProxyType
 from typing import List, TypeAlias, Union, Dict, Any
 
@@ -14,6 +20,7 @@ import numpy as np
 import numpy.typing as npt
 
 from core.processors.base import Processor
+
 
 Strata: TypeAlias = npt.NDArray[np.int64]
 """Type alias for stratum labels."""
@@ -28,16 +35,16 @@ class Stratifier(Processor):
     Class Attributes
     ----------------
     See :class:`Processor` for inherited class attributes.
-    valid_types : tuple
+    valid_types: tuple
         Valid NumPy data types (dtype) for the feature arrays (int64, float64, str_).
 
     Attributes
     ----------
-    features : list of npt.NDArray
+    features: list of npt.NDArray
         Features to consider to stratify the samples (e.g., task, context, stimulus).
         Length: ``n_features``.
         Shape of each element (feature): ``(n_samples,)``.
-    strata : npt.NDArray[np.int64]
+    strata: npt.NDArray[np.int64]
         Stratum labels of the samples. Shape: ``(n_samples,)``.
 
     Methods
@@ -145,6 +152,6 @@ class Stratifier(Processor):
             Parameter `return_inverse=True`: Return the indices of the unique combinations in the
             original array, which are used to assign the stratum labels to the samples.
         """
-        feature_stack = np.column_stack(self.features)  # type: ignore[attr-defined]
+        feature_stack = np.column_stack(self.features)  # rows: samples, columns: features
         _, strata = np.unique(feature_stack, axis=0, return_inverse=True)  # shape: (n_samples,)
         return strata
