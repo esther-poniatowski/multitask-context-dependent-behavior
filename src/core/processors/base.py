@@ -101,9 +101,12 @@ class ProcessorMeta(ABCMeta):
 
         Implementation
         --------------
-        1. Get the attributes names to store processing data declared in the class dictionary.
-        2. Define a property to access each internal attribute. Use a closure (inner function) to
-           capture the attribute name (see "Late Binding Issue").
+        1. Get the relevant attributes names declared in the class dictionary `dct`.
+        2. Assign data types automatically based on the default empty instances, creating a new
+           class-level attribute `proc_data_type` (stored in the class dictionary `dct`).
+        3. Define a property to access each internal attribute. Use a closure (inner function) to
+           capture the attribute name (see "Late Binding Issue"). If a property of the same name has
+           already be defined in the subclass, do not override it to preserve custom behavior.
         """
         # Get class attributes declared in the class dictionary
         proc_data_empty = dct.get("proc_data_empty", {})
@@ -118,7 +121,8 @@ class ProcessorMeta(ABCMeta):
         dct["proc_data_type"] = proc_data_type
         # Define a property to access each internal attribute
         for attr in proc_data:
-            dct[attr] = mcs.make_property(attr)
+            if attr not in dct:  # check if the subclass has defined this property
+                dct[attr] = mcs.make_property(attr)
         # Check the consistency of the class-level attributes
         mcs.check_consistency(proc_data, proc_data_type)
         # Create the new processor class
