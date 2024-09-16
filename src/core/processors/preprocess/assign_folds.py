@@ -51,7 +51,7 @@ from typing import Dict, TypeAlias, Any, Tuple
 import numpy as np
 
 from core.processors.base import Processor
-
+from utils.misc.arrays import create_empty_array
 
 Strata: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
 """Type alias for stratum labels."""
@@ -121,8 +121,8 @@ class FoldAssigner(Processor):
     proc_data_empty = MappingProxyType(
         {
             "n_samples": 0,
-            "strata": np.array([], dtype=np.int64),
-            "folds": np.array([], dtype=np.int64),
+            "strata": create_empty_array(1, np.int64),
+            "folds": create_empty_array(1, np.int64),
         }
     )
 

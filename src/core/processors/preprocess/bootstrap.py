@@ -55,12 +55,13 @@ Implementation
 # pylint: disable=no-member
 
 from types import MappingProxyType
-from typing import Optional, TypeAlias, Dict, Any, Tuple
+from typing import TypeAlias, Dict, Any, Tuple
 
 import numpy as np
 
 from core.constants import N_PSEUDO_MIN
 from core.processors.base import Processor
+from utils.misc.arrays import create_empty_array
 
 
 Counts: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
@@ -120,8 +121,8 @@ class Bootstrapper(Processor):
     output_attrs = ("pseudo_trials",)
     proc_data_empty = MappingProxyType(
         {
-            "counts": np.array([], dtype=np.int64),
-            "pseudo_trials": np.array([], dtype=np.int64),
+            "counts": create_empty_array(1, np.int64),
+            "pseudo_trials": create_empty_array(2, np.int64),
         }
     )
 
