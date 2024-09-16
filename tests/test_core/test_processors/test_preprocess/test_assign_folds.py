@@ -7,6 +7,11 @@ See Also
 --------
 :mod:`core.processors.preprocess.assign_folds`: Tested module.
 """
+# Disable error code for access to protected members:
+# pylint: disable=protected-access
+
+# Disable error code for expression not being assigned:
+# pylint: disable=expression-not-assigned
 
 import numpy as np
 from numpy.testing import assert_array_equal
@@ -26,7 +31,7 @@ def test_missing_inputs():
 
     Expected Outputs
     ----------------
-    ValueError is raised due to missing inputs.
+    ValueError raised due to missing inputs.
     """
     k = 3
     assigner = FoldsAssigner(k)
@@ -36,6 +41,27 @@ def test_missing_inputs():
     # Via `process` method (base class)
     with pytest.raises(ValueError):
         assigner.process()
+
+
+def test_both_inputs_provided():
+    """
+    Test :meth:`FoldsAssigner._validate` when both `strata` and `n_samples` are provided.
+
+    Test Inputs
+    -----------
+    n_samples = 6
+    strata = np.array([0, 0, 1, 1, 2, 2], dtype=np.int64)
+
+    Expected Outputs
+    ----------------
+    ValueError raised due to extra inputs.
+    """
+    k = 3
+    n_samples = 6
+    strata = np.array([0, 0, 1, 1, 2, 2], dtype=np.int64)
+    assigner = FoldsAssigner(k)
+    with pytest.raises(ValueError):
+        assigner._validate(n_samples=n_samples, strata=strata)
 
 
 def test_invalid_n_samples():
@@ -76,27 +102,6 @@ def test_invalid_strata_shape():
     assigner = FoldsAssigner(k)
     with pytest.raises(ValueError):
         assigner._validate_strata(strata=strata)
-
-
-def test_inconsistent_inputs():
-    """
-    Test :meth:`FoldsAssigner._validate` when `n_samples` and `strata` are inconsistent.
-
-    Test Inputs
-    -----------
-    n_samples = 6
-    strata = np.array([0, 0, 1, 1], dtype=np.int64) (length != n_samples)
-
-    Expected Outputs
-    ----------------
-    ValueError is raised due to inconsistency between `n_samples` and `strata`.
-    """
-    k = 3
-    n_samples = 6
-    strata = np.array([0, 0, 1, 1], dtype=np.int64)
-    assigner = FoldsAssigner(k)
-    with pytest.raises(ValueError):
-        assigner._validate(n_samples=n_samples, strata=strata)
 
 
 def test_default_strata():
@@ -221,18 +226,17 @@ def test_assign_folds_stratified_divisible():
     Test Inputs
     -----------
     k = 3
-    n_samples = 9
-    strata = [0, 0, 0, 1, 1, 1, 2, 2, 2]
+    strata = [0, 0, 0, 1, 1, 1, 2, 2, 2] (3 samples per stratum = 9 samples)
 
     Expected Outputs
     ----------------
     Each stratum should be perfectly split across all k folds.
     """
-    n_samples = 9
-    strata = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2], dtype=np.int64)
     k = 3
+    strata = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2], dtype=np.int64)
+    n_samples = strata.size
     assigner = FoldsAssigner(k)
-    assigner.process(n_samples=n_samples, strata=strata)
+    assigner.process(strata=strata)
     folds = assigner.folds
     assert len(folds) == n_samples, f"Expected {n_samples} samples, Got {len(folds)}"
     for stratum in np.unique(strata):
@@ -248,7 +252,7 @@ def test_assign_folds_stratified_non_divisible():
     -----------
     k = 3
     n_samples = 6
-    strata = [0, 0, 1, 1, 2, 2]
+    strata = [0, 0, 1, 1, 2, 2] (2 samples per stratum = 6 samples)
 
     Expected Outputs
     ----------------
@@ -259,10 +263,10 @@ def test_assign_folds_stratified_non_divisible():
     :func:`numpy.bincount`: Used to count the number of samples in each fold for each stratum.
     """
     k = 3
-    n_samples = 6
     strata = np.array([0, 0, 1, 1, 2, 2], dtype=np.int64)
+    n_samples = strata.size
     assigner = FoldsAssigner(k)
-    assigner.process(n_samples=n_samples, strata=strata)
+    assigner.process(strata=strata)
     folds = assigner.folds
     assert len(folds) == n_samples, f"Expected {n_samples} samples, Got {len(folds)}"
     for stratum in np.unique(strata):
