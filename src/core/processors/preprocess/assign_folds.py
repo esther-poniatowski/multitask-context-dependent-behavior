@@ -184,43 +184,56 @@ class FoldAssigner(Processor):
         if len(strata) < self.k:
             raise ValueError(f"len(strata): {len(strata)} < k: {self.k}")
 
-    def _default(self, **input_data: Any) -> Dict[str, Any]:
+    @property
+    def n_samples(self) -> int:
         """
-        Implement the template method called in the base class :meth:`process` method.
+        Getter for the internal attribute `_n_samples`.
 
-        Rules to ensure consistency between `n_samples` and `strata` if one of them is missing:
+        To ensure consistency between `n_samples` and `strata`:
 
-        - `strata`: All samples are treated as belonging to a single stratum (single label 0).
-        - `n_samples`: Equal to the length of `strata`.
-
-        Returns
-        -------
-        input_data: Dict[str, Any]
-            Input data with default values set for missing arguments.
+        - If `n_samples` has been provided as an input, it has been stored in the internal attribute
+          and can be directly accessed.
+        - Otherwise, it is equal to the length of `strata`.
 
         Notes
         -----
-        Since this method is called after validation, the input data is guaranteed to contain
-        exactly one of `n_samples` or `strata` (not both, nor none).
+        This property overrides the one created by the metaclass to ensure that the number of
+        samples is consistent with the strata labels.
         """
-        n_samples = input_data.get("n_samples")
-        strata = input_data.get("strata")
-        # If only strata provided, set n_samples
-        if strata is not None:  # n_samples is None
-            input_data["n_samples"] = len(strata)
-        # If only n_samples provided, set default strata
-        elif n_samples is not None:  # strata is None
-            input_data["strata"] = np.zeros(n_samples, dtype=np.int64)
-        return input_data
+        if self._n_samples != self.proc_data_empty["n_samples"]:
+            return self._n_samples
+        else:
+            return self._strata.size
 
-    def _process(self) -> Dict[str, Any]:
+    @property
+    def strata(self) -> Strata:
+        """
+        Getter for the internal attribute `_strata`.
+
+        To ensure consistency between `n_samples` and `strata`:
+
+        - If `strata` has been provided as an input, it has been stored in the internal attribute
+          and can be directly accessed.
+        - Otherwise, all samples are treated as belonging to a single stratum (single label 0).
+
+        Notes
+        -----
+        This property overrides the one created by the metaclass to ensure that the strata labels
+        are consistent with the number of samples.
+        """
+        if not np.array_equal(self._strata, self.proc_data_empty["strata"]):
+            return self._strata
+        else:
+            return np.zeros(self._n_samples, dtype=np.int64)
+
+    def _process(self) -> Dict[str, Folds]:
         """
         Implement the template method called in the base class :meth:`process` method.
 
         Returns
         -------
-        folds: np.ndarray[Tuple[Any], np.dtype[np.int64]]
-            See :attr:`folds`.
+        output_data: Dict[str, Folds]
+            Output data with the assigned folds.
         """
         folds = self.assign()
         return {"folds": folds}
