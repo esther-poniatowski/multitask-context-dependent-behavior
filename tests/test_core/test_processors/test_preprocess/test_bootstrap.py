@@ -8,12 +8,69 @@ See Also
 :mod:`core.processors.preprocess.bootstrap`: Tested module.
 :func:`assert_array_equal`: Numpy testing function for array equality.
 """
+# Disable error for properties defined by the metaclass
+# pylint: disable=no-member
+
+# Disable error for internal attributes access
+# pylint: disable=protected-access
+
+# Disable error for no assignment in assert
+# pylint: disable=expression-not-assigned
 
 import numpy as np
 from numpy.testing import assert_array_equal
 import pytest
 
 from processors.preprocess.bootstrap import Bootstrapper
+
+
+def test_default_with_global():
+    """
+    Test for :class:`Bootstrapper._default` with global parameter `n_global`.
+
+    Test Inputs
+    -----------
+    n_global = 10
+    n_pseudo not provided
+
+    Expected Outputs
+    ----------------
+    `n_pseudo` is set to `n_global`.
+    """
+    n_global = 10
+    counts = np.arange(3)  # dummy counts with 3 units
+    # Via `_default` method (subclass)
+    bootstrapper = Bootstrapper(n_global=n_global, n_min=2, alpha=0.5)  # n_min, alpha useless
+    input_data = bootstrapper._default(counts=counts)  # input data does not include n_pseudo
+    n_pseudo = input_data["n_pseudo"]
+    assert n_pseudo == n_global, f"Expected {n_global}, Got {n_pseudo}"
+
+
+def test_default_with_no_global():
+    """
+    Test for :class:`Bootstrapper._default` without global parameter `n_global`.
+
+    Test Inputs
+    -----------
+    alpha = 0.5
+    n_min = 4
+    counts = np.array([3, 4, 5, 6, 7])
+    n_pseudo not provided
+
+    Expected Outputs
+    ----------------
+    Number of trials to generate:
+    n_pseudo = mean(min+max) = (3+7)/2 = 5 > n_min
+    """
+    n_min, n_max = 3, 7
+    n_min = 4
+    alpha = 0.5
+    counts = np.arange(n_min, n_max + 1)  # uniform from `n_min` to `n_max`
+    expected_n = 5
+    bootstrapper = Bootstrapper(n_min=n_min, alpha=alpha)  # no `n_global`
+    input_data = bootstrapper._default(counts=counts)  # input data does not include n_pseudo
+    n_pseudo = input_data["n_pseudo"]
+    assert n_pseudo == expected_n, f"Expected {expected_n}, Got {n_pseudo}"
 
 
 def test_pick_trials_equal():
@@ -24,10 +81,7 @@ def test_pick_trials_equal():
     -----------
     n = 3
     n_pseudo = 3
-    To impose the number of trials to select, set:
-    - counts = np.arange(n_pseudo) (single unit, for the min and max counts)
-    - n_pseudo_min = n_pseudo (minimum number of pseudo-trials required)
-    - alpha=1.0 (to match n_pseudo as the mean of min and max counts)
+    To impose the number of trials to select, set `n_pseudo` manually via the internal attribute.
 
     Expected Outputs
     ----------------
@@ -44,8 +98,9 @@ def test_pick_trials_equal():
         which means that 0 occurs once, 1 occurs twice, 2 occurs zero times, and 3 occurs once.
     """
     n, n_pseudo = 3, 3
-    bootstrapper = Bootstrapper(np.arange(n_pseudo), n_pseudo_min=n_pseudo, alpha=1.0)
-    trials = bootstrapper._pick_trials(n)
+    bootstrapper = Bootstrapper(n_global=n_pseudo)
+    bootstrapper._n_pseudo = n_pseudo
+    trials = bootstrapper.pick_trials(n)
     occurrences = np.bincount(trials, minlength=n)
     expected = np.array([1, 1, 1])
     assert_array_equal(occurrences, expected), f"Occurrences: {occurrences} != {expected}"
@@ -68,8 +123,9 @@ def test_pick_trials_greater():
     expected_nb_0 = n - n_pseudo
     """
     n, n_pseudo = 5, 3
-    bootstrapper = Bootstrapper(np.arange(n_pseudo), n_pseudo_min=n_pseudo, alpha=1.0)
-    trials = bootstrapper._pick_trials(n)
+    bootstrapper = Bootstrapper(n_global=n_pseudo)
+    bootstrapper._n_pseudo = n_pseudo
+    trials = bootstrapper.pick_trials(n)
     # Count the number of occurrences of each trial index
     count_occurrences = np.bincount(trials, minlength=n)
     # Count the number of 1 and O in `counts` itself
@@ -101,8 +157,9 @@ def test_pick_trials_smaller():
     """
     n, n_pseudo = 3, 8
     q, r = divmod(n_pseudo, n)
-    bootstrapper = Bootstrapper(np.arange(n_pseudo), n_pseudo_min=n_pseudo, alpha=1.0)
-    trials = bootstrapper._pick_trials(n)
+    bootstrapper = Bootstrapper(n_global=n_pseudo)
+    bootstrapper._n_pseudo = n_pseudo
+    trials = bootstrapper.pick_trials(n)
     # Count the number of occurrences of each trial index
     counts = np.bincount(trials, minlength=n)
     # Count the number of trials selected q times and q + 1 times
@@ -114,55 +171,60 @@ def test_pick_trials_smaller():
     assert nb_q_plus_1 == expected_q_plus_1, f"Expected {expected_q_plus_1}, Got {nb_q_plus_1}"
 
 
-def test_hierarchical_bootstrap():
+def test_bootstrap():
     """
     Tests for :func:`bootstrap`.
 
     Test Inputs
     -----------
-    counts = np.array([3, 4, 5, 6, 7])
-    alpha = 0.5
-    n_pseudo_min = 4
+    n_units = 3
+    counts = np.array([3, 5, 7])
+    n_pseudo = 5
 
     Expected Outputs
     ----------------
-    Number of trials to generate:
-    n_pseudo = mean(min+max) = (3+7)/2 = 5 > n_pseudo_min
-    n_units = 5
+    Shape of the output array: (n_units, n_pseudo)
+    Each item should be less than the corresponding count value, because the pseudo-trials are
+    generated by sampling with replacement from the original counts. Thus, the maximum value of the
+    pseudo-trials should be less than the corresponding count value.
     """
-    n_min, n_max = 3, 7
-    n_pseudo_min = 4
-    alpha = 0.5
-    expected_n = 5
-    counts = np.arange(n_min, n_max + 1)  # uniform from `n_min` to `n_max`
+    counts = np.array([3, 5, 7])
     n_units = len(counts)
-    expected_shape = (n_units, expected_n)
-    bootstrapper = Bootstrapper(counts, n_pseudo_min=n_pseudo_min, alpha=alpha)
-    trials = bootstrapper.pseudo_trials
-    assert trials.shape[0] == n_units, f"Expected {n_units} units, Got {trials.shape[0]}"
-    assert trials.shape[1] == expected_n, f"Expected {expected_n} trials, Got {trials.shape[1]}"
-    assert trials.shape == expected_shape, f"Expected shape {expected_shape}, Got {trials.shape}"
-    assert np.all(trials < counts[:, None]), f"Items out of bounds: {trials}"
+    n_pseudo = 5
+    expected_shape = (n_units, n_pseudo)
+    bootstrapper = Bootstrapper(n_global=n_pseudo)
+    bootstrapper._n_pseudo = n_pseudo
+    bootstrapper._counts = counts
+    pseudo_trials = bootstrapper.bootstrap()
+    shape = pseudo_trials.shape
+    assert shape[0] == n_units, f"Expected {n_units} units, Got {shape[0]}"
+    assert shape[1] == n_pseudo, f"Expected {n_pseudo} trials, Got {shape[1]}"
+    assert shape == expected_shape, f"Expected shape {expected_shape}, Got {shape}"
+    assert np.all(pseudo_trials < counts[:, None]), f"Items out of bounds: {pseudo_trials}"
 
 
-def test_pseudo_trials_update_after_counts_change():
+def test_process():
     """
-    Test :attr:`Bootstrapper.pseudo_trials` cache is reset when counts are updated.
+    Test for :func:`Bootstrapper.process` method (base class).
 
     Test Inputs
     -----------
-    counts = [10, 8, 12] -> updated to [9, 7, 11]
+    See :func:`test_bootstrap` for inputs.
 
     Expected Outputs
     ----------------
-    pseudo_trials should be recomputed after updating counts.
     """
-    counts = np.array([10, 8, 12])
-    bootstrapper = Bootstrapper(counts)
-    pseudo_trials_1 = bootstrapper.pseudo_trials
-    bootstrapper.counts = np.array([9, 7, 11])
-    pseudo_trials_2 = bootstrapper.pseudo_trials
-    assert not np.array_equal(pseudo_trials_1, pseudo_trials_2), "pseudo_trials not updated"
+    counts = np.array([3, 5, 7])
+    n_units = len(counts)
+    n_pseudo = 5
+    bootstrapper = Bootstrapper(n_global=n_pseudo)
+    bootstrapper.process(counts=counts)  # without n_pseudo, should be set to n_global
+    assert bootstrapper._n_pseudo == n_pseudo, f"Expected {n_pseudo}, Got {bootstrapper._n_pseudo}"
+    pseudo_trials = bootstrapper.pseudo_trials
+    shape = pseudo_trials.shape
+    assert shape[0] == n_units, f"Expected {n_units} units, Got {shape[0]}"
+    assert shape[1] == n_pseudo, f"Expected {n_pseudo} trials, Got {shape[1]}"
+    assert np.all(pseudo_trials < counts[:, None]), f"Items out of bounds: {pseudo_trials}"
 
 
 def test_pseudo_trials_reproducibility_with_seed():
@@ -179,9 +241,10 @@ def test_pseudo_trials_reproducibility_with_seed():
     pseudo_trials should be the same when the seed is fixed.
     """
     counts = np.array([10, 8, 12])
-    bootstrapper = Bootstrapper(counts, seed=42)
-    pseudo_trials = bootstrapper.pseudo_trials
+    bootstrapper = Bootstrapper(n_global=5)
+    bootstrapper.process(counts=counts, seed=42)
+    pseudo_trials_1 = bootstrapper.pseudo_trials.copy()
     # Create a new instance with the same seed and ensure results are reproducible
-    bootstrapper_new = Bootstrapper(counts, seed=42)
-    pseudo_trials_reproduced = bootstrapper_new.pseudo_trials
-    assert_array_equal(pseudo_trials, pseudo_trials_reproduced)
+    bootstrapper.process(counts=counts, seed=42)
+    pseudo_trials_2 = bootstrapper.pseudo_trials.copy()
+    assert_array_equal(pseudo_trials_1, pseudo_trials_2), "Pseudo-trials not reproduced"
