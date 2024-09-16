@@ -46,17 +46,17 @@ number). This prevents models to capture misleading temporal drift in neuronal a
 # pylint: disable=no-member
 
 from types import MappingProxyType
-from typing import Dict, TypeAlias, Any
+from typing import Dict, TypeAlias, Any, Tuple
 
 import numpy as np
-import numpy.typing as npt
 
 from core.processors.base import Processor
 
 
-Strata: TypeAlias = npt.NDArray[np.int64]
+Strata: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
 """Type alias for stratum labels."""
-Folds: TypeAlias = npt.NDArray[np.int64]
+
+Folds: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
 """Type alias for fold assignments."""
 
 
@@ -70,10 +70,10 @@ class FoldsAssigner(Processor):
         Number of folds in which the samples will be divided. Read-only.
     n_samples: int
         Number of samples to assign to folds.
-    strata: npt.NDArray[np.int64]
+    strata: np.ndarray[Tuple[Any], np.dtype[np.int64]]
         Labels of strata for stratified assignment. Shape: ``(n_samples,)``.
         If None, all samples are treated as belonging to a single stratum.
-    folds: npt.NDArray[np.int64]
+    folds: np.ndarray[Tuple[Any], np.dtype[np.int64]]
         Fold assignment for each sample. Shape: ``(n_samples,)``.
 
     Methods
@@ -210,7 +210,7 @@ class FoldsAssigner(Processor):
 
         Returns
         -------
-        folds: npt.NDArray[np.int64]
+        folds: np.ndarray[Tuple[Any], np.dtype[np.int64]]
             See :attr:`folds`.
         """
         folds = self.assign()
@@ -222,7 +222,7 @@ class FoldsAssigner(Processor):
 
         Returns
         -------
-        folds: npt.NDArray[np.int64]
+        folds: np.ndarray[Tuple[Any], np.dtype[np.int64]]
             See :attr:`folds`.
 
         See Also
