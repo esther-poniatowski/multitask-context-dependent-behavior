@@ -19,6 +19,7 @@ from typing import List, TypeAlias, Union, Dict, Any, Tuple
 import numpy as np
 
 from core.processors.base import Processor
+from utils.misc.arrays import create_empty_array
 
 
 Strata: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
@@ -84,7 +85,7 @@ class Stratifier(Processor):
     config_attrs = ()
     input_attrs = ("features",)
     output_attrs = ("strata",)
-    proc_data_empty = MappingProxyType({"features": [], "strata": np.array([], dtype=np.int64)})
+    proc_data_empty = MappingProxyType({"features": [], "strata": create_empty_array(1, np.int64)})
     valid_types = (np.int64, np.float64, np.str_)
 
     def __init__(self):
