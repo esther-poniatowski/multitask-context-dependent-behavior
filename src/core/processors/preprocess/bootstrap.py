@@ -59,7 +59,7 @@ from typing import Optional, TypeAlias, Dict, Any, Tuple
 
 import numpy as np
 
-from core.constants import N_PSEUDO_MIN, ALPHA_BOOTSTRAP
+from core.constants import N_PSEUDO_MIN
 from core.processors.base import Processor
 
 
@@ -79,50 +79,31 @@ class Bootstrapper(Processor):
 
     Attributes
     ----------
+    n_pseudo: int
+        Total number of pseudo-trials to generate for the current run of the processor. This is a
+        global parameter which applies to all runs of the processor during its lifetime.
     counts: np.ndarray[Tuple[Any], np.int64]
         Numbers of trials available for each unit in the pseudo-population. Shape: ``(n_units,)``.
-    n_pseudo: int, optional
-        Total number of pseudo-trials to generate for the current run of the processor. It can be
-        either determined by the global parameter ``n_global`` or computed based on the statistics
-        of the current trials count and the configuration parameters ``n_min``, ``alpha``.
-    n_global: int, optional
-        Global parameter for the total number of pseudo-trials to generate, i.e. independently from
-        the statistics of the trials count across the population. If provided, it applies to all
-        runs of the processor during its lifetime.
-    n_min: int, default=N_PSEUDO_MIN
-        Minimum number of pseudo-trials required in a strata.
-    alpha: float, default=ALPHA_BOOTSTRAP
-        Variability factor to adjust the number of pseudo-trials to achieve sufficient diversity in
-        the combinations of trials.
-        Example: Setting ``alpha = 0.5`` will generate a number of pseudo-trials equal to the
-        average of the minimum and maximum number of trials across units, which promotes a moderate
-        level of variability.
-        Example: Setting ``alpha = 0.0`` will generate a number of pseudo-trials equal to the
-        minimum number of trials across units, which promotes a low level of variability.
-        Example: Setting ``alpha = 1.0`` will generate a number of pseudo-trials equal to the sum of
-        the minimum and maximum number of trials across units, which promotes a high level of
-        variability.
     pseudo_trials : np.ndarray[Tuple[Any, Any], np.int64]
         Pseudo-trials obtained by pairing trials indices across units. It contains the indices of
-        the real trials to pick from each unit to form each pseudo-trial. Shape: ``(n_units,
-        n_pseudo)``.
+        the real trials to pick from each unit to form each pseudo-trial.
+        Shape: ``(n_units, n_pseudo)``.
 
     Methods
     -------
     :meth:`pick_trials`
-    :meth:`set_seed`
     :meth:`bootstrap`
+    :meth:`determine_n_pseudo`
 
     Example
     -------
     Generate pseudo-trials for three units with 10, 8, and 12 trials respectively, using a custom
     seed for reproducibility:
 
+    >>> n_pseudo = 5
     >>> counts = np.array([4, 5, 6])
-    >>> bootstrapper = Bootstrapper(n_min=2, alpha=0.5)
+    >>> bootstrapper = Bootstrapper(n_pseudo=n_pseudo)
     >>> bootstrapper.process(counts=counts, seed=42)
-    >>> print(bootstrapper.n_pseudo)
-    5 # mean of min and max trials
     >>> pseudo_trials = bootstrapper.pseudo_trials
     >>> print(pseudo_trials)
     [[0 1 2 3 0]  # unit 0, 4 initial trials
@@ -134,24 +115,18 @@ class Bootstrapper(Processor):
     Private attributes used to enforce control and validation: `_counts`, `_pseudo_trials`.
     """
 
-    config_attrs = ("n_global", "n_min", "alpha")
-    input_attrs = ("counts", "n_pseudo")
+    config_attrs = ("n_pseudo",)
+    input_attrs = ("counts",)
     output_attrs = ("pseudo_trials",)
     proc_data_empty = MappingProxyType(
         {
             "counts": np.array([], dtype=np.int64),
-            "n_pseudo": 0,
             "pseudo_trials": np.array([], dtype=np.int64),
         }
     )
 
-    def __init__(
-        self,
-        n_global: Optional[int] = None,
-        n_min: int = N_PSEUDO_MIN,
-        alpha: float = ALPHA_BOOTSTRAP,
-    ):
-        super().__init__(n_global=n_global, n_min=n_min, alpha=alpha)
+    def __init__(self, n_pseudo: int):
+        super().__init__(n_pseudo=n_pseudo)
 
     def _validate(self, **input_data):
         """
@@ -178,43 +153,6 @@ class Bootstrapper(Processor):
             raise ValueError(f"Invalid type: {type(counts)}, expected NumPy array.")
         if counts.ndim != 1:
             raise ValueError(f"Invalid dimensions: {counts.ndim}D array.")
-
-    def _default(self, **input_data: Any) -> Dict[str, Any]:
-        """
-        Implement the template method called in the base class :meth:`process` method.
-
-        Returns
-        -------
-        input_data : Dict[str, Any]
-            Input data with default values set for missing arguments.
-        """
-        n_pseudo = input_data.get("n_pseudo")
-        counts = input_data["counts"]
-        if n_pseudo is None:
-            if self.n_global is not None:
-                n_pseudo = self.n_global
-            else:
-                n_pseudo = self.compute_n_pseudo(counts)  # from counts, alpha and n_min
-            input_data["n_pseudo"] = n_pseudo
-        return input_data
-
-    def compute_n_pseudo(self, counts: Counts) -> int:
-        """
-        Determine the final number of pseudo-trials to generate from the statistics of the counts.
-
-        Implementation
-        --------------
-        1. Compute a preliminary number of pseudo-trials:
-           ``n_pseudo = alpha * (min_count + max_count)``
-
-            - min_count, max_count: Minimum and maximum numbers of trials across all units
-            - alpha: Variability factor to control the balance between units with few and many
-              trials.
-
-        2. Ensure the number of pseudo-trials is at least the minimum required:
-           ``n_pseudo = max(n_pseudo, n_min)``
-        """
-        return max(int(self.alpha * (np.min(counts) + np.max(counts))), self.n_min)
 
     def _process(self) -> Dict[str, PseudoTrials]:
         """
@@ -290,3 +228,51 @@ class Bootstrapper(Processor):
         for trials_unit in pseudo_trials:
             np.random.shuffle(trials_unit)  # shuffle within each unit for diversity
         return pseudo_trials
+
+    @staticmethod
+    def determine_n_pseudo(counts: Counts, n_min: int = N_PSEUDO_MIN, alpha: float = 0.5) -> int:
+        """
+        Determine a number of pseudo-trials to generate from the statistics of the counts.
+
+        Parameters
+        ----------
+        n_min: int, default=N_PSEUDO_MIN
+            Minimum number of pseudo-trials required in a strata.
+        alpha: float, default=0.5
+            Variability factor to adjust the number of pseudo-trials to achieve sufficient diversity
+            in the combinations of trials.
+
+        Returns
+        -------
+        n_pseudo: int
+            Number of pseudo-trials to generate based on the statistics of the counts.
+
+        Examples
+        --------
+        - Setting ``alpha = 0.5`` will generate a number of pseudo-trials equal to the average of
+          the minimum and maximum number of trials across units, which promotes a moderate
+            level of variability.
+        - Setting ``alpha = 0.0`` will generate a number of pseudo-trials equal to the minimum
+          number of trials across units, which promotes a low level of variability.
+        - Setting ``alpha = 1.0`` will generate a number of pseudo-trials equal to the sum of the
+          minimum and maximum number of trials across units, which promotes a high level of
+          variability. However, this is not recommended as it may lead to overfitting.
+
+        Implementation
+        --------------
+        1. Compute a preliminary number of pseudo-trials:
+           ``n_pseudo = alpha * (min_count + max_count)``
+
+            - min_count, max_count: Minimum and maximum numbers of trials across all units
+            - alpha: Variability factor to control the balance between units with few and many
+              trials.
+
+        2. Ensure the number of pseudo-trials is at least the minimum required:
+           ``n_pseudo = max(n_pseudo, n_min)``
+
+        Notes
+        -----
+        This method is not involved during processing. It can be used in preliminary exploration of
+        the data set to determine the number of pseudo-trials to generate in subsequent processing.
+        """
+        return max(int(alpha * (np.min(counts) + np.max(counts))), n_min)
