@@ -392,7 +392,7 @@ class Processor(metaclass=ProcessorMeta):
             if attr not in data:
                 raise ValueError(f"Missing data: '{attr}'")
 
-    def _compute_defaults(self, **input_data: Any) -> Dict[str, Any]:
+    def _default(self, **input_data: Any) -> Dict[str, Any]:
         """
         Compute default values for optional inputs which depend on other inputs. To be implemented
         in concrete subclasses if necessary.
@@ -488,7 +488,7 @@ class Processor(metaclass=ProcessorMeta):
             self.seed = seed  # call the setter
         # Validate inputs and compute default values if necessary
         self._validate(**input_data)  # subclass-specific or default validation
-        input_data = self._compute_defaults(**input_data)
+        input_data = self._default(**input_data)
         # Reset data after complete validation
         for attr, value in self.proc_data_empty.items():
             self._set_data(attr, value)

@@ -53,6 +53,7 @@ import numpy.typing as npt
 
 from core.processors.base import Processor
 
+
 Strata: TypeAlias = npt.NDArray[np.int64]
 """Type alias for stratum labels."""
 Folds: TypeAlias = npt.NDArray[np.int64]
@@ -65,14 +66,14 @@ class FoldsAssigner(Processor):
 
     Attributes
     ----------
-    k : int
+    k: int
         Number of folds in which the samples will be divided. Read-only.
-    n_samples : int
+    n_samples: int
         Number of samples to assign to folds.
-    strata : npt.NDArray[np.int64]
+    strata: npt.NDArray[np.int64]
         Labels of strata for stratified assignment. Shape: ``(n_samples,)``.
         If None, all samples are treated as belonging to a single stratum.
-    folds : npt.NDArray[np.int64]
+    folds: npt.NDArray[np.int64]
         Fold assignment for each sample. Shape: ``(n_samples,)``.
 
     Methods
@@ -105,7 +106,7 @@ class FoldsAssigner(Processor):
 
     Implementation
     --------------
-    Private attributes are used to enforce control and validation: `_n_samples`, `_folds`, `_strata`.
+    Private attributes used to enforce control and validation: `_n_samples`, `_folds`, `_strata`.
     """
 
     config_attrs = ("k",)
@@ -138,7 +139,7 @@ class FoldsAssigner(Processor):
         strata = input_data.get("strata")
         # If both missing
         if n_samples is None and strata is None:
-            raise ValueError("Missing arguments: either n_samples or strata.")
+            raise ValueError("Missing arguments: either `n_samples` or `strata`.")
         # If both provided, check consistency
         elif n_samples is not None and strata is not None:
             if n_samples != len(strata):
@@ -151,7 +152,7 @@ class FoldsAssigner(Processor):
 
     def _validate_n_samples(self, n: int) -> None:
         """
-        Validate the number of samples compared to the number of folds.
+        Validate the argument `n_samples` (number of samples) compared to the number of folds.
 
         Raises
         ------
@@ -163,7 +164,7 @@ class FoldsAssigner(Processor):
 
     def _validate_strata(self, strata: Strata) -> None:
         """
-        Validate the strata used for stratification.
+        Validate the argument `strata` (stratum labels) based on its structure and content.
 
         Raises
         ------
@@ -179,7 +180,7 @@ class FoldsAssigner(Processor):
         if len(strata) < self.k:
             raise ValueError(f"len(strata): {len(strata)} < k: {self.k}")
 
-    def _compute_defaults(self, **input_data: Any) -> Dict[str, Any]:
+    def _default(self, **input_data: Any) -> Dict[str, Any]:
         """
         Implement the template method called in the base class :meth:`process` method.
 
@@ -190,7 +191,7 @@ class FoldsAssigner(Processor):
 
         Returns
         -------
-        input_data : Dict[str, Any]
+        input_data: Dict[str, Any]
             Input data with default values set for missing arguments.
         """
         n_samples = input_data.get("n_samples")
@@ -209,7 +210,7 @@ class FoldsAssigner(Processor):
 
         Returns
         -------
-        folds : npt.NDArray[np.int64]
+        folds: npt.NDArray[np.int64]
             See :attr:`folds`.
         """
         folds = self.assign()
@@ -221,7 +222,7 @@ class FoldsAssigner(Processor):
 
         Returns
         -------
-        folds : npt.NDArray[np.int64]
+        folds: npt.NDArray[np.int64]
             See :attr:`folds`.
 
         See Also
