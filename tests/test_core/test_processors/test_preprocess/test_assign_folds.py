@@ -104,45 +104,13 @@ def test_invalid_strata_shape():
         assigner._validate_strata(strata=strata)
 
 
-def test_default_strata():
-    """
-    Test default strata assignment when `strata` is None, with both
-    :meth:`FoldAssigner._default` and :meth:`FoldAssigner.process`.
-
-    Test Inputs
-    -----------
-    n_samples = 6
-    strata = None or not provided
-
-    Expected Outputs
-    ----------------
-    Default strata assignment where all samples are treated as belonging to a single stratum.
-    """
-    k = 3
-    n_samples = 6
-    expected_strata = np.zeros(n_samples, dtype=np.int64)
-    # Via `_default` method (subclass)
-    assigner = FoldAssigner(k)
-    input_data = assigner._default(n_samples=n_samples, strata=None)
-    strata = input_data["strata"]
-    assert strata.size == n_samples, f"strata.size = {strata.size} != {n_samples}"
-    assert_array_equal(strata, expected_strata)
-    # Via `process` method (base class)
-    assigner = FoldAssigner(k)
-    assigner.process(n_samples=n_samples)
-    strata = assigner.strata
-    assert strata.size == n_samples, f"strata.size = {strata.size} != {n_samples}"
-    assert_array_equal(strata, expected_strata)
-
-
 def test_default_n_samples():
     """
-    Test default n_samples assignment when `n_samples` is None, with both
-    :meth:`FoldAssigner._default` and :meth:`FoldAssigner.process`.
+    Test default assignment via the property when `n_samples` is not provided as input.
 
     Test Inputs
     -----------
-    n_samples = None or not provided
+    n_samples = not provided
     strata = np.array([0, 0, 1, 1, 2, 2], dtype=np.int64)
 
     Expected Outputs
@@ -151,16 +119,33 @@ def test_default_n_samples():
     """
     k = 3
     strata = np.array([0, 0, 1, 1, 2, 2], dtype=np.int64)
-    # Via `_default` method (subclass)
     assigner = FoldAssigner(k)
-    input_data = assigner._default(n_samples=None, strata=strata)
-    n_samples = input_data["n_samples"]
-    assert n_samples == strata.size, f"n_samples = {n_samples} != {strata.size}"
-    # Via `process` method (base class)
-    assigner = FoldAssigner(k)
-    assigner.process(strata=strata)
+    assigner._strata = strata  # assign manually
     n_samples = assigner.n_samples
     assert n_samples == strata.size, f"n_samples = {n_samples} != {strata.size}"
+
+
+def test_default_strata():
+    """
+    Test default strata assignment via the property when `strata` is not provided as input.
+
+    Test Inputs
+    -----------
+    n_samples = 6
+    strata not provided
+
+    Expected Outputs
+    ----------------
+    Default strata assignment where all samples are treated as belonging to a single stratum.
+    """
+    k = 3
+    n_samples = 6
+    expected_strata = np.zeros(n_samples, dtype=np.int64)
+    assigner = FoldAssigner(k)
+    assigner._n_samples = n_samples  # assign manually
+    strata = assigner.strata
+    assert strata.size == n_samples, f"strata.size = {strata.size} != {n_samples}"
+    assert_array_equal(strata, expected_strata)
 
 
 def test_folds_property_cache():
