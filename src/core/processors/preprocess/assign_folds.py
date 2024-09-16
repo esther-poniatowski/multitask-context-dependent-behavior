@@ -70,9 +70,11 @@ class FoldsAssigner(Processor):
         Number of folds in which the samples will be divided. Read-only.
     n_samples: int
         Number of samples to assign to folds.
+        If not provided or None, the number of samples is inferred from the length of `strata`.
     strata: np.ndarray[Tuple[Any], np.dtype[np.int64]]
         Labels of strata for stratified assignment. Shape: ``(n_samples,)``.
-        If None, all samples are treated as belonging to a single stratum.
+        If not provided or None, all samples are treated as belonging to a single stratum based on
+        the number of samples `n_samples`.
     folds: np.ndarray[Tuple[Any], np.dtype[np.int64]]
         Fold assignment for each sample. Shape: ``(n_samples,)``.
 
@@ -81,6 +83,10 @@ class FoldsAssigner(Processor):
     :meth:`_validate_n_samples`
     :meth:`_validate_strata`
     :meth:`assign`
+
+    Warning
+    -------
+    Provide either `n_samples` or `strata` as input to the processor.
 
     Examples
     --------
@@ -131,19 +137,17 @@ class FoldsAssigner(Processor):
         ------
         ValueError
             If both `n_samples` and `strata` are missing.
-            If both `n_samples` and `strata` are provided and inconsistent.
+            If both `n_samples` and `strata` are provided.
             If any of `n_samples` or `strata` is provided and invalid.
         """
         # Get input data (None if not provided)
         n_samples = input_data.get("n_samples")
         strata = input_data.get("strata")
-        # If both missing
+        # If both missing or both provided, raise error
         if n_samples is None and strata is None:
-            raise ValueError("Missing arguments: either `n_samples` or `strata`.")
-        # If both provided, check consistency
+            raise ValueError("Missing arguments: provide either `n_samples` or `strata`.")
         elif n_samples is not None and strata is not None:
-            if n_samples != len(strata):
-                raise ValueError(f"Mismatch: len(strata): {len(strata)} != n_samples: {n_samples}")
+            raise ValueError("Extra arguments: provide either `n_samples` and `strata`.")
         # Specific validation if provided
         elif strata is not None:
             self._validate_strata(strata)
@@ -193,14 +197,19 @@ class FoldsAssigner(Processor):
         -------
         input_data: Dict[str, Any]
             Input data with default values set for missing arguments.
+
+        Notes
+        -----
+        Since this method is called after validation, the input data is guaranteed to contain
+        exactly one of `n_samples` or `strata` (not both, nor none).
         """
         n_samples = input_data.get("n_samples")
         strata = input_data.get("strata")
         # If only strata provided, set n_samples
-        if strata is not None and n_samples is None:
+        if strata is not None:  # n_samples is None
             input_data["n_samples"] = len(strata)
         # If only n_samples provided, set default strata
-        elif n_samples is not None and strata is None:
+        elif n_samples is not None:  # strata is None
             input_data["strata"] = np.zeros(n_samples, dtype=np.int64)
         return input_data
 
