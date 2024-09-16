@@ -14,17 +14,17 @@ Classes
 # pylint: disable=no-member
 
 from types import MappingProxyType
-from typing import List, TypeAlias, Union, Dict, Any
+from typing import List, TypeAlias, Union, Dict, Any, Tuple
 
 import numpy as np
-import numpy.typing as npt
 
 from core.processors.base import Processor
 
 
-Strata: TypeAlias = npt.NDArray[np.int64]
+Strata: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
 """Type alias for stratum labels."""
-Features = List[npt.NDArray[Union[np.int64, np.float64, np.str_]]]
+
+Features = List[np.ndarray[Tuple[Any], np.dtype[Union[np.int64, np.float64, np.str_]]]]
 """Type alias for a list of feature arrays."""
 
 
@@ -40,11 +40,11 @@ class Stratifier(Processor):
 
     Attributes
     ----------
-    features: list of npt.NDArray
+    features: List[np.ndarray[Tuple[Any], np.dtype[Union[np.int64, np.float64, np.str_]]]]
         Features to consider to stratify the samples (e.g., task, context, stimulus).
         Length: ``n_features``.
         Shape of each element (feature): ``(n_samples,)``.
-    strata: npt.NDArray[np.int64]
+    strata: np.ndarray[Tuple[Any], np.dtype[np.int64]]
         Stratum labels of the samples. Shape: ``(n_samples,)``.
 
     Methods
@@ -129,7 +129,7 @@ class Stratifier(Processor):
 
         Returns
         -------
-        strata: npt.NDArray[np.int64]
+        strata: np.ndarray[Tuple[Any], np.dtype[np.int64]]
             See :attr:`strata`.
 
         Implementation
