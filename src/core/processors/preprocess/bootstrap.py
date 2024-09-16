@@ -55,18 +55,21 @@ Implementation
 # pylint: disable=no-member
 
 from types import MappingProxyType
-from typing import Optional, TypeAlias
+from typing import Optional, TypeAlias, Dict, Any, Tuple
 
 import numpy as np
-import numpy.typing as npt
 
 from core.constants import N_PSEUDO_MIN, ALPHA_BOOTSTRAP
 from core.processors.base import Processor
 
 
-Counts: TypeAlias = npt.NDArray[np.int64]
+Counts: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
 """Type alias for the number of trials per unit."""
-PseudoTrials: TypeAlias = npt.NDArray[np.int64]
+
+TrialsIndUnit: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
+"""Type alias for trials indices per unit."""
+
+PseudoTrials: TypeAlias = np.ndarray[Tuple[Any, Any], np.dtype[np.int64]]
 """Type alias for pseudo-trials indices."""
 
 
@@ -76,17 +79,16 @@ class Bootstrapper(Processor):
 
     Attributes
     ----------
-    counts: npt.NDArray[np.int_]
-        Numbers of trials for each unit in the pseudo-population. Shape: ``(n_units,)``.
+    counts: np.ndarray[Tuple[Any], np.int64]
+        Numbers of trials available for each unit in the pseudo-population. Shape: ``(n_units,)``.
     n_pseudo: int, optional
-        Total number of pseudo-trials to generate.
+        Total number of pseudo-trials to generate for the current run of the processor. It can be
+        either determined by the global parameter ``n_global`` or computed based on the statistics
+        of the current trials count and the configuration parameters ``n_min``, ``alpha``.
     n_global: int, optional
-        Total number of pseudo-trials to generate, independently from the statistics of the trials
-        count across the population.
-        If provided, it serves as a global parameter which applies to all runs of the processor.
-        Otherwise, the actual number of pseudo-trials is computed on each run based on the
-        statistics of the trials count provided to the processor and the other configuration
-        parameters (``n_pseudo_min``, ``alpha``).
+        Global parameter for the total number of pseudo-trials to generate, i.e. independently from
+        the statistics of the trials count across the population. If provided, it applies to all
+        runs of the processor during its lifetime.
     n_min: int, default=N_PSEUDO_MIN
         Minimum number of pseudo-trials required in a strata.
     alpha: float, default=ALPHA_BOOTSTRAP
@@ -100,13 +102,14 @@ class Bootstrapper(Processor):
         Example: Setting ``alpha = 1.0`` will generate a number of pseudo-trials equal to the sum of
         the minimum and maximum number of trials across units, which promotes a high level of
         variability.
-    pseudo_trials : npt.NDArray[np.int_]
-        Pseudo-trials obtained by pairing trials across units. It contains the indices of the real
-        trials to pick from each unit to form each pseudo-trial. Shape: ``(n_units, n_pseudo)``.
+    pseudo_trials : np.ndarray[Tuple[Any, Any], np.int64]
+        Pseudo-trials obtained by pairing trials indices across units. It contains the indices of
+        the real trials to pick from each unit to form each pseudo-trial. Shape: ``(n_units,
+        n_pseudo)``.
 
     Methods
     -------
-    :meth:`_pick_trials`
+    :meth:`pick_trials`
     :meth:`set_seed`
     :meth:`bootstrap`
 
@@ -115,34 +118,40 @@ class Bootstrapper(Processor):
     Generate pseudo-trials for three units with 10, 8, and 12 trials respectively, using a custom
     seed for reproducibility:
 
-    >>> counts = np.array([10, 8, 12])
-    >>> bootstrapper = Bootstrapper(counts, n_pseudo_min=5, alpha=0.5, seed=42)
-    >>> pseudo_trials = bootstrapper.pseudo_trials # automatically computes pseudo-trials
+    >>> counts = np.array([4, 5, 6])
+    >>> bootstrapper = Bootstrapper(n_min=2, alpha=0.5)
+    >>> bootstrapper.process(counts=counts, seed=42)
+    >>> print(bootstrapper.n_pseudo)
+    5 # mean of min and max trials
+    >>> pseudo_trials = bootstrapper.pseudo_trials
     >>> print(pseudo_trials)
-    [[ 0  1  2  3  4  5  6  7  8  9]
+    [[0 1 2 3 0]  # unit 0, 4 initial trials
+     [0 1 2 3 4]  # unit 1, 5 initial trials
+     [0 1 2 3 4]] # unit 2, 6 initial trials
 
     Implementation
     --------------
     Private attributes used to enforce control and validation: `_counts`, `_pseudo_trials`.
     """
 
-    config_attrs = ("n_pseudo", "n_pseudo_min", "alpha")
-    input_attrs = ("counts",)
+    config_attrs = ("n_global", "n_min", "alpha")
+    input_attrs = ("counts", "n_pseudo")
     output_attrs = ("pseudo_trials",)
     proc_data_empty = MappingProxyType(
         {
             "counts": np.array([], dtype=np.int64),
+            "n_pseudo": 0,
             "pseudo_trials": np.array([], dtype=np.int64),
         }
     )
 
     def __init__(
         self,
-        n_pseudo: Optional[int] = None,
-        n_pseudo_min: int = N_PSEUDO_MIN,
+        n_global: Optional[int] = None,
+        n_min: int = N_PSEUDO_MIN,
         alpha: float = ALPHA_BOOTSTRAP,
     ):
-        super().__init__(n_pseudo=n_pseudo, n_pseudo_min=n_pseudo_min, alpha=alpha)
+        super().__init__(n_global=n_global, n_min=n_min, alpha=alpha)
 
     def _validate(self, **input_data):
         """
@@ -179,47 +188,59 @@ class Bootstrapper(Processor):
         input_data : Dict[str, Any]
             Input data with default values set for missing arguments.
         """
-        if self.n_pseudo is None:
-            input_data["n_pseudo"] = self._compute_n_pseudo()
+        n_pseudo = input_data.get("n_pseudo")
+        counts = input_data["counts"]
+        if n_pseudo is None:
+            if self.n_global is not None:
+                n_pseudo = self.n_global
+            else:
+                n_pseudo = self.compute_n_pseudo(counts)  # from counts, alpha and n_min
+            input_data["n_pseudo"] = n_pseudo
+        return input_data
 
-    def _compute_n_pseudo(self) -> int:
+    def compute_n_pseudo(self, counts: Counts) -> int:
         """
         Determine the final number of pseudo-trials to generate from the statistics of the counts.
 
         Implementation
         --------------
         1. Compute a preliminary number of pseudo-trials:
-           ``n_pseudo = alpha * (min_trials + max_trials)``
+           ``n_pseudo = alpha * (min_count + max_count)``
 
-            - min_trials, max_trials: Minimum and maximum numbers of trials across all units
+            - min_count, max_count: Minimum and maximum numbers of trials across all units
             - alpha: Variability factor to control the balance between units with few and many
               trials.
 
         2. Ensure the number of pseudo-trials is at least the minimum required:
-           ``n_pseudo = max(n_pseudo, min_pseudo_trials)``
+           ``n_pseudo = max(n_pseudo, n_min)``
         """
-        return max(int(self.alpha * (np.min(self.counts) + np.max(self.counts))), self.n_pseudo_min)
+        return max(int(self.alpha * (np.min(counts) + np.max(counts))), self.n_min)
 
-    @property
-    def pseudo_trials(self) -> npt.NDArray[np.int_]:
-        """Access the cache `_pseudo-trials` and compute it if empty."""
-        if self._pseudo_trials is None:
-            self._pseudo_trials = self.bootstrap()
-        return self._pseudo_trials
+    def _process(self) -> Dict[str, PseudoTrials]:
+        """
+        Implement the template method called in the base class :meth:`process` method.
 
-    def _pick_trials(self, n: int) -> npt.NDArray[np.int_]:
+        Returns
+        -------
+        output_data : Dict[str, Any]
+            Output data containing the result of the processor.
+        """
+        pseudo_trials = self.bootstrap()
+        return {"pseudo_trials": pseudo_trials}
+
+    def pick_trials(self, n: int) -> TrialsIndUnit:
         """
         Pick trials from a single unit for future inclusion among the pseudo-trials.
 
         Parameters
         ----------
-        n : int
+        n: int
             Number of trials available for the considered unit.
 
         Returns
         -------
-        trials : np.ndarray
-            Trials selected for the considered unit.
+        trials_unit: np.ndarray[Tuple[Any], np.int64]
+            Trials indices selected for the considered unit.
 
         Notes
         -----
@@ -238,11 +259,16 @@ class Bootstrapper(Processor):
         :func:`numpy.random.choice`
             Randomly select elements from an array.
             Parameter `replace=False`: Prevent duplicates.
+            Output: Array of selected elements (or single element if `size=1`).
+        :fun:`numpy.atleast_1d`
+            Convert input to an array with at least one dimension.
+            Here is is used to ensure that `trials` is a 1D array in case the parameter
+            `n_pseudo`=1, for shape consistency with the pseudo-trials array.
         :func:`numpy.repeat`
             Repeat elements of an array, here used to selected each trial at least ``q`` times.
         """
         if n >= self.n_pseudo:
-            trials = np.random.choice(n, size=self.n_pseudo, replace=False)
+            trials = np.atleast_1d(np.random.choice(n, size=self.n_pseudo, replace=False))
         else:
             q = self.n_pseudo // n  # minimal number of times each trial is selected
             r = self.n_pseudo % n  # number of trials selected additionally once
@@ -250,27 +276,17 @@ class Bootstrapper(Processor):
             trials = np.concatenate((trials, np.random.choice(n, size=r, replace=False)))
         return trials
 
-    def set_seed(self) -> None:
-        """
-        Set the random seed for reproducibility.
-
-        See Also
-        --------
-        :func:`np.random.seed`: Set the random seed for reproducibility.
-        """
-        np.random.seed(self.seed)
-
-    def bootstrap(self) -> npt.NDArray:
+    def bootstrap(self) -> PseudoTrials:
         """
         Combine trials across units to form pseudo-trials.
 
         Returns
         -------
-        pseudo : npt.NDArray
+        pseudo : np.ndarray[Tuple[Any, Any], np.int64]
             See :attr:`pseudo_trials`.
         """
-        self.set_seed()
-        pseudo_trials = np.array([self._pick_trials(n) for n in self.counts])
+        self.set_random_state()  # parent method
+        pseudo_trials = np.array([self.pick_trials(n) for n in self.counts])
         for trials_unit in pseudo_trials:
             np.random.shuffle(trials_unit)  # shuffle within each unit for diversity
         return pseudo_trials
