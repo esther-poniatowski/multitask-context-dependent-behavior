@@ -17,12 +17,12 @@ import numpy as np
 from numpy.testing import assert_array_equal
 import pytest
 
-from core.processors.preprocess.assign_folds import FoldsAssigner
+from core.processors.preprocess.assign_folds import FoldAssigner
 
 
 def test_missing_inputs():
     """
-    Test :meth:`FoldsAssigner._validate` when both `strata` and `n_samples` are missing.
+    Test :meth:`FoldAssigner._validate` when both `strata` and `n_samples` are missing.
 
     Test Inputs
     -----------
@@ -34,7 +34,7 @@ def test_missing_inputs():
     ValueError raised due to missing inputs.
     """
     k = 3
-    assigner = FoldsAssigner(k)
+    assigner = FoldAssigner(k)
     # Via `_validate` method (subclass)
     with pytest.raises(ValueError):
         assigner._validate(n_samples=None, strata=None)
@@ -45,7 +45,7 @@ def test_missing_inputs():
 
 def test_both_inputs_provided():
     """
-    Test :meth:`FoldsAssigner._validate` when both `strata` and `n_samples` are provided.
+    Test :meth:`FoldAssigner._validate` when both `strata` and `n_samples` are provided.
 
     Test Inputs
     -----------
@@ -59,14 +59,14 @@ def test_both_inputs_provided():
     k = 3
     n_samples = 6
     strata = np.array([0, 0, 1, 1, 2, 2], dtype=np.int64)
-    assigner = FoldsAssigner(k)
+    assigner = FoldAssigner(k)
     with pytest.raises(ValueError):
         assigner._validate(n_samples=n_samples, strata=strata)
 
 
 def test_invalid_n_samples():
     """
-    Test :meth:`FoldsAssigner._validate_n_samples` raises ValueError if n_samples < k.
+    Test :meth:`FoldAssigner._validate_n_samples` raises ValueError if n_samples < k.
 
     Test Inputs
     -----------
@@ -79,14 +79,14 @@ def test_invalid_n_samples():
     """
     n_samples = 4
     k = 5
-    assigner = FoldsAssigner(k)
+    assigner = FoldAssigner(k)
     with pytest.raises(ValueError):
         assigner._validate_n_samples(n_samples)
 
 
 def test_invalid_strata_shape():
     """
-    Test :meth:`FoldsAssigner._validate_strata` raises ValueError for invalid strata shape.
+    Test :meth:`FoldAssigner._validate_strata` raises ValueError for invalid strata shape.
 
     Test Inputs
     -----------
@@ -99,7 +99,7 @@ def test_invalid_strata_shape():
     """
     k = 3
     strata = np.array([0, 1], dtype=np.int64)
-    assigner = FoldsAssigner(k)
+    assigner = FoldAssigner(k)
     with pytest.raises(ValueError):
         assigner._validate_strata(strata=strata)
 
@@ -107,7 +107,7 @@ def test_invalid_strata_shape():
 def test_default_strata():
     """
     Test default strata assignment when `strata` is None, with both
-    :meth:`FoldsAssigner._default` and :meth:`FoldsAssigner.process`.
+    :meth:`FoldAssigner._default` and :meth:`FoldAssigner.process`.
 
     Test Inputs
     -----------
@@ -122,13 +122,13 @@ def test_default_strata():
     n_samples = 6
     expected_strata = np.zeros(n_samples, dtype=np.int64)
     # Via `_default` method (subclass)
-    assigner = FoldsAssigner(k)
+    assigner = FoldAssigner(k)
     input_data = assigner._default(n_samples=n_samples, strata=None)
     strata = input_data["strata"]
     assert strata.size == n_samples, f"strata.size = {strata.size} != {n_samples}"
     assert_array_equal(strata, expected_strata)
     # Via `process` method (base class)
-    assigner = FoldsAssigner(k)
+    assigner = FoldAssigner(k)
     assigner.process(n_samples=n_samples)
     strata = assigner.strata
     assert strata.size == n_samples, f"strata.size = {strata.size} != {n_samples}"
@@ -138,7 +138,7 @@ def test_default_strata():
 def test_default_n_samples():
     """
     Test default n_samples assignment when `n_samples` is None, with both
-    :meth:`FoldsAssigner._default` and :meth:`FoldsAssigner.process`.
+    :meth:`FoldAssigner._default` and :meth:`FoldAssigner.process`.
 
     Test Inputs
     -----------
@@ -152,12 +152,12 @@ def test_default_n_samples():
     k = 3
     strata = np.array([0, 0, 1, 1, 2, 2], dtype=np.int64)
     # Via `_default` method (subclass)
-    assigner = FoldsAssigner(k)
+    assigner = FoldAssigner(k)
     input_data = assigner._default(n_samples=None, strata=strata)
     n_samples = input_data["n_samples"]
     assert n_samples == strata.size, f"n_samples = {n_samples} != {strata.size}"
     # Via `process` method (base class)
-    assigner = FoldsAssigner(k)
+    assigner = FoldAssigner(k)
     assigner.process(strata=strata)
     n_samples = assigner.n_samples
     assert n_samples == strata.size, f"n_samples = {n_samples} != {strata.size}"
@@ -165,7 +165,7 @@ def test_default_n_samples():
 
 def test_folds_property_cache():
     """
-    Test :attr:`FoldsAssigner.folds` caching mechanism.
+    Test :attr:`FoldAssigner.folds` caching mechanism.
 
     Test Inputs
     -----------
@@ -184,7 +184,7 @@ def test_folds_property_cache():
     """
     k = 3
     n_samples = 6
-    assigner = FoldsAssigner(k)
+    assigner = FoldAssigner(k)
     output = assigner.process(n_samples=n_samples)
     folds_returned = output["folds"]
     folds_internal = assigner._folds
@@ -198,7 +198,7 @@ def test_folds_property_cache():
 
 def test_assign_folds_no_stratification():
     """
-    Test :meth:`FoldsAssigner.assign` without stratification.
+    Test :meth:`FoldAssigner.assign` without stratification.
 
     Test Inputs
     -----------
@@ -211,7 +211,7 @@ def test_assign_folds_no_stratification():
     """
     k = 3
     n_samples = 6
-    assigner = FoldsAssigner(k)
+    assigner = FoldAssigner(k)
     assigner.process(n_samples=n_samples)
     folds = assigner.folds
     assert len(folds) == n_samples, f"Expected {n_samples} samples, Got {len(folds)}"
@@ -220,7 +220,7 @@ def test_assign_folds_no_stratification():
 
 def test_assign_folds_stratified_divisible():
     """
-    Test :meth:`FoldsAssigner.assign` with stratification where the number of samples in each
+    Test :meth:`FoldAssigner.assign` with stratification where the number of samples in each
     stratum is divisible by the number of folds.
 
     Test Inputs
@@ -235,7 +235,7 @@ def test_assign_folds_stratified_divisible():
     k = 3
     strata = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2], dtype=np.int64)
     n_samples = strata.size
-    assigner = FoldsAssigner(k)
+    assigner = FoldAssigner(k)
     assigner.process(strata=strata)
     folds = assigner.folds
     assert len(folds) == n_samples, f"Expected {n_samples} samples, Got {len(folds)}"
@@ -245,7 +245,7 @@ def test_assign_folds_stratified_divisible():
 
 def test_assign_folds_stratified_non_divisible():
     """
-    Test :meth:`FoldsAssigner.assign` with stratification where the number of samples in each
+    Test :meth:`FoldAssigner.assign` with stratification where the number of samples in each
     stratum is not divisible by the number of folds.
 
     Test Inputs
@@ -265,7 +265,7 @@ def test_assign_folds_stratified_non_divisible():
     k = 3
     strata = np.array([0, 0, 1, 1, 2, 2], dtype=np.int64)
     n_samples = strata.size
-    assigner = FoldsAssigner(k)
+    assigner = FoldAssigner(k)
     assigner.process(strata=strata)
     folds = assigner.folds
     assert len(folds) == n_samples, f"Expected {n_samples} samples, Got {len(folds)}"
@@ -291,7 +291,7 @@ def test_seed_consistency():
     n_samples = 6
     k = 3
     seed = 42
-    assigner = FoldsAssigner(k)
+    assigner = FoldAssigner(k)
     assigner.process(n_samples=n_samples, seed=seed)
     folds_1 = assigner.folds
     assigner.process(n_samples=n_samples, seed=seed)  # same seed

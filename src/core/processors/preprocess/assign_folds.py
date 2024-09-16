@@ -5,13 +5,13 @@
 
 Classes
 -------
-:class:`FoldsAssigner`
+:class:`FoldAssigner`
 
 Notes
 -----
 Folds correspond to subsets of samples (trials) used to train and test a model in cross-validation.
 
-The class :class:`FoldsAssigner` is only responsible of assigning each sample to one fold. Actual
+The class :class:`FoldAssigner` is only responsible of assigning each sample to one fold. Actual
 splitting samples into training and testing sets is carried out in the :class:`CoordFold` class
 itself based on these fold assignments (methods :meth:`get_train` and :meth:`get_test`). This allows
 direct access to the samples in each set through the coordinate, without resorting to external
@@ -60,7 +60,7 @@ Folds: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
 """Type alias for fold assignments."""
 
 
-class FoldsAssigner(Processor):
+class FoldAssigner(Processor):
     """
     Assign samples (trials) to folds for cross-validation.
 
@@ -92,7 +92,7 @@ class FoldsAssigner(Processor):
     --------
     Assign 10 samples to 3 folds:
 
-    >>> assigner = FoldsAssigner(k=3)
+    >>> assigner = FoldAssigner(k=3)
     >>> assigner.process(n_samples=10)
     >>> print(assigner.folds)
     [0 0 1 1 2 2 0 1 2 0]
