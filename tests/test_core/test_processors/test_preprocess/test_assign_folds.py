@@ -102,7 +102,7 @@ def test_inconsistent_inputs():
 def test_default_strata():
     """
     Test default strata assignment when `strata` is None, with both
-    :meth:`FoldsAssigner._compute_defaults` and :meth:`FoldsAssigner.process`.
+    :meth:`FoldsAssigner._default` and :meth:`FoldsAssigner.process`.
 
     Test Inputs
     -----------
@@ -116,9 +116,9 @@ def test_default_strata():
     k = 3
     n_samples = 6
     expected_strata = np.zeros(n_samples, dtype=np.int64)
-    # Via `_compute_defaults` method (subclass)
+    # Via `_default` method (subclass)
     assigner = FoldsAssigner(k)
-    input_data = assigner._compute_defaults(n_samples=n_samples, strata=None)
+    input_data = assigner._default(n_samples=n_samples, strata=None)
     strata = input_data["strata"]
     assert strata.size == n_samples, f"strata.size = {strata.size} != {n_samples}"
     assert_array_equal(strata, expected_strata)
@@ -133,7 +133,7 @@ def test_default_strata():
 def test_default_n_samples():
     """
     Test default n_samples assignment when `n_samples` is None, with both
-    :meth:`FoldsAssigner._compute_defaults` and :meth:`FoldsAssigner.process`.
+    :meth:`FoldsAssigner._default` and :meth:`FoldsAssigner.process`.
 
     Test Inputs
     -----------
@@ -146,9 +146,9 @@ def test_default_n_samples():
     """
     k = 3
     strata = np.array([0, 0, 1, 1, 2, 2], dtype=np.int64)
-    # Via `_compute_defaults` method (subclass)
+    # Via `_default` method (subclass)
     assigner = FoldsAssigner(k)
-    input_data = assigner._compute_defaults(n_samples=None, strata=strata)
+    input_data = assigner._default(n_samples=None, strata=strata)
     n_samples = input_data["n_samples"]
     assert n_samples == strata.size, f"n_samples = {n_samples} != {strata.size}"
     # Via `process` method (base class)

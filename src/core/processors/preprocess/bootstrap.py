@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.processors.preprocess.pipelines.bootstrap` [module]
+:mod:`core.processors.preprocess.bootstrap` [module]
 
 Classes
 -------
@@ -48,32 +48,61 @@ Implementation
 3. Combine trials across units to form actual pseudo-trials by shuffling the trials retained for
    each unit.
 """
-from typing import Optional
+# Disable error codes for attributes which are not detected by the type checker:
+# - Configuration attributes are defined by the base class constructor.
+# - Public properties for internal attributes are defined in the metaclass.
+# mypy: disable-error-code="attr-defined"
+# pylint: disable=no-member
+
+from types import MappingProxyType
+from typing import Optional, TypeAlias
 
 import numpy as np
 import numpy.typing as npt
 
 from core.constants import N_PSEUDO_MIN, ALPHA_BOOTSTRAP
+from core.processors.base import Processor
 
 
-class Bootstrapper:
+Counts: TypeAlias = npt.NDArray[np.int64]
+"""Type alias for the number of trials per unit."""
+PseudoTrials: TypeAlias = npt.NDArray[np.int64]
+"""Type alias for pseudo-trials indices."""
+
+
+class Bootstrapper(Processor):
     """
     Generate pseudo-trials through an algorithm inspired by the hierarchical bootstrap method.
 
     Attributes
     ----------
-    counts : npt.NDArray[np.int_]
+    counts: npt.NDArray[np.int_]
         Numbers of trials for each unit in the pseudo-population. Shape: ``(n_units,)``.
-    n_pseudo_min : int, default=N_PSEUDO_MIN
+    n_pseudo: int, optional
+        Total number of pseudo-trials to generate.
+    n_global: int, optional
+        Total number of pseudo-trials to generate, independently from the statistics of the trials
+        count across the population.
+        If provided, it serves as a global parameter which applies to all runs of the processor.
+        Otherwise, the actual number of pseudo-trials is computed on each run based on the
+        statistics of the trials count provided to the processor and the other configuration
+        parameters (``n_pseudo_min``, ``alpha``).
+    n_min: int, default=N_PSEUDO_MIN
         Minimum number of pseudo-trials required in a strata.
-    alpha : float, default=ALPHA_BOOTSTRAP
+    alpha: float, default=ALPHA_BOOTSTRAP
         Variability factor to adjust the number of pseudo-trials to achieve sufficient diversity in
         the combinations of trials.
         Example: Setting ``alpha = 0.5`` will generate a number of pseudo-trials equal to the
         average of the minimum and maximum number of trials across units, which promotes a moderate
         level of variability.
+        Example: Setting ``alpha = 0.0`` will generate a number of pseudo-trials equal to the
+        minimum number of trials across units, which promotes a low level of variability.
+        Example: Setting ``alpha = 1.0`` will generate a number of pseudo-trials equal to the sum of
+        the minimum and maximum number of trials across units, which promotes a high level of
+        variability.
     pseudo_trials : npt.NDArray[np.int_]
-        Pseudo-trials obtained by pairing trials across units. Shape: ``(n_units, n_pseudo)``.
+        Pseudo-trials obtained by pairing trials across units. It contains the indices of the real
+        trials to pick from each unit to form each pseudo-trial. Shape: ``(n_units, n_pseudo)``.
 
     Methods
     -------
@@ -94,48 +123,68 @@ class Bootstrapper:
 
     Implementation
     --------------
-    Private attributes are used to enforce control and validation:
-
-    - `_counts`: Accessed via the property `counts` and set by the property setter. It validates the
-      input counts and resets the cache `_pseudo_trials` if counts are updated.
-    - `_pseudo_trials`: Accessed and set via the property `pseudo_trials`. It computes this
-      attribute lazily on first access and caches it for subsequent accesses.
+    Private attributes used to enforce control and validation: `_counts`, `_pseudo_trials`.
     """
+
+    config_attrs = ("n_pseudo", "n_pseudo_min", "alpha")
+    input_attrs = ("counts",)
+    output_attrs = ("pseudo_trials",)
+    proc_data_empty = MappingProxyType(
+        {
+            "counts": np.array([], dtype=np.int64),
+            "pseudo_trials": np.array([], dtype=np.int64),
+        }
+    )
 
     def __init__(
         self,
-        counts: npt.NDArray[np.int_],
+        n_pseudo: Optional[int] = None,
         n_pseudo_min: int = N_PSEUDO_MIN,
         alpha: float = ALPHA_BOOTSTRAP,
-        seed: int = 0,
     ):
-        # Set simple attributes
-        self.n_pseudo_min = n_pseudo_min
-        self.alpha = alpha
-        self.seed = seed
-        # Initialize cache
-        self._pseudo_trials: Optional[npt.NDArray[np.int_]] = None
-        # Declare types for private attributes set by property setters
-        self._counts: npt.NDArray[np.int_]
-        self.counts = counts  # call property setter automatically
+        super().__init__(n_pseudo=n_pseudo, n_pseudo_min=n_pseudo_min, alpha=alpha)
 
-    @property
-    def counts(self) -> npt.NDArray[np.int_]:
-        """Access the private attribute `_counts`."""
-        return self._counts
-
-    @counts.setter
-    def counts(self, new_counts: npt.NDArray[np.int_]) -> None:
-        """Validate and set the `_counts` attribute, and reset the cache."""
-        if not isinstance(new_counts, np.ndarray) or new_counts.ndim != 1:
-            raise ValueError(f"Invalid dimensions: {new_counts.ndim}D array.")
-        self._counts = new_counts
-        self._pseudo_trials = None
-
-    @property
-    def n_pseudo(self) -> int:
+    def _validate(self, **input_data):
         """
-        Final number of pseudo-trials to generate.
+        Implement the template method called in the base class :meth:`process` method.
+
+        Raises
+        ------
+        ValueError
+            If the `counts` attribute is invalid.
+        """
+        self._validate_counts(input_data["counts"])
+
+    def _validate_counts(self, counts: Counts) -> None:
+        """
+        Validate the argument `counts` (number of trials per unit) based on its type and dimensions.
+
+        Raises
+        ------
+        ValueError
+            If the argument is not a NumPy array.
+            If the argument is not 1D.
+        """
+        if not isinstance(counts, np.ndarray):
+            raise ValueError(f"Invalid type: {type(counts)}, expected NumPy array.")
+        if counts.ndim != 1:
+            raise ValueError(f"Invalid dimensions: {counts.ndim}D array.")
+
+    def _default(self, **input_data: Any) -> Dict[str, Any]:
+        """
+        Implement the template method called in the base class :meth:`process` method.
+
+        Returns
+        -------
+        input_data : Dict[str, Any]
+            Input data with default values set for missing arguments.
+        """
+        if self.n_pseudo is None:
+            input_data["n_pseudo"] = self._compute_n_pseudo()
+
+    def _compute_n_pseudo(self) -> int:
+        """
+        Determine the final number of pseudo-trials to generate from the statistics of the counts.
 
         Implementation
         --------------
