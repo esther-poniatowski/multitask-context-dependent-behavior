@@ -175,20 +175,39 @@ class EnsembleAssigner(Processor):
            To split the array, use `np.split` with the array of units and the indices.
         3. Fill the last ensemble by randomly picking units from the previous ensembles, each one
            occurring at most once.
+
+        See Also
+        --------
+        :func:`np.split(arr, indices)`
+            Split an array into sub-arrays at the specified indices.
+        :func:`np.random.choice(arr, size, replace)`
+            Randomly pick elements from an array. Here, use `replace=False` to pick each element at
+            most once.
+        :func:`np.concatenate(arrays, axis)`
+            Concatenate arrays along a given axis. If `axis` is None, then the arrays are flattened
+            and concatenated end-to-end. Here, used twice: (1) to concatenate the units from the
+            previous ensembles, (2) to concatenate the last ensemble with the picked units. Because
+            the arrays are one-dimensional and the axis parameter is `None`, the arrays are joined
+            end-to-end into a single 1D array containing all the elements in the order they appear
+            in the input arrays.
+        :func:`np.stack(arrays, axis)`
+            Stack arrays along a new axis. Here, used to stack the ensembles into a 2D array. The
+            axis parameter is set to 0 to stack the arrays along the first axis, such that the
+            resulting array has the shape `(n_ensembles, ensemble_size)`.
         """
         self.set_random_state()
         units = np.arange(self.n_units)
-        # np.random.shuffle(units)
+        np.random.shuffle(units)
         # Split units into `q` full-sized ensembles of size `ensemble_size` and a last partial one
         split_indices = [i for i in range(self.ensemble_size, self.n_units, self.ensemble_size)]
         splits = np.split(units, split_indices)
         # Pick units from previous ensembles to complete the last one (if needed)
         n_missing = self.ensemble_size - splits[-1].size
         if n_missing > 0:
-            candidate_units = np.concatenate(splits[:-1])
+            candidate_units = np.concatenate(splits[:-1], axis=None)
             picked_units = np.random.choice(candidate_units, size=n_missing, replace=False)
-            last_ensemble = np.concatenate((splits[-1], picked_units))
+            last_ensemble = np.concatenate((splits[-1], picked_units), axis=None)
             splits[-1] = last_ensemble
         # Stack ensembles
-        ensembles = np.stack(splits)
+        ensembles = np.stack(splits, axis=0)
         return ensembles
