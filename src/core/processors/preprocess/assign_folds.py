@@ -259,7 +259,6 @@ class FoldAssigner(Processor):
             Output (list): ``l % n`` sub-arrays of size ``l // n + 1`` and ``n - l % n`` sub-arrays
             of size ``l // n``.
         """
-        self.set_random_state()
         folds = np.zeros(self.n_samples, dtype=np.int64)  # initialize folds
         for stratum in np.unique(self.strata):
             idx_stratum = np.where(self.strata == stratum)[0]  # indices of samples in the stratum

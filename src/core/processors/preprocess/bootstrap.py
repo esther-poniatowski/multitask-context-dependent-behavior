@@ -224,7 +224,6 @@ class Bootstrapper(Processor):
         pseudo : np.ndarray[Tuple[Any, Any], np.int64]
             See :attr:`pseudo_trials`.
         """
-        self.set_random_state()  # parent method
         pseudo_trials = np.array([self.pick_trials(n) for n in self.counts])
         for trials_unit in pseudo_trials:
             np.random.shuffle(trials_unit)  # shuffle within each unit for diversity

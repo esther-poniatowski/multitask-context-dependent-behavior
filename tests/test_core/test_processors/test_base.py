@@ -113,8 +113,8 @@ def subclass(request):
         proc_data_empty = request.getfixturevalue("proc_data_empty")
 
         def _process(self):
-            result1 = self.input1 * 2
-            result2 = self.input2 + 3
+            result1 = self.input1 * 2  # pylint: disable=no-member
+            result2 = self.input2 + 3  # pylint: disable=no-member
             return {"output1": result1, "output2": result2}
 
     return TestClass
