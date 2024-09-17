@@ -65,11 +65,9 @@ Define a processor subclass which performs a basic data transformation:
 
         config_attrs = () # processing parameters fixed for the processor instance
         input_attrs = ("input_arr",) # required inputs
-        optional_attrs = ("opt_list")  # optional inputs
         output_attrs = ("output_arr",)
-        proc_data_empty = {
+        empty_data = {
             "input_arr": np.empty(0),
-            "opt_list": [],
             "output_arr": np.empty(0)
         }
 
@@ -81,9 +79,6 @@ Define a processor subclass which performs a basic data transformation:
 
         def _process(self):
             result = self.input_arr * 2
-            if self.opt_list:
-                for item in self.opt_list:
-                    result = result + item
             return {"output_arr": result}
 
 Use the processor on actual input data:
