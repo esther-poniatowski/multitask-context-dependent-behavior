@@ -139,12 +139,12 @@ class Processor(ABC):
         This main method is the entry point to pass data to process. It orchestrates the processing
         logic by calling the subclass-specific methods through a "template method" design pattern.
 
-        Template Method Steps:
+        Key Steps:
 
-        - Setup (base class): Handle seed and reset state.
-        - Validation: Validate the input data.
-        - Processing: Execute the core logic. Concrete implementation is required in each subclass.
-        - Postprocessing: Optional steps after the core processing logic.
+        - Setup: Handle seed and reset state.
+        - Preprocessing: Validate input data, reset data attributes, store inputs.
+        - Processing: Execute the core logic.
+        - Postprocessing: Check output data.
 
         At the end of processing, all the output results computed by the concrete processor are
         stored among the attributes of the class instance. They can be accessed directly by querying
@@ -244,7 +244,7 @@ class Processor(ABC):
         self._has_input = True
 
     @abstractmethod
-    def _process(self) -> Dict[str, Any]:
+    def _process(self) -> None:
         """
         Orchestrate the specific operations performed by the concrete processor.
 
@@ -296,7 +296,7 @@ class Processor(ABC):
             else:
                 missing = np.array_equal(output, empty)
             if missing:
-                raise ValueError(f"Missing output: '{attr}'")
+                raise ValueError(f"Missing output: '{attr}', {output}")
         self._has_output = True
 
     @property
