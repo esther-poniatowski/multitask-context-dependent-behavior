@@ -250,6 +250,64 @@ class Processor(metaclass=ProcessorMeta):
         status = {"inputs": self._has_input, "outputs": self._has_output}
         return f"<{self.__class__.__name__}(status={status}, config={config_values})>"
 
+    def process(self, seed: Optional[int] = None, **input_data: Any) -> None:
+        """
+        Main processing method which receives input data and execute the processing logic.
+
+        Parameters
+        ----------
+        input_data: Any
+            Input data to process. It should be passed as keyword arguments (i.e. by name).
+            Each argument name must be included in the `input_attrs` class-level attribute
+            and its value must match the expected types defined in the `proc_data_type`
+            class-level attribute.
+            Optionally, a 'seed' parameter can be passed to control random state initialization.
+        seed: Optional[int], default=None
+            Seed for random state initialization to ensure reproducibility, if randomness is
+            involved in the operations. If provided, it will set the random seed before the
+            processing begins.
+
+        Notes
+        -----
+        This main method is the entry point to pass data to process. It orchestrates the processing
+        logic by calling the subclass-specific methods through a "template method" design pattern.
+
+        At the end of processing, all the output results computed by the concrete processor are
+        stored among the attributes of the class instance. They can be accessed directly by querying
+        the corresponding properties.
+
+        Example
+        -------
+        Pass input data to the processor and retrieve the output data:
+
+        >>> processor = ConcreteProcessor()
+        >>> processor.process(input1=..., input2=..., seed=42)
+        >>> output1 = processor.output1
+        """
+        # Set the seed if provided
+        if seed is not None:
+            self.seed = seed  # call the setter
+        self.set_random_state()  # set the random state for reproducibility
+        # Validate inputs and compute default values if necessary
+        self._validate(**input_data)  # subclass-specific or default validation
+        input_data = self._default(**input_data)
+        # Reset data after complete validation
+        for attr, value in self.proc_data_empty.items():
+            setattr(self, attr, value)
+        self._has_input = False  # update flag
+        self._has_output = False  # reset flag
+        # Store new inputs
+        for input_name, input_value in input_data.items():
+            setattr(self, input_name, input_value)
+        self._has_input = True
+        # Process
+        output_data = self._process()  # subclass-specific logic (required)
+        self._check_missing(output_data, self.output_attrs)
+        # Store outputs after validation
+        for output_name, output_value in output_data.items():
+            setattr(self, output_name, output_value)
+        self._has_output = True  # update flag
+
     def _validate(self, **input_data: Any) -> None:
         """
         Validate inputs passed to the `process` method. To be overridden in concrete subclasses for
@@ -380,64 +438,6 @@ class Processor(metaclass=ProcessorMeta):
         instance attributes so that it can be accessed directly by querying the corresponding
         attribute.
         """
-
-    def process(self, **input_data: Any) -> None:
-        """
-        Main processing method which receives input data and execute the processing logic.
-
-        Parameters
-        ----------
-        input_data: Any
-            Input data to process. It should be passed as keyword arguments (i.e. by name).
-            Each argument name must be included in the `input_attrs` class-level attribute
-            and its value must match the expected types defined in the `proc_data_type`
-            class-level attribute.
-            Optionally, a 'seed' parameter can be passed to control random state initialization.
-
-        Notes
-        -----
-        This main method is the entry point to pass data to process. It orchestrates the processing
-        logic by calling the subclass-specific methods through a "template method" design pattern.
-
-        The seed is treated as a separate input: it is extracted from the input data early so that
-        it is not validated as part of the other processing attributes.
-
-        At the end of processing, all the output results computed by the concrete processor are
-        stored among the attributes of the class instance. They can be accessed directly by querying
-        the corresponding properties.
-
-        Example
-        -------
-        Pass input data to the processor and retrieve the output data:
-
-        >>> processor = ConcreteProcessor()
-        >>> processor.process(input1=..., input2=..., seed=42)
-        >>> output1 = processor.output1
-        """
-        # Set the seed if provided
-        seed = input_data.pop("seed", None)  # use pop to extract the seed from other inputs
-        if seed is not None:
-            self.seed = seed  # call the setter
-        self.set_random_state()  # set the random state for reproducibility
-        # Validate inputs and compute default values if necessary
-        self._validate(**input_data)  # subclass-specific or default validation
-        input_data = self._default(**input_data)
-        # Reset data after complete validation
-        for attr, value in self.proc_data_empty.items():
-            setattr(self, attr, value)
-        self._has_input = False  # update flag
-        self._has_output = False  # reset flag
-        # Store new inputs
-        for input_name, input_value in input_data.items():
-            setattr(self, input_name, input_value)
-        self._has_input = True
-        # Process
-        output_data = self._process()  # subclass-specific logic (required)
-        self._check_missing(output_data, self.output_attrs)
-        # Store outputs after validation
-        for output_name, output_value in output_data.items():
-            setattr(self, output_name, output_value)
-        self._has_output = True  # update flag
 
     @property
     def seed(self) -> Optional[int]:
