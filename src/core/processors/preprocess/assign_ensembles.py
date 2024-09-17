@@ -18,7 +18,7 @@ leverage the full dat set for areas (i.e. to encompass all the neurons in each a
 models have to be fitted for ensembles in areas with larger neuron populations.
 """
 # Disable error codes for attributes which are not detected by the type checker:
-# - Configuration and data attributes are initialized by the base class constructor.
+# (configuration and data attributes are initialized by the base class constructor)
 # mypy: disable-error-code="attr-defined"
 # pylint: disable=no-member
 # pylint: disable=attribute-defined-outside-init
@@ -76,9 +76,11 @@ class EnsembleAssigner(Processor):
     - The first two ensembles are mutually exclusive, while the last ensemble includes the leftover
       units and picks remaining units from the previous ensembles.
 
-    Implementation
-    --------------
-    Private attributes used to enforce control and validation: `_n_units`, `_ensembles`.
+    See Also
+    --------
+    :class:`core.processors.preprocess.base.Processor`
+        Base class for all processors. See definition of class-level attributes and template
+        methods.
     """
 
     config_attrs = ("ensemble_size", "n_ensembles_max")
