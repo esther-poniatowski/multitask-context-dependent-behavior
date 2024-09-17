@@ -279,10 +279,8 @@ class Processor(metaclass=ProcessorMeta):
 
     Recovering output results
     ^^^^^^^^^^^^^^^^^^^^^^^^^
-    Output data is both stored within the dedicated internal attributes and returned by the
-    `process` method. Thereby, the client code has more flexibility to retrieve the target results.
-    It can either access the results immediately when calling the `process` method, or access them
-    later by querying the associated property.
+    Output data is stored within the dedicated internal attributes after the `process` method is
+    run. The client code can retrieve target results by querying the associated property.
     """
 
     config_attrs: Tuple[str, ...] = ()
@@ -453,7 +451,7 @@ class Processor(metaclass=ProcessorMeta):
         attributes in the base class `process` method.
         """
 
-    def process(self, **input_data: Any) -> Dict[str, Any]:
+    def process(self, **input_data: Any) -> None:
         """
         Main processing method which receives input data and execute the processing logic.
 
@@ -466,11 +464,6 @@ class Processor(metaclass=ProcessorMeta):
             class-level attribute.
             Optionally, a 'seed' parameter can be passed to control random state initialization.
 
-        Returns
-        -------
-        output_data: Dict[str, Any]
-            Output data, i.e. target results of the operations performed by the concrete processor.
-
         Notes
         -----
         This main method is the entry point to pass data to process. It orchestrates the processing
@@ -479,12 +472,17 @@ class Processor(metaclass=ProcessorMeta):
         The seed is treated as a separate input: it is extracted from the input data early so that
         it is not validated as part of the other processing attributes.
 
+        At the end of processing, all the output results computed by the concrete processor are
+        stored among the attributes of the class instance. They can be accessed directly by querying
+        the corresponding properties.
+
         Example
         -------
         Pass input data to the processor and retrieve the output data:
 
         >>> processor = ConcreteProcessor()
-        >>> output_data = processor.process(input1=..., input2=..., seed=42)
+        >>> processor.process(input1=..., input2=..., seed=42)
+        >>> output1 = processor.output1
         """
         # Set the seed if provided
         seed = input_data.pop("seed", None)  # use pop to extract the seed from other inputs
@@ -507,7 +505,6 @@ class Processor(metaclass=ProcessorMeta):
         for output_name, output_value in output_data.items():
             self._set_data(output_name, output_value)
         self._has_output = True  # update flag
-        return output_data
 
     @property
     def seed(self) -> Optional[int]:
