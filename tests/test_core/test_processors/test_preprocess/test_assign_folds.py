@@ -170,15 +170,12 @@ def test_folds_property_cache():
     k = 3
     n_samples = 6
     assigner = FoldAssigner(k)
-    output = assigner.process(n_samples=n_samples)
-    folds_returned = output["folds"]
+    assigner.process(n_samples=n_samples)
     folds_internal = assigner._folds
     folds_public = assigner.folds
-    assert len(folds_returned) == n_samples, f"len(folds) = {len(folds_returned)} != {n_samples}"
     assert len(folds_internal) == n_samples, f"len(folds) = {len(folds_internal)} != {n_samples}"
     assert len(folds_public) == n_samples, f"len(folds) = {len(folds_public)} != {n_samples}"
-    assert_array_equal(folds_returned, folds_internal)
-    assert_array_equal(folds_returned, folds_public)
+    assert_array_equal(folds_internal, folds_public)
 
 
 def test_assign_folds_no_stratification():

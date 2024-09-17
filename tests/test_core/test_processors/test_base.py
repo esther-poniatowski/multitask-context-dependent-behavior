@@ -316,14 +316,13 @@ def test_process(subclass, input_data, output_data, optional_attrs):
 
     Expected Output
     ---------------
-    The processed output should be stored in the internal attributes and returned.
+    The processed output should be stored in the internal attributes.
     """
     processor = subclass()
-    output = processor.process(**input_data)
+    processor.process(**input_data)
     expected_output = output_data
     # Check correct outputs
     for key in expected_output:
-        np.testing.assert_array_equal(output[key], expected_output[key])
         np.testing.assert_array_equal(getattr(processor, f"_{key}"), expected_output[key])
     # Validate the internal data flag
     assert processor._has_output is True
