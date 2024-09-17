@@ -8,7 +8,7 @@ Classes
 :class:`Stratifier`
 """
 # Disable error codes for attributes which are not detected by the type checker:
-# - Configuration and data attributes are initialized by the base class constructor.
+# (configuration and data attributes are initialized by the base class constructor)
 # mypy: disable-error-code="attr-defined"
 # pylint: disable=no-member
 # pylint: disable=attribute-defined-outside-init
