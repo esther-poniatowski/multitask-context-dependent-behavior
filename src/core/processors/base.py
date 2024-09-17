@@ -9,7 +9,7 @@ Classes
 """
 from abc import ABC, abstractmethod
 from types import MappingProxyType
-from typing import Tuple, Mapping, Dict, Any, Optional
+from typing import Tuple, Mapping, Any, Optional
 import warnings
 
 import numpy as np

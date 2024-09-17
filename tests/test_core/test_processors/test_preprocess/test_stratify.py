@@ -7,6 +7,10 @@ See Also
 --------
 :mod:`core.processors.preprocess.stratify`: Tested module.
 """
+# Disable errors
+# pylint: disable=expression-not-assigned
+# pylint: disable=protected-access
+# pylint: disable=unused-import
 
 import numpy as np
 from numpy.testing import assert_array_equal

@@ -8,13 +8,13 @@ Classes
 :class:`Stratifier`
 """
 # Disable error codes for attributes which are not detected by the type checker:
-# - Configuration attributes are defined by the base class constructor.
-# - Public properties for internal attributes are defined in the metaclass.
+# - Configuration and data attributes are initialized by the base class constructor.
 # mypy: disable-error-code="attr-defined"
 # pylint: disable=no-member
+# pylint: disable=attribute-defined-outside-init
 
 from types import MappingProxyType
-from typing import List, TypeAlias, Union, Dict, Any, Tuple
+from typing import List, TypeAlias, Union, Any, Tuple
 
 import numpy as np
 
@@ -76,7 +76,7 @@ class Stratifier(Processor):
 
     See Also
     --------
-    :class:`core.processors.preprocess.Processor`
+    :class:`core.processors.preprocess.base.Processor`
         Base class for all processors. See definition of class-level attributes and template
         methods.
     """
@@ -148,5 +148,4 @@ class Stratifier(Processor):
         """
         feature_stack = np.column_stack(self.features)  # rows: samples, columns: features
         _, strata = np.unique(feature_stack, axis=0, return_inverse=True)  # shape: (n_samples,)
-        # Store the strata as a class attribute
-        self.strata = strata
+        self.strata = strata  # cache strata labels
