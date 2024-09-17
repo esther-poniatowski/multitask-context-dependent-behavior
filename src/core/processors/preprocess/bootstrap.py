@@ -49,13 +49,13 @@ Implementation
    each unit.
 """
 # Disable error codes for attributes which are not detected by the type checker:
-# - Configuration attributes are defined by the base class constructor.
-# - Public properties for internal attributes are defined in the metaclass.
+# - Configuration and data attributes are initialized by the base class constructor.
 # mypy: disable-error-code="attr-defined"
 # pylint: disable=no-member
+# pylint: disable=attribute-defined-outside-init
 
 from types import MappingProxyType
-from typing import TypeAlias, Dict, Any, Tuple
+from typing import TypeAlias, Any, Tuple
 
 import numpy as np
 
@@ -111,15 +111,17 @@ class Bootstrapper(Processor):
      [0 1 2 3 4]  # unit 1, 5 initial trials
      [0 1 2 3 4]] # unit 2, 6 initial trials
 
-    Implementation
-    --------------
-    Private attributes used to enforce control and validation: `_counts`, `_pseudo_trials`.
+    See Also
+    --------
+    :class:`core.processors.preprocess.base.Processor`
+        Base class for all processors. See definition of class-level attributes and template
+        methods.
     """
 
     config_attrs = ("n_pseudo",)
     input_attrs = ("counts",)
     output_attrs = ("pseudo_trials",)
-    proc_data_empty = MappingProxyType(
+    empty_data = MappingProxyType(
         {
             "counts": create_empty_array(1, np.int64),
             "pseudo_trials": create_empty_array(2, np.int64),
@@ -130,15 +132,12 @@ class Bootstrapper(Processor):
         super().__init__(n_pseudo=n_pseudo)
 
     def _validate(self, **input_data):
-        """
-        Implement the template method called in the base class :meth:`process` method.
-
-        Raises
-        ------
-        ValueError
-            If the `counts` attribute is invalid.
-        """
+        """Implement the template method called in the base class :meth:`process` method."""
         self._validate_counts(input_data["counts"])
+
+    def _process(self) -> None:
+        """Implement the template method called in the base class :meth:`process` method."""
+        self.bootstrap()
 
     def _validate_counts(self, counts: Counts) -> None:
         """
@@ -154,18 +153,6 @@ class Bootstrapper(Processor):
             raise ValueError(f"Invalid type: {type(counts)}, expected NumPy array.")
         if counts.ndim != 1:
             raise ValueError(f"Invalid dimensions: {counts.ndim}D array.")
-
-    def _process(self) -> Dict[str, PseudoTrials]:
-        """
-        Implement the template method called in the base class :meth:`process` method.
-
-        Returns
-        -------
-        output_data : Dict[str, Any]
-            Output data containing the result of the processor.
-        """
-        pseudo_trials = self.bootstrap()
-        return {"pseudo_trials": pseudo_trials}
 
     def pick_trials(self, n: int) -> TrialsIndUnit:
         """
@@ -215,7 +202,7 @@ class Bootstrapper(Processor):
             trials = np.concatenate((trials, np.random.choice(n, size=r, replace=False)))
         return trials
 
-    def bootstrap(self) -> PseudoTrials:
+    def bootstrap(self) -> None:
         """
         Combine trials across units to form pseudo-trials.
 
@@ -227,7 +214,7 @@ class Bootstrapper(Processor):
         pseudo_trials = np.array([self.pick_trials(n) for n in self.counts])
         for trials_unit in pseudo_trials:
             np.random.shuffle(trials_unit)  # shuffle within each unit for diversity
-        return pseudo_trials
+        self.pseudo_trials = pseudo_trials
 
     @staticmethod
     def determine_n_pseudo(counts: Counts, n_min: int = N_PSEUDO_MIN, alpha: float = 0.5) -> int:
