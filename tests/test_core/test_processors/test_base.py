@@ -168,7 +168,6 @@ def test_class_creation(input_attrs, output_attrs, subclass):
     # Check the presence of the class attributes
     assert hasattr(subclass, "input_attrs")
     assert hasattr(subclass, "output_attrs")
-    assert hasattr(subclass, "intermediate_attrs")  # not explicitly defined in concrete subclass
     assert hasattr(subclass, "proc_data_type")
     # Check the content of class input/output attributes
     assert subclass.input_attrs == input_attrs

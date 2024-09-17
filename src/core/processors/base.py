@@ -34,7 +34,6 @@ class ProcessorMeta(ABCMeta):
     input_attrs: Processor.input_attrs
     optional_attrs: Processor.optional_attrs
     output_attrs: Processor.output_attrs
-    intermediate_attrs: Processor.intermediate_attrs
     proc_data_empty: Processor.proc_data_empty
     proc_data_type: Processor.proc_data_type
 
@@ -111,10 +110,7 @@ class ProcessorMeta(ABCMeta):
         # Get class attributes declared in the class dictionary
         proc_data_empty = dct.get("proc_data_empty", {})
         proc_data = (
-            dct.get("input_attrs", ())
-            + dct.get("optional_attrs", ())
-            + dct.get("output_attrs", ())
-            + dct.get("intermediate_attrs", ())
+            dct.get("input_attrs", ()) + dct.get("optional_attrs", ()) + dct.get("output_attrs", ())
         )
         # Assign data types automatically based on the default empty instances
         proc_data_type = mcs.infer_types(proc_data_empty)
@@ -172,8 +168,7 @@ class ProcessorMeta(ABCMeta):
         Check that the class-level attributes are consistent with each other.
 
         Specifically, check that the keys in :attr:`Data.proc_data_type` (dict) match the strings in
-        :attr:`Processor.input_attrs`, :attr:`Processor.output_attrs` and
-        :attr:`Processor.intermediate_attrs` (tuples).
+        :attr:`Processor.input_attrs` and :attr:`Processor.output_attrs` (tuples).
 
         Parameters
         ----------
@@ -215,8 +210,6 @@ class Processor(metaclass=ProcessorMeta):
         Names of the optional inputs to process.
     output_attrs: Tuple[str], default=()
         Names of the outputs, i.e. results of the processing.
-    intermediate_attrs: Tuple[str], default=()
-        Names of the intermediate data which should be stored for some processing steps.
     proc_data_type: Mapping[str, Type], default={}
         Mapping of attributes names to their corresponding type. Automatically inferred from the
         default empty instances in `proc_data_empty` by the metaclass.
@@ -287,7 +280,6 @@ class Processor(metaclass=ProcessorMeta):
     input_attrs: Tuple[str, ...] = ()
     optional_attrs: Tuple[str, ...] = ()
     output_attrs: Tuple[str, ...] = ()
-    intermediate_attrs: Tuple[str, ...] = ()
     proc_data_empty: Mapping[str, Any] = MappingProxyType({})
     proc_data_type: Mapping[str, Type] = MappingProxyType({})
 
