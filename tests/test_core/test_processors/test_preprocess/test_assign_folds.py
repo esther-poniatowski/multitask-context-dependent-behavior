@@ -38,9 +38,6 @@ def test_missing_inputs():
     # Via `_validate` method (subclass)
     with pytest.raises(ValueError):
         assigner._validate(n_samples=None, strata=None)
-    # Via `process` method (base class)
-    with pytest.raises(ValueError):
-        assigner.process()
 
 
 def test_both_inputs_provided():
@@ -106,7 +103,7 @@ def test_invalid_strata_shape():
 
 def test_default_n_samples():
     """
-    Test default assignment via the property when `n_samples` is not provided as input.
+    Test default assignment of `n_samples` via :meth:`_set_inputs` when it is not provided as input.
 
     Test Inputs
     -----------
@@ -120,14 +117,14 @@ def test_default_n_samples():
     k = 3
     strata = np.array([0, 0, 1, 1, 2, 2], dtype=np.int64)
     assigner = FoldAssigner(k)
-    assigner._strata = strata  # assign manually
+    assigner._set_inputs(n_samples=None, strata=strata)
     n_samples = assigner.n_samples
     assert n_samples == strata.size, f"n_samples = {n_samples} != {strata.size}"
 
 
 def test_default_strata():
     """
-    Test default strata assignment via the property when `strata` is not provided as input.
+    Test default assignment of `strata` via :meth:`_set_inputs` when it is not provided as input.
 
     Test Inputs
     -----------
@@ -142,43 +139,13 @@ def test_default_strata():
     n_samples = 6
     expected_strata = np.zeros(n_samples, dtype=np.int64)
     assigner = FoldAssigner(k)
-    assigner._n_samples = n_samples  # assign manually
+    assigner._set_inputs(n_samples=n_samples, strata=None)
     strata = assigner.strata
     assert strata.size == n_samples, f"strata.size = {strata.size} != {n_samples}"
     assert_array_equal(strata, expected_strata)
 
 
-def test_folds_property_cache():
-    """
-    Test :attr:`FoldAssigner.folds` caching mechanism.
-
-    Test Inputs
-    -----------
-    n_samples = 6
-
-    Expected Outputs
-    ----------------
-    After computation, folds should be stored in the internal attribute `_folds` and accessible via
-    the public property `folds`.
-    Check whether the content of those attributes is not an empty array (default value).
-
-    Warning
-    -------
-    This test only ensures that the cache is working as expected. It does not check the correctness
-    of the values computed for the fold assignment.
-    """
-    k = 3
-    n_samples = 6
-    assigner = FoldAssigner(k)
-    assigner.process(n_samples=n_samples)
-    folds_internal = assigner._folds
-    folds_public = assigner.folds
-    assert len(folds_internal) == n_samples, f"len(folds) = {len(folds_internal)} != {n_samples}"
-    assert len(folds_public) == n_samples, f"len(folds) = {len(folds_public)} != {n_samples}"
-    assert_array_equal(folds_internal, folds_public)
-
-
-def test_assign_folds_no_stratification():
+def test_assign_no_stratification():
     """
     Test :meth:`FoldAssigner.assign` without stratification.
 
@@ -194,13 +161,14 @@ def test_assign_folds_no_stratification():
     k = 3
     n_samples = 6
     assigner = FoldAssigner(k)
-    assigner.process(n_samples=n_samples)
+    assigner._set_inputs(n_samples=n_samples)  # set manually
+    assigner.assign()
     folds = assigner.folds
     assert len(folds) == n_samples, f"Expected {n_samples} samples, Got {len(folds)}"
     assert np.unique(folds).size == k, f"Expected {k} folds, Got {np.unique(folds).size}"
 
 
-def test_assign_folds_stratified_divisible():
+def test_assign_stratified_divisible():
     """
     Test :meth:`FoldAssigner.assign` with stratification where the number of samples in each
     stratum is divisible by the number of folds.
@@ -218,14 +186,15 @@ def test_assign_folds_stratified_divisible():
     strata = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2], dtype=np.int64)
     n_samples = strata.size
     assigner = FoldAssigner(k)
-    assigner.process(strata=strata)
+    assigner._set_inputs(strata=strata)  # set manually
+    assigner.assign()
     folds = assigner.folds
     assert len(folds) == n_samples, f"Expected {n_samples} samples, Got {len(folds)}"
     for stratum in np.unique(strata):
         assert np.unique(folds[strata == stratum]).size == k, f"Stratum {stratum} not evenly split."
 
 
-def test_assign_folds_stratified_non_divisible():
+def test_assign_stratified_non_divisible():
     """
     Test :meth:`FoldAssigner.assign` with stratification where the number of samples in each
     stratum is not divisible by the number of folds.
@@ -248,7 +217,8 @@ def test_assign_folds_stratified_non_divisible():
     strata = np.array([0, 0, 1, 1, 2, 2], dtype=np.int64)
     n_samples = strata.size
     assigner = FoldAssigner(k)
-    assigner.process(strata=strata)
+    assigner._set_inputs(strata=strata)  # set manually
+    assigner.assign()
     folds = assigner.folds
     assert len(folds) == n_samples, f"Expected {n_samples} samples, Got {len(folds)}"
     for stratum in np.unique(strata):

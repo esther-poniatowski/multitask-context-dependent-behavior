@@ -40,10 +40,10 @@ considered in stratification (i.e. positional information: recording number, blo
 number). This prevents models to capture misleading temporal drift in neuronal activity.
 """
 # Disable error codes for attributes which are not detected by the type checker:
-# - Configuration attributes are defined by the base class constructor.
-# - Public properties for internal attributes are defined in the metaclass.
+# - Configuration and data attributes are initialized by the base class constructor.
 # mypy: disable-error-code="attr-defined"
 # pylint: disable=no-member
+# pylint: disable=attribute-defined-outside-init
 
 from types import MappingProxyType
 from typing import Dict, TypeAlias, Any, Tuple
@@ -52,6 +52,7 @@ import numpy as np
 
 from core.processors.base import Processor
 from utils.misc.arrays import create_empty_array
+
 
 Strata: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
 """Type alias for stratum labels."""
@@ -110,15 +111,17 @@ class FoldAssigner(Processor):
     >>> print(assigner.folds)
     [0 0 1 1 2 2]
 
-    Implementation
-    --------------
-    Private attributes used to enforce control and validation: `_n_samples`, `_folds`, `_strata`.
+    See Also
+    --------
+    :class:`core.processors.preprocess.base.Processor`
+        Base class for all processors. See definition of class-level attributes and template
+        methods.
     """
 
     config_attrs = ("k",)
     input_attrs = ("n_samples", "strata")
     output_attrs = ("folds",)
-    proc_data_empty = MappingProxyType(
+    empty_data = MappingProxyType(
         {
             "n_samples": 0,
             "strata": create_empty_array(1, np.int64),
@@ -133,6 +136,9 @@ class FoldAssigner(Processor):
         """
         Implement the template method called in the base class :meth:`process` method.
 
+        Specific validation is required to handle the input data `n_samples` and `strata`, since
+        only one of them should be provided.
+
         Raises
         ------
         ValueError
@@ -146,13 +152,43 @@ class FoldAssigner(Processor):
         # If both missing or both provided, raise error
         if n_samples is None and strata is None:
             raise ValueError("Missing arguments: provide either `n_samples` or `strata`.")
-        elif n_samples is not None and strata is not None:
+        if n_samples is not None and strata is not None:
             raise ValueError("Extra arguments: provide either `n_samples` and `strata`.")
-        # Specific validation if provided
-        elif strata is not None:
+        # Specific validation
+        if strata is not None:
             self._validate_strata(strata)
-        elif n_samples is not None:
+        if n_samples is not None:
             self._validate_n_samples(n_samples)
+
+    def _set_inputs(self, **input_data: Any) -> None:
+        """
+        Implement the template method called in the base class :meth:`process` method.
+
+        Set the default value for the attribute `n_samples` and `strata` which has not been
+        provided, based on the other one.
+
+        Notes
+        -----
+        Since this method is run after the validation step, the input data is guaranteed to contain
+        either `n_samples` or `strata` (not both, nor none).
+
+        The actual setting of the input data is performed in the base class method
+        :meth:`_set_inputs` which is called after the default values are added to the input data.
+        """
+        # Get input data (None if not provided)
+        n_samples = input_data.get("n_samples")
+        strata = input_data.get("strata")
+        # Add default values to the input data
+        if n_samples is None and strata is not None:
+            input_data["n_samples"] = self._default_n_samples(strata)
+        if strata is None and n_samples is not None:
+            input_data["strata"] = self._default_strata(n_samples)
+        # Call the base class method to set complete input data
+        super()._set_inputs(**input_data)
+
+    def _process(self) -> None:
+        """Implement the template method called in the base class :meth:`process` method."""
+        self.assign()
 
     def _validate_n_samples(self, n: int) -> None:
         """
@@ -184,68 +220,29 @@ class FoldAssigner(Processor):
         if len(strata) < self.k:
             raise ValueError(f"len(strata): {len(strata)} < k: {self.k}")
 
-    @property
-    def n_samples(self) -> int:
+    def _default_n_samples(self, strata: Strata) -> int:
         """
-        Getter for the internal attribute `_n_samples`.
+        Determine the default value of `n_samples` based on `strata`.
 
-        To ensure consistency between `n_samples` and `strata`:
-
-        - If `n_samples` has been provided as an input, it has been stored in the internal attribute
-          and can be directly accessed.
-        - Otherwise, it is equal to the length of `strata`.
-
-        Notes
-        -----
-        This property overrides the one created by the metaclass to ensure that the number of
-        samples is consistent with the strata labels.
+        Rule: `n_samples` should be equal to the length of `strata`.
         """
-        if self._n_samples != self.proc_data_empty["n_samples"]:
-            return self._n_samples
-        else:
-            return self._strata.size
+        return strata.size
 
-    @property
-    def strata(self) -> Strata:
+    def _default_strata(self, n_samples: int) -> Strata:
         """
-        Getter for the internal attribute `_strata`.
+        Determine the default value of `strata` based on `n_samples`.
 
-        To ensure consistency between `n_samples` and `strata`:
-
-        - If `strata` has been provided as an input, it has been stored in the internal attribute
-          and can be directly accessed.
-        - Otherwise, all samples are treated as belonging to a single stratum (single label 0).
-
-        Notes
-        -----
-        This property overrides the one created by the metaclass to ensure that the strata labels
-        are consistent with the number of samples.
+        Rule: All samples are treated as belonging to a single stratum (single label 0).
         """
-        if not np.array_equal(self._strata, self.proc_data_empty["strata"]):
-            return self._strata
-        else:
-            return np.zeros(self._n_samples, dtype=np.int64)
+        return np.zeros(n_samples, dtype=np.int64)
 
-    def _process(self) -> Dict[str, Folds]:
-        """
-        Implement the template method called in the base class :meth:`process` method.
-
-        Returns
-        -------
-        output_data: Dict[str, Folds]
-            Output data with the assigned folds.
-        """
-        folds = self.assign()
-        return {"folds": folds}
-
-    def assign(self) -> Folds:
+    def assign(self) -> None:
         """
         Assign folds to trials, stratified by condition.
 
-        Returns
-        -------
-        folds: np.ndarray[Tuple[Any], np.dtype[np.int64]]
-            See :attr:`folds`.
+        Important
+        ---------
+        Update the attribute `folds` with the computed fold assignments.
 
         See Also
         --------
@@ -266,4 +263,4 @@ class FoldAssigner(Processor):
             split_indices = np.array_split(idx_stratum, self.k)  # split samples into k groups
             for i_fold, idx_samples in enumerate(split_indices):
                 folds[idx_samples] = i_fold
-        return folds
+        self.folds = folds
