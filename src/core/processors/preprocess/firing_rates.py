@@ -5,142 +5,230 @@
 
 Classes
 -------
-:class:`FiringRatesConvertor`
+:class:`FiringRatesConverter`
 """
+# Disable error codes for attributes which are not detected by the type checker:
+# (configuration and data attributes are initialized by the base class constructor)
+# mypy: disable-error-code="attr-defined"
+# pylint: disable=no-member
+# pylint: disable=attribute-defined-outside-init
 
-from typing import TypeAlias
+from types import MappingProxyType
+from typing import TypeAlias, Any, Tuple, Optional
 
 import numpy as np
-import numpy.typing as npt
 from scipy.signal import fftconvolve
 
 from core.constants import T_BIN
+from core.processors.base import Processor
+from utils.misc.arrays import create_empty_array
 
 
-SpikingTimes: TypeAlias = npt.NDArray[np.float64]
+SpikingTimes: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
 """Type alias for spiking times."""
-FiringRates: TypeAlias = npt.NDArray[np.float64]
+
+FiringRates: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.float64]]
 """Type alias for firing rates."""
 
 
-class FiringRatesConvertor:
+class FiringRatesConverter(Processor):
     """
     Convert raw spike times into firing rates.
 
     Attributes
     ----------
+    spikes: np.ndarray[Tuple[Any], np.dtype[np.int64]]
+        Spiking times. Shape: ``(n_spikes,)``.
+    f_binned: np.ndarray[Tuple[Any], np.dtype[np.float64]]
+        Firing rate time course (in spikes/s), obtained by binning the spikes.
+        Shape: ``(n_tpts,)`` (see :attr:`n_tpts`).
+    f_smoothed: np.ndarray[Tuple[Any], np.dtype[np.float64]]
+        Smoothed firing rate time course (in spikes/s).
+        Shape: ``(n_tpts_smth,)`` (see :attr:`n_tpts_smth`).
+    n_tpts: int
+        Number of time bins in the recording period, corresponding to the final length of the binned
+        firing rates time course ``f_binned``: ``n_tpts = t_max/t_bin``.
+    n_tpts_smth: int
+        Number of time bins in the smoothed firing rate time course, corresponding to the final
+        length of the smoothed firing rates time course ``f_smoothed``.
+    t_bin: float
+        Time bin (in seconds).
+    t_max: float
+        Duration of the recording period (in seconds).
+    window: float
+        Size of the smoothing window (in seconds).
+    mode: str
+        Convolution mode for smoothing. Options: ``'valid'`` (default), ``'same'``. See
+        :meth:`smooth` for details.
 
     Methods
     -------
-    extract_trial
-    slice_epoch
-    join_epochs
-    align_timings
     spikes_to_rates
     smooth
+
+    Examples
+    --------
+    Assume spiking times homogeneously distributed every 0.1 s in a 1-second recording period, and
+    then homogeneously distributed every 0.2 s in another 1-second recording period. The firing rate
+    is expected to be 10 Hz in the first period and 5 Hz in the second period.
+
+    >>> converter = FiringRatesConverter(t_bin=0.1, t_max=1.0, window=0.5)
+    >>> spikes1 = np.arange(0, 1, 0.1)
+    [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    >>> converter.process(spikes=spikes1)
+    >>> print(converter.f_binned)
+    [0. 1. 1. 1. 1. 1. 1. 1. 1. 1.]
+    >>> spikes2 = np.arange(0, 1, 0.2)
+    [0.0, 0.2, 0.4, 0.6, 0.8]
+    >>> converter.process(spikes=spikes2)
+    >>> print(converter.f_binned)
+    [0. 0. 1. 0. 1. 0. 1. 0. 1. 0.]
+
+    Applying a 0.5 s smoothing window over the total firing rate time course will average the rates
+    over the window:
+
+    - For the first 0.25 seconds, only spikes from the first period (10 Hz) will contribute to the
+      smoothed rate.
+    - Between 0.25 s and 0.75 s, the smoothing window will include more spikes from the first
+      period, and the rate will be dominated by the 10 Hz spikes.
+    - After 1 second, the window starts to overlap both the first and second periods. The rate will
+      gradually decrease as spikes from the second period (5 Hz) enter the window.
+
+    >>> spikes_tot = np.concatenate((spikes1, spikes2 + 1))
+    [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.2, 1.4, 1.6, 1.8, 2.0]
+    >>> converter.t_max = 2.0
+    >>> converter.process(spikes=spikes_tot)
+    >>> print(converter.f_smoothed)
+    #TODO: Add expected output
+
+    See Also
+    --------
+    :class:`core.processors.preprocess.base.Processor`
+        Base class for all processors. See definition of class-level attributes and template
+        methods.
     """
 
-    def __init__(self, spikes: SpikingTimes, trials: npt.NDArray[np.int64]):
-        self.spikes = spikes
-        self.trials = trials
+    config_attrs = ("t_bin", "t_max", "window", "mode")
+    input_attrs = ("spikes",)
+    output_attrs = ("f_binned", "f_smoothed")
+    empty_data = MappingProxyType(
+        {
+            "spikes": create_empty_array(1, np.int64),
+            "f_binned": create_empty_array(1, np.float64),
+            "f_smoothed": create_empty_array(1, np.float64),
+        }
+    )
 
-    @staticmethod
-    def spikes_to_rates(spk: SpikingTimes, t_bin: float, t_max: float) -> FiringRates:
+    def __init__(
+        self,
+        t_bin: float = T_BIN,
+        t_max: Optional[float] = None,
+        window: float = 0.5,
+        mode: str = "valid",
+    ):
+        super().__init__(t_bin=t_bin, t_max=t_max, window=window, mode=mode)
+
+    def _process(self) -> None:
+        """Implement the template method called in the base class :meth:`process` method."""
+        self.spikes_to_rates()
+        self.smooth()
+
+    def spikes_to_rates(self) -> None:
         """
         Convert a spike train into a firing rate time course.
 
-        Parameters
-        ----------
-        spk: :obj:`core.types.ArrayLike`
-            Spiking times.
-        t_bin: float
-            Time bin (in seconds).
-        t_max: float
-            Duration of the recording period (in seconds).
-
-        Returns
-        -------
-        frates: :obj:`core.types.NumpyArray`
-            Firing rate time course (in spikes/s).
-            Shape: ``(ntpts, 1)`` with ``ntpts = t_max/t_bin`` (number of bins).
-
-        See Also
-        --------
-        numpy.histogram: Used to count the number of spikes in each bin.
-
-        Algorithm
+        Important
         ---------
-        - Divide the recording period ``[0, t_max]`` into bins of size ``t_bin``.
-        - Count the number of spikes in each bin.
-        - Divide the spikes count in each bin by the bin size ``t_bin``.
+        Update the attribute `f_binned` with the computed firing rates.
 
         Implementation
         --------------
-        :func:`np.histogram` takes an argument `bins` for bin edges,
-        which should include the *rightmost edge*.
-        Bin edges are obtained with :func:`numpy.arange`,
-        with the last bin edge at ``t_max + t_bin`` to include the last bin.
-        :func:`np.histogram` returns two outputs:
-        ``hist`` (number of spikes in each bin), ``edges`` (useless).
+        - Divide the recording period ``[0, t_max]`` into bins of size ``t_bin``.
+        - Count the number of spikes in each bin.
+        - Divide the spikes count in each bin by the bin size ``t_bin`` to get rates in spikes/s.
 
-        The shape of ``frates`` is extended to two dimensions representing
-        time (length ``n_bins``),
-        trials (length ``1``, single trial).
-        It ensures compatibility and consistence in the full process.
-        """
-        frates = np.histogram(spk, bins=np.arange(0, t_max + t_bin, t_bin))[0] / t_bin
-        frates = frates[:, np.newaxis]  # add one dimension for trials
-        return frates
-
-    @staticmethod
-    def smooth(
-        frates: FiringRates, window: float, t_bin: float, mode: str = "valid"
-    ) -> FiringRates:
-        """
-        Smooth the firing rates across time.
-
-        Parameters
-        ----------
-        frates: :obj:`core.types.NumpyArray`
-            Firing rate time course (in spikes/s).
-            Shape: ``(ntpts, ntrials)``,
-        window: float
-            Smoothing window size (in seconds).
-        t_bin: float
-            Time bin (in seconds).
-
-        Returns
-        -------
-        smoothed: :obj:`core.types.NumpyArray`
-            Smoothed firing rate time course (in spikes/s).
-            Shape: ``(ntpts_out, ntrials)``, ``ntpts_out`` depend on ``mode``.
-            With ``"valid"``:  ``ntpts_out = ntpts - window/t_bin + 1``.
-            With ``"same"``:  ``ntpts_out = ntpts``.
+        Bin edges span the duration from 0 to ``t_max`` by steps of ``t_bin``.
+        With :func:`numpy.arange`, if the step falls at ``t_max``, then the last bin edge be
+        excluded from the sequence. To include it in any case, the stop value is ``t_max + t_bin``.
 
         See Also
         --------
-        scipy.signal.fftconvolve: Used to convolve the firing rate time course with a boxcar kernel.
+        :func:`numpy.histogram(arr, bins)`
+            Used to count the number of spikes in each bin. Input `bins` contains the starting time
+            of each bin, so the last bin edge should be included in this sequence. Outputs: ``hist``
+            (number of spikes in each bin), ``edges`` (useless here).
+        """
+        hist, _ = np.histogram(self.spikes, bins=np.arange(0, self.t_max + self.t_bin, self.t_bin))
+        f_binned = hist / self.t_bin
+        self.f_binned = f_binned
 
-        Algorithm
+    def smooth(self) -> None:
+        """
+        Smooth the firing rates across time.
+
+        Important
         ---------
+        Update the attribute `f_smooth` with the smoothed firing rates.
+
+        Notes
+        -----
+        Convolution Modes:
+
+        - ``'same'``: Keep the same output shape as the input sequence. The kernel is centered on
+          each input element, with zero-padding applied to the edges of the input signal as needed.
+        - ``'valid'``: Keep only the values which are not influenced by zero-padding, i.e. where the
+          kernel fully overlaps with the input signal. The first valid position is when the kernel's
+          left edge aligns with the input's left edge. The last valid position is when the kernel's
+          right edge aligns with the input's right edge.
+
+        Corresponding output shape:
+
+        - ``'same'``:  ``n_out = n_in``. Here: ``n_tpts_smth = n_tpts``.
+        - ``'valid'``:  ``n_out = n_in - k + 1``, where ``k`` is the kernel size. This is because
+          the kernel cannot fit in the signal when it is placed on the last `k+1` positions. Here:
+          ``n_tpts_smth = n_tpts - window/t_bin + 1``.
+
+        Implementation
+        --------------
         Smoothing consists in averaging consecutive values in a sliding window.
 
-        - Convolve the firing rate time course with a boxcar kernel (FFT method).
-        Size of the window: ``window/t_bin``.
-        - Divide the output by the window size to get the average.
+        - Define a boxcar kernel with all values equal to 1. The window size (in number of bins) is
+          equal to ``window/t_bin`` (rounded down to the nearest integer) to match the time bin of
+          the firing rate time course.
+        - Convolve the firing rate time course with the boxcar kernel (FFT method), to *sum* the
+          values in the window at each location in the time course.
+        - Divide the output by the window size to get the *average*. This is necessary to keep the
+          same scale as the input firing rates, and to avoid increasing the values when the window
+          size is large.
 
-        Convolution Modes
+        See Also
+        --------
+        :func:`scipy.signal.fftconvolve(arr, kernel, mode, axes)`
+            Convolve the firing rate time course with kernel.
+        """
+        kernel = np.ones(int(self.window / self.t_bin))  # boxcar kernel
+        f_smoothed = fftconvolve(self.f_binned, kernel, mode=self.mode, axes=0) / len(kernel)
+        self.f_smoothed = f_smoothed
 
-        - ``'same'``: Keep the output shape as the input sequence.
-        - ``'valid'``: Keep only the values which are not influenced by zero-padding.
+    @property
+    def n_tpts(self) -> int:
         """
-        kernel = np.ones((int(window / t_bin), 1))  # add one dimension for shape compatibility
-        smoothed = fftconvolve(frates, kernel, mode=mode, axes=0) / len(kernel)
-        return smoothed
+        Number of time bins in the recording period.
 
-    def process_firing_rates(self, trial: int, t_bin: float, t_max: float) -> FiringRates:
+        Rule: ``n_tpts = t_max/t_bin``. If the division is not exact, the result is rounded down.
         """
-        Complete pipeline to process spiking data for a given trial into firing rates.
+        return int(self.t_max / self.t_bin)
+
+    @property
+    def n_tpts_smth(self) -> int:
         """
-        spk_trial = None  # self.extract_trial(trial)
-        return self.spikes_to_rates(spk_trial, t_bin, t_max)
+        Number of time bins in the smoothed firing rate time course.
+
+        Rule: Depend on the convolution mode. See :meth:`smooth` for details.
+        """
+        if self.mode == "same":
+            return self.n_tpts
+        elif self.mode == "valid":
+            return self.n_tpts - int(self.window / self.t_bin) + 1
+        else:
+            raise ValueError(f"Invalid mode: {self.mode}")
