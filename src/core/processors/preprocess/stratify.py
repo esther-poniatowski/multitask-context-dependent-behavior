@@ -126,6 +126,10 @@ class Stratifier(Processor):
         """
         Compute stratum labels based on unique combinations of features.
 
+        Important
+        ---------
+        Update the attribute `strata` with the computed stratum labels.
+
         Implementation
         --------------
 
