@@ -12,6 +12,7 @@ np.testing.assert_array_almost_equal:
     errors due to floating point arithmetic. Specifically designed for testing purposes (detailed
     error messages). Default tolerance: 1e-5.
 """
+# pylint: disable=expression-not-assigned
 
 import numpy as np
 from numpy.testing import assert_array_almost_equal as assert_array_eq

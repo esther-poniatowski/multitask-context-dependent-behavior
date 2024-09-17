@@ -150,6 +150,9 @@ class Processor(ABC):
         stored among the attributes of the class instance. They can be accessed directly by querying
         the corresponding properties.
 
+        Resetting is performed after validation of new inputs to ensure that the class instance is
+        in a clean state before processing new data. that
+
         Example
         -------
         Pass input data to the processor and retrieve the output data:
