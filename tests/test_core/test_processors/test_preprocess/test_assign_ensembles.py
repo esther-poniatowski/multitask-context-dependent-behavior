@@ -64,7 +64,7 @@ def test_n_ensembles(n_units, ensemble_size, n_ensembles_max, n_expected):
         Expected number of ensembles.
     """
     assigner = EnsembleAssigner(ensemble_size=ensemble_size, n_ensembles_max=n_ensembles_max)
-    assigner._n_units = n_units  # assign manually
+    assigner.n_units = n_units  # assign manually
     n_ensembles = assigner.n_ensembles
     assert n_ensembles == n_expected, f"Expected {n_expected} ensembles, Got {n_ensembles}"
 

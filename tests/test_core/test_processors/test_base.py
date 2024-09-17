@@ -231,7 +231,7 @@ def test_init_empty_data(subclass):
     processor = subclass()
     # Check initial empty state
     for input_attr in subclass.input_attrs:
-        np.testing.assert_array_equal(getattr(processor, f"_{input_attr}"), expected_empty_array)
+        np.testing.assert_array_equal(getattr(processor, input_attr), expected_empty_array)
     # Check that the flag has been reset to False
     assert processor._has_output is False
 
@@ -263,25 +263,6 @@ def test_check_name_type(subclass, proc_data_empty):
     with pytest.raises(ValueError):
         for attr, value in proc_data_empty.items():
             processor._check_name_type("invalid_name", value)
-
-
-def test_set_data(subclass):
-    """
-    Test the :meth:`set_data` method for assigning dynamic data to internal attributes.
-
-    Test Inputs
-    -----------
-    subclass:
-        Class inheriting from :class:`Processor`.
-
-    Expected Output
-    ---------------
-    Dynamic attributes should be set, and invalid assignments should raise errors.
-    """
-    input_arr = np.array([1, 2, 3])
-    processor = subclass()
-    processor._set_data("input1", input_arr)
-    np.testing.assert_array_equal(processor._input1, input_arr)
 
 
 def test_check_missing(subclass, input_data):
@@ -322,7 +303,7 @@ def test_process(subclass, input_data, output_data, optional_attrs):
     expected_output = output_data
     # Check correct outputs
     for key in expected_output:
-        np.testing.assert_array_equal(getattr(processor, f"_{key}"), expected_output[key])
+        np.testing.assert_array_equal(getattr(processor, key), expected_output[key])
     # Validate the internal data flag
     assert processor._has_output is True
 
@@ -342,7 +323,7 @@ def test_seed_property(subclass, input_data, output_data):
     # Ensure outputs are initially populated
     assert processor._has_output is True
     for output_attr, expected_value in output_data.items():
-        np.testing.assert_array_equal(getattr(processor, f"_{output_attr}"), expected_value)
+        np.testing.assert_array_equal(getattr(processor, output_attr), expected_value)
     # Set seed manually
     processor.seed = new_seed
     assert processor.seed == new_seed
@@ -350,7 +331,7 @@ def test_seed_property(subclass, input_data, output_data):
     assert processor._has_output is False
     for output_attr in processor.output_attrs:
         np.testing.assert_array_equal(
-            getattr(processor, f"_{output_attr}"), processor.proc_data_empty[output_attr]
+            getattr(processor, output_attr), processor.proc_data_empty[output_attr]
         )
 
 

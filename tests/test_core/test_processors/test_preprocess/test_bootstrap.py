@@ -140,7 +140,7 @@ def test_bootstrap():
     n_pseudo = 5
     expected_shape = (n_units, n_pseudo)
     bootstrapper = Bootstrapper(n_pseudo=n_pseudo)
-    bootstrapper._counts = counts
+    bootstrapper.counts = counts
     pseudo_trials = bootstrapper.bootstrap()
     shape = pseudo_trials.shape
     assert shape[0] == n_units, f"Expected {n_units} units, Got {shape[0]}"
