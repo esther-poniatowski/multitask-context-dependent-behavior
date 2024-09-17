@@ -206,10 +206,9 @@ class Bootstrapper(Processor):
         """
         Combine trials across units to form pseudo-trials.
 
-        Returns
-        -------
-        pseudo : np.ndarray[Tuple[Any, Any], np.int64]
-            See :attr:`pseudo_trials`.
+        Important
+        ---------
+        Update the attribute `pseudo_trials` with the computed pseudo-trial indices.
         """
         pseudo_trials = np.array([self.pick_trials(n) for n in self.counts])
         for trials_unit in pseudo_trials:
