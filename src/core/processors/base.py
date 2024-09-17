@@ -488,6 +488,7 @@ class Processor(metaclass=ProcessorMeta):
         seed = input_data.pop("seed", None)  # use pop to extract the seed from other inputs
         if seed is not None:
             self.seed = seed  # call the setter
+        self.set_random_state()  # set the random state for reproducibility
         # Validate inputs and compute default values if necessary
         self._validate(**input_data)  # subclass-specific or default validation
         input_data = self._default(**input_data)

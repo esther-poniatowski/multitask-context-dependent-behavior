@@ -197,7 +197,6 @@ class EnsembleAssigner(Processor):
             axis parameter is set to 0 to stack the arrays along the first axis, such that the
             resulting array has the shape `(n_ensembles, ensemble_size)`.
         """
-        self.set_random_state()
         units = np.arange(self.n_units)
         np.random.shuffle(units)
         # Split units into `q` full-sized ensembles of size `ensemble_size` and a last partial one
