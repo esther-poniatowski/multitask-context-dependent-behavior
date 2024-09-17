@@ -45,7 +45,7 @@ def test_invalid_n_units():
     argvalues=[(10, 5, None, 2), (10, 6, None, 2), (10, 6, 1, 1)],
     ids=["divisible", "non-divisible", "max-ensembles"],
 )
-def test_n_ensembles(n_units, ensemble_size, n_ensembles_max, n_expected):
+def test_determine_n_ensembles(n_units, ensemble_size, n_ensembles_max, n_expected):
     """
     Parametrized test for computing the number of ensembles based on the number of units.
 
@@ -65,6 +65,7 @@ def test_n_ensembles(n_units, ensemble_size, n_ensembles_max, n_expected):
     """
     assigner = EnsembleAssigner(ensemble_size=ensemble_size, n_ensembles_max=n_ensembles_max)
     assigner.n_units = n_units  # assign manually
+    assigner.determine_n_ensembles()
     n_ensembles = assigner.n_ensembles
     assert n_ensembles == n_expected, f"Expected {n_expected} ensembles, Got {n_ensembles}"
 
@@ -85,7 +86,8 @@ def test_single_ensemble():
     n_units = 4
     ensemble_size = 4
     assigner = EnsembleAssigner(ensemble_size)
-    assigner.process(n_units=n_units)
+    assigner.n_units = n_units  # assign manually
+    assigner.assign()
     ensembles = assigner.ensembles
     assert ensembles.shape[0] == 1, f"Expected 1 ensemble, Got {ensembles.shape[0]}"
     assert ensembles.size == n_units, f"Expected {n_units} units, Got {ensembles.size}"
@@ -108,7 +110,8 @@ def test_multiple_ensembles():
     ensemble_size = 5
     n_ens_expected = 2
     assigner = EnsembleAssigner(ensemble_size)
-    assigner.process(n_units=n_units)
+    assigner.n_units = n_units  # assign manually
+    assigner.assign()
     ensembles = assigner.ensembles
     # Test dimensions
     shape = ensembles.shape
@@ -145,7 +148,8 @@ def test_last_ensemble_filling():
     ensemble_size = 4
     n_ens_expected = 3
     assigner = EnsembleAssigner(ensemble_size)
-    assigner.process(n_units=n_units)
+    assigner.n_units = n_units  # assign manually
+    assigner.assign()
     ensembles = assigner.ensembles
     # Test dimensions
     shape = ensembles.shape
@@ -183,7 +187,8 @@ def test_exact_split():
     ensemble_size = 4
     n_ens_expected = 3
     assigner = EnsembleAssigner(ensemble_size)
-    assigner.process(n_units=n_units)
+    assigner.n_units = n_units  # assign manually
+    assigner.assign()
     ensembles = assigner.ensembles
     # Test dimensions
     shape = ensembles.shape
