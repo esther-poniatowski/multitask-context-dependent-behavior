@@ -20,12 +20,28 @@ See Also
 from typing import Mapping
 
 import numpy as np
+from numpy.testing import assert_array_equal
 import pytest
 
 from core.processors.base import Processor
 
 
 # --- Fixtures -------------------------------------------------------------------------------------
+
+
+def computation(input_arr: np.ndarray) -> np.ndarray:
+    """
+    Simple computation performed by a processor: multiply by 2.
+
+    Parameters
+    ----------
+    input_arr: np.ndarray
+
+    Returns
+    -------
+    input_arr: np.ndarray
+    """
+    return input_arr * 2
 
 
 @pytest.fixture
@@ -42,55 +58,29 @@ def input_attrs():
 
 
 @pytest.fixture
-def output_attrs():
+def output_attrs(input_attrs):
     """
     Fixture - Generate the class attribute :attr:`output_attrs`.
 
     Returns
     -------
     Tuple[str, ...]:
-        Names of the output attributes.
+        Names of the output attributes: ("output1", "output2")
     """
-    return ("output1", "output2")
+    return tuple(f"output{i}" for i in range(1, len(input_attrs) + 1))
 
 
 @pytest.fixture
-def optional_attrs():
+def empty_data(input_attrs, output_attrs) -> Mapping[str, np.ndarray]:
     """
-    Fixture - Generate the class attribute :attr:`optional_attrs`.
-
-    Returns
-    -------
-    Tuple[str, ...]:
-        Names of the optional attributes.
-    """
-    return ("optional_input",)
-
-
-@pytest.fixture
-def proc_data_type(input_attrs, output_attrs) -> Mapping[str, type]:
-    """
-    Fixture - Generate the class attribute :attr:`proc_data_type`.
-
-    Returns
-    -------
-    MappingProxyType:
-        Mapping of dynamic attributes to their corresponding types.
-    """
-    return {attr: np.ndarray for attr in (*input_attrs, *output_attrs)}
-
-
-@pytest.fixture
-def proc_data_empty(input_attrs, output_attrs) -> Mapping[str, np.ndarray]:
-    """
-    Fixture - Generate the class attribute :attr:`proc_data_empty`.
+    Fixture - Generate the class attribute :attr:`empty_data`.
 
     Returns
     -------
     MappingProxyType:
         Mapping of dynamic attributes to their corresponding empty state.
     """
-    return {attr: np.empty(0) for attr in (*input_attrs, *output_attrs)}
+    return {attr: np.empty(0) for attr in input_attrs + output_attrs}
 
 
 @pytest.fixture
@@ -101,47 +91,49 @@ def subclass(request):
     Returns
     -------
     TestClass:
-        Class inheriting from :class:`Processor`. It defines the class attributes `input_attrs`,
-        `output_attrs`, and `proc_data_type` required by the metaclass :class:`ProcessorMeta`. It
-        implements the abstract method `_process`.
+        Class inheriting from :class:`Processor`. It defines the class attributes `config_attrs`,
+        `input_attrs` and `output_attrs` as in the base class. It implements the abstract method
+        `_process`.
     """
 
     class TestClass(Processor):
 
-        input_attrs = request.getfixturevalue("input_attrs")
+        config_attrs = ("param",)
+        # input_attrs = request.getfixturevalue("input_attrs")
+        input_attrs = ("input1", "input2")
         output_attrs = request.getfixturevalue("output_attrs")
-        proc_data_empty = request.getfixturevalue("proc_data_empty")
+        empty_data = request.getfixturevalue("empty_data")
+
+        def __init__(self, param: int = 1):
+            super().__init__(param=param)
 
         def _process(self):
-            result1 = self.input1 * 2  # pylint: disable=no-member
-            result2 = self.input2 + 3  # pylint: disable=no-member
-            return {"output1": result1, "output2": result2}
+            for attr in self.input_attrs:
+                input_arr = getattr(self, attr)
+                output_arr = computation(input_arr)
+                setattr(self, f"output{attr[-1]}", output_arr)
+                setattr(self, attr, self.empty_data[attr])
 
     return TestClass
 
 
 @pytest.fixture
-def input_data():
+def input_data(input_attrs):
     """
     Fixture - Generate input data for the processing test.
 
     Returns
     -------
     input_data: Dict[str, np.ndarray]
-        Input data passed to the processor.
-    expected_output: Dict[str, np.ndarray]
-        Expected output from the processor after applying the processing logic.
+        Input data to pass to the processor.
     """
-    return {
-        "input1": np.array([1, 2, 3]),
-        "input2": np.array([4, 5, 6]),
-    }
+    return {f"input{i}": np.arange(i, i + 3) for i in range(1, len(input_attrs) + 1)}
 
 
 @pytest.fixture
-def output_data():
+def output_data(input_data):
     """
-    Fixture - Generate expected output data corresponding to the input data.
+    Fixture - Generate expected output data corresponding to the input data (multiply by 2)
 
     Returns
     -------
@@ -149,34 +141,16 @@ def output_data():
         Expected output from the processor after applying the processing logic.
     """
     return {
-        "output1": np.array([2, 4, 6]),  # input1 * 2
-        "output2": np.array([7, 8, 9]),  # input2 + 3
+        f"output{i}": computation(input_data[f"input{i}"]) for i in range(1, len(input_data) + 1)
     }
 
 
 # --- Tests ----------------------------------------------------------------------------------------
 
 
-def test_class_creation(input_attrs, output_attrs, subclass):
+def test_init_config(subclass):
     """
-    Test subclass creation involving :class:`ProcessorMeta` and :class:`Processor`.
-
-    Expected Output
-    ---------------
-    Class attributes :attr:`input_attrs` and :attr:`output_attrs` should be set.
-    """
-    # Check the presence of the class attributes
-    assert hasattr(subclass, "input_attrs")
-    assert hasattr(subclass, "output_attrs")
-    assert hasattr(subclass, "proc_data_type")
-    # Check the content of class input/output attributes
-    assert subclass.input_attrs == input_attrs
-    assert subclass.output_attrs == output_attrs
-
-
-def test_properties(subclass):
-    """
-    Test the creation of properties for input and output attributes by the metaclass.
+    Test the initialization of the configuration parameters by the base class constructor.
 
     Test Inputs
     -----------
@@ -187,103 +161,112 @@ def test_properties(subclass):
     ---------------
     Input and output properties should be accessible via the dynamic attribute names.
     """
-    processor = subclass()
-    for input_attr in subclass.input_attrs:
-        assert hasattr(processor, input_attr), f"Missing property (input attr): {input_attr}"
-    for output_attr in subclass.output_attrs:
-        assert hasattr(processor, output_attr), f"Missing property (output attr): {output_attr}"
+    processor = subclass(param=42)
+    assert hasattr(processor, "param"), f"Missing config attribute: 'param'"
 
 
-def test_check_consistency():
-    """
-    Test that :meth:`ProcessorMeta.check_consistency` detects inconsistencies between dynamic
-    attributes and `proc_data_type`.
-
-    Define an invalid test class inheriting from :class:`Processor`, where the class attributes
-    `input_attrs` and `output_attrs` do not match the `proc_data_type` mapping.
-
-    Expected Output
-    ---------------
-    ValueError raised for a mismatch between the dynamic attributes in `input_attrs`,
-    `output_attrs`, and the keys in `proc_data_type`.
-    """
-    with pytest.raises(ValueError):
-
-        class InconsistentProcessor(Processor):
-            input_attrs = ("input1", "input2")
-            output_attrs = ("output1",)
-            proc_data_type = {  # missing 'input2', extra 'output2'
-                "input1": np.ndarray,
-                "output1": np.ndarray,
-                "output2": np.ndarray,
-            }
-
-
-def test_init_empty_data(subclass):
+def test_init_empty_data(input_attrs, output_attrs, subclass):
     """
     Ensure that the data attributes are initialize with default empty state.
 
     Expected Output
     ---------------
-    Dynamic attributes should be set to their empty state (e.g., empty arrays).
+    Input and output attributes should be set to their empty state (e.g., empty arrays).
     """
     expected_empty_array = np.empty(0)  # empty array to compare with reset attributes
     processor = subclass()
+    # Check attribute existence
+    for attr in input_attrs + output_attrs:
+        assert hasattr(processor, attr), f"Missing attribute: {attr}"
     # Check initial empty state
-    for input_attr in subclass.input_attrs:
-        np.testing.assert_array_equal(getattr(processor, input_attr), expected_empty_array)
+    for attr in input_attrs + output_attrs:
+        assert_array_equal(getattr(processor, attr), expected_empty_array)
     # Check that the flag has been reset to False
+    assert processor._has_input is False
     assert processor._has_output is False
 
 
-def test_check_name_type(subclass, proc_data_empty):
+def test_validate(subclass, input_data):
     """
-    Test the :meth:`_check_name_type` method for checking inputs data names and types.
-
-    Test Inputs
-    -----------
-    subclass:
-        Class inheriting from :class:`Processor`.
-    proc_data_empty: Mapping[str, np.ndarray]
-        Mapping of dynamic attributes to their corresponding empty state.
+    Test the method :meth:`_validate` for basic validation logic.
 
     Expected Output
     ---------------
-    ValueError raised for invalid data types in dynamic attributes.
+    ValueError raised for missing input attributes or unexpected inputs.
     """
     processor = subclass()
-    # Test valid data types
-    for attr, value in proc_data_empty.items():
-        processor._check_name_type(attr, value)
-    # Test invalid data type
-    with pytest.raises(TypeError):
-        for attr, _ in proc_data_empty.items():
-            processor._check_name_type(attr, "invalid_type")
-    # Test invalid setting of dynamic attribute (wrong name)
-    with pytest.raises(ValueError):
-        for attr, value in proc_data_empty.items():
-            processor._check_name_type("invalid_name", value)
-
-
-def test_check_missing(subclass, input_data):
-    """
-    Test the method :meth:`_check_missing` for validation logic.
-
-    Expected Output
-    ---------------
-    ValueError raised for missing input attributes.
-    """
-    processor = subclass()
-    # Test missing input: remove one required element from input_data
+    # Missing input: remove one required element from input_data
     key1 = list(input_data.keys())[0]
-    input_data_invalid = {k: v for k, v in input_data.items() if k != key1}
+    input_data_missing = {k: v for k, v in input_data.items() if k != key1}
     with pytest.raises(ValueError):
-        processor._check_missing(input_data_invalid, processor.input_attrs)
+        processor._validate(**input_data_missing)
+    # Unexpected input: add an extra element to input_data
+    input_data_extra = {**input_data, "extra": np.array([1, 2, 3])}
+    with pytest.raises(ValueError):
+        processor._validate(**input_data_extra)
 
 
-def test_process(subclass, input_data, output_data, optional_attrs):
+def test_reset(subclass, input_data):
     """
-    Test the :meth:`process` method in the concrete subclass.
+    Test the method :meth:`_reset` for clearing the input and output data.
+
+    Expected Output
+    ---------------
+    Input and output attributes should be reset to their empty state (e.g., empty arrays).
+    """
+    input_array = np.array([1, 2, 3])
+    input_attr = "input1"
+    expected_empty_array = np.empty(0)  # empty array to compare with reset attributes
+    # Set input1 and flag manually
+    processor = subclass()
+    setattr(processor, input_attr, input_array)
+    processor._has_input = True
+    assert_array_equal(getattr(processor, input_attr), input_array)
+    # Check input attributes and flag after reset
+    processor._reset()
+    assert_array_equal(getattr(processor, input_attr), expected_empty_array)
+    assert processor._has_input is False
+
+
+def test_set_inputs(subclass, input_data):
+    """
+    Test the method :meth:`_set_inputs` for setting input data.
+
+    Expected Output
+    ---------------
+    Input attributes should be set to the provided data.
+    """
+    processor = subclass()
+    processor._set_inputs(**input_data)
+    for key, value in input_data.items():
+        assert_array_equal(getattr(processor, key), value)
+    assert processor._has_input is True
+
+
+def test_check_outputs(subclass, input_data, output_data):
+    """
+    Test the method :meth:`_check_outputs` for checking the output data.
+
+    Expected Output
+    ---------------
+    If outputs are missing, raise a ValueError.
+    If outputs are present, the flag `_has_output` should be set to True.
+    """
+    processor = subclass()
+    # Check missing outputs (no process is called, empty data is set)
+    with pytest.raises(ValueError):
+        processor._check_outputs()
+    # Set outputs manually
+    for key, value in output_data.items():
+        setattr(processor, key, value)
+    # Check outputs and flag
+    processor._check_outputs()
+    assert processor._has_output is True
+
+
+def test_process(subclass, input_data, output_data):
+    """
+    Test the :meth:`process` method inherited from the base class.
 
     Test Inputs
     -----------
@@ -296,7 +279,7 @@ def test_process(subclass, input_data, output_data, optional_attrs):
 
     Expected Output
     ---------------
-    The processed output should be stored in the internal attributes.
+    Store the processed output among the attributes.
     """
     processor = subclass()
     processor.process(**input_data)
@@ -331,7 +314,7 @@ def test_seed_property(subclass, input_data, output_data):
     assert processor._has_output is False
     for output_attr in processor.output_attrs:
         np.testing.assert_array_equal(
-            getattr(processor, output_attr), processor.proc_data_empty[output_attr]
+            getattr(processor, output_attr), processor.empty_data[output_attr]
         )
 
 
