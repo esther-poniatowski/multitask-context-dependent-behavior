@@ -46,7 +46,7 @@ number). This prevents models to capture misleading temporal drift in neuronal a
 # pylint: disable=attribute-defined-outside-init
 
 from types import MappingProxyType
-from typing import Dict, TypeAlias, Any, Tuple
+from typing import TypeAlias, Any, Tuple
 
 import numpy as np
 

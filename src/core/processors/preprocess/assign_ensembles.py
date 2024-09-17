@@ -18,13 +18,13 @@ leverage the full dat set for areas (i.e. to encompass all the neurons in each a
 models have to be fitted for ensembles in areas with larger neuron populations.
 """
 # Disable error codes for attributes which are not detected by the type checker:
-# - Configuration attributes are defined by the base class constructor.
-# - Public properties for internal attributes are defined in the metaclass.
+# - Configuration and data attributes are initialized by the base class constructor.
 # mypy: disable-error-code="attr-defined"
 # pylint: disable=no-member
+# pylint: disable=attribute-defined-outside-init
 
 from types import MappingProxyType
-from typing import Dict, TypeAlias, Any, Tuple, Optional
+from typing import TypeAlias, Any, Tuple, Optional
 
 import numpy as np
 
@@ -83,10 +83,11 @@ class EnsembleAssigner(Processor):
 
     config_attrs = ("ensemble_size", "n_ensembles_max")
     input_attrs = ("n_units",)
-    output_attrs = ("ensembles",)
-    proc_data_empty = MappingProxyType(
+    output_attrs = ("n_ensembles", "ensembles")
+    empty_data = MappingProxyType(
         {
             "n_units": 0,
+            "n_ensembles": 0,
             "ensembles": create_empty_array(2, np.int64),
         }
     )
@@ -104,6 +105,11 @@ class EnsembleAssigner(Processor):
         """
         self._validate_n_units(input_data["n_units"])
 
+    def _process(self) -> None:
+        """Implement the template method called in the base class :meth:`process` method."""
+        self.determine_n_ensembles()
+        self.assign()
+
     def _validate_n_units(self, n: int) -> None:
         """
         Validate the argument `n_units` (number of units) compared to the ensemble size.
@@ -116,12 +122,18 @@ class EnsembleAssigner(Processor):
         if n < self.ensemble_size:
             raise ValueError(f"n_units: {n} < ensemble_size: {self.ensemble_size}")
 
-    @property
-    def n_ensembles(self) -> int:
+    def determine_n_ensembles(self) -> None:
         """
         Determine the number of ensembles to generate.
 
-        Rules:
+        Important
+        ---------
+        Update the attribute `n_ensembles` with the computed number of ensembles.
+
+        Notes
+        -----
+        Rules to determine the number of ensembles from the number of units and the target ensemble
+        size:
 
         - If the number of units is equal to the ensemble size, then all units form a single
           ensemble. Thus, :math:`n_ensembles = 1`.
@@ -144,28 +156,15 @@ class EnsembleAssigner(Processor):
         n_ensembles = np.ceil(self.n_units / self.ensemble_size).astype(int)
         if self.n_ensembles_max is not None and n_ensembles > self.n_ensembles_max:
             n_ensembles = self.n_ensembles_max
-        return n_ensembles
+        self.n_ensembles = n_ensembles
 
-    def _process(self) -> Dict[str, Ensembles]:
-        """
-        Implement the template method called in the base class :meth:`process` method.
-
-        Returns
-        -------
-        output_data: Dict[str, Any]
-            Output data with the ensemble assignments.
-        """
-        ensembles = self.assign()
-        return {"ensembles": ensembles}
-
-    def assign(self) -> Ensembles:
+    def assign(self) -> None:
         """
         Assign units to ensembles by sub-sampling the units in distinct groups.
 
-        Returns
-        -------
-        ensembles: np.ndarray[Tuple[Any], np.dtype[np.int64]]
-            See :attr:`ensembles`.
+        Important
+        ---------
+        Update the attribute `ensembles` with the computed ensemble assignments.
 
         Implementation
         --------------
@@ -211,4 +210,4 @@ class EnsembleAssigner(Processor):
             splits[-1] = last_ensemble
         # Stack ensembles
         ensembles = np.stack(splits, axis=0)
-        return ensembles
+        self.ensembles = ensembles
