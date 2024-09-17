@@ -11,24 +11,11 @@ Notes
 -----
 Ensembles correspond to subsets of units (neurons) in each brain area.
 
-For rigorous data analysis, it is necessary to homogenize the number of neurons that are used in the
-distinct models corresponding to distinct brain areas. The essential constraint for the common
-number of neurons retained for all models is imposed by the minimal number of neurons across all the
-brain areas. In order to leverage the full dat set for areas which encompass more neurons than this
-minimal number, several models have to be fitted for different groups of units.
-
-Implementation
---------------
-Procedure for ensemble assignment in one area:
-
-1. Sub-sample the units in the area.
-
-For each area, the maximal number of ensembles depend on the number of units in the area:
-
-- If the area has exactly the minimal number of units, only one ensemble is created.
-- If the area has more units, several ensembles are created by sub-sampling the units.
-- If the area has less units, the procedure is not applied.
-
+For comparative analysis between brain areas with varying neuron populations, it is necessary to
+homogenize the number of neurons across different models. The common number of neurons retained for
+all models is imposed by the minimal number of neurons across all the brain areas. In order to
+leverage the full dat set for areas (i.e. to encompass all the neurons in each area), multiple
+models have to be fitted for ensembles in areas with larger neuron populations.
 """
 # Disable error codes for attributes which are not detected by the type checker:
 # - Configuration attributes are defined by the base class constructor.
@@ -61,18 +48,33 @@ class EnsembleAssigner(Processor):
         Maximum number of ensembles to generate.
     n_units: int
         Number of units to assign to ensembles.
+    n_ensembles: int
+        Number of ensembles to generate based on the number of units and the ensemble size.
     ensembles: np.ndarray[Tuple[Any], np.dtype[np.int64]]
         Ensemble assignments, containing the indices of the units forming each ensemble.
         Shape: ``(n_ensembles, ensemble_size)``.
 
     Methods
     -------
+    :meth:`_validate_n_units`
     :meth:`assign`
 
     Examples
     --------
-    Assign units to ensembles with an ensemble size of 3:
+    Assign 10 units to ensembles of size of 4:
 
+    >>> assigner = EnsembleAssigner(ensemble_size=4)
+    >>> assigner.process(n_units=10)
+    >>> print(assigner.ensembles)
+    [[0 7 4 3]
+     [2 8 6 1]
+     [5 9 0 6]]
+
+    Explanation:
+
+    - 3 ensembles are generated so that each unit is included in at least one ensemble.
+    - The first two ensembles are mutually exclusive, while the last ensemble includes the leftover
+      units and picks remaining units from the previous ensembles.
 
     Implementation
     --------------
@@ -158,7 +160,7 @@ class EnsembleAssigner(Processor):
 
     def assign(self) -> Ensembles:
         """
-        Assign units to ensembles.
+        Assign units to ensembles by sub-sampling the units in distinct groups.
 
         Returns
         -------
