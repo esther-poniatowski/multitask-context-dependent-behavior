@@ -15,31 +15,6 @@ import pytest
 from core.processors.preprocess.stratify import Stratifier
 
 
-def test_stratify():
-    """
-    Test :meth:`Stratifier.stratify`.
-
-    Test Inputs
-    -----------
-    features: Integer and string arrays for 3 samples.
-
-    Expected Outputs
-    ----------------
-    Two samples have identical feature combinations.
-    Expected strata: [0, 0, 1]
-    """
-    features = [
-        np.array([1, 1, 2], dtype=np.int64),
-        np.array([0.1, 0.1, 0.2], dtype=np.float64),
-        np.array(["A", "A", "B"], dtype=np.str_),
-    ]
-    expected_strata = np.array([0, 0, 1], dtype=np.int64)
-    stratifier = Stratifier()
-    stratifier.process(features=features)
-    strata = stratifier.strata
-    assert_array_equal(strata, expected_strata), f"Expected {expected_strata}, Got {strata}"
-
-
 def test_invalid_feature_dimensions():
     """
     Test :meth:`Stratifier._validate_features` raises ValueError for invalid dimensions.
@@ -97,9 +72,35 @@ def test_unequal_number_of_samples():
         stratifier._validate_features(features)
 
 
-def test_dynamic_attribute_update():
+def test_stratify():
     """
-    Test updating the `features` dynamically and recomputing strata.
+    Test :meth:`Stratifier.stratify`.
+
+    Test Inputs
+    -----------
+    features: Integer and string arrays for 3 samples.
+
+    Expected Outputs
+    ----------------
+    Two samples have identical feature combinations.
+    Expected strata: [0, 0, 1]
+    """
+    features = [
+        np.array([1, 1, 2], dtype=np.int64),
+        np.array([0.1, 0.1, 0.2], dtype=np.float64),
+        np.array(["A", "A", "B"], dtype=np.str_),
+    ]
+    expected_strata = np.array([0, 0, 1], dtype=np.int64)
+    stratifier = Stratifier()
+    stratifier.features = features  # set features manually
+    stratifier.stratify()
+    strata = stratifier.strata
+    assert_array_equal(strata, expected_strata), f"Expected {expected_strata}, Got {strata}"
+
+
+def test_process():
+    """
+    Test the full processing pipeline of :class:`Stratifier`.
 
     Test Inputs
     -----------

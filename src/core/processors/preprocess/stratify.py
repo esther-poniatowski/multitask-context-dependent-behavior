@@ -35,7 +35,6 @@ class Stratifier(Processor):
 
     Class Attributes
     ----------------
-    See :class:`Processor` for inherited class attributes.
     valid_types: tuple
         Valid NumPy data types (dtype) for the feature arrays (int64, float64, str_).
 
@@ -75,17 +74,17 @@ class Stratifier(Processor):
     >>> print(stratifier.strata)
     [0 1 1]
 
-    Implementation
-    --------------
-    Private attributes are used to enforce control and validation: `_features`, `_strata`.
-    Those private attributes are accessed via the corresponding public properties (with no
-    underscore) which are automatically created by the metaclass `ProcessorMeta`.
+    See Also
+    --------
+    :class:`core.processors.preprocess.Processor`
+        Base class for all processors. See definition of class-level attributes and template
+        methods.
     """
 
     config_attrs = ()
     input_attrs = ("features",)
     output_attrs = ("strata",)
-    proc_data_empty = MappingProxyType({"features": [], "strata": create_empty_array(1, np.int64)})
+    empty_data = MappingProxyType({"features": [], "strata": create_empty_array(1, np.int64)})
     valid_types = (np.int64, np.float64, np.str_)
 
     def __init__(self):
@@ -94,6 +93,10 @@ class Stratifier(Processor):
     def _validate(self, **input_data) -> None:
         """Implement the template method called in the base class :meth:`process` method."""
         self._validate_features(input_data["features"])
+
+    def _process(self) -> None:
+        """Implement the template method called in the base class :meth:`process` method."""
+        self.stratify()
 
     def _validate_features(self, features: Features) -> None:
         """
@@ -119,19 +122,9 @@ class Stratifier(Processor):
         if not all(n == n_samples[0] for n in n_samples):
             raise ValueError(f"Unequal number of samples across features: {n_samples}")
 
-    def _process(self) -> Dict[str, Any]:
-        """Implement the template method called in the base class :meth:`process` method."""
-        strata = self.stratify()
-        return {"strata": strata}
-
-    def stratify(self) -> Strata:
+    def stratify(self) -> None:
         """
         Compute stratum labels based on unique combinations of features.
-
-        Returns
-        -------
-        strata: np.ndarray[Tuple[Any], np.dtype[np.int64]]
-            See :attr:`strata`.
 
         Implementation
         --------------
@@ -155,4 +148,5 @@ class Stratifier(Processor):
         """
         feature_stack = np.column_stack(self.features)  # rows: samples, columns: features
         _, strata = np.unique(feature_stack, axis=0, return_inverse=True)  # shape: (n_samples,)
-        return strata
+        # Store the strata as a class attribute
+        self.strata = strata
