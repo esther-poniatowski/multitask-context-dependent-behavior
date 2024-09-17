@@ -272,6 +272,15 @@ class Processor(metaclass=ProcessorMeta):
         This main method is the entry point to pass data to process. It orchestrates the processing
         logic by calling the subclass-specific methods through a "template method" design pattern.
 
+        Template Method Steps:
+
+        1. Setup: Prepare for processing, e.g., handle seed and reset state.
+        2. Validation: Validate the input data.
+        3. Preprocessing: Optional steps before the core processing logic.
+        4. Processing: The core logic, must be implemented in the subclass.
+        5. Postprocessing: Optional steps after the core processing logic.
+        6. Finalize: Ensure outputs are set and the state is updated.
+
         At the end of processing, all the output results computed by the concrete processor are
         stored among the attributes of the class instance. They can be accessed directly by querying
         the corresponding properties.
@@ -283,6 +292,7 @@ class Processor(metaclass=ProcessorMeta):
         >>> processor = ConcreteProcessor()
         >>> processor.process(input1=..., input2=..., seed=42)
         >>> output1 = processor.output1
+        >>> output2 = processor.output2
         """
         # Set the seed if provided
         if seed is not None:
@@ -290,7 +300,6 @@ class Processor(metaclass=ProcessorMeta):
         self.set_random_state()  # set the random state for reproducibility
         # Validate inputs and compute default values if necessary
         self._validate(**input_data)  # subclass-specific or default validation
-        input_data = self._default(**input_data)
         # Reset data after complete validation
         for attr, value in self.proc_data_empty.items():
             setattr(self, attr, value)
@@ -393,29 +402,6 @@ class Processor(metaclass=ProcessorMeta):
         for attr in expected:
             if attr not in data:
                 raise ValueError(f"Missing data: '{attr}'")
-
-    def _default(self, **input_data: Any) -> Dict[str, Any]:
-        """
-        Compute default values for optional inputs which depend on other inputs. To be implemented
-        in concrete subclasses if necessary.
-
-        Parameters
-        ----------
-        input_data: Any
-            Input data to process, received as keyword arguments in the `process` method.
-
-        Returns
-        -------
-        input_data: Dict[str, Any]
-            Input data with updated default values for optional inputs if necessary.
-
-        Notes
-        -----
-        Modify the `input_data` dictionary directly or return a modified copy. This dictionary is
-        used by the base class `process` method to set the final values for input data after the
-        validation steps and before running the processing operations.
-        """
-        return input_data
 
     @abstractmethod
     def _process(self) -> Dict[str, Any]:
