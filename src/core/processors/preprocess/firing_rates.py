@@ -55,7 +55,7 @@ class FiringRatesConverter(Processor):
         Time bin (in seconds).
     t_max: float
         Duration of the recording period (in seconds).
-    window: float
+    smooth_window: float
         Size of the smoothing window (in seconds).
     mode: str
         Convolution mode for smoothing. Options: ``'valid'`` (default), ``'same'``. See
@@ -72,7 +72,7 @@ class FiringRatesConverter(Processor):
     then homogeneously distributed every 0.2 s in another 1-second recording period. The firing rate
     is expected to be 10 Hz in the first period and 5 Hz in the second period.
 
-    >>> converter = FiringRatesConverter(t_bin=0.1, t_max=1.0, window=0.5)
+    >>> converter = FiringRatesConverter(t_bin=0.1, t_max=1.0, smooth_window=0.5)
     >>> spikes1 = np.arange(0, 1, 0.1)
     [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
     >>> converter.process(spikes=spikes1)
@@ -108,7 +108,7 @@ class FiringRatesConverter(Processor):
         methods.
     """
 
-    config_attrs = ("t_bin", "t_max", "window", "mode")
+    config_attrs = ("t_bin", "t_max", "smooth_window", "mode")
     input_attrs = ("spikes",)
     output_attrs = ("f_binned", "f_smoothed")
     empty_data = MappingProxyType(
@@ -123,10 +123,10 @@ class FiringRatesConverter(Processor):
         self,
         t_bin: float = T_BIN,
         t_max: Optional[float] = None,
-        window: float = 0.5,
+        smooth_window: float = 0.5,
         mode: str = "valid",
     ):
-        super().__init__(t_bin=t_bin, t_max=t_max, window=window, mode=mode)
+        super().__init__(t_bin=t_bin, t_max=t_max, smooth_window=smooth_window, mode=mode)
 
     def _process(self) -> None:
         """Implement the template method called in the base class :meth:`process` method."""
@@ -186,19 +186,19 @@ class FiringRatesConverter(Processor):
         - ``'same'``:  ``n_out = n_in``. Here: ``n_tpts_smth = n_tpts``.
         - ``'valid'``:  ``n_out = n_in - k + 1``, where ``k`` is the kernel size. This is because
           the kernel cannot fit in the signal when it is placed on the last `k+1` positions. Here:
-          ``n_tpts_smth = n_tpts - window/t_bin + 1``.
+          ``n_tpts_smth = n_tpts - smooth_window/t_bin + 1``.
 
         Implementation
         --------------
-        Smoothing consists in averaging consecutive values in a sliding window.
+        Smoothing consists in averaging consecutive values in a sliding smooth_window.
 
         - Define a boxcar kernel with all values equal to 1. The window size (in number of bins) is
-          equal to ``window/t_bin`` (rounded down to the nearest integer) to match the time bin of
+          equal to ``smooth_window/t_bin`` (rounded down to the nearest integer) to match the time bin of
           the firing rate time course.
         - Convolve the firing rate time course with the boxcar kernel (FFT method), to *sum* the
           values in the window at each location in the time course.
         - Divide the output by the window size to get the *average*. This is necessary to keep the
-          same scale as the input firing rates, and to avoid increasing the values when the window
+          same scale as the input firing rates, and to avoid increasing the values when the smooth_window
           size is large.
 
         See Also
@@ -206,7 +206,7 @@ class FiringRatesConverter(Processor):
         :func:`scipy.signal.fftconvolve(arr, kernel, mode, axes)`
             Convolve the firing rate time course with kernel.
         """
-        kernel = np.ones(int(self.window / self.t_bin))  # boxcar kernel
+        kernel = np.ones(int(self.smooth_window / self.t_bin))  # boxcar kernel
         f_smoothed = fftconvolve(self.f_binned, kernel, mode=self.mode, axes=0) / len(kernel)
         self.f_smoothed = f_smoothed
 
@@ -229,6 +229,6 @@ class FiringRatesConverter(Processor):
         if self.mode == "same":
             return self.n_tpts
         elif self.mode == "valid":
-            return self.n_tpts - int(self.window / self.t_bin) + 1
+            return self.n_tpts - int(self.smooth_window / self.t_bin) + 1
         else:
             raise ValueError(f"Invalid mode: {self.mode}")
