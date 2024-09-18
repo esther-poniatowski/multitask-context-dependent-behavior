@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.processors.preprocess.firing_rates` [module]
+:mod:`core.processors.preprocess.convert_to_rates` [module]
 
 Classes
 -------
