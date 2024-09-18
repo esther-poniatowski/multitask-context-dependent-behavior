@@ -62,7 +62,7 @@ def test_smooth():
         Alternating patterns [0, 1], repeated 5 times (10 values).
     t_bin: float
         Set to 0.1 sec.
-    window: int
+    smooth_window: int
         Set to 0.2, for a boxcar kernel of 2 bins width.
     mode: str
         Set to ``'valid'``, to keep only the values which are not influenced by zero-padding.
@@ -70,8 +70,8 @@ def test_smooth():
     Expected Outputs
     ----------------
     expected: np.ndarray
-        Shape: ``(n_tpts_smth,)`` with ``n_tpts_smth = n_tpts - window/t_bin + 1`` (valid mode).
-        Here: ``window/t_bin = 2`` bins, so ``n_tpts_smth = 10 - 2 + 1 = 9``.
+        Shape: ``(n_tpts_smth,)`` with ``n_tpts_smth = n_tpts - smooth_window/t_bin + 1`` (valid mode).
+        Here: ``smooth_window/t_bin = 2`` bins, so ``n_tpts_smth = 10 - 2 + 1 = 9``.
         Values: All equal to 0.5, which is the average of two consecutive values in both input
         trials, ``(0 + 1)/2 = (0.25 + 0.75)/2 = 0.5``.
 
@@ -87,10 +87,12 @@ def test_smooth():
     f_binned = np.tile(np.array([0, 1]), 5)  # shape: (10,)
     t_bin = 0.1
     t_max = 1.0  # not used by the `smooth` method, only to initialize the converter
-    window = 0.2
+    smooth_window = 0.2
     mode = "valid"
     expected = np.full(shape=9, fill_value=0.5)
-    converter = FiringRatesConverter(t_bin=t_bin, t_max=t_max, window=window, mode=mode)
+    converter = FiringRatesConverter(
+        t_bin=t_bin, t_max=t_max, smooth_window=smooth_window, mode=mode
+    )
     converter.f_binned = f_binned  # set manually
     converter.smooth()
     smoothed = converter.f_smoothed
