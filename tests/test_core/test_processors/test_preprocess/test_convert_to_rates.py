@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_core.test_pipelines.test_preprocess.test_firing_rates` [module]
+:mod:`test_core.test_pipelines.test_preprocess.test_convert_to_rates` [module]
 
-Tests for the module :mod:`core.processors.preprocess.firing_rates`.
+Tests for the module :mod:`core.processors.preprocess.convert_to_rates`.
 
 See Also
 --------
@@ -18,7 +18,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal as assert_array_eq
 import pytest
 
-from core.processors.preprocess.firing_rates import FiringRatesConverter
+from processors.preprocess.convert_to_rates import FiringRatesConverter
 
 
 def test_spikes_to_rates():
