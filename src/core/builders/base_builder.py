@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.builders.base` [module]
+:mod:`core.builders.base_builder` [module]
 
 Base classes for data structure builders.
 
@@ -40,7 +40,7 @@ Usage of the concrete builder:
 from abc import ABC, abstractmethod
 from typing import TypeVar, Generic, Type
 
-from core.data_structures.base import DataStructure
+from core.data_structures.base_data_struct import DataStructure
 
 
 D = TypeVar("D", bound=DataStructure)
@@ -67,7 +67,7 @@ class DataBuilder(Generic[D], ABC):
 
     See Also
     --------
-    :class:`core.data_structures.base.Data`
+    :class:`core.data_structures.base_data_struct.Data`
         Abstract base class for data structures.
 
     Implementation

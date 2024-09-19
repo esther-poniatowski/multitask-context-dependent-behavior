@@ -1,5 +1,5 @@
 """
-:mod:`core.preprocess` [subpackage]
+:mod:`core.processors.preprocess` [subpackage]
 
 Preprocess the raw data up to obtain a format suitable for analysis.
 

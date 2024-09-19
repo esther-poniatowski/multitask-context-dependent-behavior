@@ -6,7 +6,7 @@
 Notes
 -----
 Saver and Loader subclasses are tested together to ensure their consistent interaction. Contrary to
-the tests in :mod:`test_core.io_data.test_saver_base` and :mod:`test_core.io_data.test_loader_base`,
+the tests in :mod:`test_core.test_io_data.test_saver_base` and :mod:`test_core.io_data.test_loader_base`,
 here the focus is on the specific *content* of the data which is saved and loaded, rather than on
 general checks carried out in the base classes.
 
@@ -17,8 +17,8 @@ paths with appropriate extensions in order to recover the data manually without 
 
 See Also
 --------
-:mod:`utils.io_data.savers.impl`: Tested module.
-:mod:`utils.io_data.loaders.impl`: Tested module.
+:mod:`utils.io_data.savers.impl_savers`: Tested module.
+:mod:`utils.io_data.loaders.impl_loaders`: Tested module.
 """
 from pathlib import Path
 
@@ -37,8 +37,14 @@ from mock_data.python_objects import (
     expected_from_list,
 )
 from mock_data.match_content import PATH_MOCK_DATA, data_list_yml, data_dict_yml
-from utils.io_data.loaders.impl import LoaderCSV, LoaderNPY, LoaderPKL, LoaderDILL, LoaderYAML
-from utils.io_data.savers.impl import SaverCSV, SaverNPY, SaverPKL, SaverDILL
+from utils.io_data.loaders.impl_loaders import (
+    LoaderCSV,
+    LoaderNPY,
+    LoaderPKL,
+    LoaderDILL,
+    LoaderYAML,
+)
+from utils.io_data.savers.impl_savers import SaverCSV, SaverNPY, SaverPKL, SaverDILL
 
 
 @pytest.mark.parametrize(

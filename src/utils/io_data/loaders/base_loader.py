@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`utils.io_data.loaders.base` [module]
+:mod:`utils.io_data.loaders.base_loader` [module]
 
 Common interface to load data from files.
 
@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Mapping, Union, TypeVar, Generic
 
 from utils.io_data.formats import FileExt, TargetType
-from path_system.local_server import LocalServer
+from utils.path_system.local_server import LocalServer
 
 
 T = TypeVar("T")

@@ -93,7 +93,6 @@ Classes
 """
 
 import argparse
-import os
 from pathlib import Path
 from typing import Dict, Union, Optional
 
@@ -101,7 +100,7 @@ import yaml
 
 from utils.path_system.local_server import LocalServer
 from utils.path_system.remote_server import RemoteServer
-from utils.io_data.loaders.impl import LoaderYAML
+from utils.io_data.loaders.impl_loaders import LoaderYAML
 from utils.io_data.formats import TargetType
 
 
@@ -216,7 +215,7 @@ class DirectoryOrganizer:
 
         See Also
         --------
-        :class:`utils.io_data.loaders.impl.LoaderYAML`
+        :class:`utils.io_data.loaders.impl_loaders.LoaderYAML`
         """
         path = Path(path).resolve()  # absolute path
         try:

@@ -16,7 +16,7 @@ from typing import TypeVar, Generic, Dict, Iterable, Any
 import numpy as np
 import numpy.typing as npt
 
-from core.coordinates.base import Coordinate
+from coordinates.base_coord import Coordinate
 from core.entities.bio import CorticalDepth
 from core.entities.composites import Unit
 
@@ -45,7 +45,7 @@ class CoordPopulation(Coordinate, Generic[T]):
     --------
     :class:`core.entities.composites.Unit`
     :class:`core.entities.bio_data.CorticalDepth`
-    :class:`core.coordinates.base.Coordinate`
+    :class:`core.coordinates.base_coord.Coordinate`
     """
 
     def __init__(self, values: npt.NDArray[np.str_]):
@@ -82,7 +82,7 @@ class CoordUnit(CoordPopulation[Unit]):
     See Also
     --------
     :class:`core.entities.composites.Unit`
-    :class:`core.coordinates.base.CoordPopulation`
+    :class:`core.coordinates.base_coord.CoordPopulation`
     """
 
     def __init__(self, values: npt.NDArray[np.str_]):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.processors.base` [module]
+:mod:`core.processors.base_processor` [module]
 
 Classes
 -------

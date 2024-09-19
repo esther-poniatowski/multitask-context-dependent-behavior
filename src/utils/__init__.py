@@ -11,7 +11,7 @@ Modules
 
 Sub-Packages
 ------------
-:mod:`io`
+:mod:`io_data`
 :mod:`path_system`
 :mod:`misc`
 

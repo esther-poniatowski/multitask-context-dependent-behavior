@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.coordinates.base` [module]
+:mod:`core.coordinates.base_coord` [module]
 
 Classes
 -------

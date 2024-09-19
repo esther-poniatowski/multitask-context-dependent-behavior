@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.data_structures.base` [module]
+:mod:`core.data_structures.base_data_struct` [module]
 
 Classes
 -------
@@ -17,12 +17,12 @@ from typing import Tuple, List, Dict, FrozenSet, Mapping, Type, TypeVar, Generic
 import numpy as np
 import numpy.typing as npt
 
-from utils.storage_rulers.base import PathRuler
+from utils.storage_rulers.base_path_ruler import PathRuler
 from utils.io_data.formats import TargetType
-from utils.io_data.loaders.base import Loader
-from utils.io_data.loaders.impl import LoaderDILL
-from utils.io_data.savers.base import Saver
-from utils.io_data.savers.impl import SaverDILL
+from utils.io_data.loaders.base_loader import Loader
+from utils.io_data.loaders.impl_loaders import LoaderDILL
+from utils.io_data.savers.base_saver import Saver
+from utils.io_data.savers.impl_savers import SaverDILL
 from utils.misc.sequences import reverse_dict_container
 
 

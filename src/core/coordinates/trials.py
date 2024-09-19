@@ -16,7 +16,7 @@ from typing import Optional, Dict, List
 import numpy as np
 import numpy.typing as npt
 
-from core.coordinates.base import Coordinate
+from coordinates.base_coord import Coordinate
 
 
 class CoordError(Coordinate):
@@ -35,7 +35,7 @@ class CoordError(Coordinate):
 
     See Also
     --------
-    :class:`core.coordinates.base.Coordinate`
+    :class:`core.coordinates.base_coord.Coordinate`
     """
 
     def __init__(self, values: npt.NDArray[np.bool_]):

@@ -31,14 +31,6 @@ Dealing with imbalanced trial counts across units
 3. Mitigating redundancies in trials' pairings: Trials are shuffled to obtain diverse combinations
    at the level of the pseudo-population.
 
-Warning
--------
-For data analysis:
-
-- Assign trials to folds *by unit*.
-- Assign units to batches.
-- Use *stratified* assignment by condition (task, context, stimulus, error, fold, batch).
-
 Implementation
 --------------
 
@@ -60,7 +52,7 @@ from typing import TypeAlias, Any, Tuple
 import numpy as np
 
 from core.constants import N_PSEUDO_MIN
-from core.processors.base import Processor
+from processors.base_processor import Processor
 from utils.misc.arrays import create_empty_array
 
 
@@ -113,7 +105,7 @@ class Bootstrapper(Processor):
 
     See Also
     --------
-    :class:`core.processors.preprocess.base.Processor`
+    :class:`core.processors.preprocess.base_processor.Processor`
         Base class for all processors. See definition of class-level attributes and template
         methods.
     """

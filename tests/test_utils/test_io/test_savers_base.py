@@ -14,8 +14,8 @@ the file paths and formats.
 
 See Also
 --------
-:mod:`utils.io_data.savers.base`: Tested module.
-:mod:`utils.io_data.savers.impl`: Concrete implementations.
+:mod:`utils.io_data.savers.base_saver`: Tested module.
+:mod:`utils.io_data.savers.impl_savers`: Concrete implementations.
 """
 
 import pytest
@@ -26,7 +26,7 @@ from mock_data.python_objects import (
     data_array,
     data_df,
 )
-from utils.io_data.savers.impl import SaverCSV
+from utils.io_data.savers.impl_savers import SaverCSV
 
 
 @pytest.mark.parametrize(

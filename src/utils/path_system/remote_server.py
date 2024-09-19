@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Union, Optional
 from dotenv import dotenv_values
 
-from path_system.base import ServerInterface
+from utils.path_system.base_path_manager import ServerInterface
 
 
 class RemoteServer(ServerInterface):
@@ -91,7 +91,7 @@ class RemoteServer(ServerInterface):
         print(f"[INFO] Credentials for the remote server: {self.user}@{self.host}")
         print(f"       Root path: {self.root_path}")
 
-    def is_dir(self, path: Path) -> bool:
+    def is_dir(self, path: Union[Path, str]) -> bool:
         """
         See :meth:`ServerInterface.is_dir`.
 
@@ -108,7 +108,7 @@ class RemoteServer(ServerInterface):
             print(f"[WARNING] Missing directory: {path} on {self.host}")
             return False
 
-    def is_file(self, path: Path) -> bool:
+    def is_file(self, path: Union[Path, str]) -> bool:
         """
         See :meth:`ServerInterface.is_file`.
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`utils.storage_rulers.base` [module]
+:mod:`utils.storage_rulers.base_path_ruler` [module]
 
 Manage the file system paths centrally.
 

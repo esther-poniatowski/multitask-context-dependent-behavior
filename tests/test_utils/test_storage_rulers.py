@@ -5,15 +5,15 @@
 
 See Also
 --------
-:mod:`utils.storage_rulers.base`: Tested module.
-:mod:`utils.storage_rulers.impl`: Tested module.
+:mod:`utils.storage_rulers.base_path_ruler`: Tested module.
+:mod:`utils.storage_rulers.impl_path_rulers`: Tested module.
 """
 import os
 
 import pytest
 
-from utils.storage_rulers.base import PathRuler
-from utils.storage_rulers.impl import RawSpkTimesPath
+from utils.storage_rulers.base_path_ruler import PathRuler
+from utils.storage_rulers.impl_path_rulers import RawSpkTimesPath
 
 
 def test_get_root(tmp_path):

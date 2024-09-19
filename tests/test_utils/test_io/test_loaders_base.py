@@ -14,13 +14,13 @@ the file paths and formats.
 
 See Also
 --------
-:mod:`utils.io_data.loaders.base`: Tested module.
-:mod:`utils.io_data.loaders.impl`: Concrete implementations.
+:mod:`utils.io_data.loaders.base_loader`: Tested module.
+:mod:`utils.io_data.loaders.impl_path_rulers`: Concrete implementations.
 """
 
 import pytest
 
-from utils.io_data.loaders.impl import LoaderCSV
+from utils.io_data.loaders.impl_loaders import LoaderCSV
 
 
 def test_loader_check_type_invalid():

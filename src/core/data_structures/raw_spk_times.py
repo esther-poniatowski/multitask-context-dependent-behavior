@@ -12,10 +12,10 @@ import numpy.typing as npt
 
 from core.constants import SMPL_RATE
 from core.coordinates.exp_structure import CoordBlock
-from core.data_structures.base import DataStructure
+from core.data_structures.base_data_struct import DataStructure
 from utils.io_data.formats import TargetType
-from utils.io_data.loaders.impl import LoaderNPY
-from utils.storage_rulers.impl import RawSpkTimesPath
+from utils.io_data.loaders.impl_loaders import LoaderNPY
+from utils.storage_rulers.impl_path_rulers import RawSpkTimesPath
 
 
 class RawSpkTimes(DataStructure):

@@ -28,7 +28,7 @@ from typing import TypeAlias, Any, Tuple, Optional
 
 import numpy as np
 
-from core.processors.base import Processor
+from processors.base_processor import Processor
 from utils.misc.arrays import create_empty_array
 
 
@@ -78,7 +78,7 @@ class EnsembleAssigner(Processor):
 
     See Also
     --------
-    :class:`core.processors.preprocess.base.Processor`
+    :class:`core.processors.preprocess.base_processor.Processor`
         Base class for all processors. See definition of class-level attributes and template
         methods.
     """

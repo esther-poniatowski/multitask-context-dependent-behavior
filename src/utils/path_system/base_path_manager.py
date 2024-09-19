@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`utils.path_system.manage_server` [module]
+:mod:`utils.path_system.base_path_manager` [module]
 
 Classes
 -------

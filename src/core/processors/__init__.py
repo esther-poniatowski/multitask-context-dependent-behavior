@@ -5,6 +5,12 @@
 
 Classes implementing mid-level data processors used for data transformations in the analysis.
 
+Modules
+-------
+:mod:`core.processors.base_processor`
+
+Notes
+-----
 **Content and Functionalities of Processors**
 
 Processors are designed to process data using a consistent framework across different subclasses.
@@ -36,10 +42,6 @@ Processors are created and used as follows:
 |           | - Define the behavior of the         |   data, gat target results           |
 |           |   processor                          |                                      |
 +-----------+--------------------------------------+--------------------------------------+
-
-Modules
--------
-:mod:`core.processors.base`
 
 Implementation
 --------------

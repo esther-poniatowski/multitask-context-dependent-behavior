@@ -39,7 +39,7 @@ A coordinate object can be obtained via several pathways :
 
 Modules
 -------
-:mod:`base`
+:mod:`base_coord`
 :mod:`time`
 :mod:`exp_condition`
 :mod:`exp_structure`

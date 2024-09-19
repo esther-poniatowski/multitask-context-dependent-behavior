@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`utils.io_data.loaders.impl` [module]
+:mod:`utils.io_data.loaders_loaders` [module]
 
 Load data from files in specific formats.
 
@@ -19,7 +19,7 @@ See Also
 --------
 :class:`utils.io_data.formats.FileExt`
 :class:`utils.io_data.formats.TargetType`
-:class:`utils.io_data.loaders.base.Loader`
+:class:`utils.io_data.loaders.base_loader.Loader`
 
 Implementation
 --------------
@@ -43,7 +43,7 @@ import pandas as pd
 import yaml
 
 from utils.io_data.formats import FileExt, TargetType
-from utils.io_data.loaders.base import Loader
+from utils.io_data.loaders.base_loader import Loader
 
 
 class LoaderPKL(Loader):

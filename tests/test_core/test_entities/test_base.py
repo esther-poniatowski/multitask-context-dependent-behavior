@@ -5,7 +5,7 @@
 
 See Also
 --------
-:mod:`core.entities.base`: Tested module.
+:mod:`core.entities.base_entity`: Tested module.
 """
 
 from types import MappingProxyType
@@ -13,7 +13,7 @@ from typing import FrozenSet, Mapping
 
 import pytest
 
-from core.entities.base import CoreObject
+from entities.base_entity import CoreObject
 
 
 # Test Inputs
