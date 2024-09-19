@@ -16,7 +16,7 @@ Implementation of a concrete builder class:
 .. code-block:: python
 
     class ConcreteBuilder(DataBuilder):
-        product_class = ConcreteDataStructure
+        data_class = ConcreteDataStructure
 
         def build(self,
                   input_for_data: np.ndarray,
@@ -27,7 +27,7 @@ Implementation of a concrete builder class:
             coord_pipeline = CoordPipeline()
             data = data_pipeline.process(input_for_data)
             coord = coord_pipeline.process(input_for_coord)
-            return self.product_class(data=data, coord=coord, metadata=input_metadata)
+            return self.data_class(data=data, coord=coord, metadata=input_metadata)
 
 Usage of the concrete builder:
 
@@ -53,8 +53,13 @@ class DataBuilder(Generic[D], ABC):
 
     Class Attributes
     ----------------
-    product_class : type
+    data_class: type
         Class of the data structure to build.
+
+    Attributes
+    ----------
+    data_structure: D
+        Data structure instance built by this builder.
 
     Methods
     -------
@@ -72,16 +77,19 @@ class DataBuilder(Generic[D], ABC):
     inputs.
     """
 
-    product_class: Type[D]
+    data_class: Type[D]
+
+    def __init__(self) -> None:
+        self.data_structure: D
 
     @abstractmethod
-    def build(self, **inputs) -> D:
+    def build(self, *args, **kwargs) -> D:
         """
         Finalize the creation of the data structure by processing inputs through pipelines.
 
         Arguments
         ---------
-        inputs : Dict[str, Any]
+        args, kwargs:
             Specific input objects required to build the product (data, metadata, etc.).
 
         Returns
@@ -89,4 +97,3 @@ class DataBuilder(Generic[D], ABC):
         product_type
             Data structure instance built by this builder.
         """
-        pass
