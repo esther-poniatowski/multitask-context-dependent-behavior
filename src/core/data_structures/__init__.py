@@ -52,7 +52,7 @@ Interactions with Coordinates - Dependency Injection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Data structures store coordinates, which have to be instantiated *outside* of the data constructors
-and passed as arguments. This constraint reduces coupling between :class:`Data` and the specific
+and passed as arguments. This constraint reduces coupling between :class:`DataStructure` and the specific
 :class:`Coordinate` classes.
 
 IO-Handling - Strategy Design Pattern
@@ -74,14 +74,14 @@ interact with data consistently. This interface is established though a combinat
 
 - A metaclass :class:`DataStructMeta`:
   Sets *class-level* attributes related to the dimensions and coordinates of any data structure.
-- An abstract base class :class:`Data`:
+- An abstract base class :class:`DataStructure`:
   Defines methods and attributes shared by all the specific data structures.
 
 Implementing Specific Data Structures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Each *specific* data structure is implemented as a concrete subclass which inherits from
-:class:`Data`.
+:class:`DataStructure`.
 
 To be valid, each data structure subclass must perform the following steps:
 
@@ -110,7 +110,7 @@ Customize Loading and Saving (Optional)
   additional argument.
 
 By default, the data is handled with :mod:`pickle`, which allows to recover it as an instance of
-:class:`Data` and to save it directly without any transformation.
+:class:`DataStructure` and to save it directly without any transformation.
 
 Implement a Custom Constructor
 ..............................

@@ -29,7 +29,7 @@ should match the identifier of the only key in the dictionary :attr:`load_method
 
 This solution is chosen instead of overriding the constructor of the subclass and removing the
 :attr:`tpe` parameter from the signature. Indeed, this would not respect the Liskov Substitution
-Principle, which is problematic especially in the abstract :class:`Data` class.
+Principle, which is problematic especially in the abstract :class:`DataStructure` class.
 """
 import pickle
 from types import MappingProxyType

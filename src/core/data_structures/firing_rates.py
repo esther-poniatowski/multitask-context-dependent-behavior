@@ -22,7 +22,7 @@ from core.constants import (
 from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim
 from core.coordinates.time import CoordTime
 from core.coordinates.trials import CoordError
-from core.data_structures.base import Data
+from core.data_structures.base import DataStructure
 from core.entities.bio import Area, Training
 from utils.io_data.formats import TargetType
 from utils.storage_rulers.impl import FiringRatesPopPath
@@ -30,7 +30,7 @@ from utils.io_data.loaders.impl import LoaderPKL
 from utils.io_data.savers.impl import SaverPKL
 
 
-class FiringRates(Data):
+class FiringRates(DataStructure):
     """
     Firing rates for a single unit or a pseudo-population in a set of (pseudo-)trials.
 
@@ -116,7 +116,7 @@ class FiringRatesUnit(FiringRates):
         raise NotImplementedError
 
 
-class FiringRatesPop(Data):
+class FiringRatesPop(DataStructure):
     """
     Firing rates for a pseudo-population in a set of pseudo-trials.
 

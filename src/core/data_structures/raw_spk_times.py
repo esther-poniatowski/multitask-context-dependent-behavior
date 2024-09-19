@@ -12,13 +12,13 @@ import numpy.typing as npt
 
 from core.constants import SMPL_RATE
 from core.coordinates.exp_structure import CoordBlock
-from core.data_structures.base import Data
+from core.data_structures.base import DataStructure
 from utils.io_data.formats import TargetType
 from utils.io_data.loaders.impl import LoaderNPY
 from utils.storage_rulers.impl import RawSpkTimesPath
 
 
-class RawSpkTimes(Data):
+class RawSpkTimes(DataStructure):
     """
     Raw spiking times for one unit (neuron) in one session of the experiment.
 

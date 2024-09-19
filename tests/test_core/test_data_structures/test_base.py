@@ -25,7 +25,7 @@ from typing import Dict
 import numpy as np
 import pytest
 
-from core.data_structures.base import Data
+from core.data_structures.base import DataStructure
 
 
 @pytest.fixture
@@ -91,7 +91,7 @@ def coords(dim2coord, data) -> Dict[str, np.ndarray]:
     coords: Dict[str, np.ndarray]
         Coordinates associated to each dimension with appropriate lengths.
         Coordinates are stored in a dictionary with the name of the coordinate as keys, so that they
-        can be passed directly as kwargs to the :class:`Data` constructor.
+        can be passed directly as kwargs to the :class:`DataStructure` constructor.
     """
     coords = {}
     for i, (dim, coord_set) in enumerate(dim2coord.items()):
@@ -103,14 +103,14 @@ def coords(dim2coord, data) -> Dict[str, np.ndarray]:
 @pytest.fixture
 def subclass(request, tmp_path):
     """
-    Fixture - Define a test class inheriting from :class:`Data`.
+    Fixture - Define a test class inheriting from :class:`DataStructure`.
 
     Returns
     -------
     TestClass:
-        Class inheriting from :class:`Data`. It defines the class attributes :attr:`dim2coord`,
+        Class inheriting from :class:`DataStructure`. It defines the class attributes :attr:`dim2coord`,
         :attr:`coord2type` and :attr:`path_ruler` required by the metaclass :class:`DataStructMeta`. It
-        implements the property :attr:`path` required by the abstract base class :class:`Data`.
+        implements the property :attr:`path` required by the abstract base class :class:`DataStructure`.
 
     See Also
     --------
@@ -120,7 +120,7 @@ def subclass(request, tmp_path):
         function during attribute assignment, leading to an AttributeError.
     """
 
-    class TestClass(Data):
+    class TestClass(DataStructure):
 
         dim2coord = request.getfixturevalue("dim2coord")
         coord2type = request.getfixturevalue("coord2type")
@@ -135,7 +135,7 @@ def subclass(request, tmp_path):
 
 def test_class_creation(dim2coord, subclass):
     """
-    Test subclass creation involving :class:`DataStructMeta` and :class:`Data`.
+    Test subclass creation involving :class:`DataStructMeta` and :class:`DataStructure`.
 
     Test Inputs
     -----------
@@ -178,7 +178,7 @@ def test_init_from_scratch(subclass, data, coords, valid):
     Test Inputs
     -----------
     subclass:
-        Class inheriting from :class:`Data`.
+        Class inheriting from :class:`DataStructure`.
     data:
         Numpy array which should be passed as the data attribute.
     coords:
@@ -211,7 +211,7 @@ def test_getitem(subclass, data, coords):
     Test Inputs
     -----------
     subclass:
-        Class inheriting from :class:`Data`.
+        Class inheriting from :class:`DataStructure`.
     data:
         Numpy array that represents the data to be loaded.
     coords:
@@ -239,7 +239,7 @@ def test_save_load(subclass, data, coords):
     Test Inputs
     -----------
     subclass:
-        Class inheriting from :class:`Data`.
+        Class inheriting from :class:`DataStructure`.
     data:
         Numpy array that represents the data to be loaded.
     coords:

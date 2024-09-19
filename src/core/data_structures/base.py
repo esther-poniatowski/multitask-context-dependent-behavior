@@ -6,7 +6,7 @@
 Classes
 -------
 :class:`DataStructMeta` (metaclass)
-:class:`Data` (abstract base class, generic)
+:class:`DataStructure` (abstract base class, generic)
 """
 from abc import ABCMeta, abstractmethod
 import copy
@@ -28,7 +28,7 @@ from utils.misc.sequences import reverse_dict_container
 
 class DataStructMeta(ABCMeta):
     """
-    Metaclass to create data structures classes (subclasses of :class:`Data`).
+    Metaclass to create data structures classes (subclasses of :class:`DataStructure`).
 
     Responsibilities:
 
@@ -64,14 +64,14 @@ class DataStructMeta(ABCMeta):
 
     Warning
     -------
-    In a metaclass, the instances are classes themselves (here, subclasses of :class:`Data`).
+    In a metaclass, the instances are classes themselves (here, subclasses of :class:`DataStructure`).
     """
 
     required_attributes = ["dim2coord", "coord2type", "path_ruler"]
 
     def __new__(mcs, name, bases, dct):
         """
-        Create a subclass of :class:`Data` after ensuring its consistency.
+        Create a subclass of :class:`DataStructure` after ensuring its consistency.
 
         Parameters
         ----------
@@ -83,7 +83,7 @@ class DataStructMeta(ABCMeta):
         Returns
         -------
         Type
-            New class (subclass of :class:`Data`).
+            New class (subclass of :class:`DataStructure`).
 
         See Also
         --------
@@ -169,7 +169,7 @@ T = TypeVar("T")
 """Type variable representing the type of data in the generic Data class."""
 
 
-class Data(Generic[T], metaclass=DataStructMeta):
+class DataStructure(Generic[T], metaclass=DataStructMeta):
     """
     Abstract base class for data structures, defining the interface to interact with data.
 
@@ -262,7 +262,7 @@ class Data(Generic[T], metaclass=DataStructMeta):
     Notes
     -----
     Since :class:`DataStructMeta` inherits from :class:`abc.ABCMeta`, it is not necessary to make
-    :class:`Data` inherit from :class:`abc.ABC`.
+    :class:`DataStructure` inherit from :class:`abc.ABC`.
     """
 
     # --- Dimensions and Coordinates ---
