@@ -32,10 +32,6 @@ class Processor(ABC):
 
     Attributes
     ----------
-    _has_input: bool
-        Flag indicating whether the class instance currently stores input data.
-    _has_output: bool
-        Flag indicating whether the class instance currently stores processed data (output results).
     _seed: Optional[int]
         Seed for random state initialization.
 
@@ -108,16 +104,13 @@ class Processor(ABC):
             else:
                 setattr(self, attr, config[attr])
         # Initialize data attributes to empty instances of expected types
-        self._has_input: bool = False
-        self._has_output: bool = False
         self._reset(inputs=True, outputs=True)
         # Declare the seed (set optionally afterwards, only if randomness is involved in operations)
         self._seed: Optional[int] = None
 
     def __repr__(self):
         config_values = {attr: getattr(self, attr) for attr in self.config_attrs}
-        status = {"inputs": self._has_input, "outputs": self._has_output}
-        return f"<{self.__class__.__name__}(status={status}, config={config_values}, inputs={self.input_attrs}, outputs={self.output_attrs})"
+        return f"<{self.__class__.__name__}(config={config_values}, inputs={self.input_attrs}, outputs={self.output_attrs})"
 
     def process(self, seed: Optional[int] = None, **input_data: Any) -> None:
         """
@@ -166,7 +159,7 @@ class Processor(ABC):
             self.seed = seed  # call property setter
         self.set_random_state()  # set random state again
         self._validate(**input_data)
-        self._reset(inputs=True, outputs=True)  # reset all data and flags
+        self._reset(inputs=True, outputs=True)  # reset all data
         self._set_inputs(**input_data)
         self._process()  # subclass-specific logic (required)
         self._check_outputs()  # check if output data is complete
@@ -212,28 +205,26 @@ class Processor(ABC):
 
     def _reset(self, inputs: bool = True, outputs: bool = True) -> None:
         """
-        Reset data to their empty state and update corresponding flags.
+        Reset data to their empty state.
 
         Parameters
         ----------
         inputs, outputs: bool, default=True
-            Whether to reset input or output data and flags.
+            Whether to reset input or output data.
         """
-        # Determine which attributes to reset and which flag to update
+        # Determine which attributes to reset
         attrs_to_reset: Tuple[str, ...] = ()
         if inputs:
             attrs_to_reset += self.input_attrs
-            self._has_input = False
         if outputs:
             attrs_to_reset += self.output_attrs
-            self._has_output = False
         # Reset each attribute to its empty state
         for attr in attrs_to_reset:
             setattr(self, attr, self.empty_data[attr])
 
     def _set_inputs(self, **input_data: Any) -> None:
         """
-        Store input data in the class instance attributes. Update the flag accordingly.
+        Store input data in the class instance attributes.
 
         Optionally overridden in concrete subclasses for more specific validation steps.
 
@@ -244,7 +235,6 @@ class Processor(ABC):
         """
         for input_name, input_value in input_data.items():
             setattr(self, input_name, input_value)
-        self._has_input = True
 
     @abstractmethod
     def _process(self) -> None:
@@ -266,7 +256,7 @@ class Processor(ABC):
 
     def _check_outputs(self) -> None:
         """
-        Check that the output data is complete and raise an error if not. Set the flag accordingly.
+        Check that the output data is complete and raise an error if not.
 
         Raises
         ------
@@ -300,7 +290,6 @@ class Processor(ABC):
                 missing = np.array_equal(output, empty)
             if missing:
                 raise ValueError(f"Missing output: '{attr}', {output}")
-        self._has_output = True
 
     @property
     def seed(self) -> Optional[int]:
@@ -319,7 +308,7 @@ class Processor(ABC):
         """
         Property setter for the seed.
 
-        When the seed is modified, clear the output data and reset the `_has_output` flag.
+        When the seed is modified, clear the output data.
 
         Parameters
         ----------
@@ -327,7 +316,7 @@ class Processor(ABC):
             New seed value to set.
         """
         self._seed = value  # store the new seed in the internal attribute
-        self._reset(outputs=True, inputs=False)  # reset output data and flag
+        self._reset(outputs=True, inputs=False)  # reset output data
 
     def set_random_state(self) -> None:
         """
