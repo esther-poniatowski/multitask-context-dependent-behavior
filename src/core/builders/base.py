@@ -40,10 +40,10 @@ Usage of the concrete builder:
 from abc import ABC, abstractmethod
 from typing import TypeVar, Generic, Type
 
-from core.data_structures.base import Data
+from core.data_structures.base import DataStructure
 
 
-D = TypeVar("D", bound=Data)
+D = TypeVar("D", bound=DataStructure)
 """Type variable representing the Data structure class associated with each builder."""
 
 

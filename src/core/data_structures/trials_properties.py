@@ -14,13 +14,13 @@ from core.constants import SMPL_RATE
 from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim
 from core.coordinates.exp_structure import CoordRecNum, CoordBlock, CoordSlot
 from core.coordinates.trials import CoordError
-from core.data_structures.base import Data
+from core.data_structures.base import DataStructure
 from utils.storage_rulers.impl import TrialsPropertiesPath
 from utils.io_data.loaders.impl import LoaderPKL
 from utils.io_data.savers.impl import SaverPKL
 
 
-class TrialsProperties(Data):
+class TrialsProperties(DataStructure):
     """
     Properties of a set of trials from one session or several sessions recorded at the same site.
 
