@@ -32,7 +32,7 @@ class Processor(ABC):
 
     Attributes
     ----------
-    _seed: Optional[int]
+    seed: Optional[int]
         Seed for random state initialization.
 
     Methods
@@ -43,7 +43,6 @@ class Processor(ABC):
     _set_inputs (optionally overridden in subclasses)
     _process (abstract, required in subclasses)
     process
-    set_seed
     set_random_state
 
     Notes
@@ -106,7 +105,7 @@ class Processor(ABC):
         # Initialize data attributes to empty instances of expected types
         self._reset(inputs=True, outputs=True)
         # Declare the seed (set optionally afterwards, only if randomness is involved in operations)
-        self._seed: Optional[int] = None
+        self.seed: Optional[int] = None
 
     def __repr__(self):
         config_values = {attr: getattr(self, attr) for attr in self.config_attrs}
@@ -290,33 +289,6 @@ class Processor(ABC):
                 missing = np.array_equal(output, empty)
             if missing:
                 raise ValueError(f"Missing output: '{attr}', {output}")
-
-    @property
-    def seed(self) -> Optional[int]:
-        """
-        Property for accessing the internal seed.
-
-        Returns
-        -------
-        Optional[int]
-            Current seed value.
-        """
-        return self._seed
-
-    @seed.setter
-    def seed(self, value: int) -> None:
-        """
-        Property setter for the seed.
-
-        When the seed is modified, clear the output data.
-
-        Parameters
-        ----------
-        value : int
-            New seed value to set.
-        """
-        self._seed = value  # store the new seed in the internal attribute
-        self._reset(outputs=True, inputs=False)  # reset output data
 
     def set_random_state(self) -> None:
         """
