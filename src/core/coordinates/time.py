@@ -16,7 +16,7 @@ import warnings
 import numpy as np
 import numpy.typing as npt
 
-from core.coordinates.base import Coordinate
+from coordinates.base_coord import Coordinate
 from core.constants import T_ON, T_OFF, T_SHOCK
 
 
@@ -46,7 +46,7 @@ class CoordTime(Coordinate):
 
     See Also
     --------
-    :class:`core.coordinates.base.Coordinate`
+    :class:`core.coordinates.base_coord.Coordinate`
     """
 
     def __init__(

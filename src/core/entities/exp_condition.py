@@ -15,7 +15,7 @@ Classes
 from types import MappingProxyType
 from typing import FrozenSet, Mapping
 
-from core.entities.base import CoreObject
+from entities.base_entity import CoreObject
 
 
 class Task(CoreObject[str]):

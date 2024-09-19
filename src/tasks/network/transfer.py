@@ -84,7 +84,7 @@ from typing import Dict, List, Union, Optional
 
 import yaml
 
-from utils.io_data.loaders.impl import LoaderYAML
+from utils.io_data.loaders.impl_loaders import LoaderYAML
 from utils.io_data.formats import TargetType
 from utils.path_system.local_server import LocalServer
 from utils.path_system.remote_server import RemoteServer
@@ -280,7 +280,7 @@ class TransferManager:
 
         See Also
         --------
-        :class:`utils.io_data.loaders.impl.LoaderYAML`
+        :class:`utils.io_data.loaders.impl_loaders.LoaderYAML`
         """
         path = Path(path).resolve()  # absolute path
         try:

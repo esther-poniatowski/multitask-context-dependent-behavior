@@ -18,7 +18,7 @@ from typing import TypeVar, Type, Generic, Optional, Union, Dict, Self, overload
 import numpy as np
 import numpy.typing as npt
 
-from core.coordinates.base import Coordinate
+from coordinates.base_coord import Coordinate
 from core.entities.exp_condition import Task, Context, Stimulus
 
 
@@ -57,7 +57,7 @@ class CoordExpCond(Coordinate, Generic[C]):
 
     See Also
     --------
-    :class:`core.coordinates.base.Coordinate`
+    :class:`core.coordinates.base_coord.Coordinate`
     :mod:`core.entities.exp_condition`
     """
 

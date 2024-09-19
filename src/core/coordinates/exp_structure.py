@@ -18,7 +18,7 @@ from typing import TypeVar, Type, Generic, Dict
 import numpy as np
 import numpy.typing as npt
 
-from core.coordinates.base import Coordinate
+from coordinates.base_coord import Coordinate
 from core.entities.exp_structure import Recording, Block, Slot
 
 
@@ -63,7 +63,7 @@ class CoordPosition(Coordinate, Generic[P]):
 
     See Also
     --------
-    :class:`core.coordinates.base.Coordinate`
+    :class:`core.coordinates.base_coord.Coordinate`
     :mod:`core.entities.exp_structure`
     """
 

@@ -13,7 +13,7 @@ from typing import List, TypeAlias, Any, Tuple
 import numpy as np
 
 from core.data_structures.firing_rates import FiringRatesPop, FiringRatesUnit
-from core.builders.base import DataBuilder
+from core.builders.base_builder import DataBuilder
 from core.processors.preprocess.stratify import Stratifier
 from core.processors.preprocess.assign_ensembles import EnsembleAssigner
 from core.processors.preprocess.assign_folds import FoldAssigner

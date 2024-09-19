@@ -5,6 +5,12 @@
 
 Classes representing data structures used in the analysis.
 
+Modules
+-------
+:mod:`core.data_structures.base_data_struct`
+
+Notes
+-----
 **Content and Functionalities of Data Structures**
 
 Data structures are designed to store and manipulate the data sets used in the analysis.
@@ -23,7 +29,6 @@ Each data structure object encapsulates :
 - Specific metadata describing the unique properties of the data set instance (e.g. session ID)
 - Methods relevant to manipulate the data, specifically to load and save data from/to files
 
-
 **Create and Load Data Structures**
 
 A data structure object can be obtained via two pathways :
@@ -39,12 +44,6 @@ A data structure object can be obtained via two pathways :
 |           |   of a processing pipeline           |   the end of a processing pipeline   |
 |           | - To visualize data contents         | - To test functions with custom data |
 +-----------+--------------------------------------+--------------------------------------+
-
-
-Modules
--------
-:mod:`core.data_structures.base`
-
 
 Implementation
 --------------

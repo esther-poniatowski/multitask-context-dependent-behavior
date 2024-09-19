@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any, Mapping, Union
 
 from utils.io_data.formats import FileExt
-from path_system.local_server import LocalServer
+from utils.path_system.local_server import LocalServer
 
 
 class Saver(ABC):

@@ -11,7 +11,7 @@ import os
 from pathlib import Path
 from typing import Union, Optional
 
-from path_system.base import ServerInterface
+from utils.path_system.base_path_manager import ServerInterface
 
 
 class LocalServer(ServerInterface):

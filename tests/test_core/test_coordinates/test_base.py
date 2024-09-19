@@ -11,7 +11,7 @@ because the abstract base class cannot be instantiated.
 
 See Also
 --------
-:mod:`core.coordinates.base`: Tested module.
+:mod:`core.coordinates.base_coord`: Tested module.
 :mod:`core.coordinates.time`: Tested module.
 """
 

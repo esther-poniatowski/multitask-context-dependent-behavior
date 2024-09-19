@@ -10,6 +10,7 @@ It constitutes a type in itself, with its own attributes, methods and properties
 
 Modules
 -------
+:mod:`base_entity`
 :mod:`exp_condition`
 :mod:`exp_structure`
 :mod:`bio`

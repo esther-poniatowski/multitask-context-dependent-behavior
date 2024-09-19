@@ -16,7 +16,7 @@ Mock data for the `.env` file and directories: `tests/test_tasks/test_network/mo
 from pathlib import Path
 import pytest
 
-from path_system.remote_server import RemoteServer
+from utils.path_system.remote_server import RemoteServer
 from mock_data.match_content import PATH_MOCK_ENV, mock_credentials
 
 

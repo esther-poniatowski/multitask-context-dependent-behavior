@@ -5,7 +5,7 @@
 
 See Also
 --------
-:mod:`core.processors.base`: Tested module.
+:mod:`core.processors.base_processor`: Tested module.
 """
 
 # pyright: reportAttributeAccessIssue=false
@@ -23,7 +23,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 import pytest
 
-from core.processors.base import Processor
+from processors.base_processor import Processor
 
 
 # --- Fixtures -------------------------------------------------------------------------------------

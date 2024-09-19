@@ -5,7 +5,7 @@
 
 See Also
 --------
-:mod:`core.data_structures.base`: Tested module.
+:mod:`core.data_structures.base_data_struct`: Tested module.
 :class:`unittest.mock.MagicMock`: Mocking class.
     Principle: Create a mock object to replace the loader method.
 
@@ -25,7 +25,7 @@ from typing import Dict
 import numpy as np
 import pytest
 
-from core.data_structures.base import DataStructure
+from core.data_structures.base_data_struct import DataStructure
 
 
 @pytest.fixture

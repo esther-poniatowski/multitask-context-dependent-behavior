@@ -5,7 +5,7 @@
 
 See Also
 --------
-:mod:`utils.path_system.base`: Tested module.
+:mod:`utils.path_system.base_path_manager`: Tested module.
 :mod:`utils.path_system.local_server`: Tested module.
 
 Notes
