@@ -30,6 +30,92 @@ from utils.io_data.loaders.impl import LoaderPKL
 from utils.io_data.savers.impl import SaverPKL
 
 
+class FiringRates(Data):
+    """
+    Firing rates for a single unit or a pseudo-population in a set of (pseudo-)trials.
+
+    Key Features
+    ------------
+    Data       : ``data`` (type ``npt.NDArray[np.float64]``)
+    Dimensions : ``time``, ``trials``
+    Coordinates: ``recnum`` (type ``CoordRecNum``)
+                 ``block`` (type ``CoordBlock``)
+                 ``slot`` (type ``CoordSlot``)
+                 ``task`` (type ``CoordTask``)
+                 ``ctx`` (type ``CoordCtx``)
+                 ``stim`` (type ``CoordStim``)
+    Metadata   : ``n_t``, ``n_trials``
+                 ``t_max``, ``t_on``, ``t_off``, ``t_shock``,
+                 ``t_bin``, ``smooth_window``
+
+    Attributes
+    ----------
+    data: npt.NDArray[np.float64]
+        Firing rates time courses of the unit in all the trials.
+        Shape: ``(n_t, n_trials)``.
+    n_trials: int
+        Total number of pseudo-trials in the reconstructed data set.
+    n_t: int
+        Number of time points in a trial's time course.
+    time: CoordTime
+        Coordinate for dimension `time`.
+    task: CoordTask
+        Coordinate for dimension `trials`.
+    ctx: CoordCtx
+        Coordinate for dimension `trials`.
+    stim: CoordStim
+        Coordinate for dimension `trials`.
+    t_max: float
+        Total duration the firing rate time courses (in seconds).
+    t_on, t_off, t_shock: float
+        Times of stimulus onset, stimulus offset and shock (in seconds).
+    t_bin: float
+        Time bin used to generate the firing rate time courses (in seconds).
+    smooth_window: float
+        Smoothing window size used to generate the firing rate time courses (in seconds).
+    """
+
+    dim2coord = MappingProxyType({"trial": frozenset(["task", "ctx", "stim"])})
+    coord2type = MappingProxyType(
+        {
+            "time": CoordTime,
+            "task": CoordTask,
+            "ctx": CoordCtx,
+            "stim": CoordStim,
+        }
+    )
+    loader = LoaderPKL
+    saver = SaverPKL
+    tpe = TargetType("ndarray_float")
+
+    @property
+    def path(self) -> Path:
+        raise NotImplementedError
+
+    @property
+    def n_t(self) -> int:
+        return self.data.shape[1]
+
+    @property
+    def n_trials(self) -> int:
+        return self.data.shape[2]
+
+
+# --------------------------------------------------------------------------------------------------
+
+
+class FiringRatesUnit(FiringRates):
+    """
+    Firing rates for a single unit in a set of (real) trials.
+    """
+
+    # TODO
+
+    @property
+    def path(self) -> Path:
+        raise NotImplementedError
+
+
 class FiringRatesPop(Data):
     """
     Firing rates for a pseudo-population in a set of pseudo-trials.
@@ -45,9 +131,10 @@ class FiringRatesPop(Data):
                  ``ctx`` (type ``CoordCtx``)
                  ``stim`` (type ``CoordStim``)
                  ``error`` (type ``CoordError``)
-    Metadata   : ``unit_id``, ``t_bin``, ``smooth_window``,
-                 ``t_max``, ``t_on``, ``t_off``, ``t_shock``
-                 ``n_units``, ``n_tpts``, ``n_trials``
+    Metadata   : ``n_units``, ``n_t``, ``n_trials``
+                 ``t_max``, ``t_on``, ``t_off``, ``t_shock``,
+                 ``t_bin``, ``smooth_window``
+                 ``area``, ``training``
 
     Attributes
     ----------
@@ -71,13 +158,13 @@ class FiringRatesPop(Data):
     error: CoordError
         Coordinate for dimension `trials`.
     t_max: float
-        Total duration the firing rate time course (in seconds), homogeneous across trials.
-    t_on, t_off: float
-        Times of the stimulus onset and offset (in seconds), homogeneous across trials.
+        Total duration the firing rate time courses (in seconds).
+    t_on, t_off, t_shock: float
+        Times of stimulus onset, stimulus offset and shock (in seconds).
     t_bin: float
-        Time bin for the firing rate time course (in seconds).
+        Time bin used to generate the firing rate time courses (in seconds).
     smooth_window: float
-        Smoothing window size (in seconds).
+        Smoothing window size used to generate the firing rate time courses (in seconds).
     area: Area
         Brain area from which the units were recorded.
     training: Training
@@ -103,11 +190,11 @@ class FiringRatesPop(Data):
         self,
         area: Area,
         training: Training,
-        t_bin: float = T_BIN,
         t_max: float = T_MAX,
         t_on: float = T_ON,
         t_off: float = T_OFF,
         t_shock: float = T_SHOCK,
+        t_bin: float = T_BIN,
         smooth_window: float = SMOOTH_WINDOW,
         data: Optional[npt.NDArray[np.float64]] = None,
         time: Optional[CoordTime] = None,
