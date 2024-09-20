@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_core.test_processors.test_base` [module]
+:mod:`test_core.test_processors.test_base_processor` [module]
 
 See Also
 --------
@@ -15,18 +15,20 @@ See Also
 # pylint: disable=missing-class-docstring
 # pylint: disable=redefined-outer-name
 # pylint: disable=protected-access
+# pylint: disable=unused-argument
+# pylint: disable=expression-not-assigned
+# mypy: disable-error-code="annotation-unchecked"
 
-
-from typing import Mapping
+from dataclasses import dataclass, fields
 
 import numpy as np
 from numpy.testing import assert_array_equal
 import pytest
 
-from processors.base_processor import Processor
+from processors.base_processor import Processor, ProcessorInput, ProcessorOutput
 
 
-# --- Fixtures -------------------------------------------------------------------------------------
+# --- Fixtures for a simple processor --------------------------------------------------------------
 
 
 def computation(input_arr: np.ndarray) -> np.ndarray:
@@ -45,89 +47,148 @@ def computation(input_arr: np.ndarray) -> np.ndarray:
 
 
 @pytest.fixture
-def input_attrs():
+def subclass_inputs():
     """
-    Fixture - Generate the class attribute :attr:`input_attrs`.
+    Fixture - Define a data class for the class attribute :attr:`input_dataclass`.
 
     Returns
     -------
-    Tuple[str, ...]:
-        Names of the input attributes.
+    TestClassInputs:
+        Data class for the input attributes, inheriting from :class:`ProcessorInput`.
+        Its attributes correspond to the valid input names.
     """
-    return ("input1", "input2")
+
+    @dataclass
+    class TestClassInputs(ProcessorInput):
+        input1: np.ndarray
+        input2: np.ndarray
+
+    return TestClassInputs
 
 
 @pytest.fixture
-def output_attrs(input_attrs):
+def subclass_outputs():
     """
-    Fixture - Generate the class attribute :attr:`output_attrs`.
+    Fixture - Define a data class for the class attribute :attr:`output_dataclass`.
 
     Returns
     -------
-    Tuple[str, ...]:
-        Names of the output attributes: ("output1", "output2")
+    TestClassOutputs:
+        Data class for the output attributes, inheriting from :class:`ProcessorOutput`.
+        Its attributes correspond to the valid output names.
     """
-    return tuple(f"output{i}" for i in range(1, len(input_attrs) + 1))
+
+    @dataclass
+    class TestClassOutputs(ProcessorOutput):
+        output1: np.ndarray
+        output2: np.ndarray
+
+    return TestClassOutputs
 
 
 @pytest.fixture
-def empty_data(input_attrs, output_attrs) -> Mapping[str, np.ndarray]:
+def subclass(request, subclass_inputs, subclass_outputs):
     """
-    Fixture - Generate the class attribute :attr:`empty_data`.
-
-    Returns
-    -------
-    MappingProxyType:
-        Mapping of dynamic attributes to their corresponding empty state.
-    """
-    return {attr: np.empty(0) for attr in input_attrs + output_attrs}
-
-
-@pytest.fixture
-def subclass(request):
-    """
-    Fixture - Define a test class inheriting from :class:`Processor`.
+    Fixture - Define a processor class implementing a simple computation.
 
     Returns
     -------
     TestClass:
-        Class inheriting from :class:`Processor`. It defines the class attributes `config_attrs`,
-        `input_attrs` and `output_attrs` as in the base class. It implements the abstract method
-        `_process`.
+        Class inheriting from :class:`Processor`.
+
+    Notes
+    -----
+    To test the main functionalities of the `Processor` class:``
+
+    - Define the class attributes `config_params` with a single parameter `param`. Call the parent
+      constructor and pass it as a named argument. Give a default value to facilitate tests.
+    - Store a reference to the input and output data classes in the class attributes
+      `input_dataclass` and `output_dataclass`.
+    - Set the flag `is_random` to `True` to allow random state initialization.
+    - Implement the abstract method `_process`, which applies the basic computation defined in the
+      fixture `computation`.
+    - Do not override the optional methods  `_pre_process` and `_post_process` in order to test
+      their base implementation.
+
+    See Also
+    --------
+    :meth:`request.getfixturevalue`
+        Access to fixtures in the current module. Here, it is necessary to store the results of the
+        fixtures instead of calling them directly.
     """
 
     class TestClass(Processor):
-
-        config_attrs = ("param",)
-        # input_attrs = request.getfixturevalue("input_attrs")
-        input_attrs = ("input1", "input2")
-        output_attrs = request.getfixturevalue("output_attrs")
-        empty_data = request.getfixturevalue("empty_data")
+        config_params = ("param",)
+        input_dataclass = request.getfixturevalue("subclass_inputs")
+        output_dataclass = request.getfixturevalue("subclass_outputs")
+        is_random = True
 
         def __init__(self, param: int = 1):
             super().__init__(param=param)
 
-        def _process(self):
-            for attr in self.input_attrs:
-                input_arr = getattr(self, attr)
-                output_arr = computation(input_arr)
-                setattr(self, f"output{attr[-1]}", output_arr)
-                setattr(self, attr, self.empty_data[attr])
+        def _process(self, input1=None, input2=None, **kwargs):
+            output1 = computation(input1)
+            output2 = computation(input2)
+            return output1, output2
 
     return TestClass
 
 
 @pytest.fixture
-def input_data(input_attrs):
+def input_data(subclass_inputs):
     """
-    Fixture - Generate input data for the processing test.
+    Fixture - Generate valid input data matching the input data class.
 
     Returns
     -------
     input_data: Dict[str, np.ndarray]
         Input data to pass to the processor.
+        Keys: Names of the attributes in the data class `subclass_inputs`.
+        Values: Arrays of shape (3,) with increasing values.
     """
-    return {f"input{i}": np.arange(i, i + 3) for i in range(1, len(input_attrs) + 1)}
+    keys = [field.name for field in fields(subclass_inputs)]
+    values = [np.arange(i, i + 3) for i in range(len(keys))]
+    return dict(zip(keys, values))
+
+
+@pytest.fixture
+def input_missing(input_data):
+    """
+    Fixture - Generate input data with a missing key.
+
+    Returns
+    -------
+    Dict[str, np.ndarray]:
+        Input data with one key removed.
+    """
+    key1 = list(input_data.keys())[0]
+    return {k: v for k, v in input_data.items() if k != key1}
+
+
+@pytest.fixture
+def input_extra(input_data):
+    """
+    Fixture - Generate input data with an extra key.
+
+    Returns
+    -------
+    Dict[str, np.ndarray]:
+        Input data with one additional key.
+    """
+    return {**input_data, "extra": np.array([1, 2, 3])}
+
+
+@pytest.fixture
+def output_names(subclass_outputs):
+    """
+    Fixture - Generate valid names for the outputs, matching the output data class.
+
+    Returns
+    -------
+    Tuple[str, ...]:
+        Names of the output attributes.
+    """
+    return tuple([field.name for field in fields(subclass_outputs)])
 
 
 @pytest.fixture
@@ -137,20 +198,163 @@ def output_data(input_data):
 
     Returns
     -------
-    expected_output: Dict[str, np.ndarray]
+    expected_output: Tuple[np.ndarray]
         Expected output from the processor after applying the processing logic.
     """
-    return {
-        f"output{i}": computation(input_data[f"input{i}"]) for i in range(1, len(input_data) + 1)
-    }
+    return tuple([computation(value) for key, value in input_data.items()])
 
 
-# --- Tests ----------------------------------------------------------------------------------------
+@pytest.fixture
+def output_missing(output_data):
+    """
+    Fixture - Generate output data with a missing element.
+
+    Returns
+    -------
+    Tuple[np.ndarray]:
+        Output data with one element removed.
+    """
+    return output_data[1:]
+
+
+@pytest.fixture
+def output_extra(output_data):
+    """
+    Fixture - Generate output data with an extra element.
+
+    Returns
+    -------
+    Tuple[np.ndarray]:
+        Output data with one additional element (last element, thereby occurring twice).
+    """
+    return output_data + (output_data[-1],)
+
+
+# --- Fixtures for a processor to test edge cases --------------------------------------------------
+
+
+@pytest.fixture
+def subclass_inputs_with_default():
+    """
+    Fixture - Define a data class for the class attribute :attr:`input_dataclass` with one default
+    value.
+
+    Returns
+    -------
+    TestClassInputsWithDefault
+    """
+
+    @dataclass
+    class TestClassInputsWithDefault(ProcessorInput):
+        input1: str = "default"
+
+    return TestClassInputsWithDefault
+
+
+@pytest.fixture
+def subclass_outputs_single_value():
+    """
+    Fixture - Define a data class for the class attribute :attr:`output_dataclass` which computes a
+    single output.
+
+    Returns
+    -------
+    TestClassOutputsSingleValue
+    """
+
+    @dataclass
+    class TestClassOutputsSingleValue(ProcessorOutput):
+        output1: str
+
+    return TestClassOutputsSingleValue
+
+
+@pytest.fixture
+def single_output_value():
+    """
+    Fixture - Generate a single output value for the edge case.
+
+    Returns
+    -------
+    str
+    """
+    return "unique_output"
+
+
+@pytest.fixture
+def subclass_edge_cases(
+    request, subclass_inputs_with_default, subclass_outputs_single_value, single_output_value
+):
+    """
+    Fixture - Define a processor class to test edge cases.
+
+    Returns
+    -------
+    TestClassEdgeCases
+    """
+
+    class TestClassEdgeCases(Processor):
+        input_dataclass = request.getfixturevalue("subclass_inputs_with_default")
+        output_dataclass = request.getfixturevalue("subclass_outputs_single_value")
+
+        def _process(self, input1=None, input2=None, **kwargs):
+            output1 = request.getfixturevalue("single_output_value")
+            return output1
+
+    return TestClassEdgeCases
+
+
+# --- Tests for with a simple processor ------------------------------------------------------------
+
+
+def test_processor_input(subclass_inputs, input_data):
+    """
+    Test the input data class for the processor when passing inputs by unpacking a dictionary.
+
+    Test Inputs
+    -----------
+    subclass_inputs:
+        Data class for the input attributes, inheriting from :class:`ProcessorInput`.
+    input_data: Dict[str, np.ndarray]
+        Input data passed to the data class.
+
+    Expected Output
+    ---------------
+    The data class instance should have attributes corresponding to the inputs.
+    """
+    inputs_obj = subclass_inputs(**input_data)
+    for name in input_data:
+        assert hasattr(inputs_obj, name), f"Missing attribute: '{name}'"
+        assert_array_equal(getattr(inputs_obj, name), input_data[name]), "Invalid value"
+
+
+def test_processor_output(subclass_outputs, output_data, output_names):
+    """
+    Test the output data class for the processor when passing outputs by unpacking a tuple.
+
+    Test Inputs
+    -----------
+    subclass_outputs:
+        Data class for the output attributes, inheriting from :class:`ProcessorOutput`.
+    output_data: Tuple[np.ndarray]
+        Output data passed to the data class.
+    output_names: Tuple[str]
+        Names of the expected output attributes, in the order in which they are passed.
+
+    Expected Output
+    ---------------
+    The data class instance should have attributes corresponding to the outputs.
+    """
+    outputs_obj = subclass_outputs(*output_data)
+    for name, value in zip(output_names, output_data):
+        assert hasattr(outputs_obj, name), f"Missing attribute: '{name}'"
+        assert_array_equal(getattr(outputs_obj, name), value), "Invalid value"
 
 
 def test_init_config(subclass):
     """
-    Test the initialization of the configuration parameters by the base class constructor.
+    Test the initialization of the configuration parameters by the base class constructor when
+    passing named arguments.
 
     Test Inputs
     -----------
@@ -161,110 +365,97 @@ def test_init_config(subclass):
     ---------------
     Input and output properties should be accessible via the dynamic attribute names.
     """
-    processor = subclass(param=42)
-    assert hasattr(processor, "param"), f"Missing config attribute: 'param'"
+    param = 42
+    processor = subclass(param=param)
+    assert hasattr(processor, "param"), "Missing config attribute: 'param'"
+    assert processor.param == param
+    assert processor.seed is None
 
 
-def test_init_empty_data(input_attrs, output_attrs, subclass):
+def test_pre_process(subclass, input_data, input_missing, input_extra):
     """
-    Ensure that the data attributes are initialize with default empty state.
+    Test the base implementation of method :meth:`_pre_process` for validation logic.
+
+    Test Inputs
+    -----------
+    input_data: Dict[str, np.ndarray]
+        Complete and valid input data passed to the method by unpacking the dictionary.
+    input_missing: Dict[str, np.ndarray]
+        Input data with one missing element (one key removed).
+    input_extra: Dict[str, np.ndarray]
+        Input data with one extra element (one key added).
 
     Expected Output
     ---------------
-    Input and output attributes should be set to their empty state (e.g., empty arrays).
-    """
-    expected_empty_array = np.empty(0)  # empty array to compare with reset attributes
-    processor = subclass()
-    # Check attribute existence
-    for attr in input_attrs + output_attrs:
-        assert hasattr(processor, attr), f"Missing attribute: {attr}"
-    # Check initial empty state
-    for attr in input_attrs + output_attrs:
-        assert_array_equal(getattr(processor, attr), expected_empty_array)
-    # Check that the flag has been reset to False
-    assert processor._has_input is False
-    assert processor._has_output is False
-
-
-def test_validate(subclass, input_data):
-    """
-    Test the method :meth:`_validate` for basic validation logic.
-
-    Expected Output
-    ---------------
+    When inputs are complete, the method should return a dictionary with the input data, validated
+    through the data class and converted back to a dictionary.
     ValueError raised for missing input attributes or unexpected inputs.
     """
     processor = subclass()
-    # Missing input: remove one required element from input_data
-    key1 = list(input_data.keys())[0]
-    input_data_missing = {k: v for k, v in input_data.items() if k != key1}
-    with pytest.raises(ValueError):
-        processor._validate(**input_data_missing)
-    # Unexpected input: add an extra element to input_data
-    input_data_extra = {**input_data, "extra": np.array([1, 2, 3])}
-    with pytest.raises(ValueError):
-        processor._validate(**input_data_extra)
-
-
-def test_reset(subclass, input_data):
-    """
-    Test the method :meth:`_reset` for clearing the input and output data.
-
-    Expected Output
-    ---------------
-    Input and output attributes should be reset to their empty state (e.g., empty arrays).
-    """
-    input_array = np.array([1, 2, 3])
-    input_attr = "input1"
-    expected_empty_array = np.empty(0)  # empty array to compare with reset attributes
-    # Set input1 and flag manually
-    processor = subclass()
-    setattr(processor, input_attr, input_array)
-    processor._has_input = True
-    assert_array_equal(getattr(processor, input_attr), input_array)
-    # Check input attributes and flag after reset
-    processor._reset()
-    assert_array_equal(getattr(processor, input_attr), expected_empty_array)
-    assert processor._has_input is False
-
-
-def test_set_inputs(subclass, input_data):
-    """
-    Test the method :meth:`_set_inputs` for setting input data.
-
-    Expected Output
-    ---------------
-    Input attributes should be set to the provided data.
-    """
-    processor = subclass()
-    processor._set_inputs(**input_data)
-    for key, value in input_data.items():
-        assert_array_equal(getattr(processor, key), value)
-    assert processor._has_input is True
-
-
-def test_check_outputs(subclass, input_data, output_data):
-    """
-    Test the method :meth:`_check_outputs` for checking the output data.
-
-    Expected Output
-    ---------------
-    If outputs are missing, raise a ValueError.
-    If outputs are present, the flag `_has_output` should be set to True.
-    """
-    processor = subclass()
-    # Check missing outputs (no process is called, empty data is set)
-    with pytest.raises(ValueError):
-        processor._check_outputs()
-    # Set outputs manually
-    for key, value in output_data.items():
-        setattr(processor, key, value)
-    # Check outputs and flag
-    processor._check_outputs()
-    assert processor._has_output is True
+    # Pass valid input data by unpacking
+    validated = processor._pre_process(**input_data)
+    assert isinstance(validated, dict)
+    # Missing input
+    with pytest.raises(TypeError):
+        processor._pre_process(**input_missing)
+    # Unexpected input
+    with pytest.raises(TypeError):
+        processor._pre_process(**input_extra)
 
 
 def test_process(subclass, input_data, output_data):
+    """
+    Test the :meth:`_process` method implemented by the subclass.
+
+    Test Inputs
+    -----------
+    input_data: Dict[str, np.ndarray]
+        Valid input data passed to the method by unpacking the dictionary.
+
+    Expected Output
+    ---------------
+    The output should be a tuple of the processed data, as defined in the subclass.
+    The order of the elements should match the order of the output attributes.
+    """
+    processor = subclass()
+    out = processor._process(**input_data)
+    assert isinstance(out, tuple), f"Output not a tuple, actual type: {type(out)}"
+    for actual, expected in zip(out, output_data):
+        assert_array_equal(actual, expected), "Invalid output"
+
+
+def test_post_process(subclass, output_data, output_missing, output_extra):
+    """
+    Test the base implementation of the :meth:`_post_process` method for validation logic.
+
+    Test Inputs
+    -----------
+    output_data: Tuple[np.ndarray]
+        Expected output data passed to the method by unpacking the tuple.
+    output_missing: Tuple[np.ndarray]
+        Output data with one missing element (one element removed).
+    output_extra: Tuple[np.ndarray]
+        Output data with one extra element (one element added).
+
+    Expected Output
+    ---------------
+    When outputs are valid, the method should return a tuple with the output data, validated
+    through the data class and converted back to a tuple.
+    ValueError raised for missing, unexpected or invalid outputs.
+    """
+    processor = subclass()
+    # Pass valid input data by unpacking
+    validated = processor._post_process(*output_data)
+    assert isinstance(validated, tuple)
+    # Missing output
+    with pytest.raises(TypeError):
+        processor._post_process(*output_missing)
+    # Unexpected output
+    with pytest.raises(TypeError):
+        processor._post_process(*output_extra)
+
+
+def test_process_base(subclass, input_data, output_data):
     """
     Test the :meth:`process` method inherited from the base class.
 
@@ -282,43 +473,12 @@ def test_process(subclass, input_data, output_data):
     Store the processed output among the attributes.
     """
     processor = subclass()
-    processor.process(**input_data)
-    expected_output = output_data
-    # Check correct outputs
-    for key in expected_output:
-        np.testing.assert_array_equal(getattr(processor, key), expected_output[key])
-    # Validate the internal data flag
-    assert processor._has_output is True
+    out = processor.process(**input_data)
+    for actual, expected in zip(out, output_data):
+        assert_array_equal(actual, expected), "Invalid output"
 
 
-def test_seed_property(subclass, input_data, output_data):
-    """
-    Test the behavior of setting and getting the seed property.
-
-    Expected Output
-    ---------------
-    - Getting the seed returns the correct value.
-    - Setting the seed clears the output data.
-    """
-    new_seed = 42
-    processor = subclass()
-    processor.process(**input_data)
-    # Ensure outputs are initially populated
-    assert processor._has_output is True
-    for output_attr, expected_value in output_data.items():
-        np.testing.assert_array_equal(getattr(processor, output_attr), expected_value)
-    # Set seed manually
-    processor.seed = new_seed
-    assert processor.seed == new_seed
-    # Ensure output data is cleared and flag is reset
-    assert processor._has_output is False
-    for output_attr in processor.output_attrs:
-        np.testing.assert_array_equal(
-            getattr(processor, output_attr), processor.empty_data[output_attr]
-        )
-
-
-def test_set_random_state(subclass, input_data):
+def test_set_random_state(subclass):
     """
     Test the method :meth:`set_random_state` for setting the random state.
 
@@ -337,6 +497,26 @@ def test_set_random_state(subclass, input_data):
     """
     processor = subclass()
     seed = 42
-    processor.process(**input_data, seed=seed)  # run process with a specific seed
+    processor.set_random_state(seed)  # run process with a specific seed
     assert processor.seed == seed
-    assert processor._has_output is True
+
+
+# --- Tests edge cases -----------------------------------------------------------------------------
+
+
+def test_process_with_single_input(subclass_edge_cases, single_output_value):
+    """
+    Test the processor for edge cases.
+
+    - No inputs is passed to the `process` method to test whether the default value is used after
+      the `_pre_process` method is called in the pipeline.
+    - The outputs should be validated by the `_post_process` method although there is a single
+      value, since it should have been converted into a tuple before calling the `_post_process`
+      method. However, the return value should not be a tuple anymore since the single value should
+      have been extracted from the tuple after the `_post_process` method.
+    """
+    # Call the processor without any input
+    processor = subclass_edge_cases()
+    out = processor.process()
+    # Check the output
+    assert out == single_output_value, "Invalid output"

@@ -6,29 +6,163 @@
 Classes
 -------
 :class:`Processor`
+
+Implementation
+--------------
+Justification of Key Design Choices
+
+**Dataclasses for Input and Output**
+
+For each processor, the types of inputs and outputs are specified in two dataclasses:
+`ProcessorInput` and `ProcessorOutput`. This approach has several purposes:
+
+- Centralized documentation: Inputs and outputs are defined once with there types. They can be
+  referenced by the processor's methods.
+- Automatic Validation: The structure of the inputs and outputs (including number, name, default
+  values) is enforced via the data classes. This ensures a seamless flow through the processing
+  pipeline when chaining several methods. In contrast, a dictionary-based approach using a
+  class-level attribute defined in the processor would require manual validation and potentially
+  clutter the processing logic.
+
+**Passing Inputs and Retrieving Outputs**
+
+The client code interacts with the main `process` method if it were a pure function:
+
+- Input Handling: Inputs are passed as keyword arguments, with argument names matching the
+  attributes of the dataclass associated with the processor.
+- Output Retrieval: Outputs are returned as a tuple (for multiple results) or as a single output.
+  The order of the outputs corresponds to the order of the attributes in the `ProcessorOutput`
+  dataclass. In contrast, a dictionary format would be less straightforward for accessing the
+  results.
+
+Inputs and outputs are not stored among the attributes of the processor instance, for several
+reasons:
+
+- Statelessness: Each processing call is independent of the previous ones, to prevent side effects
+  due to mutable states.
+- Decoupling and Transparency: Inputs and outputs explicitly passed and returned throughout the
+  pipeline. This facilitates testing, since they are accessible at each step by isolating individual
+  methods.
+
+**Manipulating Inputs and Outputs through the Pipeline**
+
+- Consistent formats: Within the `process` method, inputs are manipulated as a dictionary, while the
+  outputs are handled as a tuple. Those formats are maintained across the `_pre_process`, `_process`
+  and `_post_process` methods to ensure consistency throughout the pipeline. Thereby, modifications
+  in any step does not affect the overall interface of the processor.
+- Flexible signatures: In signature of the base `process` method supports any number of inputs
+  passed as keyword arguments. Concrete processors's methods can specialize their signatures to
+  specify the exact inputs require for their tasks.
+- Unpacking: When passed to internal methods and data classes, inputs and outputs are unpacked from
+  their respective formats (dictionary and tuple). This allows direct access to their content
+  within methods without the need to extract them from a container.
+
+**Template Method Pattern**
+
+The base class provides a template method design pattern for the processing pipeline:
+
+- Abstract `_process`method: This method must be implemented by each concrete processor subclass.
+- Optional `_pre_process` and `_post_process` methods: These methods provide a basic implementation
+  by default but also serve as optional hooks for subclass-specific validation or transformation
+  operations.
+
+Advantages of the template method pattern:
+
+- Separation of Concerns: Each method focuses on a distinct phase of the pipeline, adhering to the
+  Single Responsibility Principle.
+- Modularity and Extensibility: Each part of the pipeline can be updated individually without
+  affecting the other steps, while preserving the overall structure of the pipeline.
 """
 from abc import ABC, abstractmethod
-from types import MappingProxyType
-from typing import Tuple, Mapping, Any, Optional
+from dataclasses import dataclass, fields, asdict, astuple
+from typing import Tuple, Any, Optional, TypeVar, Generic, Dict
 import warnings
 
 import numpy as np
 
 
-class Processor(ABC):
+@dataclass
+class ProcessorInput:
+    """
+    Base class for processor inputs.
+
+    Notes
+    -----
+    Each subclass of `Processor` should define a dataclass that inherits from this class.
+
+    Usage for input validation:
+
+    - Pass the dictionary `input_data` received by the `Processor._pre_process` method to the data
+      class to capture mismatches between the expected and actual inputs (missing or extra inputs).
+      This dictionary should be passed by unpacking the keyword arguments in the data class
+      constructor to match the expected attributes.
+    - More specific validation can be added by adding a `__post_init__` method in the dataclass
+      subclass or by implementing a subclass-specific `_pre_process` method if interaction with the
+      processor's configuration parameters is required.
+
+    Examples of flexible subclass-specific validations:
+
+    - Check the structure or inner datatype for nested objects (e.g., lists, dictionaries).
+    - Enforce the consistency of related inputs.
+    - Set default values for optional inputs if not provided.
+
+    Usage for documentation: The data class centralizes the definition of the expected inputs for a
+    processor subclass. Its attributes can be referenced from the processor's methods.
+
+    Warning
+    -------
+    Type validation from the type hints is not automatically enforced by the data class decorator.
+    """
+
+
+@dataclass
+class ProcessorOutput:
+    """
+    Base class for processor outputs.
+
+    Notes
+    -----
+    Each subclass of `Processor` should define a specific dataclass that inherits from this class.
+
+    Usage for output validation:
+
+    - Pass the tuple `output_data` returned by the `Processor._process` method to the data class to
+      capture mismatches between the expected and actual outputs (missing or extra outputs). The
+      tuple should be passed by unpacking the return values in the data class constructor to match
+      the expected attributes, in the order they are defined.
+    - More specific validation can be added by adding a `__post_init__` method in the subclass or by
+      implementing a subclass-specific `_post_process` method if interaction with configuration
+      parameters of the processor is required.
+
+    Warning
+    -------
+    Type validation from the type hints is not automatically enforced by the data class decorator.
+    """
+
+
+I = TypeVar("I", bound=ProcessorInput)
+"""Type variable for the input data class associated with a specific processor."""
+
+O = TypeVar("O", bound=ProcessorOutput)
+"""Type variable for the output data class associated with a specific processor."""
+
+
+class Processor(ABC, Generic[I, O]):
     """
     Abstract base class for data processors.
 
     Class Attributes
     ----------------
-    config_attrs: Tuple[str], default=()
+    config_params: Tuple[str], default=()
         Names of the configuration parameters (fixed for each processor instance).
-    input_attrs: Tuple[str], default=()
-        Names of the required inputs to process.
-    output_attrs: Tuple[str], default=()
-        Names of the outputs, i.e. results of the processing.
-    empty_data: Mapping[str, Any], default={}
-        Mapping of attributes names to their corresponding empty instance.
+    input_dataclass: type[I]
+        Reference to the data class which defines the expected input arguments for the processor.
+    output_dataclass: type[O]
+        Reference to the data class which defines the expected output arguments for the processor.
+    output_names: Tuple[str], default=()
+        Names of the outputs in the output dataclass, ordered as they are returned by the processor.
+    is_random: bool, default=False
+        Flag indicating whether randomness is involved in the operations of the processor.
 
     Attributes
     ----------
@@ -37,12 +171,10 @@ class Processor(ABC):
 
     Methods
     -------
-    __init__
-    __repr__
-    _validate (optionally overridden in subclasses)
-    _set_inputs (optionally overridden in subclasses)
-    _process (abstract, required in subclasses)
     process
+    _pre_process
+    _process (abstract, required in subclasses)
+    _post_process
     set_random_state
 
     Notes
@@ -52,79 +184,74 @@ class Processor(ABC):
     Processor classes operate on data of two distinct nature:
 
     - "Configuration parameters" define the fixed behavior of each class instance throughout its
-    lifecycle (Examples: model parameters, tuning settings...). They are initialized in the
-    constructor for each processor instance. Those parameters apply homogeneously on all
-    subsequent calls of the main processing method.
-    - "Processing data" is processed at runtime by one single call to the main method of the class
-    instance (examples: input data, output result...). They are passed as arguments to the main
-    processing method, stored temporarily, and reset when new data is provided. The initial state
-    of those attributes is set empty in the constructor.
-
-    Storing processing data as transient attributes has several purposes:
-
-    - It facilitates the access to those attributes across multiple methods for different processing
-      steps.
-    - It maintains the link between the inputs and the outputs within the class instance if they
-      need to be manipulated in the client code.
-    - It allows to centralize the documentation of this data as attributes in the class docstring
-      rather than as parameters in each method.
+      lifecycle (examples: model parameters, tuning settings...). They are initialized in the
+      constructor for each processor instance. Those parameters apply homogeneously on any call to
+      the main processing method.
+    - "Processing data" is passed at runtime to the main processing method (examples: input data).
+      By default, this data is not stored in the instance to ensure statelessness and avoid side
+      effects due to mutable objects.
 
     Passing input data to a class instance
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    Input data should be passed to the `process` method, which is common across all processor
-    subclasses. It will be validated and stored it in the dedicated attributes.
-
-    Random state initialization is fully handled by the base class. Subclasses do not need to
-    manually define nor set any seed. A seed can be passed directly to the base `process` method as
-    an extra input.
+    Input data should be passed to the `process` method as named arguments.
 
     Recovering output results
     ^^^^^^^^^^^^^^^^^^^^^^^^^
-    Output data is stored within the dedicated attributes when the `process` method is run (specific
-    storage operations are performed within each subclass). The client code can retrieve target
-    results by querying the associated property.
+    At the end of processing, the target results are directly returned from the main `process`
+    method, as with a pure function (tuple `output_data`). If multiple outputs are generated, their
+    order is specified in the subclass-specific documentation.
 
-    Warning
-    -------
-    Intermediate attributes stored during processing should be mentioned among the output
-    attributes to ensure they are reset when new data is processed.
+    Randomness
+    ^^^^^^^^^^
+    Random state initialization is fully handled by the base class. Subclasses do not need to
+    manually define nor set any seed. A seed can be passed directly to the base `process` method as
+    an extra input.
     """
 
-    config_attrs: Tuple[str, ...] = ()
-    input_attrs: Tuple[str, ...] = ()
-    output_attrs: Tuple[str, ...] = ()
-    empty_data: Mapping[str, Any] = MappingProxyType({})
+    config_params: Tuple[str, ...] = ()
+    input_dataclass: type[I]
+    output_dataclass: type[O]
+    is_random: bool = False
 
-    def __init__(self, **config: Any):
+    def __init__(self, **config_args: Any):
         # Initialize configuration attributes
-        for attr in self.config_attrs:
-            if attr not in config:
+        for attr in self.config_params:
+            if attr not in config_args:
                 raise ValueError(f"Missing configuration in '{self.__class__.__name__}': '{attr}'")
             else:
-                setattr(self, attr, config[attr])
-        # Initialize data attributes to empty instances of expected types
-        self._reset(inputs=True, outputs=True)
-        # Declare the seed (set optionally afterwards, only if randomness is involved in operations)
+                setattr(self, attr, config_args[attr])
+        # Declare the seed (optionally set if randomness is involved in operations)
         self.seed: Optional[int] = None
 
     def __repr__(self):
-        config_values = {attr: getattr(self, attr) for attr in self.config_attrs}
-        return f"<{self.__class__.__name__}(config={config_values}, inputs={self.input_attrs}, outputs={self.output_attrs})"
+        config = {attr: getattr(self, attr) for attr in self.config_params}
+        input_names = [field.name for field in fields(self.input_dataclass)]
+        output_names = [field.name for field in fields(self.output_dataclass)]
+        return f"<{self.__class__.__name__}(config={config}, inputs={input_names}, outputs={output_names})"
 
-    def process(self, seed: Optional[int] = None, **input_data: Any) -> None:
+    def process(self, seed: Optional[int] = None, **input_data: Any) -> Any:
         """
-        Main processing method which receives input data and execute the processing logic.
+        Main processing method: receives input data, execute processing operations, return results.
 
         Parameters
         ----------
         input_data: Any
             Input data to process. It should be passed as keyword arguments (i.e. by name). Each
-            argument name must be included in the `input_attrs` class-level attribute and its value
-            must match the expected types defined in the `empty_data` class-level attribute.
+            argument name must be included among the attributes of the data class associated with
+            the processor, and its value must match the expected types.
+            .. _input_data:
         seed: Optional[int], default=None
             Seed for random state initialization to ensure reproducibility, if randomness is
             involved in the operations. If provided, it will set the random seed before the
             processing begins.
+
+        Returns
+        -------
+        output_data: Any
+            Output data computed by the processor. Return type: single or multiple values
+            corresponding to the types defined in the output data class, in the order in which those
+            attributes are defined.
+            .. _output_data:
 
         Notes
         -----
@@ -133,180 +260,170 @@ class Processor(ABC):
 
         Key Steps:
 
-        - Setup: Handle seed and reset state.
-        - Preprocessing: Validate input data, reset data attributes, store inputs.
-        - Processing: Execute the core logic.
-        - Postprocessing: Check output data.
-
-        At the end of processing, all the output results computed by the concrete processor are
-        stored among the attributes of the class instance. They can be accessed directly by querying
-        the corresponding properties.
-
-        Resetting is performed after validation of new inputs to ensure that the class instance is
-        in a clean state before processing new data. that
+        - Setup: Initialize the random state from the seed, if randomness is involved.
+        - Pre-processing: Validate input data (base) and perform more specific pre-processing if
+          implemented in the subclass.
+        - Processing: Execute the subclass-specific operations to compute its target results.
+        - Postprocessing: Validate output data (base) and perform more specific post-processing if
+          implemented in the subclass.
 
         Example
         -------
         Pass input data to the processor and retrieve the output data:
 
         >>> processor = ConcreteProcessor()
-        >>> processor.process(input1=..., input2=..., seed=42)
-        >>> output1 = processor.output1
-        >>> output2 = processor.output2
-        """
-        if seed is not None:  # set new seed if provided
-            self.seed = seed  # call property setter
-        self.set_random_state()  # set random state again
-        self._validate(**input_data)
-        self._reset(inputs=True, outputs=True)  # reset all data
-        self._set_inputs(**input_data)
-        self._process()  # subclass-specific logic (required)
-        self._check_outputs()  # check if output data is complete
+        >>> output1, output2 = processor.process(input1=..., input2=..., seed=42)
 
-    def _validate(self, **input_data: Any) -> None:
-        """
-        Validate inputs passed to the `process` method.
+        Implementation
+        --------------
+        The methods `_pre_process`, `_process`, and `_post_process` should be consistent in the
+        types of their inputs and outputs:
 
-        Optionally overridden in concrete subclasses for more specific validation steps.
+        - `_process` takes a dictionary and returns a tuple, as the `process` method.
+        - `_pre_process` takes and returns a dictionary, so that it could be removed from the
+          pipeline without changing the signature of the `process` and `_process` methods.
+        - `_post_process` takes a tuple and returns a tuple, for the same reason.
+        """
+        if self.is_random:
+            self.set_random_state(seed)
+        input_valid = self._pre_process(**input_data)
+        output_data = self._process(**input_valid)  # subclass-specific logic (required)
+        if not isinstance(output_data, tuple):  # if single output: format as a tuple
+            output_data = (output_data,)
+        self._post_process(*output_data)  # optional subclass-specific post-processing
+        if len(output_data) == 1:  # if single output: return as a single value (not a tuple)
+            return output_data[0]
+        return output_data
+
+    def _pre_process(self, **input_data: Any) -> Dict[str, Any]:
+        """
+        Pre-processing operations.
+
+        Optionally overridden in concrete processor subclasses.
+        Base implementation: validate the input data passed to the `process` method.
 
         Parameters
         ----------
         input_data: Any
-            Input data to process, received as keyword arguments in the `process` method.
+            See :ref:`input_data`.
+
+        Returns
+        -------
+        input_valid: Dict[str, Any]
+            Validated input data.
 
         Raises
         ------
-        ValueError
-            If a required attribute is missing.
-            If an invalid attribute name is provided.
         TypeError
-            If the type of an attribute does not match the expected type.
+            If an input argument has an invalid type.
+        ValueError
+            If an input argument has an invalid value based on the constraints enforced by the
+            `ProcessorInput.__post_init__` data class.
 
         Notes
         -----
-        Examples of flexible subclass-specific validation:
+        The return type is a dictionary to ensure compatibility with the in the `process` method
+        pipeline. The dictionary is then unpacked to pass the validated input data to the
+        subclass-specific `_process` method which expects keyword arguments.
 
-        - Check the structure or inner datatype for nested objects (e.g., lists, dictionaries).
-        - Enforce the consistency of related inputs.
-        - Set default values for optional inputs if not provided.
-
-        Once more specific validation is performed by the subclass, the base class validation can be
-        run by calling the parent method with `super()._validate(**input_data)`.
+        See Also
+        --------
+        :class:`ProcessorInput`
+        :meth:`dataclasses.asdict`
         """
-        provided = set(input_data.keys())
-        expected = set(self.input_attrs)
-        missing = expected - provided
-        unexpected = provided - expected
-        if missing:
-            raise ValueError(f"Missing inputs: {missing}")
-        if unexpected:
-            raise ValueError(f"Unexpected inputs: {unexpected}")
-
-    def _reset(self, inputs: bool = True, outputs: bool = True) -> None:
-        """
-        Reset data to their empty state.
-
-        Parameters
-        ----------
-        inputs, outputs: bool, default=True
-            Whether to reset input or output data.
-        """
-        # Determine which attributes to reset
-        attrs_to_reset: Tuple[str, ...] = ()
-        if inputs:
-            attrs_to_reset += self.input_attrs
-        if outputs:
-            attrs_to_reset += self.output_attrs
-        # Reset each attribute to its empty state
-        for attr in attrs_to_reset:
-            setattr(self, attr, self.empty_data[attr])
-
-    def _set_inputs(self, **input_data: Any) -> None:
-        """
-        Store input data in the class instance attributes.
-
-        Optionally overridden in concrete subclasses for more specific validation steps.
-
-        Parameters
-        ----------
-        input_data: Any
-            Input data to process, received as keyword arguments in the `process` method.
-        """
-        for input_name, input_value in input_data.items():
-            setattr(self, input_name, input_value)
+        try:
+            input_valid = self.input_dataclass(**input_data)
+        except TypeError as exc:
+            valid_types = {field.name: field.type for field in fields(self.input_dataclass)}
+            raise TypeError(
+                f"Invalid input to {self.__class__.__name__}: {exc}. Valid types: {valid_types}"
+            ) from exc
+        except ValueError as exc:
+            raise ValueError(f"Invalid input to {self.__class__.__name__}: {exc}") from exc
+        return asdict(input_valid)
 
     @abstractmethod
-    def _process(self) -> None:
+    def _process(self, **input_data: Any) -> Any:
         """
         Orchestrate the specific operations performed by the concrete processor.
 
-        Implementation required in concrete subclasses.
+        Implementation required in each concrete processor subclass.
 
-        Notes
-        -----
-        No input arguments are passed to this method since it operates on input data stored in the
-        class instance after validation.
+        Parameters
+        ----------
+        input_data: Any
+            See :ref:`input_data`.
 
-        No output is returned. Instead, target outputs (and intermediate results, if needed) should
-        have been stored in the class instance attributes, under the names specified in the class
-        attribute `output_attrs`. Thereby, those results are directly accessible by querying the
-        corresponding attribute after this method is run in the main `process` method.
+        Returns
+        -------
+        Any
+            Output data computed by the processor, in a format similar to :ref:`output_data`.
         """
 
-    def _check_outputs(self) -> None:
+    def _post_process(self, *output_data: Any) -> Any:
         """
-        Check that the output data is complete and raise an error if not.
+        Post-processing operations.
+
+        Optionally overridden in concrete processor subclasses.
+        Base implementation: validate the output data returned by the `_process` method.
+
+        Parameters
+        ----------
+        output_data: Any
+            See :ref:`output_data`.
+
+        Returns
+        -------
+        Any
+            Post-processed output data, in a format similar to :ref:`output_data`.
 
         Raises
         ------
-        ValueError
-            If a required output is missing.
+        TypeError
+            If the output data has an invalid type.
 
-        Warning
-        -------
-        Criteria for the presence of an output:
+        Notes
+        -----
+        Examples of subclass-specific post-processing:
 
-        The content of the corresponding attribute should be different from the empty instance
-        stored in the class-level attribute `empty_data`. This is necessary because the
-        attributes are initialized in the constructor with empty instances of the expected types (to
-        ensure type consistency) rather than by `None` values.
+        - Check the consistency of the output data.
+        - Clear temporary data in case they had been stored during processing.
+        - Logging.
 
-        Equality is checked with the `==` operator, which may not be suitable for all types of data.
-        In particular, for numpy arrays, the `==` operator is element-wise and returns a boolean
-        array. This output type is handled by this base class method since numpy arrays are commonly
-        used in the outputs of processors. The comparison with the value of the empty instance is
-        performed via the function `np.array_equal`.
-
-        For more complex data types, the method `_check_outputs` should be overridden in the
-        concrete subclass.
+        See Also
+        --------
+        :class:`ProcessorInput`
+        :meth:`dataclasses.astuple`
         """
-        for attr in self.output_attrs:
-            output = getattr(self, attr)
-            empty = self.empty_data[attr]
-            if not isinstance(output, np.ndarray):
-                missing = output == empty
-            else:
-                missing = np.array_equal(output, empty)
-            if missing:
-                raise ValueError(f"Missing output: '{attr}', {output}")
+        try:
+            outputs_valid = self.output_dataclass(*output_data)
+        except TypeError as exc:
+            raise TypeError(f"Invalid output from {self.__class__.__name__}: {exc}") from exc
+        return astuple(outputs_valid)
 
-    def set_random_state(self) -> None:
+    def set_random_state(self, seed) -> None:
         """
-        Set the random state for reproducibility, based on the current seed attribute.
+        Set the random state for reproducibility, store the current seed in an attribute.
+
+        Parameters
+        ----------
+        seed: Optional[int]
+            See :attr:`seed`.
+
+        Notes
+        -----
+        This base class method serves as a utility for those concrete processors which involve
+        random number generation.
+
+        If no 'seed' attribute is set in the processor instance, a warning is raised and the random
+        state initialization is skipped.
 
         See Also
         --------
         :func:`np.random.seed`
-
-        Notes
-        -----
-        This method is included in the base class as a utility which is commonly used in processors
-        which involve random number generation.
-
-        If no 'seed' attribute is set in the processor instance, a warning is raised and the random
-        state initialization is skipped.
         """
-        if self.seed is not None:
+        if seed is not None:
+            self.seed = seed
             np.random.seed(self.seed)
         else:
             warnings.warn(
