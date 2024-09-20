@@ -4,6 +4,8 @@ abstractmethod
 allclose
 arange
 argvalues
+asdict
+astuple
 astype
 atleast
 bincount
