@@ -6,72 +6,8 @@
 Classes
 -------
 :class:`Processor`
-
-Implementation
---------------
-Justification of Key Design Choices
-
-**Dataclasses for Input and Output**
-
-For each processor, the types of inputs and outputs are specified in two dataclasses:
-`ProcessorInput` and `ProcessorOutput`. This approach has several purposes:
-
-- Centralized documentation: Inputs and outputs are defined once with there types. They can be
-  referenced by the processor's methods.
-- Automatic Validation: The structure of the inputs and outputs (including number, name, default
-  values) is enforced via the data classes. This ensures a seamless flow through the processing
-  pipeline when chaining several methods. In contrast, a dictionary-based approach using a
-  class-level attribute defined in the processor would require manual validation and potentially
-  clutter the processing logic.
-
-**Passing Inputs and Retrieving Outputs**
-
-The client code interacts with the main `process` method if it were a pure function:
-
-- Input Handling: Inputs are passed as keyword arguments, with argument names matching the
-  attributes of the dataclass associated with the processor.
-- Output Retrieval: Outputs are returned as a tuple (for multiple results) or as a single output.
-  The order of the outputs corresponds to the order of the attributes in the `ProcessorOutput`
-  dataclass. In contrast, a dictionary format would be less straightforward for accessing the
-  results.
-
-Inputs and outputs are not stored among the attributes of the processor instance, for several
-reasons:
-
-- Statelessness: Each processing call is independent of the previous ones, to prevent side effects
-  due to mutable states.
-- Decoupling and Transparency: Inputs and outputs explicitly passed and returned throughout the
-  pipeline. This facilitates testing, since they are accessible at each step by isolating individual
-  methods.
-
-**Manipulating Inputs and Outputs through the Pipeline**
-
-- Consistent formats: Within the `process` method, inputs are manipulated as a dictionary, while the
-  outputs are handled as a tuple. Those formats are maintained across the `_pre_process`, `_process`
-  and `_post_process` methods to ensure consistency throughout the pipeline. Thereby, modifications
-  in any step does not affect the overall interface of the processor.
-- Flexible signatures: In signature of the base `process` method supports any number of inputs
-  passed as keyword arguments. Concrete processors's methods can specialize their signatures to
-  specify the exact inputs require for their tasks.
-- Unpacking: When passed to internal methods and data classes, inputs and outputs are unpacked from
-  their respective formats (dictionary and tuple). This allows direct access to their content
-  within methods without the need to extract them from a container.
-
-**Template Method Pattern**
-
-The base class provides a template method design pattern for the processing pipeline:
-
-- Abstract `_process`method: This method must be implemented by each concrete processor subclass.
-- Optional `_pre_process` and `_post_process` methods: These methods provide a basic implementation
-  by default but also serve as optional hooks for subclass-specific validation or transformation
-  operations.
-
-Advantages of the template method pattern:
-
-- Separation of Concerns: Each method focuses on a distinct phase of the pipeline, adhering to the
-  Single Responsibility Principle.
-- Modularity and Extensibility: Each part of the pipeline can be updated individually without
-  affecting the other steps, while preserving the overall structure of the pipeline.
+:class:`ProcessorInput`
+:class:`ProcessorOutput`
 """
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, fields, asdict, astuple
@@ -92,26 +28,13 @@ class ProcessorInput:
 
     Usage for input validation:
 
-    - Pass the dictionary `input_data` received by the `Processor._pre_process` method to the data
-      class to capture mismatches between the expected and actual inputs (missing or extra inputs).
-      This dictionary should be passed by unpacking the keyword arguments in the data class
-      constructor to match the expected attributes.
-    - More specific validation can be added by adding a `__post_init__` method in the dataclass
-      subclass or by implementing a subclass-specific `_pre_process` method if interaction with the
-      processor's configuration parameters is required.
-
-    Examples of flexible subclass-specific validations:
-
-    - Check the structure or inner datatype for nested objects (e.g., lists, dictionaries).
-    - Enforce the consistency of related inputs.
-    - Set default values for optional inputs if not provided.
-
-    Usage for documentation: The data class centralizes the definition of the expected inputs for a
-    processor subclass. Its attributes can be referenced from the processor's methods.
-
-    Warning
-    -------
-    Type validation from the type hints is not automatically enforced by the data class decorator.
+    - To capture mismatches between the expected and actual inputs (missing or extra inputs), pass
+      the dictionary `input_data` received by the processor's `_pre_process` method to the data
+      class. Unpack the keyword arguments in the data class constructor to match the expected
+      attributes.
+    - (Optional) To add more specific validation, use the data class's `__post_init__` method or the
+      processor's `_pre_process` method (e.g. if interaction with the processor's configuration
+      parameters is required).
     """
 
 
@@ -126,17 +49,12 @@ class ProcessorOutput:
 
     Usage for output validation:
 
-    - Pass the tuple `output_data` returned by the `Processor._process` method to the data class to
-      capture mismatches between the expected and actual outputs (missing or extra outputs). The
-      tuple should be passed by unpacking the return values in the data class constructor to match
-      the expected attributes, in the order they are defined.
-    - More specific validation can be added by adding a `__post_init__` method in the subclass or by
-      implementing a subclass-specific `_post_process` method if interaction with configuration
-      parameters of the processor is required.
-
-    Warning
-    -------
-    Type validation from the type hints is not automatically enforced by the data class decorator.
+    - To capture mismatches between the expected and actual outputs (missing or extra outputs), pass
+      the tuple `output_data` returned by the processor's `_process` method to the data class.
+      Unpack the return values in the data class constructor to match the expected attributes in the
+      order they are defined.
+    - (Optional) To add more specific validation, use the data class's `__post_init__` method or the
+     processor's `_post_process` method.
     """
 
 
@@ -236,9 +154,9 @@ class Processor(ABC, Generic[I, O]):
         Parameters
         ----------
         input_data: Any
-            Input data to process. It should be passed as keyword arguments (i.e. by name). Each
-            argument name must be included among the attributes of the data class associated with
-            the processor, and its value must match the expected types.
+            Input data to process, passed as keyword arguments (i.e. by name). Each argument name
+            must be included among the attributes of the data class associated with the processor,
+            and its value must match the expected types.
             .. _input_data:
         seed: Optional[int], default=None
             Seed for random state initialization to ensure reproducibility, if randomness is
@@ -248,9 +166,8 @@ class Processor(ABC, Generic[I, O]):
         Returns
         -------
         output_data: Any
-            Output data computed by the processor. Return type: single or multiple values
-            corresponding to the types defined in the output data class, in the order in which those
-            attributes are defined.
+            Output data computed by the processor. Single or multiple values (tuple) as defined in
+            the output data class, in the order in which its attributes are defined.
             .. _output_data:
 
         Notes
@@ -261,11 +178,11 @@ class Processor(ABC, Generic[I, O]):
         Key Steps:
 
         - Setup: Initialize the random state from the seed, if randomness is involved.
-        - Pre-processing: Validate input data (base) and perform more specific pre-processing if
-          implemented in the subclass.
+        - Pre-processing: Validate input data (base default behavior) and perform subclass-specific
+          pre-processing (optional).
         - Processing: Execute the subclass-specific operations to compute its target results.
-        - Postprocessing: Validate output data (base) and perform more specific post-processing if
-          implemented in the subclass.
+        - Postprocessing: Validate output data (base default behavior) and perform subclass-specific
+          post-processing (optional).
 
         Example
         -------
@@ -310,7 +227,8 @@ class Processor(ABC, Generic[I, O]):
         Returns
         -------
         input_valid: Dict[str, Any]
-            Validated input data.
+            Validated input data. The return type is a dictionary to ensure compatibility with the
+            in the `process` method pipeline.
 
         Raises
         ------
@@ -322,9 +240,11 @@ class Processor(ABC, Generic[I, O]):
 
         Notes
         -----
-        The return type is a dictionary to ensure compatibility with the in the `process` method
-        pipeline. The dictionary is then unpacked to pass the validated input data to the
-        subclass-specific `_process` method which expects keyword arguments.
+        Examples of subclass-specific pre-processing:
+
+        - Check the structure or inner datatype for nested objects (e.g., lists, dictionaries).
+        - Enforce the consistency of related inputs.
+        - Set default values for optional inputs if not provided.
 
         See Also
         --------
