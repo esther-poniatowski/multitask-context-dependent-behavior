@@ -28,7 +28,7 @@ from typing import TypeAlias, Any, Tuple, Optional
 
 import numpy as np
 
-from processors.base_processor import Processor
+from core.processors.base_processor import Processor
 from utils.misc.arrays import create_empty_array
 
 
@@ -83,8 +83,8 @@ class EnsembleAssigner(Processor):
         methods.
     """
 
-    config_attrs = ("ensemble_size", "n_ensembles_max")
-    input_attrs = ("n_units",)
+    config_params = ("ensemble_size", "n_ensembles_max")
+    input_args = ("n_units",)
     output_attrs = ("n_ensembles", "ensembles")
     empty_data = MappingProxyType(
         {

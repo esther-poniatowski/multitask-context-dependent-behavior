@@ -73,7 +73,7 @@ from typing import Literal, TypeAlias, Any, Tuple
 import numpy as np
 
 from core.constants import D_PRE, D_STIM, D_POST, D_WARN
-from processors.base_processor import Processor
+from core.processors.base_processor import Processor
 from utils.misc.arrays import create_empty_array
 
 
@@ -129,8 +129,8 @@ class SpikesAligner(Processor):
         methods.
     """
 
-    config_attrs = ("d_pre", "d_stim", "d_post", "d_warn")
-    input_attrs = ("spikes", "task", "stim", "t_on", "t_off")
+    config_params = ("d_pre", "d_stim", "d_post", "d_warn")
+    input_args = ("spikes", "task", "stim", "t_on", "t_off")
     output_attrs = ("aligned_spikes",)
     empty_data = MappingProxyType(
         {

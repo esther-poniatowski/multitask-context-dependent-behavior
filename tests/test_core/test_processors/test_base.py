@@ -25,7 +25,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 import pytest
 
-from processors.base_processor import Processor, ProcessorInput, ProcessorOutput
+from core.processors.base_processor import Processor, ProcessorInput, ProcessorOutput
 
 
 # --- Fixtures for a simple processor --------------------------------------------------------------

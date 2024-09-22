@@ -21,7 +21,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 import pytest
 
-from processors.preprocess.bootstrap import Bootstrapper
+from core.processors.preprocess.bootstrap import Bootstrapper
 
 
 def test_pick_trials_equal():

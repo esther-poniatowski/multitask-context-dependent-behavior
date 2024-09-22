@@ -5,6 +5,8 @@
 
 Classes
 -------
+:class:`FiringRatesConverterInputs`
+:class:`FiringRatesConverterOutputs`
 :class:`FiringRatesConverter`
 """
 # Disable error codes for attributes which are not detected by the type checker:
@@ -20,7 +22,7 @@ import numpy as np
 from scipy.signal import fftconvolve
 
 from core.constants import T_BIN
-from processors.base_processor import Processor
+from core.processors.base_processor import Processor, ProcessorInput, ProcessorOutput
 from utils.misc.arrays import create_empty_array
 
 
@@ -108,8 +110,8 @@ class FiringRatesConverter(Processor):
         methods.
     """
 
-    config_attrs = ("t_bin", "t_max", "smooth_window", "mode")
-    input_attrs = ("spikes",)
+    config_params = ("t_bin", "t_max", "smooth_window", "mode")
+    input_
     output_attrs = ("f_binned", "f_smoothed")
     empty_data = MappingProxyType(
         {
