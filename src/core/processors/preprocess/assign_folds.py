@@ -5,6 +5,8 @@
 
 Classes
 -------
+:class:`FoldAssignerInputs`
+:class:`FoldAssignerOutputs`
 :class:`FoldAssigner`
 
 Notes
@@ -16,28 +18,6 @@ splitting samples into training and testing sets is carried out in the :class:`C
 itself based on these fold assignments (methods :meth:`get_train` and :meth:`get_test`). This allows
 direct access to the samples in each set through the coordinate, without resorting to external
 cross-validation tools.
-
-Warning
--------
-For data analysis:
-
-- Assign trials to folds *by unit*, before constructing pseudo-trials via hierarchical bootstrap.
-  This ensures that trials are combined within each fold and prevents data leakage across folds.
-- Use *stratified* assignment by condition (task, context, stimulus, error) to balance trial types
-  across folds.
-
-Implementation
---------------
-Procedure for fold assignment:
-
-1. Keep valid trial (if necessary).
-2. Split samples by condition (task, context, stimulus, error).
-2. For each condition, shuffle the trials and distribute them in k groups.
-3. Assign each trial to a fold by selecting the corresponding group.
-
-Shuffling before splitting aims to balance across folds the task variables which have not been
-considered in stratification (i.e. positional information: recording number, block number, slot
-number). This prevents models to capture misleading temporal drift in neuronal activity.
 """
 # Disable error codes for attributes which are not detected by the type checker:
 # (configuration and data attributes are initialized by the base class constructor)
@@ -45,13 +25,11 @@ number). This prevents models to capture misleading temporal drift in neuronal a
 # pylint: disable=no-member
 # pylint: disable=attribute-defined-outside-init
 
-from types import MappingProxyType
-from typing import TypeAlias, Any, Tuple
+from typing import TypeAlias, Any, Tuple, Dict
 
 import numpy as np
 
-from core.processors.base_processor import Processor
-from utils.misc.arrays import create_empty_array
+from core.processors.base_processor import Processor, ProcessorInput, ProcessorOutput
 
 
 Strata: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
@@ -59,6 +37,67 @@ Strata: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
 
 Folds: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
 """Type alias for fold assignments."""
+
+
+class FoldAssignerInputs(ProcessorInput):
+    """
+    Dataclass for the inputs of the :class:`FoldAssigner` processor.
+
+    Attributes
+    ----------
+    n_samples: int
+        Number of samples to assign to folds.
+    strata: Strata
+        Labels of strata for stratified assignment. Shape: ``(n_samples,)``.
+        If not provided or None, all samples are treated as belonging to a single stratum based on
+        the number of samples `n_samples`.
+
+    Raises
+    ------
+    ValueError
+        If both `n_samples` and `strata` are missing.
+        If both `n_samples` and `strata` are provided.
+        If any of `n_samples` or `strata` is provided and invalid.
+
+    Notes
+    -----
+    Specific validation is required to ensure consistency between both attributes:
+
+    - Check that exactly one input is provided as argument (not both, nor none).
+    - Set the default value for the missing attribute based on the other one.
+
+    Rules:
+
+    - If `strata` is provided, then `n_samples` is equal to the length of `strata`.
+    - If `n_samples` is provided, then all samples are treated as belonging to a single stratum,
+      therefore `strata` is a zero array of length `n_samples` (single label 0).
+    """
+
+    n_samples: int
+    strata: Strata
+
+    def __post_init__(self):
+        if self.n_samples is None and self.strata is None:
+            raise ValueError("Missing arguments: provide either `n_samples` or `strata`.")
+        if self.n_samples is not None and self.strata is not None:
+            raise ValueError("Extra arguments: provide either `n_samples` and `strata`.")
+        if self.strata is None:
+            self.strata = np.zeros(self.n_samples, dtype=np.int64)
+        if self.n_samples is None:
+            self.n_samples = self.strata.size
+
+
+class FoldAssignerOutputs(ProcessorOutput):
+    """
+    Dataclass for the outputs of the :class:`FoldAssigner` processor.
+
+    Attributes
+    ----------
+    folds: Folds
+        Fold assignment for each sample. Shape: ``(n_samples,)``.
+    """
+
+    folds: Folds
 
 
 class FoldAssigner(Processor):
@@ -73,16 +112,12 @@ class FoldAssigner(Processor):
         Number of samples to assign to folds.
         If not provided or None, the number of samples is inferred from the length of `strata`.
     strata: np.ndarray[Tuple[Any], np.dtype[np.int64]]
-        Labels of strata for stratified assignment. Shape: ``(n_samples,)``.
-        If not provided or None, all samples are treated as belonging to a single stratum based on
-        the number of samples `n_samples`.
-    folds: np.ndarray[Tuple[Any], np.dtype[np.int64]]
+
+    folds:
         Fold assignment for each sample. Shape: ``(n_samples,)``.
 
     Methods
     -------
-    :meth:`_validate_n_samples`
-    :meth:`_validate_strata`
     :meth:`assign`
 
     Warning
@@ -94,21 +129,15 @@ class FoldAssigner(Processor):
     Assign 10 samples to 3 folds:
 
     >>> assigner = FoldAssigner(k=3)
-    >>> assigner.process(n_samples=10)
-    >>> print(assigner.folds)
+    >>> folds = assigner.process(n_samples=10)
+    >>> print(folds)
     [0 0 1 1 2 2 0 1 2 0]
-
-    Update to 6 samples and reassign the folds:
-
-    >>> assigner.process(n_samples=6)
-    >>> print(assigner.folds)
-    [0 0 1 1 2 2]
 
     Use stratified fold assignment:
 
     >>> strata = np.array([0, 0, 1, 1, 2, 2], dtype=np.int64)
-    >>> assigner.process(strata=strata)
-    >>> print(assigner.folds)
+    >>> folds = assigner.process(strata=strata)
+    >>> print(folds)
     [0 0 1 1 2 2]
 
     See Also
@@ -119,130 +148,56 @@ class FoldAssigner(Processor):
     """
 
     config_params = ("k",)
-    input_args = ("n_samples", "strata")
-    output_attrs = ("folds",)
-    empty_data = MappingProxyType(
-        {
-            "n_samples": 0,
-            "strata": create_empty_array(1, np.int64),
-            "folds": create_empty_array(1, np.int64),
-        }
-    )
+    input_dataclass = FoldAssignerInputs
+    output_dataclass = FoldAssignerOutputs
+    is_random = True
 
     def __init__(self, k: int):
         super().__init__(k=k)
 
-    def _validate(self, **input_data: Any) -> None:
+    def _pre_process(self, **input_data: Any) -> Dict[str, Any]:
         """
         Implement the template method called in the base class :meth:`process` method.
-
-        Specific validation is required to handle the input data `n_samples` and `strata`, since
-        only one of them should be provided.
 
         Raises
         ------
         ValueError
-            If both `n_samples` and `strata` are missing.
-            If both `n_samples` and `strata` are provided.
-            If any of `n_samples` or `strata` is provided and invalid.
+            If the number of samples than the number of folds.
         """
-        # Get input data (None if not provided)
-        n_samples = input_data.get("n_samples")
-        strata = input_data.get("strata")
-        # If both missing or both provided, raise error
-        if n_samples is None and strata is None:
-            raise ValueError("Missing arguments: provide either `n_samples` or `strata`.")
-        if n_samples is not None and strata is not None:
-            raise ValueError("Extra arguments: provide either `n_samples` and `strata`.")
-        # Specific validation
-        if strata is not None:
-            self._validate_strata(strata)
-        if n_samples is not None:
-            self._validate_n_samples(n_samples)
+        # Call the base class method to check input data and set default values
+        input_valid = super()._pre_process(**input_data)
+        # Check if the number of samples is lower than the number of folds
+        n_samples = input_valid["n_samples"]  # get the number of samples after initial validation
+        if n_samples < self.k:
+            raise ValueError(f"n_samples: {n_samples} < k: {self.k}")
+        return input_valid
 
-    def _set_inputs(self, **input_data: Any) -> None:
-        """
-        Implement the template method called in the base class :meth:`process` method.
-
-        Set the default value for the attribute `n_samples` and `strata` which has not been
-        provided, based on the other one.
-
-        Notes
-        -----
-        Since this method is run after the validation step, the input data is guaranteed to contain
-        either `n_samples` or `strata` (not both, nor none).
-
-        The actual setting of the input data is performed in the base class method
-        :meth:`_set_inputs` which is called after the default values are added to the input data.
-        """
-        # Get input data (None if not provided)
-        n_samples = input_data.get("n_samples")
-        strata = input_data.get("strata")
-        # Add default values to the input data
-        if n_samples is None and strata is not None:
-            input_data["n_samples"] = self._default_n_samples(strata)
-        if strata is None and n_samples is not None:
-            input_data["strata"] = self._default_strata(n_samples)
-        # Call the base class method to set complete input data
-        super()._set_inputs(**input_data)
-
-    def _process(self) -> None:
+    def _process(self, strata: Strata = FoldAssignerInputs.strata, **input_data: Any) -> Folds:
         """Implement the template method called in the base class :meth:`process` method."""
-        self.assign()
+        folds = self.assign(strata)
+        return folds
 
-    def _validate_n_samples(self, n: int) -> None:
+    def assign(self, strata: Strata) -> Folds:
         """
-        Validate the argument `n_samples` (number of samples) compared to the number of folds.
+        Assign folds to each sample based on strata labels.
 
-        Raises
-        ------
-        ValueError
-            If the number of samples is lower than the number of folds.
-        """
-        if n < self.k:
-            raise ValueError(f"n_samples: {n} < k: {self.k}")
-
-    def _validate_strata(self, strata: Strata) -> None:
-        """
-        Validate the argument `strata` (stratum labels) based on its structure and content.
-
-        Raises
-        ------
-        ValueError
-            If the strata is not 1D.
-            If the strata dtype is not int64.
-            If the number of samples in the strata is lower than the number of folds.
-        """
-        if strata.ndim != 1:
-            raise ValueError(f"Invalid strata dimension: {strata.ndim}")
-        if not np.issubdtype(strata.dtype, np.integer):
-            raise ValueError(f"Invalid strata dtype: {strata.dtype}")
-        if len(strata) < self.k:
-            raise ValueError(f"len(strata): {len(strata)} < k: {self.k}")
-
-    def _default_n_samples(self, strata: Strata) -> int:
-        """
-        Determine the default value of `n_samples` based on `strata`.
-
-        Rule: `n_samples` should be equal to the length of `strata`.
-        """
-        return strata.size
-
-    def _default_strata(self, n_samples: int) -> Strata:
-        """
-        Determine the default value of `strata` based on `n_samples`.
-
-        Rule: All samples are treated as belonging to a single stratum (single label 0).
-        """
-        return np.zeros(n_samples, dtype=np.int64)
-
-    def assign(self) -> None:
-        """
-        Assign folds to trials, stratified by condition.
-
-        Important
+        Arguments
         ---------
-        Update the attribute `folds` with the computed fold assignments.
+        strata: Strata
+            See :attr:`FoldAssignerInputs.strata`.
+
+        Returns
+        -------
+        Folds
+            See :attr:`FoldAssignerOutputs.folds`.
+
+        Implementation
+        --------------
+        1. Extract the samples by strata.
+        2. Within each strata, shuffle the samples to balance across folds the remaining variables
+           have not been considered in stratification.
+        3. Within the considered strata, distribute the shuffled samples into k groups.
+        4. For each sample, associate the fold index based on the group to which it belongs.
 
         See Also
         --------
@@ -256,11 +211,11 @@ class FoldAssigner(Processor):
             Output (list): ``l % n`` sub-arrays of size ``l // n + 1`` and ``n - l % n`` sub-arrays
             of size ``l // n``.
         """
-        folds = np.zeros(self.n_samples, dtype=np.int64)  # initialize folds
-        for stratum in np.unique(self.strata):
-            idx_stratum = np.where(self.strata == stratum)[0]  # indices of samples in the stratum
+        folds = np.zeros(strata.size, dtype=np.int64)  # initialize folds
+        for stratum in np.unique(strata):
+            idx_stratum = np.where(strata == stratum)[0]  # indices of samples in the stratum
             np.random.shuffle(idx_stratum)  # shuffle samples before splitting
             split_indices = np.array_split(idx_stratum, self.k)  # split samples into k groups
             for i_fold, idx_samples in enumerate(split_indices):
                 folds[idx_samples] = i_fold
-        self.folds = folds
+        return folds
