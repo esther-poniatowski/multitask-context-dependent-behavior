@@ -15,7 +15,6 @@ Classes
 # pylint: disable=no-member
 # pylint: disable=attribute-defined-outside-init
 
-from types import MappingProxyType
 from typing import TypeAlias, Any, Tuple, Optional
 
 import numpy as np
@@ -23,7 +22,6 @@ from scipy.signal import fftconvolve
 
 from core.constants import T_BIN
 from core.processors.base_processor import Processor, ProcessorInput, ProcessorOutput
-from utils.misc.arrays import create_empty_array
 
 
 SpikingTimes: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
@@ -33,26 +31,48 @@ FiringRates: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.float64]]
 """Type alias for firing rates."""
 
 
+class FiringRatesConverterInputs(ProcessorInput):
+    """
+    Dataclass for the inputs of the :class:`FiringRatesConverter` processor.
+
+    Attributes
+    ----------
+    spikes: SpikingTimes
+        Spiking times. Shape: ``(n_spikes,)``.
+    """
+
+    spikes: SpikingTimes
+
+
+class FiringRatesConverterOutputs(ProcessorOutput):
+    """
+    Dataclass for the outputs of the :class:`FiringRatesConverter` processor.
+
+    Attributes
+    ----------
+    f_rates: FiringRates
+        Firing rate time course (in spikes/s), obtained in two steps:
+        1. Binning the spikes.
+        2. Smoothing the binned rates.
+        Shape: ``(n_tpts_smth,)`` (see :attr:`FiringRatesConverter.n_tpts_smth`).
+
+    f_smoothed: FiringRates
+        Smoothed firing rate time course (in spikes/s).
+        Shape: ``(n_tpts_smth,)`` (see :attr:`FiringRatesConverter.n_tpts_smth`).
+    f_binned: FiringRates
+        Firing rate time course (in spikes/s), obtained by binning the spikes.
+        Shape: ``(n_tpts,)`` (see :attr:`FiringRatesConverter.n_tpts`).
+    """
+
+    f_rates: FiringRates
+
+
 class FiringRatesConverter(Processor):
     """
     Convert raw spike times into firing rates.
 
     Attributes
     ----------
-    spikes: np.ndarray[Tuple[Any], np.dtype[np.int64]]
-        Spiking times. Shape: ``(n_spikes,)``.
-    f_binned: np.ndarray[Tuple[Any], np.dtype[np.float64]]
-        Firing rate time course (in spikes/s), obtained by binning the spikes.
-        Shape: ``(n_tpts,)`` (see :attr:`n_tpts`).
-    f_smoothed: np.ndarray[Tuple[Any], np.dtype[np.float64]]
-        Smoothed firing rate time course (in spikes/s).
-        Shape: ``(n_tpts_smth,)`` (see :attr:`n_tpts_smth`).
-    n_tpts: int
-        Number of time bins in the recording period, corresponding to the final length of the binned
-        firing rates time course ``f_binned``: ``n_tpts = t_max/t_bin``.
-    n_tpts_smth: int
-        Number of time bins in the smoothed firing rate time course, corresponding to the final
-        length of the smoothed firing rates time course ``f_smoothed``.
     t_bin: float
         Time bin (in seconds).
     t_max: float
@@ -60,8 +80,13 @@ class FiringRatesConverter(Processor):
     smooth_window: float
         Size of the smoothing window (in seconds).
     mode: str
-        Convolution mode for smoothing. Options: ``'valid'`` (default), ``'same'``. See
-        :meth:`smooth` for details.
+        Convolution mode for smoothing. Options: ``'valid'`` (default), ``'same'``.
+        See  :meth:`smooth` for details.
+    n_tpts: int
+        Number of time bins in the firing rate time course ``f_binned``: ``n_tpts = t_max/t_bin``.
+    n_tpts_smth: int
+        Number of time bins in the smoothed firing rate time course ``f_smoothed``, depending on the
+        convolution mode. See :meth:`smooth` for details.
 
     Methods
     -------
@@ -70,38 +95,21 @@ class FiringRatesConverter(Processor):
 
     Examples
     --------
-    Assume spiking times homogeneously distributed every 0.1 s in a 1-second recording period, and
-    then homogeneously distributed every 0.2 s in another 1-second recording period. The firing rate
-    is expected to be 10 Hz in the first period and 5 Hz in the second period.
+    Consider spiking times recorded during in two periods of 1 second duration, first homogeneously
+    distributed every 0.1 s, and then every 0.2 s. The firing rate is expected to be 10 Hz in the
+    first period and 5 Hz in the second period.
 
-    >>> converter = FiringRatesConverter(t_bin=0.1, t_max=1.0, smooth_window=0.5)
-    >>> spikes1 = np.arange(0, 1, 0.1)
+    >>> spikes_1 = np.arange(0, 1, 0.1)
     [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-    >>> converter.process(spikes=spikes1)
-    >>> print(converter.f_binned)
-    [0. 1. 1. 1. 1. 1. 1. 1. 1. 1.]
-    >>> spikes2 = np.arange(0, 1, 0.2)
+    >>> spikes_2 = np.arange(0, 1, 0.2)
     [0.0, 0.2, 0.4, 0.6, 0.8]
-    >>> converter.process(spikes=spikes2)
-    >>> print(converter.f_binned)
+    >>> converter = FiringRatesConverter(t_bin=0.1, t_max=1.0, smooth_window=0.5)
+    >>> f_rates = converter.process(spikes=spikes1)
+    >>> print(f_rates)
+    [0. 1. 1. 1. 1. 1. 1. 1. 1. 1.]
+    >>> f_rates_2 = converter.process(spikes=spikes_2)
+    >>> print(f_rates_2)
     [0. 0. 1. 0. 1. 0. 1. 0. 1. 0.]
-
-    Applying a 0.5 s smoothing window over the total firing rate time course will average the rates
-    over the window:
-
-    - For the first 0.25 seconds, only spikes from the first period (10 Hz) will contribute to the
-      smoothed rate.
-    - Between 0.25 s and 0.75 s, the smoothing window will include more spikes from the first
-      period, and the rate will be dominated by the 10 Hz spikes.
-    - After 1 second, the window starts to overlap both the first and second periods. The rate will
-      gradually decrease as spikes from the second period (5 Hz) enter the window.
-
-    >>> spikes_tot = np.concatenate((spikes1, spikes2 + 1))
-    [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.2, 1.4, 1.6, 1.8, 2.0]
-    >>> converter.t_max = 2.0
-    >>> converter.process(spikes=spikes_tot)
-    >>> print(converter.f_smoothed)
-    #TODO: Add expected output
 
     See Also
     --------
@@ -111,15 +119,9 @@ class FiringRatesConverter(Processor):
     """
 
     config_params = ("t_bin", "t_max", "smooth_window", "mode")
-    input_
-    output_attrs = ("f_binned", "f_smoothed")
-    empty_data = MappingProxyType(
-        {
-            "spikes": create_empty_array(1, np.int64),
-            "f_binned": create_empty_array(1, np.float64),
-            "f_smoothed": create_empty_array(1, np.float64),
-        }
-    )
+    input_dataclass = FiringRatesConverterInputs
+    output_dataclass = FiringRatesConverterOutputs
+    is_random = False
 
     def __init__(
         self,
@@ -130,18 +132,29 @@ class FiringRatesConverter(Processor):
     ):
         super().__init__(t_bin=t_bin, t_max=t_max, smooth_window=smooth_window, mode=mode)
 
-    def _process(self) -> None:
+    def _process(
+        self, spikes: SpikingTimes = FiringRatesConverterInputs.spikes, **input_data: Any
+    ) -> FiringRates:
         """Implement the template method called in the base class :meth:`process` method."""
-        self.spikes_to_rates()
-        self.smooth()
+        f_binned = self.spikes_to_rates(spikes)
+        f_smooth = self.smooth(f_binned)
+        return f_smooth
 
-    def spikes_to_rates(self) -> None:
+    def spikes_to_rates(self, spikes: SpikingTimes) -> FiringRates:
         """
         Convert a spike train into a firing rate time course.
 
-        Important
+        Arguments
         ---------
-        Update the attribute `f_binned` with the computed firing rates.
+        spikes: SpikingTimes
+            See :attr:`FiringRatesConverterInputs.spikes`.
+
+        Returns
+        -------
+        f_binned: FiringRates
+            Firing rate time course (in spikes/s), obtained by binning the spikes.
+            Shape: ``(n_tpts,)`` (see :attr:`FiringRatesConverter.n_tpts`).
+            .. _f_binned:
 
         Implementation
         --------------
@@ -160,17 +173,23 @@ class FiringRatesConverter(Processor):
             of each bin, so the last bin edge should be included in this sequence. Outputs: ``hist``
             (number of spikes in each bin), ``edges`` (useless here).
         """
-        hist, _ = np.histogram(self.spikes, bins=np.arange(0, self.t_max + self.t_bin, self.t_bin))
+        hist, _ = np.histogram(spikes, bins=np.arange(0, self.t_max + self.t_bin, self.t_bin))
         f_binned = hist / self.t_bin
-        self.f_binned = f_binned
+        return f_binned
 
-    def smooth(self) -> None:
+    def smooth(self, f_binned: FiringRates) -> FiringRates:
         """
         Smooth the firing rates across time.
 
-        Important
+        Arguments
         ---------
-        Update the attribute `f_smooth` with the smoothed firing rates.
+        f_binned: FiringRates
+            See :ref:`f_binned`.
+
+        Returns
+        -------
+        f_smoothed: FiringRates
+            See :attr:`FiringRatesConverter.n_tpts_smth`).
 
         Notes
         -----
@@ -195,13 +214,13 @@ class FiringRatesConverter(Processor):
         Smoothing consists in averaging consecutive values in a sliding smooth_window.
 
         - Define a boxcar kernel with all values equal to 1. The window size (in number of bins) is
-          equal to ``smooth_window/t_bin`` (rounded down to the nearest integer) to match the time bin of
-          the firing rate time course.
+          equal to ``smooth_window/t_bin`` (rounded down to the nearest integer) to match the time
+          bin of the firing rate time course.
         - Convolve the firing rate time course with the boxcar kernel (FFT method), to *sum* the
           values in the window at each location in the time course.
         - Divide the output by the window size to get the *average*. This is necessary to keep the
-          same scale as the input firing rates, and to avoid increasing the values when the smooth_window
-          size is large.
+          same scale as the input firing rates, and to avoid increasing the values when the
+          smooth_window size is large.
 
         See Also
         --------
@@ -209,8 +228,8 @@ class FiringRatesConverter(Processor):
             Convolve the firing rate time course with kernel.
         """
         kernel = np.ones(int(self.smooth_window / self.t_bin))  # boxcar kernel
-        f_smoothed = fftconvolve(self.f_binned, kernel, mode=self.mode, axes=0) / len(kernel)
-        self.f_smoothed = f_smoothed
+        f_smoothed = fftconvolve(f_binned, kernel, mode=self.mode, axes=0) / len(kernel)
+        return f_smoothed
 
     @property
     def n_tpts(self) -> int:
