@@ -118,8 +118,6 @@ class Stratifier(Processor):
 
     def _process(self, features: Features = StratifierInputs.features, **input_data: Any) -> Strata:
         """Implement the template method called in the base class :meth:`process` method."""
-        if features is None:
-            features = []
         return self.stratify(features)
 
     def stratify(self, features: Features) -> Strata:

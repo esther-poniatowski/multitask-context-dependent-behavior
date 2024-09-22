@@ -12,6 +12,10 @@ Functionalities of each builder class:
 
 Flexible configurations of data structured can be obtained by adding different components to the builder.
 
+Modules
+-------
+
+
 Notes
 -----
 Creating Data structures with builders
@@ -34,8 +38,33 @@ Pipelines are used to produce components which are incorporated in the final dat
 with other relevant metadata or attributes.
 
 
-Modules
--------
+Comparison: Builders vs. Processors
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Responsibilities:
+
+- Processor: Perform a focused (often complex) computation, transformation or algorithm on input
+  data.
+- Builder: Produce a data structure. It involves orchestrating multiple steps: invoking processors,
+  handling data flow between them, combining their results, assembling components.
+
+Organization of the Operations:
+
+- Processor: Clear structure, adapted for the template method pattern. Method names reflect a strict
+  workflow (pre-processing, processing, post-processing).
+- Builder: Flexible structure, tailored to the assembly process. Method names reflect the sequence
+  of steps involved in the assembly.
+
+Input/Output Handling:
+
+- Processor: Inputs are strictly validated, and outputs are returned as tuples or single values.
+- Builder: Input validation is less rigid, it may accept a wider variety of inputs. It returns a
+  single fully constructed object.
+
+Statefulness:
+
+- Processor: Processors are stateless each processing call is independent of the others.
+- Builder: Builders are often *stateful*. They may need to store intermediate results between steps
+  or manage temporary states during the assembly process.
 
 
 See Also
@@ -44,4 +73,5 @@ See Also
     Data structure classes which are constructed by the builders.
 :mod:`core.processors`
     Pipelines used to process and transform data before final assembly by the builders.
+
 """
