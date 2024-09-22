@@ -5,6 +5,8 @@
 
 Classes
 -------
+:class:`EnsembleAssignerInputs`
+:class:`EnsembleAssignerOutputs`
 :class:`EnsembleAssigner`
 
 Notes
@@ -23,17 +25,42 @@ models have to be fitted for ensembles in areas with larger neuron populations.
 # pylint: disable=no-member
 # pylint: disable=attribute-defined-outside-init
 
-from types import MappingProxyType
-from typing import TypeAlias, Any, Tuple, Optional
+from typing import TypeAlias, Any, Tuple, Optional, Dict
 
 import numpy as np
 
-from core.processors.base_processor import Processor
-from utils.misc.arrays import create_empty_array
+from core.processors.base_processor import Processor, ProcessorInput, ProcessorOutput
 
 
 Ensembles: TypeAlias = np.ndarray[Tuple[Any, Any], np.dtype[np.int64]]
 """Type alias for ensemble assignments."""
+
+
+class EnsembleAssignerInputs(ProcessorInput):
+    """
+    Dataclass for the inputs of the :class:`EnsembleAssigner` processor.
+
+    Attributes
+    ----------
+    n_units: int
+        Number of units to assign to ensembles.
+    """
+
+    n_units: int
+
+
+class EnsembleAssignerOutputs(ProcessorOutput):
+    """
+    Dataclass for the outputs of the :class:`EnsembleAssigner` processor.
+
+    Attributes
+    ----------
+    ensembles: Ensembles
+        Ensemble assignments, containing the indices of the units forming each ensemble.
+        Shape: ``(n_ensembles, ensemble_size)``.
+    """
+
+    ensembles: Ensembles
 
 
 class EnsembleAssigner(Processor):
@@ -56,7 +83,6 @@ class EnsembleAssigner(Processor):
 
     Methods
     -------
-    :meth:`_validate_n_units`
     :meth:`assign`
 
     Examples
@@ -64,8 +90,8 @@ class EnsembleAssigner(Processor):
     Assign 10 units to ensembles of size of 4:
 
     >>> assigner = EnsembleAssigner(ensemble_size=4)
-    >>> assigner.process(n_units=10)
-    >>> print(assigner.ensembles)
+    >>> ensembles = assigner.process(n_units=10)
+    >>> print(ensembles)
     [[0 7 4 3]
      [2 8 6 1]
      [5 9 0 6]]
@@ -84,36 +110,17 @@ class EnsembleAssigner(Processor):
     """
 
     config_params = ("ensemble_size", "n_ensembles_max")
-    input_args = ("n_units",)
-    output_attrs = ("n_ensembles", "ensembles")
-    empty_data = MappingProxyType(
-        {
-            "n_units": 0,
-            "n_ensembles": 0,
-            "ensembles": create_empty_array(2, np.int64),
-        }
-    )
+    input_dataclass = EnsembleAssignerInputs
+    output_dataclass = EnsembleAssignerOutputs
+    is_random = True
 
     def __init__(self, ensemble_size: int, n_ensembles_max: Optional[int] = None):
         super().__init__(ensemble_size=ensemble_size, n_ensembles_max=n_ensembles_max)
 
-    def _validate(self, **input_data: Any) -> None:
+    def _pre_process(self, **input_data: Any) -> Dict[str, Any]:
         """
-        Implement the template method called in the base class :meth:`process` method.
+        Implement the template method called in the base class :meth:`pre_process` method.
 
-        Raises
-        ------
-        ValueError
-        """
-        self._validate_n_units(input_data["n_units"])
-
-    def _process(self) -> None:
-        """Implement the template method called in the base class :meth:`process` method."""
-        self.determine_n_ensembles()
-        self.assign()
-
-    def _validate_n_units(self, n: int) -> None:
-        """
         Validate the argument `n_units` (number of units) compared to the ensemble size.
 
         Raises
@@ -121,16 +128,32 @@ class EnsembleAssigner(Processor):
         ValueError
             If the number of units is lower than the ensemble size.
         """
-        if n < self.ensemble_size:
-            raise ValueError(f"n_units: {n} < ensemble_size: {self.ensemble_size}")
+        input_valid = self._pre_process(**input_data)  # call the base class method
+        n_units = input_valid["n_units"]  # get the number of units from the input data
+        if n_units < self.ensemble_size:
+            raise ValueError(f"n_units: {n_units} < ensemble_size: {self.ensemble_size}")
+        return input_valid
 
-    def determine_n_ensembles(self) -> None:
+    def _process(
+        self, n_units: int = EnsembleAssignerInputs.n_units, **input_data: Any
+    ) -> Ensembles:
+        """Implement the template method called in the base class :meth:`process` method."""
+        ensembles = self.assign(n_units)
+        return ensembles
+
+    def eval_n_ensembles(self, n_units: int) -> int:
         """
         Determine the number of ensembles to generate.
 
-        Important
+        Arguments
         ---------
-        Update the attribute `n_ensembles` with the computed number of ensembles.
+        n_units: int
+            See :attr:`EnsembleAssignerInputs.n_units`.
+
+        Returns
+        -------
+        n_ensembles: int
+            Number of ensembles to generate based on the number of units and the ensemble size.
 
         Notes
         -----
@@ -155,18 +178,24 @@ class EnsembleAssigner(Processor):
         --------
         :func:`numpy.ceil`: Round up to the nearest integer (floating point output).
         """
-        n_ensembles = np.ceil(self.n_units / self.ensemble_size).astype(int)
+        n_ensembles = np.ceil(n_units / self.ensemble_size).astype(int)
         if self.n_ensembles_max is not None and n_ensembles > self.n_ensembles_max:
             n_ensembles = self.n_ensembles_max
-        self.n_ensembles = n_ensembles
+        return n_ensembles
 
-    def assign(self) -> None:
+    def assign(self, n_units: int) -> Ensembles:
         """
         Assign units to ensembles by sub-sampling the units in distinct groups.
 
-        Important
+        Arguments
         ---------
-        Update the attribute `ensembles` with the computed ensemble assignments.
+        n_units: int
+            Number of units to assign to ensembles.
+
+        Returns
+        -------
+        ensembles: Ensembles
+            See :attr:`EnsembleAssignerOutputs.ensembles`.
 
         Implementation
         --------------
@@ -198,10 +227,10 @@ class EnsembleAssigner(Processor):
             axis parameter is set to 0 to stack the arrays along the first axis, such that the
             resulting array has the shape `(n_ensembles, ensemble_size)`.
         """
-        units = np.arange(self.n_units)
+        units = np.arange(n_units)
         np.random.shuffle(units)
         # Split units into `q` full-sized ensembles of size `ensemble_size` and a last partial one
-        split_indices = [i for i in range(self.ensemble_size, self.n_units, self.ensemble_size)]
+        split_indices = [i for i in range(self.ensemble_size, n_units, self.ensemble_size)]
         splits = np.split(units, split_indices)
         # Pick units from previous ensembles to complete the last one (if needed)
         n_missing = self.ensemble_size - splits[-1].size
@@ -212,4 +241,4 @@ class EnsembleAssigner(Processor):
             splits[-1] = last_ensemble
         # Stack ensembles
         ensembles = np.stack(splits, axis=0)
-        self.ensembles = ensembles
+        return ensembles
