@@ -5,6 +5,8 @@
 
 Classes
 -------
+:class:`BootstrapperInputs`
+:class:`BootstrapperOutputs`
 :class:`Bootstrapper`
 
 Notes
@@ -46,14 +48,12 @@ Implementation
 # pylint: disable=no-member
 # pylint: disable=attribute-defined-outside-init
 
-from types import MappingProxyType
 from typing import TypeAlias, Any, Tuple
 
 import numpy as np
 
 from core.constants import N_PSEUDO_MIN
-from core.processors.base_processor import Processor
-from utils.misc.arrays import create_empty_array
+from core.processors.base_processor import Processor, ProcessorInput, ProcessorOutput
 
 
 Counts: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
@@ -66,6 +66,34 @@ PseudoTrials: TypeAlias = np.ndarray[Tuple[Any, Any], np.dtype[np.int64]]
 """Type alias for pseudo-trials indices."""
 
 
+class BootstrapperInputs(ProcessorInput):
+    """
+    Dataclass for the inputs of the :class:`Bootstrapper` processor.
+
+    Attributes
+    ----------
+    counts: Counts
+        Numbers of trials available for each unit in the pseudo-population. Shape: ``(n_units,)``.
+    """
+
+    counts: Counts
+
+
+class BootstrapperOutputs(ProcessorOutput):
+    """
+    Dataclass for the outputs of the :class:`Bootstrapper` processor.
+
+    Attributes
+    ----------
+    pseudo_trials: PseudoTrials
+        Pseudo-trials obtained by pairing trials indices across units. It contains the indices of
+        the real trials to pick from each unit to form each pseudo-trial.
+        Shape: ``(n_units, n_pseudo)``.
+    """
+
+    pseudo_trials: PseudoTrials
+
+
 class Bootstrapper(Processor):
     """
     Generate pseudo-trials through an algorithm inspired by the hierarchical bootstrap method.
@@ -75,18 +103,12 @@ class Bootstrapper(Processor):
     n_pseudo: int
         Total number of pseudo-trials to generate for the current run of the processor. This is a
         global parameter which applies to all runs of the processor during its lifetime.
-    counts: np.ndarray[Tuple[Any], np.int64]
-        Numbers of trials available for each unit in the pseudo-population. Shape: ``(n_units,)``.
-    pseudo_trials : np.ndarray[Tuple[Any, Any], np.int64]
-        Pseudo-trials obtained by pairing trials indices across units. It contains the indices of
-        the real trials to pick from each unit to form each pseudo-trial.
-        Shape: ``(n_units, n_pseudo)``.
 
     Methods
     -------
     :meth:`pick_trials`
     :meth:`bootstrap`
-    :meth:`determine_n_pseudo`
+    :meth:`eval_n_pseudo`
 
     Example
     -------
@@ -96,8 +118,7 @@ class Bootstrapper(Processor):
     >>> n_pseudo = 5
     >>> counts = np.array([4, 5, 6])
     >>> bootstrapper = Bootstrapper(n_pseudo=n_pseudo)
-    >>> bootstrapper.process(counts=counts, seed=42)
-    >>> pseudo_trials = bootstrapper.pseudo_trials
+    >>> pseudo_trials = bootstrapper.process(counts=counts, seed=42)
     >>> print(pseudo_trials)
     [[0 1 2 3 0]  # unit 0, 4 initial trials
      [0 1 2 3 4]  # unit 1, 5 initial trials
@@ -111,40 +132,19 @@ class Bootstrapper(Processor):
     """
 
     config_params = ("n_pseudo",)
-    input_args = ("counts",)
-    output_attrs = ("pseudo_trials",)
-    empty_data = MappingProxyType(
-        {
-            "counts": create_empty_array(1, np.int64),
-            "pseudo_trials": create_empty_array(2, np.int64),
-        }
-    )
+    input_dataclass = BootstrapperInputs
+    output_dataclass = BootstrapperOutputs
+    is_random = True
 
     def __init__(self, n_pseudo: int):
         super().__init__(n_pseudo=n_pseudo)
 
-    def _validate(self, **input_data):
+    def _process(
+        self, counts: Counts = BootstrapperInputs.counts, **input_data: Any
+    ) -> PseudoTrials:
         """Implement the template method called in the base class :meth:`process` method."""
-        self._validate_counts(input_data["counts"])
-
-    def _process(self) -> None:
-        """Implement the template method called in the base class :meth:`process` method."""
-        self.bootstrap()
-
-    def _validate_counts(self, counts: Counts) -> None:
-        """
-        Validate the argument `counts` (number of trials per unit) based on its type and dimensions.
-
-        Raises
-        ------
-        ValueError
-            If the argument is not a NumPy array.
-            If the argument is not 1D.
-        """
-        if not isinstance(counts, np.ndarray):
-            raise ValueError(f"Invalid type: {type(counts)}, expected NumPy array.")
-        if counts.ndim != 1:
-            raise ValueError(f"Invalid dimensions: {counts.ndim}D array.")
+        pseudo_trials = self.bootstrap(counts)
+        return pseudo_trials
 
     def pick_trials(self, n: int) -> TrialsIndUnit:
         """
@@ -194,26 +194,34 @@ class Bootstrapper(Processor):
             trials = np.concatenate((trials, np.random.choice(n, size=r, replace=False)))
         return trials
 
-    def bootstrap(self) -> None:
+    def bootstrap(self, counts: Counts) -> PseudoTrials:
         """
         Combine trials across units to form pseudo-trials.
 
-        Important
+        Arguments
         ---------
-        Update the attribute `pseudo_trials` with the computed pseudo-trial indices.
+        counts: Counts
+            See :attr:`BootstrapperInputs.counts`.
+
+        Returns
+        -------
+        pseudo_trials: PseudoTrials
+            See :attr:`BootstrapperOutputs.pseudo_trials`.
         """
-        pseudo_trials = np.array([self.pick_trials(n) for n in self.counts])
+        pseudo_trials = np.array([self.pick_trials(n) for n in counts])
         for trials_unit in pseudo_trials:
             np.random.shuffle(trials_unit)  # shuffle within each unit for diversity
-        self.pseudo_trials = pseudo_trials
+        return pseudo_trials
 
     @staticmethod
-    def determine_n_pseudo(counts: Counts, n_min: int = N_PSEUDO_MIN, alpha: float = 0.5) -> int:
+    def eval_n_pseudo(counts: Counts, n_min: int = N_PSEUDO_MIN, alpha: float = 0.5) -> int:
         """
         Determine a number of pseudo-trials to generate from the statistics of the counts.
 
-        Parameters
-        ----------
+        Arguments
+        ---------
+        counts: Counts
+            See :attr:`BootstrapperInputs.counts`.
         n_min: int, default=N_PSEUDO_MIN
             Minimum number of pseudo-trials required in a strata.
         alpha: float, default=0.5
