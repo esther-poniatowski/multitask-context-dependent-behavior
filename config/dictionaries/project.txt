@@ -8,8 +8,6 @@ D_SHOCK
 D_STIM
 D_WARN
 DPEG
-proc_data
-proc_datas
 exptevents
 firingrates
 frates
@@ -22,11 +20,14 @@ ntrials
 Perigenual
 Prelimbic
 preprocess
+proc_data
+proc_datas
 PSTH
 rawspktimes
 recnum
 sampl
 smpl
+smth
 spikefile
 Stim
 stims
