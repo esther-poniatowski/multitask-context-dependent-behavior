@@ -16,7 +16,7 @@ Classes
 # pylint: disable=attribute-defined-outside-init
 # pylint: disable=useless-parent-delegation
 
-from typing import List, TypeAlias, Union, Any, Tuple, Optional
+from typing import List, TypeAlias, Union, Any, Tuple
 
 import numpy as np
 
@@ -133,7 +133,7 @@ class Stratifier(Processor):
     def __init__(self):
         super().__init__()  # call the parent class constructor (no config attributes)
 
-    def _process(self, features: Optional[Features] = None, **input_data: Any) -> Strata:
+    def _process(self, features: Features = StratifierInputs.features, **input_data: Any) -> Strata:
         """Implement the template method called in the base class :meth:`process` method."""
         if features is None:
             features = []
