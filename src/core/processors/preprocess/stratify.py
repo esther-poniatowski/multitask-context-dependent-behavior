@@ -45,28 +45,17 @@ class StratifierInputs(ProcessorInput):
     features: Features
 
     def __post_init__(self):
-        self._validate_features(self.features)
+        self.validate_features(self.features)
 
-    def _validate_features(self, features: Features) -> None:
+    def validate_features(self, features: Features) -> None:
         """
         Validate the features to be used for stratification.
 
         Raises
         ------
         ValueError
-            If the features are not NumPy arrays.
-            If the feature types are not valid.
-            If the feature dimensions are not 1.
-            If the number of samples in each feature array is not equal.
+            If the number of samples is not equal across features.
         """
-        if not all(isinstance(feat, np.ndarray) for feat in features):
-            raise ValueError(f"Feature(s) not numpy arrays: {features}")
-        types = [feat.dtype.type for feat in features]
-        if not all(tpe in self.valid_types for tpe in types):
-            raise ValueError(f"Invalid feature types: {types}")
-        dims = [feat.ndim for feat in features]
-        if not all(dim == 1 for dim in dims):
-            raise ValueError(f"Invalid feature dimensions: {dims}")
         n_samples = [len(feat) for feat in features]
         if not all(n == n_samples[0] for n in n_samples):
             raise ValueError(f"Unequal number of samples across features: {n_samples}")
@@ -89,11 +78,6 @@ class StratifierOutputs(ProcessorOutput):
 class Stratifier(Processor):
     """
     Divide a set of samples in strata (groups) based on combinations of experimental features.
-
-    Class Attributes
-    ----------------
-    valid_types: tuple
-        Valid NumPy data types (dtype) for the feature arrays (int64, float64, str_).
 
     Methods
     -------
@@ -128,7 +112,6 @@ class Stratifier(Processor):
     input_dataclass = StratifierInputs
     output_dataclass = StratifierOutputs
     is_random: bool = False
-    valid_types = (np.int64, np.float64, np.str_)
 
     def __init__(self):
         super().__init__()  # call the parent class constructor (no config attributes)
