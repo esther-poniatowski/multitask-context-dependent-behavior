@@ -50,7 +50,7 @@ from typing import TypeAlias, Any, Tuple
 
 import numpy as np
 
-from processors.base_processor import Processor
+from core.processors.base_processor import Processor
 from utils.misc.arrays import create_empty_array
 
 
@@ -118,8 +118,8 @@ class FoldAssigner(Processor):
         methods.
     """
 
-    config_attrs = ("k",)
-    input_attrs = ("n_samples", "strata")
+    config_params = ("k",)
+    input_args = ("n_samples", "strata")
     output_attrs = ("folds",)
     empty_data = MappingProxyType(
         {

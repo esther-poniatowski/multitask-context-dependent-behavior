@@ -20,7 +20,7 @@ from typing import List, TypeAlias, Union, Any, Tuple, Optional
 
 import numpy as np
 
-from processors.base_processor import Processor, ProcessorInput, ProcessorOutput
+from core.processors.base_processor import Processor, ProcessorInput, ProcessorOutput
 
 
 Strata: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]

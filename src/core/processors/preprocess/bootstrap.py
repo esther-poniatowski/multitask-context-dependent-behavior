@@ -52,7 +52,7 @@ from typing import TypeAlias, Any, Tuple
 import numpy as np
 
 from core.constants import N_PSEUDO_MIN
-from processors.base_processor import Processor
+from core.processors.base_processor import Processor
 from utils.misc.arrays import create_empty_array
 
 
@@ -110,8 +110,8 @@ class Bootstrapper(Processor):
         methods.
     """
 
-    config_attrs = ("n_pseudo",)
-    input_attrs = ("counts",)
+    config_params = ("n_pseudo",)
+    input_args = ("counts",)
     output_attrs = ("pseudo_trials",)
     empty_data = MappingProxyType(
         {

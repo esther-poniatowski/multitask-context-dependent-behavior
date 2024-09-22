@@ -18,7 +18,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal as assert_array_eq
 import pytest
 
-from processors.preprocess.convert_to_rates import FiringRatesConverter
+from core.processors.preprocess.convert_to_rates import FiringRatesConverter
 
 
 def test_spikes_to_rates():
