@@ -56,12 +56,18 @@ def subclass_inputs():
     TestClassInputs:
         Data class for the input attributes, inheriting from :class:`ProcessorInput`.
         Its attributes correspond to the valid input names.
+        It implements the method `validate` just to check that it is possible to pass configuration
+        parameters from the associated processor subclass.
     """
 
     @dataclass
     class TestClassInputs(ProcessorInput):
         input1: np.ndarray
         input2: np.ndarray
+
+        def validate(self, **config_params):
+            if "param" not in config_params:
+                raise ValueError("Not found: configuration parameter 'param'")
 
     return TestClassInputs
 
@@ -321,11 +327,13 @@ def test_processor_input(subclass_inputs, input_data):
     Expected Output
     ---------------
     The data class instance should have attributes corresponding to the inputs.
+    Its method `validate` should be callable.
     """
     inputs_obj = subclass_inputs(**input_data)
     for name in input_data:
         assert hasattr(inputs_obj, name), f"Missing attribute: '{name}'"
         assert_array_equal(getattr(inputs_obj, name), input_data[name]), "Invalid value"
+    inputs_obj.validate(param=42)
 
 
 def test_processor_output(subclass_outputs, output_data, output_names):
@@ -396,10 +404,10 @@ def test_pre_process(subclass, input_data, input_missing, input_extra):
     validated = processor._pre_process(**input_data)
     assert isinstance(validated, dict)
     # Missing input
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         processor._pre_process(**input_missing)
     # Unexpected input
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         processor._pre_process(**input_extra)
 
 
@@ -448,10 +456,10 @@ def test_post_process(subclass, output_data, output_missing, output_extra):
     validated = processor._post_process(*output_data)
     assert isinstance(validated, tuple)
     # Missing output
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         processor._post_process(*output_missing)
     # Unexpected output
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         processor._post_process(*output_extra)
 
 
