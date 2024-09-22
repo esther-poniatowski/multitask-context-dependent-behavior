@@ -65,6 +65,10 @@ Define a processor subclass which performs a basic data transformation:
     class ExampleProcessorInputs(ProcessorInput):
         input_arr: np.ndarray = np.empty(0)
 
+        def __post_init__(self):
+            if not isinstance(self.input_arr, np.ndarray):
+                raise ValueError("Invalid type: expected NumPy array.")
+
 
     class ExampleProcessorOutputs(ProcessorOutput):
         output_arr: np.ndarray = np.empty(0)
@@ -74,36 +78,28 @@ Define a processor subclass which performs a basic data transformation:
 
         # --- Define processor class-level attributes
 
-        config_params = ("min_length",) # config parameters fixed for the processor instance
+        config_params = ("example_param",) # config parameters fixed for the processor instance
         input_dataclass = ExampleProcessorInputs
         output_dataclass = ExampleProcessorOutputs
         is_random = True
 
-        # Call the parent constructor to set the config
-        def __init__(self, min_length: int = 1):
-            super().__init__(min_length=min_length)
+        # --- Set the configuration parameters via the parent constructor
 
-        # --- Define processor methods
+        def __init__(self, example_param: int = 1):
+            super().__init__(example_param=example_param)
 
-        def _preprocess(self, **input_data):
-            # Subclass-specific validation
-            if len(input_data["input_arr"]) < min_length:
-                raise ValueError(f"Invalid length for input: {len(input_data['input_arr'])}")
-            # Default validation: call the parent method
-            super()._preprocess(**input_data)
+        # --- Define processor methods - Specify signature and processing logic
 
-        # Specify the signature for this concrete processor
-        # Set default values to named arguments from the ExampleProcessorInput dataclass
-        # to ensure compatibility with the base class (Liskov Substitution Principle)
         def _process(self, input_arr: np.ndarray = ExampleProcessorInputs.input_arr) -> np.ndarray:
-            output_arr = self.input_arr * 2
+            output_arr = self.input_arr * self.example_param
             return output_arr
+
 
 Use the processor on actual input data:
 
 .. code-block:: python
 
-    processor = ExampleProcessor(min_length=3)
+    processor = ExampleProcessor(example_param=3)
     output_arr = processor.process(input_data=np.array([1, 2, 3]))
     # Output: array([2, 4, 6])}
 
