@@ -32,10 +32,20 @@ class ProcessorInput:
       the dictionary `input_data` received by the processor's `_pre_process` method to the data
       class. Unpack the keyword arguments in the data class constructor to match the expected
       attributes.
-    - (Optional) To add more specific validation, use the data class's `__post_init__` method or the
-      processor's `_pre_process` method (e.g. if interaction with the processor's configuration
-      parameters is required).
+    - (Optional) To add more specific validation, use the data class's `validate` method and call it
+      in the processor's `_pre_process` method (e.g. if interaction with the processor's
+      configuration parameters is required).
     """
+
+    def validate(self, **config_params: Any):
+        """
+        Validate the input data.
+
+        Parameters
+        ----------
+        config_params: Any
+            Configuration parameters from the processor that may affect validation.
+        """
 
 
 @dataclass
@@ -142,10 +152,21 @@ class Processor(ABC, Generic[I, O]):
         self.seed: Optional[int] = None
 
     def __repr__(self):
-        config = {attr: getattr(self, attr) for attr in self.config_params}
+        config = self.get_config_params()
         input_names = [field.name for field in fields(self.input_dataclass)]
         output_names = [field.name for field in fields(self.output_dataclass)]
         return f"<{self.__class__.__name__}(config={config}, inputs={input_names}, outputs={output_names})"
+
+    def get_config_params(self) -> Dict[str, Any]:
+        """
+        Get the configuration parameters as a dictionary.
+
+        Returns
+        -------
+        config_params: Dict[str, Any]
+            Configuration parameters of the processor instance.
+        """
+        return {attr: getattr(self, attr) for attr in self.config_params}
 
     def process(self, seed: Optional[int] = None, **input_data: Any) -> Any:
         """
@@ -207,10 +228,10 @@ class Processor(ABC, Generic[I, O]):
         output_data = self._process(**input_valid)  # subclass-specific logic (required)
         if not isinstance(output_data, tuple):  # if single output: format as a tuple
             output_data = (output_data,)
-        self._post_process(*output_data)  # optional subclass-specific post-processing
-        if len(output_data) == 1:  # if single output: return as a single value (not a tuple)
-            return output_data[0]
-        return output_data
+        output_valid = self._post_process(*output_data)
+        if len(output_valid) == 1:  # if single output: return as a single value (not a tuple)
+            return output_valid[0]
+        return output_valid
 
     def _pre_process(self, **input_data: Any) -> Dict[str, Any]:
         """
@@ -232,11 +253,9 @@ class Processor(ABC, Generic[I, O]):
 
         Raises
         ------
-        TypeError
-            If an input argument has an invalid type.
         ValueError
             If an input argument has an invalid value based on the constraints enforced by the
-            `ProcessorInput.__post_init__` data class.
+            `ProcessorInput` data class.
 
         Notes
         -----
@@ -251,16 +270,13 @@ class Processor(ABC, Generic[I, O]):
         :class:`ProcessorInput`
         :meth:`dataclasses.asdict`
         """
+        config_params = self.get_config_params()
         try:
-            input_valid = self.input_dataclass(**input_data)
-        except TypeError as exc:
-            valid_types = {field.name: field.type for field in fields(self.input_dataclass)}
-            raise TypeError(
-                f"Invalid input to {self.__class__.__name__}: {exc}. Valid types: {valid_types}"
-            ) from exc
-        except ValueError as exc:
+            input_obj = self.input_dataclass(**input_data)  # instantiate
+            input_obj.validate(**config_params)  # validate based on config params (if needed)
+        except (TypeError, ValueError) as exc:
             raise ValueError(f"Invalid input to {self.__class__.__name__}: {exc}") from exc
-        return asdict(input_valid)
+        return asdict(input_obj)  # return validated input data as a dictionary
 
     @abstractmethod
     def _process(self, **input_data: Any) -> Any:
@@ -299,8 +315,9 @@ class Processor(ABC, Generic[I, O]):
 
         Raises
         ------
-        TypeError
-            If the output data has an invalid type.
+        ValueError
+            If the output data is invalid based on the constraints enforced by the `ProcessorOutput`
+            data class.
 
         Notes
         -----
@@ -316,10 +333,10 @@ class Processor(ABC, Generic[I, O]):
         :meth:`dataclasses.astuple`
         """
         try:
-            outputs_valid = self.output_dataclass(*output_data)
-        except TypeError as exc:
-            raise TypeError(f"Invalid output from {self.__class__.__name__}: {exc}") from exc
-        return astuple(outputs_valid)
+            output_obj = self.output_dataclass(*output_data)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Invalid output from {self.__class__.__name__}: {exc}") from exc
+        return astuple(output_obj)
 
     def set_random_state(self, seed) -> None:
         """
