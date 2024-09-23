@@ -65,9 +65,10 @@ def subclass_inputs():
         input1: np.ndarray
         input2: np.ndarray
 
-        def validate(self, **config_params):
-            if "param" not in config_params:
-                raise ValueError("Not found: configuration parameter 'param'")
+        def validate(self, param=1, **config_params):
+            l = len(self.input1)
+            if l < param:
+                raise ValueError(f"Invalid length : {l} < {param}")
 
     return TestClassInputs
 
@@ -323,17 +324,23 @@ def test_processor_input(subclass_inputs, input_data):
         Data class for the input attributes, inheriting from :class:`ProcessorInput`.
     input_data: Dict[str, np.ndarray]
         Input data passed to the data class.
+    param: int
+        Configuration parameter to pass to the `validate` method, corresponding to the minimal length
+        of the input array.
 
     Expected Output
     ---------------
     The data class instance should have attributes corresponding to the inputs.
-    Its method `validate` should be callable.
+    Its method `validate` should pass when `param = 1` but raise an error when `param = 10`, since
+    the length of the input array is 3.
     """
     inputs_obj = subclass_inputs(**input_data)
     for name in input_data:
         assert hasattr(inputs_obj, name), f"Missing attribute: '{name}'"
         assert_array_equal(getattr(inputs_obj, name), input_data[name]), "Invalid value"
-    inputs_obj.validate(param=42)
+    inputs_obj.validate(param=1)
+    with pytest.raises(ValueError):
+        inputs_obj.validate(param=10)
 
 
 def test_processor_output(subclass_outputs, output_data, output_names):
