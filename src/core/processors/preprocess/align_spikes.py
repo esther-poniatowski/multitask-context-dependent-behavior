@@ -5,6 +5,8 @@
 
 Classes
 -------
+:class:`SpikesAlignerInputs`
+:class:`SpikesAlignerOutputs`
 :class:`SpikesAligner`
 
 Notes
@@ -66,15 +68,15 @@ Aligning a Click train
 # mypy: disable-error-code="attr-defined"
 # pylint: disable=no-member
 # pylint: disable=attribute-defined-outside-init
+# pylint: disable=unused-argument
 
-from types import MappingProxyType
+from dataclasses import dataclass
 from typing import Literal, TypeAlias, Any, Tuple
 
 import numpy as np
 
 from core.constants import D_PRE, D_STIM, D_POST, D_WARN
-from core.processors.base_processor import Processor
-from utils.misc.arrays import create_empty_array
+from core.processors.base_processor import Processor, ProcessorInput, ProcessorOutput
 
 
 Stim: TypeAlias = Literal["R", "T", "N"]
@@ -87,6 +89,60 @@ SpikingTimes: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.float64]]
 """Type alias for spiking times."""
 
 
+@dataclass
+class SpikesAlignerInputs(ProcessorInput):
+    """
+    Dataclass for the inputs of the :class:`SpikesAligner` processor.
+
+    Attributes
+    ----------
+    spikes: SpikingTimes
+        Spiking times during a whole trial (in seconds). Shape: ``(nspikes,)``.
+    task: Task
+        Type of task from which the trial is extracted.
+    stim: Stim
+        Type of stimulus presented during the trial.
+    t_on, t_off: float
+        Times of stimulus onset and offset (in seconds) during the *specific* trial to align.
+    """
+
+    spikes: SpikingTimes
+    task: Task
+    stim: Stim
+    t_on: float
+    t_off: float
+
+    def validate(
+        self, valid_tasks=frozenset(), valid_stims=frozenset(), **config_params: Any
+    ) -> None:
+        """
+        Check that the input values for task, stimulus, and timings are consistent.
+
+        Raises
+        ------
+        ValueError
+            If the input values are inconsistent.
+        """
+        if self.task not in valid_tasks:
+            raise ValueError(f"Invalid task: {self.task}")
+        if self.stim not in valid_stims:
+            raise ValueError(f"Invalid stimulus: {self.stim}")
+
+
+@dataclass
+class SpikesAlignerOutputs(ProcessorOutput):
+    """
+    Dataclass for the outputs of the :class:`SpikesAligner` processor.
+
+    Attributes
+    ----------
+    aligned_spikes: SpikingTimes
+        Spiking times aligned with the other trials in the final data set. Shape: ``(nspikes,)``.
+    """
+
+    aligned_spikes: SpikingTimes
+
+
 class SpikesAligner(Processor):
     """
     Align spiking times from a single trial with the other trials in a data set.
@@ -95,9 +151,9 @@ class SpikesAligner(Processor):
 
     Class Attributes
     ----------------
-    valid_tasks: set
+    valid_tasks: frozenset
         Valid types of tasks.
-    valid_stims: set
+    valid_stims: frozenset
         Valid types of stimuli.
 
     Attributes
@@ -107,20 +163,21 @@ class SpikesAligner(Processor):
         the trials in the final dataset.
     d_warn: float
         Duration of the TORC stimulus (in seconds), within the total trial duration in task CLK.
-    spikes: npt.NDArray[np.float64]
-        Spiking times during a whole trial (in seconds). Shape: ``(nspikes,)``.
-    task: Task
-        Type of task.
-    stim: Stim
-        Type of stimulus.
-    t_on, t_off: float
-        Times of stimulus onset and offset (in seconds) during the *specific* trial to align.
 
     Methods
     -------
+    eval_times
+    slice_epoch
+    join_epochs
 
     Examples
     --------
+    Align spikes with default duration parameters:
+
+    >>> aligner = SpikesAligner()
+    >>> aligned_spikes = aligner.process(spikes=spikes, task=task, stim=stim, t_on=t_on, t_off=t_off)
+    >>> print(strata)
+    [0 0 1]
 
     See Also
     --------
@@ -129,22 +186,11 @@ class SpikesAligner(Processor):
         methods.
     """
 
-    config_params = ("d_pre", "d_stim", "d_post", "d_warn")
-    input_args = ("spikes", "task", "stim", "t_on", "t_off")
-    output_attrs = ("aligned_spikes",)
-    empty_data = MappingProxyType(
-        {
-            # "spikes": create_empty_array(1, np.float64),
-            "spikes": None,
-            "task": "",
-            "stim": "",
-            "t_on": 0.0,
-            "t_off": 0.0,
-            "aligned_spikes": create_empty_array(1, np.float64),
-        }
-    )
-    valid_tasks = {"PTD", "CLK"}
-    valid_stims = {"R", "T", "N"}
+    config_params: Tuple[str, ...] = ("d_pre", "d_stim", "d_post", "d_warn")
+    input_dataclass = SpikesAlignerInputs
+    output_dataclass = SpikesAlignerOutputs
+    valid_tasks: frozenset = frozenset({"PTD", "CLK"})
+    valid_stims: frozenset = frozenset({"R", "T", "N"})
 
     def __init__(
         self,
@@ -154,45 +200,34 @@ class SpikesAligner(Processor):
         d_warn: float = D_WARN,
     ):
         super().__init__(d_pre=d_pre, d_stim=d_stim, d_post=d_post, d_warn=d_warn)
+        # Add class-level attributes to make them available for `SpikesAlignerInputs`
+        # when `config_params` is passed as keyword arguments in `Processor._pre_process()`
+        self.config_params += ("valid_tasks", "valid_stims")
 
-    def _validate(self, **input_data: Any) -> None:
+    def _process(
+        self,
+        spikes: SpikingTimes = SpikesAlignerInputs.spikes,
+        task: Task = SpikesAlignerInputs.task,
+        stim: Stim = SpikesAlignerInputs.stim,
+        t_on: float = SpikesAlignerInputs.t_on,
+        t_off: float = SpikesAlignerInputs.t_off,
+        **input_data: Any,
+    ) -> SpikingTimes:
         """Implement the template method called in the base class :meth:`process` method."""
-        task = input_data["task"]
-        stim = input_data["stim"]
-        self._validate_exp_params(task, stim)
-
-    def _process(self) -> None:
-        """Implement the template method called in the base class :meth:`process` method."""
-        t_start1, t_end1, t_start2, t_end2 = self.eval_times(
-            self.task, self.stim, self.t_on, self.t_off
-        )
-        spk_joined = self.join_epochs(t_start1, t_end1, t_start2, t_end2)
-        self.aligned_spikes = spk_joined
-
-    def _validate_exp_params(self, task: Task, stim: Stim) -> None:
-        """
-        Check that the input values for task, stimulus, and timings are consistent.
-
-        Raises
-        ------
-        ValueError
-            If the input values are inconsistent.
-        """
-        if task not in self.valid_tasks:
-            raise ValueError(f"Unknown task: {task}")
-        if stim not in self.valid_stims:
-            raise ValueError(f"Unknown stimulus: {stim}")
+        t_start1, t_end1, t_start2, t_end2 = self.eval_times(task, stim, t_on, t_off)
+        spk_joined = self.join_epochs(spikes, t_start1, t_end1, t_start2, t_end2)
+        return spk_joined
 
     def eval_times(
         self, task: Task, stim: Stim, t_on: float, t_off: float
-    ) -> tuple[float, float, float, float]:
+    ) -> Tuple[float, float, float, float]:
         """
         Determine the times boundaries of the epochs to extract in one specific trial in order to
         align it with the other trials in a data set.
 
         Returns
         -------
-        t_start1, t_end1, t_start2, t_end2: tuple[float, float, float, float]
+        t_start1, t_end1, t_start2, t_end2: float
             Time boundaries of the first and second epochs to extract in the specific trial.
         """
         t_start1 = t_on - self.d_pre
@@ -206,7 +241,7 @@ class SpikesAligner(Processor):
             t_end2 = t_start2 + self.d_stim + self.d_post
         return t_start1, t_end1, t_start2, t_end2
 
-    def slice_epoch(self, t_start: float, t_end: float) -> SpikingTimes:
+    def slice_epoch(self, spikes: SpikingTimes, t_start: float, t_end: float) -> SpikingTimes:
         """
         Extract spiking times within one epoch and reset them relative to the epoch start.
 
@@ -214,8 +249,10 @@ class SpikesAligner(Processor):
         ---------
         Resulting spiking times are *relative* to the beginning of the considered epoch.
 
-        Parameters
-        ----------
+        Arguments
+        ---------
+        spikes: SpikingTimes
+            See :attr:`SpikesAlignerInput.spikes`
         t_start, t_end: float
             Times boundaries of the epoch (in seconds).
 
@@ -230,16 +267,18 @@ class SpikesAligner(Processor):
         - Select the spiking times within the epoch with a boolean mask.
         - Subtract the starting time of the epoch to reset the time.
         """
-        return self.spikes[(self.spikes >= t_start) & (self.spikes < t_end)] - t_start
+        return spikes[(spikes >= t_start) & (spikes < t_end)] - t_start
 
     def join_epochs(
-        self, t_start1: float, t_end1: float, t_start2: float, t_end2: float
+        self, spikes: SpikingTimes, t_start1: float, t_end1: float, t_start2: float, t_end2: float
     ) -> SpikingTimes:
         """
         Join spiking times from two distinct epochs as if they were continuous.
 
         Parameters
         ----------
+        spikes: SpikingTimes
+            See :attr:`SpikesAlignerInput.spikes`
         t_start1, t_end1, t_start2, t_end2: float
             Times boundaries of both epochs to connect (in seconds).
 
@@ -255,6 +294,6 @@ class SpikesAligner(Processor):
         - Shift the times in the second period by the duration of the first period.
         - Concatenate the two sets of spiking times.
         """
-        spk1 = self.slice_epoch(t_start1, t_end1)
-        spk2 = self.slice_epoch(t_start2, t_end2) + (t_end1 - t_start1)
+        spk1 = self.slice_epoch(spikes, t_start1, t_end1)
+        spk2 = self.slice_epoch(spikes, t_start2, t_end2) + (t_end1 - t_start1)
         return np.concatenate([spk1, spk2])
