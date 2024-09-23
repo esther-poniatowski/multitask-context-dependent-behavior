@@ -70,8 +70,8 @@ def test_smooth():
     Expected Outputs
     ----------------
     expected: np.ndarray
-        Shape: ``(n_tpts_smth,)`` with ``n_tpts_smth = n_tpts - smooth_window/t_bin + 1`` (valid mode).
-        Here: ``smooth_window/t_bin = 2`` bins, so ``n_tpts_smth = 10 - 2 + 1 = 9``.
+        Shape: ``(n_t_smth,)`` with ``n_t_smth = n_t - smooth_window/t_bin + 1`` (valid mode).
+        Here: ``smooth_window/t_bin = 2`` bins, so ``n_t_smth = 10 - 2 + 1 = 9``.
         Values: All equal to 0.5, which is the average of two consecutive values in both input
         trials, ``(0 + 1)/2 = (0.25 + 0.75)/2 = 0.5``.
 

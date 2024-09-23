@@ -15,7 +15,9 @@ Classes
 # pylint: disable=no-member
 # pylint: disable=attribute-defined-outside-init
 # pylint: disable=useless-parent-delegation
+# pylint: disable=unused-argument
 
+from dataclasses import dataclass
 from typing import List, TypeAlias, Union, Any, Tuple
 
 import numpy as np
@@ -30,6 +32,7 @@ Features = List[np.ndarray[Tuple[Any], np.dtype[Union[np.int64, np.float64, np.s
 """Type alias for a list of feature arrays."""
 
 
+@dataclass
 class StratifierInputs(ProcessorInput):
     """
     Dataclass for the inputs of the :class:`Stratifier` processor.
@@ -44,10 +47,7 @@ class StratifierInputs(ProcessorInput):
 
     features: Features
 
-    def __post_init__(self):
-        self.validate_features(self.features)
-
-    def validate_features(self, features: Features) -> None:
+    def validate(self, **config_params: Any) -> None:
         """
         Validate the features to be used for stratification.
 
@@ -56,11 +56,12 @@ class StratifierInputs(ProcessorInput):
         ValueError
             If the number of samples is not equal across features.
         """
-        n_samples = [len(feat) for feat in features]
+        n_samples = [len(feat) for feat in self.features]
         if not all(n == n_samples[0] for n in n_samples):
             raise ValueError(f"Unequal number of samples across features: {n_samples}")
 
 
+@dataclass
 class StratifierOutputs(ProcessorOutput):
     """
     Dataclass for the outputs of the :class:`Stratifier` processor.
@@ -69,7 +70,6 @@ class StratifierOutputs(ProcessorOutput):
     ----------
     strata: np.ndarray[Tuple[Any], np.dtype[np.int64]]
         Stratum labels of the samples. Shape: ``(n_samples,)``.
-        .. _strata_input:
     """
 
     strata: Strata
@@ -81,7 +81,6 @@ class Stratifier(Processor):
 
     Methods
     -------
-    :meth:`_validate_features`
     :meth:`stratify`
 
     Examples
@@ -124,9 +123,10 @@ class Stratifier(Processor):
         """
         Compute stratum labels based on unique combinations of features.
 
-        Important
+        Arguments
         ---------
-        Update the attribute `strata` with the computed stratum labels.
+        features: Features
+            See :attr:`StratifierInputs.features`.
 
         Implementation
         --------------

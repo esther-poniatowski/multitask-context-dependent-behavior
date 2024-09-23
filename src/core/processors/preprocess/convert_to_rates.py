@@ -14,7 +14,9 @@ Classes
 # mypy: disable-error-code="attr-defined"
 # pylint: disable=no-member
 # pylint: disable=attribute-defined-outside-init
+# pylint: disable=unused-argument
 
+from dataclasses import dataclass
 from typing import TypeAlias, Any, Tuple, Optional
 
 import numpy as np
@@ -31,6 +33,7 @@ FiringRates: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.float64]]
 """Type alias for firing rates."""
 
 
+@dataclass
 class FiringRatesConverterInputs(ProcessorInput):
     """
     Dataclass for the inputs of the :class:`FiringRatesConverter` processor.
@@ -44,6 +47,7 @@ class FiringRatesConverterInputs(ProcessorInput):
     spikes: SpikingTimes
 
 
+@dataclass
 class FiringRatesConverterOutputs(ProcessorOutput):
     """
     Dataclass for the outputs of the :class:`FiringRatesConverter` processor.
@@ -54,14 +58,7 @@ class FiringRatesConverterOutputs(ProcessorOutput):
         Firing rate time course (in spikes/s), obtained in two steps:
         1. Binning the spikes.
         2. Smoothing the binned rates.
-        Shape: ``(n_tpts_smth,)`` (see :attr:`FiringRatesConverter.n_tpts_smth`).
-
-    f_smoothed: FiringRates
-        Smoothed firing rate time course (in spikes/s).
-        Shape: ``(n_tpts_smth,)`` (see :attr:`FiringRatesConverter.n_tpts_smth`).
-    f_binned: FiringRates
-        Firing rate time course (in spikes/s), obtained by binning the spikes.
-        Shape: ``(n_tpts,)`` (see :attr:`FiringRatesConverter.n_tpts`).
+        Shape: ``(n_t_smth,)`` (see :attr:`FiringRatesConverter.n_t_smth`).
     """
 
     f_rates: FiringRates
@@ -82,9 +79,9 @@ class FiringRatesConverter(Processor):
     mode: str
         Convolution mode for smoothing. Options: ``'valid'`` (default), ``'same'``.
         See  :meth:`smooth` for details.
-    n_tpts: int
-        Number of time bins in the firing rate time course ``f_binned``: ``n_tpts = t_max/t_bin``.
-    n_tpts_smth: int
+    n_t: int
+        Number of time bins in the firing rate time course ``f_binned``: ``n_t = t_max/t_bin``.
+    n_t_smth: int
         Number of time bins in the smoothed firing rate time course ``f_smoothed``, depending on the
         convolution mode. See :meth:`smooth` for details.
 
@@ -153,7 +150,7 @@ class FiringRatesConverter(Processor):
         -------
         f_binned: FiringRates
             Firing rate time course (in spikes/s), obtained by binning the spikes.
-            Shape: ``(n_tpts,)`` (see :attr:`FiringRatesConverter.n_tpts`).
+            Shape: ``(n_t,)`` (see :attr:`FiringRatesConverter.n_t`).
             .. _f_binned:
 
         Implementation
@@ -189,7 +186,9 @@ class FiringRatesConverter(Processor):
         Returns
         -------
         f_smoothed: FiringRates
-            See :attr:`FiringRatesConverter.n_tpts_smth`).
+            Smoothed firing rate time course (in spikes/s).
+            Shape: ``(n_t_smth,)`` (see :attr:`FiringRatesConverter.n_t_smth`).
+            .. _f_smoothed:
 
         Notes
         -----
@@ -204,10 +203,10 @@ class FiringRatesConverter(Processor):
 
         Corresponding output shape:
 
-        - ``'same'``:  ``n_out = n_in``. Here: ``n_tpts_smth = n_tpts``.
-        - ``'valid'``:  ``n_out = n_in - k + 1``, where ``k`` is the kernel size. This is because
-          the kernel cannot fit in the signal when it is placed on the last `k+1` positions. Here:
-          ``n_tpts_smth = n_tpts - smooth_window/t_bin + 1``.
+        - ``'same'``:  ``n_out = n_in``. Here: ``n_t_smth = n_t``.
+        - ``'valid'``:  ``n_out = n_in - k + 1``, where ``k`` is the kernel size. Indeed, `k - 1`
+          positions have to be subtracted since the kernel cannot fit within the signal when it is
+          placed on the last `k + 1` positions. Here: ``n_t_smth = n_t - smooth_window/t_bin + 1``.
 
         Implementation
         --------------
@@ -232,24 +231,24 @@ class FiringRatesConverter(Processor):
         return f_smoothed
 
     @property
-    def n_tpts(self) -> int:
+    def n_t(self) -> int:
         """
         Number of time bins in the recording period.
 
-        Rule: ``n_tpts = t_max/t_bin``. If the division is not exact, the result is rounded down.
+        Rule: ``n_t = t_max/t_bin``. If the division is not exact, the result is rounded down.
         """
         return int(self.t_max / self.t_bin)
 
     @property
-    def n_tpts_smth(self) -> int:
+    def n_t_smth(self) -> int:
         """
         Number of time bins in the smoothed firing rate time course.
 
         Rule: Depend on the convolution mode. See :meth:`smooth` for details.
         """
         if self.mode == "same":
-            return self.n_tpts
+            return self.n_t
         elif self.mode == "valid":
-            return self.n_tpts - int(self.smooth_window / self.t_bin) + 1
+            return self.n_t - int(self.smooth_window / self.t_bin) + 1
         else:
             raise ValueError(f"Invalid mode: {self.mode}")

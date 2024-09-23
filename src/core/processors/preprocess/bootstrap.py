@@ -47,7 +47,9 @@ Implementation
 # mypy: disable-error-code="attr-defined"
 # pylint: disable=no-member
 # pylint: disable=attribute-defined-outside-init
+# pylint: disable=unused-argument
 
+from dataclasses import dataclass
 from typing import TypeAlias, Any, Tuple
 
 import numpy as np
@@ -66,6 +68,7 @@ PseudoTrials: TypeAlias = np.ndarray[Tuple[Any, Any], np.dtype[np.int64]]
 """Type alias for pseudo-trials indices."""
 
 
+@dataclass
 class BootstrapperInputs(ProcessorInput):
     """
     Dataclass for the inputs of the :class:`Bootstrapper` processor.
@@ -79,6 +82,7 @@ class BootstrapperInputs(ProcessorInput):
     counts: Counts
 
 
+@dataclass
 class BootstrapperOutputs(ProcessorOutput):
     """
     Dataclass for the outputs of the :class:`Bootstrapper` processor.
