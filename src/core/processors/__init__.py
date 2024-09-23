@@ -65,9 +65,10 @@ Define a processor subclass which performs a basic data transformation:
     class ExampleProcessorInputs(ProcessorInput):
         input_arr: np.ndarray = np.empty(0)
 
-        def __post_init__(self):
-            if not isinstance(self.input_arr, np.ndarray):
-                raise ValueError("Invalid type: expected NumPy array.")
+        def validate(self, min_length: int = 0, **config_params):
+            l = len(self.input_arr)
+            if l < min_length:
+                raise ValueError(f"Invalid length for input array: {l} < {min_length}")
 
 
     class ExampleProcessorOutputs(ProcessorOutput):
@@ -78,20 +79,20 @@ Define a processor subclass which performs a basic data transformation:
 
         # --- Define processor class-level attributes
 
-        config_params = ("example_param",) # config parameters fixed for the processor instance
+        config_params = ("min_length", "factor") # fixed for the processor instance
         input_dataclass = ExampleProcessorInputs
         output_dataclass = ExampleProcessorOutputs
         is_random = True
 
         # --- Set the configuration parameters via the parent constructor
 
-        def __init__(self, example_param: int = 1):
-            super().__init__(example_param=example_param)
+        def __init__(self, min_length: int = 1, factor: float = 1.0):
+            super().__init__(min_length=min_length, factor=factor)
 
         # --- Define processor methods - Specify signature and processing logic
 
         def _process(self, input_arr: np.ndarray = ExampleProcessorInputs.input_arr) -> np.ndarray:
-            output_arr = self.input_arr * self.example_param
+            output_arr = self.input_arr * self.factor
             return output_arr
 
 
@@ -115,11 +116,14 @@ For each processor, the types of inputs and outputs are specified in two datacla
 
 - Centralized documentation: Inputs and outputs are defined once with there types. They can be
   referenced by the processor's methods.
-- Automatic Validation: The structure of the inputs and outputs (including number, name, default
-  values) is enforced via the data classes. This ensures a seamless flow through the processing
-  pipeline when chaining several methods. In contrast, a dictionary-based approach using a
-  class-level attribute defined in the processor would require manual validation and potentially
-  clutter the processing logic.
+- Automatic Validation: The structure of the inputs and outputs (i.e. number and name) is enforced
+  by the data classes instantiation. This ensures a seamless flow through the processing pipeline
+  when chaining several methods. In contrast, a dictionary-based approach using a class-level
+  attribute defined in the processor would require manual validation and potentially clutter the
+  processing logic.
+- Delegated Validation via Dependency Injection : Setting default values or checking inputs
+  consistency is possible via the `validate` method in the data class. This method accepts the
+  configuration parameters of the associated processor if the latter are required for validation.
 
 Warning: Type validation from the type hints is not automatically enforced by the data class
 decorator.
