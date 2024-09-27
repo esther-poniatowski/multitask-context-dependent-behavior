@@ -3,15 +3,15 @@
 """
 :mod:`core.entities.base_entity` [module]
 
-Define an abstract base class for all enumeration classes.
+Define a common interface for all classes representing the entities (core objects) in the package.
 
 Classes
 -------
-:class:`CoreObject` (Enum, ABC)
+:class:`Entity` (Enum, ABC)
 
 Implementation
 --------------
-The base class defines a common interface for all classes representing the entities in the package.
+
 It should be inherited by subclasses that represent specific types of objects, which correspond to
 concrete quantities or categories in the experiment. Each subclass stands as a type in itself and
 provides a central documentation for the object it represents.
@@ -36,7 +36,7 @@ T = TypeVar("T")
 """Type variable for the values representing an entity."""
 
 
-class CoreObject(ABC, Generic[T]):
+class Entity(ABC, Generic[T]):
     """
     Abstract base class for custom enumeration classes.
 
@@ -67,7 +67,7 @@ class CoreObject(ABC, Generic[T]):
 
     .. code-block:: python
 
-        class ConcreteObject(CoreObject):
+        class ConcreteObject(Entity):
             _options = ["a", "b"]
             _full_labels = {"a": "Alpha", "b": "Beta"}
 
