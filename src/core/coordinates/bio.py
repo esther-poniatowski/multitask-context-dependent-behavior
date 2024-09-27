@@ -32,7 +32,7 @@ class CoordPopulation(Coordinate, Generic[T]):
     Class Attributes
     ----------------
     feature: Type[T]
-        Subclass of :class:`CoreObject` corresponding to the type of feature which is represented by
+        Subclass of :class:`Entity` corresponding to the type of feature which is represented by
         the coordinate.
 
     Attributes
