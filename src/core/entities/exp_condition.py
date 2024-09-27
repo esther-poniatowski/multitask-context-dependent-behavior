@@ -15,10 +15,10 @@ Classes
 from types import MappingProxyType
 from typing import FrozenSet, Mapping
 
-from entities.base_entity import CoreObject
+from entities.base_entity import Entity
 
 
-class Task(CoreObject[str]):
+class Task(Entity[str]):
     """
     Tasks performed by the animals (i.e. discrimination between two sounds categories).
 
@@ -46,7 +46,7 @@ class Task(CoreObject[str]):
     )
 
 
-class Context(CoreObject[str]):
+class Context(Entity[str]):
     """
     Contexts, i.e. animals' engagement in a task.
 
@@ -88,7 +88,7 @@ class Context(CoreObject[str]):
     )
 
 
-class Stimulus(CoreObject[str]):
+class Stimulus(Entity[str]):
     """
     Behavioral category of the auditory stimuli in the Go/NoGo task.
 

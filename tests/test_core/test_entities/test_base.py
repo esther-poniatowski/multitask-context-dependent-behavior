@@ -13,7 +13,7 @@ from typing import FrozenSet, Mapping
 
 import pytest
 
-from entities.base_entity import CoreObject
+from entities.base_entity import Entity
 
 
 # Test Inputs
@@ -26,7 +26,7 @@ FULL_LABELS: Mapping[int, str] = MappingProxyType({1: "One", 2: "Two", 3: "Three
 """Full labels for the valid values."""
 
 
-class TestObject(CoreObject):
+class TestObject(Entity):
     """Concrete class for testing the base object."""
 
     _options = OPTIONS

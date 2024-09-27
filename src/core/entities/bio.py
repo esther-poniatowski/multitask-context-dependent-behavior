@@ -16,10 +16,10 @@ Classes
 from types import MappingProxyType
 from typing import FrozenSet, Mapping
 
-from entities.base_entity import CoreObject
+from entities.base_entity import Entity
 
 
-class Animal(CoreObject[str]):
+class Animal(Entity[str]):
     """
     Animals in which neurons were recorded.
 
@@ -88,7 +88,7 @@ class Animal(CoreObject[str]):
     )
 
 
-class Training(CoreObject[bool]):
+class Training(Entity[bool]):
     """
     Training status of an animal.
 
@@ -104,7 +104,7 @@ class Training(CoreObject[bool]):
     _full_labels: Mapping[bool, str] = MappingProxyType({True: "Trained", False: "Naive"})
 
 
-class Area(CoreObject[str]):
+class Area(Entity[str]):
     """
     Brain areas in which neurons were recorded.
 
@@ -141,7 +141,7 @@ class Area(CoreObject[str]):
     )
 
 
-class CorticalDepth(CoreObject):
+class CorticalDepth(Entity):
     """
     Depth of the recording electrode in the cortex.
 

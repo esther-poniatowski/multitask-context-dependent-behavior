@@ -52,7 +52,7 @@ class Position(ABC):
 
     Implementation
     --------------
-    This class does not inherit from CoreObject although it represents an experimental quantity. The
+    This class does not inherit from Entity although it represents an experimental quantity. The
     reason is that representing positional information requires specific logic, and thus a dedicated
     base class.
     This base class is inherited by three concrete sub-classes classes used conjointly to describe
