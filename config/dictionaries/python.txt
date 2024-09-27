@@ -44,6 +44,7 @@ loadtxt
 makedirs
 matplotlib
 meshgrid
+moveaxis
 ndarray
 ndim
 newaxis
@@ -56,14 +57,19 @@ pyright
 pytest
 PYTHONPATH
 pyyaml
+reduceat
 repr
 returncode
+rollaxis
 savetxt
 scikit
 scipy
 setattr
 setflags
 staticmethod
+swapaxes
 sysconfig
+ufunc
+ufuncs
 writerows
 xarray
