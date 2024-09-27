@@ -33,7 +33,7 @@ class CoordExpCond(Coordinate, Generic[C]):
     Class Attributes
     ----------------
     condition: Type[C]
-        Subclass of :class:`CoreObject` corresponding to the type of experimental condition which is
+        Subclass of :class:`Entity` corresponding to the type of experimental condition which is
         represented by the coordinate.
         It has to be defined in each subclass to match the specific condition type.
 
