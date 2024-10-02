@@ -29,8 +29,8 @@ FULL_LABELS: Mapping[int, str] = MappingProxyType({1: "One", 2: "Two", 3: "Three
 class TestObject(Entity):
     """Concrete class for testing the base object."""
 
-    _options = OPTIONS
-    _full_labels = FULL_LABELS
+    _OPTIONS = OPTIONS
+    _LABELS = FULL_LABELS
 
 
 # Test Functions
