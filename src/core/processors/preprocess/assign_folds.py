@@ -5,112 +5,32 @@
 
 Classes
 -------
-:class:`FoldAssignerInputs`
-:class:`FoldAssignerOutputs`
-:class:`FoldAssigner`
+`FoldAssigner`
 
 Notes
 -----
 Folds correspond to subsets of samples (trials) used to train and test a model in cross-validation.
 
-The class :class:`FoldAssigner` is only responsible of assigning each sample to one fold. Actual
-splitting samples into training and testing sets is carried out in the :class:`CoordFold` class
-itself based on these fold assignments (methods :meth:`get_train` and :meth:`get_test`). This allows
-direct access to the samples in each set through the coordinate, without resorting to external
-cross-validation tools.
+The class `FoldAssigner` is only responsible of assigning each sample to one fold. Actual splitting
+samples into training and testing sets is carried out in the `CoordFold` class itself based
+on these fold assignments (methods `CoordFold.get_train` and `CoordFold.get_test`). This allows direct access to the
+samples in each set through the coordinate, without resorting to external cross-validation tools.
 """
 # Disable error codes for attributes which are not detected by the type checker:
 # (configuration and data attributes are initialized by the base class constructor)
 # mypy: disable-error-code="attr-defined"
 # pylint: disable=no-member
-# pylint: disable=attribute-defined-outside-init
-# pylint: disable=unused-argument
 
-from dataclasses import dataclass
-from typing import TypeAlias, Any, Tuple
+from typing import TypeAlias, Any, Tuple, Optional, Dict
 
 import numpy as np
 
-from core.processors.base_processor import Processor, ProcessorInput, ProcessorOutput
+from core.processors.base_processor import Processor
 from core.processors.preprocess.stratify import Strata
 
 
 Folds: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
 """Type alias for fold assignments."""
-
-
-@dataclass
-class FoldAssignerInputs(ProcessorInput):
-    """
-    Dataclass for the inputs of the :class:`FoldAssigner` processor.
-
-    Attributes
-    ----------
-    n_samples: int
-        Number of samples to assign to folds.
-    strata: Strata
-        Labels of strata for stratified assignment. Shape: ``(n_samples,)``.
-        If not provided or None, all samples are treated as belonging to a single stratum based on
-        the number of samples `n_samples`.
-    """
-
-    n_samples: int
-    strata: Strata
-
-    def validate(self, k: int = 0, **config_params: Any) -> None:
-        """
-        Ensure consistency between both inputs:
-
-        - Check that exactly one input is provided as argument (not both, nor none).
-        - Set the default value for the missing attribute based on the other one.
-
-        Arguments
-        ---------
-        k: int
-            See :attr:`FoldAssigner.k`
-
-        Raises
-        ------
-        ValueError
-            If both `n_samples` and `strata` are missing.
-            If both `n_samples` and `strata` are provided.
-            If the number of samples is lower than the number of folds to form.
-
-        Notes
-        -----
-        Rules to assign default values:
-
-        - If `strata` is provided, then `n_samples` is equal to the length of `strata`.
-        - If `n_samples` is provided, then all samples are treated as belonging to a single stratum,
-          therefore `strata` is a zero array of length `n_samples` (single label 0).
-        """
-        # Check that only one input is provided
-        if self.n_samples is None and self.strata is None:
-            raise ValueError("Missing arguments: provide either `n_samples` or `strata`.")
-        if self.n_samples is not None and self.strata is not None:
-            raise ValueError("Extra arguments: provide either `n_samples` or `strata`.")
-        # Set the default value for the missing input
-        if self.strata is None:
-            self.strata = np.zeros(self.n_samples, dtype=np.int64)
-        if self.n_samples is None:
-            self.n_samples = self.strata.size
-        # Check if the resulting number of samples is lower than the number of folds
-        if self.n_samples < k:
-            raise ValueError(f"n_samples: {self.n_samples} < k: {k}")
-
-
-@dataclass
-class FoldAssignerOutputs(ProcessorOutput):
-    """
-    Dataclass for the outputs of the :class:`FoldAssigner` processor.
-
-    Attributes
-    ----------
-    folds: Folds
-        Fold assignment for each sample. Shape: ``(n_samples,)``.
-    """
-
-    folds: Folds
 
 
 class FoldAssigner(Processor):
@@ -119,19 +39,12 @@ class FoldAssigner(Processor):
 
     Attributes
     ----------
-    k: int
-        Number of folds in which the samples will be divided. Read-only.
-    n_samples: int
-        Number of samples to assign to folds.
-        If not provided or None, the number of samples is inferred from the length of `strata`.
-    strata: np.ndarray[Tuple[Any], np.dtype[np.int64]]
-
-    folds:
-        Fold assignment for each sample. Shape: ``(n_samples,)``.
+    k : int
+        Number of folds in which the samples will be divided.
 
     Methods
     -------
-    :meth:`assign`
+    `assign`
 
     Warning
     -------
@@ -160,16 +73,71 @@ class FoldAssigner(Processor):
         methods.
     """
 
-    config_params = ("k",)
-    input_dataclass = FoldAssignerInputs
-    output_dataclass = FoldAssignerOutputs
     is_random = True
 
     def __init__(self, k: int):
         super().__init__(k=k)
 
-    def _process(self, strata: Strata = FoldAssignerInputs.strata, **input_data: Any) -> Folds:
-        """Implement the template method called in the base class :meth:`process` method."""
+    def _pre_process(
+        self, n_samples: Optional[int] = None, strata: Optional[Strata] = None, **input_data: Any
+    ) -> Dict[str, Any]:
+        """
+        Ensure consistency between both inputs:
+
+        - Check that exactly one input is provided as argument (not both, nor none).
+        - Set the default value for the missing attribute based on the other one.
+
+        Raises
+        ------
+        ValueError
+            If both `n_samples` and `strata` are missing.
+            If both `n_samples` and `strata` are provided.
+            If the number of samples is lower than the number of folds to form.
+
+        Notes
+        -----
+        Rules to assign default values:
+
+        - If `strata` is provided, then `n_samples` is equal to the length of `strata`.
+        - If `n_samples` is provided, then all samples are treated as belonging to a single stratum,
+          therefore `strata` is a zero array of length `n_samples` (single label 0).
+        """
+        # Set the default value for the missing input
+        if strata is None and n_samples is not None:
+            strata = np.zeros(n_samples, dtype=np.int64)
+        elif n_samples is None and strata is not None:
+            n_samples = strata.size
+        else:
+            raise ValueError("Invalid arguments: provide either `n_samples` or `strata`.")
+        # Check if the resulting number of samples is lower than the number of folds
+        if n_samples < self.k:
+            raise ValueError(f"n_samples: {n_samples} < k: {self.k}")
+        # Override missing input data
+        input_data = {"n_samples": n_samples, "strata": strata}
+        return input_data
+
+    def _process(self, strata: Optional[Strata] = None, **input_data: Any) -> Folds:
+        """
+        Implement the template method called in the base class `process` method.
+
+        Arguments
+        ---------
+        n_samples : int
+            Number of samples to assign to folds.
+            If not provided, it is inferred from the length of `strata`.
+            .. _n_samples:
+        strata : Strata
+            Labels of strata for stratified assignment. Shape: ``(n_samples,)``. If not provided,
+            all samples are treated as belonging to a single stratum based on the number of samples.
+            .. _strata:
+
+        Returns
+        -------
+        folds : Folds
+            Fold assignment for each sample. Shape: ``(n_samples,)``.
+            .. _folds:
+        """
+        assert strata is not None
         folds = self.assign(strata)
         return folds
 
@@ -180,12 +148,12 @@ class FoldAssigner(Processor):
         Arguments
         ---------
         strata: Strata
-            See :attr:`FoldAssignerInputs.strata`.
+            See the argument :ref:`strata`.
 
         Returns
         -------
-        Folds
-            See :attr:`FoldAssignerOutputs.folds`.
+        folds: Folds
+            See the return value :ref:`folds`.
 
         Implementation
         --------------

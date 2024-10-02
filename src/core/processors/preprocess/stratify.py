@@ -5,24 +5,17 @@
 
 Classes
 -------
-:class:`StratifierInputs`
-:class:`StratifierOutputs`
-:class:`Stratifier`
+`Stratifier`
 """
 # Disable error codes for attributes which are not detected by the type checker:
 # (configuration and data attributes are initialized by the base class constructor)
-# mypy: disable-error-code="attr-defined"
-# pylint: disable=no-member
-# pylint: disable=attribute-defined-outside-init
 # pylint: disable=useless-parent-delegation
-# pylint: disable=unused-argument
 
-from dataclasses import dataclass
-from typing import List, TypeAlias, Union, Any, Tuple
+from typing import List, TypeAlias, Union, Any, Tuple, Optional, Dict
 
 import numpy as np
 
-from core.processors.base_processor import Processor, ProcessorInput, ProcessorOutput
+from core.processors.base_processor import Processor
 
 
 Strata: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
@@ -32,56 +25,13 @@ Features = List[np.ndarray[Tuple[Any], np.dtype[Union[np.int64, np.float64, np.s
 """Type alias for a list of feature arrays."""
 
 
-@dataclass
-class StratifierInputs(ProcessorInput):
-    """
-    Dataclass for the inputs of the :class:`Stratifier` processor.
-
-    Attributes
-    ----------
-    features: List[np.ndarray[Tuple[Any], np.dtype[Union[np.int64, np.float64, np.str_]]]]
-        Features to consider to stratify the samples (e.g., task, context, stimulus).
-        Length: ``n_features``.
-        Shape of each element (feature): ``(n_samples,)``.
-    """
-
-    features: Features
-
-    def validate(self, **config_params: Any) -> None:
-        """
-        Validate the features to be used for stratification.
-
-        Raises
-        ------
-        ValueError
-            If the number of samples is not equal across features.
-        """
-        n_samples = [len(feat) for feat in self.features]
-        if not all(n == n_samples[0] for n in n_samples):
-            raise ValueError(f"Unequal number of samples across features: {n_samples}")
-
-
-@dataclass
-class StratifierOutputs(ProcessorOutput):
-    """
-    Dataclass for the outputs of the :class:`Stratifier` processor.
-
-    Attributes
-    ----------
-    strata: np.ndarray[Tuple[Any], np.dtype[np.int64]]
-        Stratum labels of the samples. Shape: ``(n_samples,)``.
-    """
-
-    strata: Strata
-
-
 class Stratifier(Processor):
     """
     Divide a set of samples in strata (groups) based on combinations of experimental features.
 
     Methods
     -------
-    :meth:`stratify`
+    `stratify`
 
     Examples
     --------
@@ -98,25 +48,50 @@ class Stratifier(Processor):
     See Also
     --------
     :class:`core.processors.preprocess.base_processor.Processor`
-        Base class for all processors. See definition of class-level attributes and template
-        methods.
-
-    Notes
-    -----
-    No configuration parameters are required for this processor. Therefore, the class does not store
-    any configuration attributes.
+        Base class for all processors: see class-level attributes and template methods.
     """
 
-    config_params = ()
-    input_dataclass = StratifierInputs
-    output_dataclass = StratifierOutputs
     is_random: bool = False
 
     def __init__(self):
-        super().__init__()  # call the parent class constructor (no config attributes)
+        super().__init__()  # no config params
 
-    def _process(self, features: Features = StratifierInputs.features, **input_data: Any) -> Strata:
-        """Implement the template method called in the base class :meth:`process` method."""
+    def _pre_process(
+        self, features: Optional[Features] = None, **input_data: Any
+    ) -> Dict[str, Any]:
+        """
+        Validate the features to be used for stratification.
+
+        Raises
+        ------
+        ValueError
+            If the number of samples is not equal across features.
+        """
+        assert features is not None
+        n_samples = [len(feat) for feat in features]
+        if not all(n == n_samples[0] for n in n_samples):
+            raise ValueError(f"Unequal number of samples across features: {n_samples}")
+        return input_data
+
+    def _process(self, features: Optional[Features] = None, **input_data: Any) -> Strata:
+        """
+        Implement the template method called in the base class `process` method.
+
+        Parameters
+        ----------
+        features : Features
+            Features to consider to stratify the samples (e.g., task, context, stimulus).
+            Length: ``n_features``.
+            Shape of each element (feature): ``(n_samples,)``.
+            .. _features:
+
+        Returns
+        -------
+        strata : Strata
+            Stratum labels of the samples. Shape: ``(n_samples,)``.
+            .. _strata:
+        """
+        assert features is not None
         return self.stratify(features)
 
     def stratify(self, features: Features) -> Strata:
@@ -125,8 +100,13 @@ class Stratifier(Processor):
 
         Arguments
         ---------
-        features: Features
-            See :attr:`StratifierInputs.features`.
+        features : Features
+            See the argument :ref:`features`.
+
+        Returns
+        -------
+        strata : Strata
+            See the return value :ref:`strata`.
 
         Implementation
         --------------
