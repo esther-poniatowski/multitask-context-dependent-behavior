@@ -3,7 +3,9 @@
 """
 :mod:`core.entities.base_entity` [module]
 
-Define a common interface for all classes representing the entities (core objects) in the package.
+Define a common interface for all classes representing entities (core objects) in the package.
+
+Derived subclasses represent specific concrete quantities or categories in the experiment.
 
 Classes
 -------
@@ -11,10 +13,8 @@ Classes
 
 Implementation
 --------------
-
-It should be inherited by subclasses that represent specific types of objects, which correspond to
-concrete quantities or categories in the experiment. Each subclass stands as a type in itself and
-provides a central documentation for the object it represents.
+Each subclass stands as a type in itself and provides a central documentation for the object it
+represents.
 
 Each subclass should define:
 
@@ -28,7 +28,6 @@ See Also
 """
 
 from abc import ABC
-from types import MappingProxyType
 from typing import Generic, TypeVar, Mapping, FrozenSet
 
 
@@ -38,18 +37,16 @@ T = TypeVar("T")
 
 class Entity(ABC, Generic[T]):
     """
-    Abstract base class for custom enumeration classes.
+    Abstract base class for 'entities', under the form of a custom enumeration class.
 
     Class Attributes
     ----------------
-    _options: FrozenSet[T]
-        Valid values to represent the object.
-        To be overridden in the derived classes.
-    _full_labels: Mapping[T, str]
-        Full labels for the valid values.
+    _OPTIONS: FrozenSet[T]
+        Valid values to represent the object. To be overridden in derived classes.
+    _LABELS: Mapping[T, str]
+        Full labels for the valid values. To be overridden in derived classes.
         Keys: Valid values.
         Values: Full labels for the valid values.
-        To be overridden in the derived classes.
 
     Methods
     -------
@@ -68,8 +65,8 @@ class Entity(ABC, Generic[T]):
     .. code-block:: python
 
         class ConcreteObject(Entity):
-            _options = ["a", "b"]
-            _full_labels = {"a": "Alpha", "b": "Beta"}
+            _OPTIONS = frozenset(["a", "b"])
+            _LABELS = MappingProxyType({"a": "Alpha", "b": "Beta"})
 
     Instantiate an object and get its full label:
 
@@ -98,23 +95,23 @@ class Entity(ABC, Generic[T]):
 
     """
 
-    _options: FrozenSet[T] = frozenset()
-    _full_labels: Mapping[T, str] = MappingProxyType({})
+    _OPTIONS: FrozenSet[T]
+    _LABELS: Mapping[T, str]
 
     def __init__(self, value):
-        if value not in self._options:
+        if value not in self._OPTIONS:
             raise ValueError(f"Invalid value: {value}")
         self.value = value
 
     @property
     def full_label(self) -> str:
         """Full label for the value (often used for visualization)."""
-        return self._full_labels.get(self.value, "")
+        return self._LABELS.get(self.value, "")
 
     @classmethod
     def get_options(cls) -> FrozenSet[T]:
         """Get all the valid options for the values of an object."""
-        return cls._options
+        return cls._OPTIONS
 
     def __eq__(self, other) -> bool:
         """Check equality based on the value."""

@@ -24,7 +24,7 @@ class Task(Entity[str]):
 
     Class Attributes
     ----------------
-    _options : FrozenSet[str]
+    _OPTIONS : FrozenSet[str]
         Tasks represented by their short names (3 letters).
         PTD : Pure Tone Discrimination.
             Categories : Pure tone vs. White noise.
@@ -35,9 +35,9 @@ class Task(Entity[str]):
             Similar to PTD in terms of task structure.
     """
 
-    _options: FrozenSet[str] = frozenset(["PTD", "CLK", "CCH"])
+    _OPTIONS: FrozenSet[str] = frozenset(["PTD", "CLK", "CCH"])
 
-    _full_labels: Mapping[str, str] = MappingProxyType(
+    _LABELS: Mapping[str, str] = MappingProxyType(
         {
             "PTD": "Pure Tone Discrimination",
             "CLK": "Click Rate Discrimination",
@@ -52,7 +52,7 @@ class Context(Entity[str]):
 
     Class Attributes
     ----------------
-    _options : FrozenSet[str]
+    _OPTIONS : FrozenSet[str]
         Contexts represented by their short names (1 to 4 letters).
         a : Active context (only for trained animals).
             The animal performs an aversive Go/No-Go task.
@@ -71,19 +71,19 @@ class Context(Entity[str]):
     :meth:`get_naive`
     """
 
-    _options: FrozenSet[str] = frozenset(["a", "p", "p-pre", "p-post"])
+    _OPTIONS: FrozenSet[str] = frozenset(["a", "p", "p-pre", "p-post"])
 
     @classmethod
     def get_trained(cls) -> FrozenSet["Context"]:
         """Contexts for trained animals (all)."""
-        return frozenset(cls(o) for o in cls._options)
+        return frozenset(cls(o) for o in cls._OPTIONS)
 
     @classmethod
     def get_naive(cls) -> FrozenSet["Context"]:
         """Contexts for naive animals (only passive)."""
         return frozenset([cls("p")])
 
-    _full_labels: Mapping[str, str] = MappingProxyType(
+    _LABELS: Mapping[str, str] = MappingProxyType(
         {"p": "Passive", "a": "Active", "p-pre": "Pre-Passive", "p-post": "Post-Passive"}
     )
 
@@ -100,7 +100,7 @@ class Stimulus(Entity[str]):
 
     Class Attributes
     ----------------
-    _options : FrozenSet[str]
+    _OPTIONS : FrozenSet[str]
         Stimuli represented by their short names (1 letter).
         R : Reference stimulus, i.e. Go (safe).
             In PTD : TORC sound.
@@ -117,18 +117,16 @@ class Stimulus(Entity[str]):
     :meth:`get_ptd`
     """
 
-    _options: FrozenSet[str] = frozenset(["R", "T", "N"])
+    _OPTIONS: FrozenSet[str] = frozenset(["R", "T", "N"])
 
     @classmethod
     def get_clk(cls) -> FrozenSet["Stimulus"]:
         """Stimuli for task CLK (all)."""
-        return frozenset(cls(o) for o in cls._options)
+        return frozenset(cls(o) for o in cls._OPTIONS)
 
     @classmethod
     def get_ptd(cls) -> FrozenSet["Stimulus"]:
         """Stimuli for task PTD (no neutral)."""
         return frozenset([cls("R"), cls("T")])
 
-    _full_labels: Mapping[str, str] = MappingProxyType(
-        {"R": "Reference", "T": "Target", "N": "Neutral"}
-    )
+    _LABELS: Mapping[str, str] = MappingProxyType({"R": "Reference", "T": "Target", "N": "Neutral"})
