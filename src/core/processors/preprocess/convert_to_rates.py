@@ -5,25 +5,20 @@
 
 Classes
 -------
-:class:`FiringRatesConverterInputs`
-:class:`FiringRatesConverterOutputs`
-:class:`FiringRatesConverter`
+`FiringRatesConverter`
 """
 # Disable error codes for attributes which are not detected by the type checker:
 # (configuration and data attributes are initialized by the base class constructor)
 # mypy: disable-error-code="attr-defined"
 # pylint: disable=no-member
-# pylint: disable=attribute-defined-outside-init
-# pylint: disable=unused-argument
 
-from dataclasses import dataclass
 from typing import TypeAlias, Any, Tuple, Optional
 
 import numpy as np
 from scipy.signal import fftconvolve
 
 from core.constants import T_BIN
-from core.processors.base_processor import Processor, ProcessorInput, ProcessorOutput
+from core.processors.base_processor import Processor
 
 
 SpikingTimes: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
@@ -31,37 +26,6 @@ SpikingTimes: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
 
 FiringRates: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.float64]]
 """Type alias for firing rates."""
-
-
-@dataclass
-class FiringRatesConverterInputs(ProcessorInput):
-    """
-    Dataclass for the inputs of the :class:`FiringRatesConverter` processor.
-
-    Attributes
-    ----------
-    spikes: SpikingTimes
-        Spiking times. Shape: ``(n_spikes,)``.
-    """
-
-    spikes: SpikingTimes
-
-
-@dataclass
-class FiringRatesConverterOutputs(ProcessorOutput):
-    """
-    Dataclass for the outputs of the :class:`FiringRatesConverter` processor.
-
-    Attributes
-    ----------
-    f_rates: FiringRates
-        Firing rate time course (in spikes/s), obtained in two steps:
-        1. Binning the spikes.
-        2. Smoothing the binned rates.
-        Shape: ``(n_t_smth,)`` (see :attr:`FiringRatesConverter.n_t_smth`).
-    """
-
-    f_rates: FiringRates
 
 
 class FiringRatesConverter(Processor):
@@ -78,12 +42,12 @@ class FiringRatesConverter(Processor):
         Size of the smoothing window (in seconds).
     mode: str
         Convolution mode for smoothing. Options: ``'valid'`` (default), ``'same'``.
-        See  :meth:`smooth` for details.
+        See method `smooth` for details.
     n_t: int
         Number of time bins in the firing rate time course ``f_binned``: ``n_t = t_max/t_bin``.
     n_t_smth: int
         Number of time bins in the smoothed firing rate time course ``f_smoothed``, depending on the
-        convolution mode. See :meth:`smooth` for details.
+        convolution mode. See method `smooth` for details.
 
     Methods
     -------
@@ -111,13 +75,9 @@ class FiringRatesConverter(Processor):
     See Also
     --------
     :class:`core.processors.preprocess.base_processor.Processor`
-        Base class for all processors. See definition of class-level attributes and template
-        methods.
+        Base class for all processors: see class-level attributes and template methods.
     """
 
-    config_params = ("t_bin", "t_max", "smooth_window", "mode")
-    input_dataclass = FiringRatesConverterInputs
-    output_dataclass = FiringRatesConverterOutputs
     is_random = False
 
     def __init__(
@@ -129,10 +89,26 @@ class FiringRatesConverter(Processor):
     ):
         super().__init__(t_bin=t_bin, t_max=t_max, smooth_window=smooth_window, mode=mode)
 
-    def _process(
-        self, spikes: SpikingTimes = FiringRatesConverterInputs.spikes, **input_data: Any
-    ) -> FiringRates:
-        """Implement the template method called in the base class :meth:`process` method."""
+    def _process(self, spikes: Optional[SpikingTimes] = None, **input_data: Any) -> FiringRates:
+        """
+        Implement the template method called in the base class `process` method.
+
+        Parameters
+        ----------
+        spikes: SpikingTimes
+            Spiking times. Shape: ``(n_spikes,)``
+            .. _spikes:
+
+        Returns
+        -------
+        f_rates: FiringRates
+            Firing rate time course (in spikes/s), obtained in two steps:
+            1. Binning the spikes.
+            2. Smoothing the binned rates.
+            Shape: ``(n_t_smth,)`` (see attribute `n_t_smth`).
+            .. _f_rates:
+        """
+        assert spikes is not None
         f_binned = self.spikes_to_rates(spikes)
         f_smooth = self.smooth(f_binned)
         return f_smooth
@@ -144,7 +120,7 @@ class FiringRatesConverter(Processor):
         Arguments
         ---------
         spikes: SpikingTimes
-            See :attr:`FiringRatesConverterInputs.spikes`.
+            See the argument :ref:`spikes`.
 
         Returns
         -------
@@ -181,13 +157,13 @@ class FiringRatesConverter(Processor):
         Arguments
         ---------
         f_binned: FiringRates
-            See :ref:`f_binned`.
+            See the return value :ref:`f_binned`.
 
         Returns
         -------
         f_smoothed: FiringRates
             Smoothed firing rate time course (in spikes/s).
-            Shape: ``(n_t_smth,)`` (see :attr:`FiringRatesConverter.n_t_smth`).
+            Shape: ``(n_t_smth,)`` (see the attribute `n_t_smth`).
             .. _f_smoothed:
 
         Notes
