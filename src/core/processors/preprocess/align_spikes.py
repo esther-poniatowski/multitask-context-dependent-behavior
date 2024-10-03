@@ -90,6 +90,12 @@ class SpikesAligner(Processor):
 
     Provide utility functions for epoch slicing, concatenation and alignment.
 
+    Conventions for the documentation:
+
+    - Attributes: Configuration parameters of the processor, passed to the *constructor*.
+    - Arguments: Input data to process, passed to the `process` method (base class).
+    - Returns: Output data after processing, returned by the `process` method (base class).
+
     Class Attributes
     ----------------
     _TASKS : frozenset
@@ -104,6 +110,28 @@ class SpikesAligner(Processor):
         the trials in the final dataset.
     d_warn : float
         Duration of the TORC stimulus (in seconds), within the total trial duration in task CLK.
+
+    Arguments
+    ---------
+    spikes : SpikingTimes
+        Spiking times during a whole trial (in seconds). Shape: ``(nspikes,)``.
+        .. _spikes:
+    task : Task
+        Type of task from which the trial is extracted.
+        .. _task:
+    stim : Stim
+        Type of stimulus presented during the trial.
+        .. _stim:
+    t_on, t_off : float
+        Times of stimulus onset and offset (in seconds) during the *specific* trial to align.
+        .. _t_on:
+
+    Returns
+    -------
+    aligned_spikes : SpikingTimes
+        Spiking times aligned with the other trials in the final data set.
+        Shape: ``(nspikes,)``.
+        .. _aligned_spikes:
 
     Methods
     -------
@@ -137,9 +165,6 @@ class SpikesAligner(Processor):
         d_warn: float = D_WARN,
     ):
         super().__init__(d_pre=d_pre, d_stim=d_stim, d_post=d_post, d_warn=d_warn)
-        # Add class-level attributes to make them available for `SpikesAlignerInputs`
-        # when `config_params` is passed as keyword arguments in `Processor._pre_process()`
-        self.config_params += ("valid_tasks", "valid_stims")
 
     def _pre_process(
         self, task: Optional[Task] = None, stim: Optional[Stim] = None, **input_data: Any
@@ -167,31 +192,7 @@ class SpikesAligner(Processor):
         t_off: float = 0.0,
         **input_data: Any,
     ) -> SpikingTimes:
-        """
-        Implement the template method called in the base class `process` method.
-
-        Arguments
-        ---------
-        spikes : SpikingTimes
-            Spiking times during a whole trial (in seconds). Shape: ``(nspikes,)``.
-            .. _spikes:
-        task : Task
-            Type of task from which the trial is extracted.
-            .. _task:
-        stim : Stim
-            Type of stimulus presented during the trial.
-            .. _stim:
-        t_on, t_off : float
-            Times of stimulus onset and offset (in seconds) during the *specific* trial to align.
-            .. _t_on:
-
-        Returns
-        -------
-        aligned_spikes : SpikingTimes
-            Spiking times aligned with the other trials in the final data set.
-            Shape: ``(nspikes,)``.
-            .. _aligned_spikes:
-        """
+        """Implement the template method called in the base class `process` method."""
         assert spikes is not None and task is not None and stim is not None
         t_start1, t_end1, t_start2, t_end2 = self.eval_times(task, stim, t_on, t_off)
         spk_joined = self.join_epochs(spikes, t_start1, t_end1, t_start2, t_end2)
