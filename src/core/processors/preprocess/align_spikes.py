@@ -66,7 +66,7 @@ Aligning a Click train
 # mypy: disable-error-code="attr-defined"
 # pylint: disable=no-member
 
-from typing import Literal, TypeAlias, Any, Tuple, Optional, Dict
+from typing import Literal, TypeAlias, Any, Tuple, Dict
 
 import numpy as np
 
@@ -166,9 +166,7 @@ class SpikesAligner(Processor):
     ):
         super().__init__(d_pre=d_pre, d_stim=d_stim, d_post=d_post, d_warn=d_warn)
 
-    def _pre_process(
-        self, task: Optional[Task] = None, stim: Optional[Stim] = None, **input_data: Any
-    ) -> Dict[str, Any]:
+    def _pre_process(self, **input_data: Any) -> Dict[str, Any]:
         """
         Check that the input values for task, stimulus, and timings are consistent.
 
@@ -177,23 +175,21 @@ class SpikesAligner(Processor):
         ValueError
             If the input values are inconsistent.
         """
+        task = input_data.get("task", None)
+        stim = input_data.get("stim", None)
         if task not in self._TASKS:
             raise ValueError(f"Invalid task: {task}")
         if stim not in self._STIMS:
             raise ValueError(f"Invalid stimulus: {stim}")
         return input_data
 
-    def _process(
-        self,
-        spikes: Optional[SpikingTimes] = None,
-        task: Optional[Task] = None,
-        stim: Optional[Stim] = None,
-        t_on: float = 0.0,
-        t_off: float = 0.0,
-        **input_data: Any,
-    ) -> SpikingTimes:
+    def _process(self, **input_data: Any) -> SpikingTimes:
         """Implement the template method called in the base class `process` method."""
-        assert spikes is not None and task is not None and stim is not None
+        spikes = input_data["spikes"]
+        task = input_data["task"]
+        stim = input_data["stim"]
+        t_on = input_data["t_on"]
+        t_off = input_data["t_off"]
         t_start1, t_end1, t_start2, t_end2 = self.eval_times(task, stim, t_on, t_off)
         spk_joined = self.join_epochs(spikes, t_start1, t_end1, t_start2, t_end2)
         return spk_joined

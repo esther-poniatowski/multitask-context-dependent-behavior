@@ -10,14 +10,6 @@ Classes
 Notes
 -----
 Each subclass of `Processor` should define a dataclass that inherits from this class.
-
-For input validation, pass the dictionary `input_data` received by the base processor's `process`
-method to the subclass-specific `_pre_process` method. Unpack the keyword arguments within the
-pre-processing method.
-
-For output validation, pass the tuple `output_data` returned by the subclass-specific `_process`
-method to the subclass-specific `_post_process` method. Unpack the return values within the
-post-processing method. If the processor returns a single value, format it as a tuple.
 """
 from abc import ABC, abstractmethod
 from typing import Tuple, Any, Optional, Dict, TypeVar, Generic, Union
@@ -58,31 +50,20 @@ class Processor(ABC, Generic[I, O]):
 
     Notes
     -----
-    Configuration vs. Processing Attributes
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     Processor classes operate on data of two distinct nature:
 
     - "Configuration parameters" define the fixed behavior of each processor instance throughout its
-      lifecycle. They are initialized in the constructor and apply homogeneously on any call to the
-      main processing method. Examples: model parameters, tuning settings...
-    - "Input data" is passed at runtime to the main processing method (`process`). By default, this
-      data is not stored in the instance to ensure statelessness and avoid side effects due to
-      mutable objects. Examples: recorded spiking times, time stamps, labels, indices...
+      lifecycle. They apply homogeneously for any call to the main processing method (`process`).
+      They are stored as attributes of the instance. Examples: model parameters, tuning settings...
+    - "Input data" is passed at runtime to the main processing method (`process`). It is not stored
+      in the instance, to ensure statelessness and avoid side effects due to potentially mutable
+      objects. Examples: recorded spiking times, time stamps, labels, indices...
 
-    Interaction with a Processor
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    Input data should be passed to the base `process` method as *named arguments*.
+    Interaction with a Processor:
 
-    Output data (target results) is directly returned as a *tuple*, as with a pure function.
-
-    For each subclass, inputs are outputs are specified in the documentation of the
-    subclass-specific main `_process` method.
-
-    Randomness
-    ^^^^^^^^^^
-    Random state initialization is fully handled by the base class. Subclasses do not need to
-    manually define nor set any seed. A seed can be passed directly to the base `process` method as
-    an extra input.
+    - Configuration parameters are passed to the processor constructor.
+    - Input data is passed to the base `process` method as *named arguments*.
+    - Output data (target results) is directly returned as a *tuple*, as with a pure function.
     """
 
     is_random: bool = False

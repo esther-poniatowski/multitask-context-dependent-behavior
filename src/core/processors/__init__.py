@@ -148,6 +148,37 @@ reasons:
   pipeline. This facilitates testing, since they are accessible at each step by isolating individual
   methods.
 
+Warning
+Two possibilities to handle the input data in the subclass-specific `_pre_process` method:
+
+- Extract the relevant input data to manipulate from the `input_data` dictionary (e.g. using
+  the `get` method for dictionaries).
+- Specify the relevant inputs in the signature of the `_pre_process` method to manipulate
+  them directly within the method body. In this case, the method should still include a
+  catch-all `**input_data` argument to be consistent with the signature of the ase class
+  (Liskov Substitution Principle). Then, the dictionary `input_data` recovered within the
+  method body contains the *remaining* inputs which are not isolated in the signature.
+  Therefore, the method should not return the `input_data` dictionary, but rather
+  reconstruct or update it to introduce the isolated inputs.
+
+Conclusion: Keep the `**input_data` syntax without detailing. For consistency, follow this approach
+also in the `_process` method and `_post_process` method (with the tuple `*output_data`). However,
+inputs can be recovered differently in those methods:
+
+- In `_pre_process`, extract the relevant inputs from the dictionary with the `get` method. This
+  allows to specify a default value if the input is not found (like a default factory). If only
+  input validation is performed without any modification (error raising), then only return the
+  `input_data` dictionary. Otherwise, update the dictionary with the modified inputs before
+  returning it.
+- In `_process`, directly access the inputs from the dictionary using the bracket notation. The
+  inputs are guaranteed to be present and valid since they have been validated in the `_pre_process`
+  method. This approach avoids warning messages from the type checkers regarding the value that is
+  accessed (contrary to the `get` method, since it should be necessary to specify again a default
+  value matching the expected type for the subsequent processing steps).
+- In the `_post_process` method, unpack the outputs from the tuple to access them directly within
+  the method body by their index.
+
+
 **Manipulating Inputs and Outputs through the Pipeline**
 
 - Consistent formats: Within the `process` method, inputs are manipulated as a dictionary, while the
@@ -179,4 +210,21 @@ Advantages of the template method pattern:
 - Modularity and Extensibility: Each part of the pipeline can be updated individually without
   affecting the other steps, while preserving the overall structure of the pipeline.
 
+
+For each subclass, inputs are outputs are specified in the documentation of the
+subclass-specific main `_process` method.
+
+For input validation, pass the dictionary `input_data` received by the base processor's `process`
+method to the subclass-specific `_pre_process` method. Unpack the keyword arguments within the
+pre-processing method.
+
+For output validation, pass the tuple `output_data` returned by the subclass-specific `_process`
+method to the subclass-specific `_post_process` method. Unpack the return values within the
+post-processing method. If the processor returns a single value, format it as a tuple.
+
+Randomness
+^^^^^^^^^^
+Random state initialization is fully handled by the base class. Subclasses do not need to
+manually define nor set any seed. A seed can be passed directly to the base `process` method as
+an extra input.
 """

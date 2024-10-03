@@ -110,9 +110,9 @@ class FiringRatesConverter(Processor):
     ):
         super().__init__(t_bin=t_bin, t_max=t_max, smooth_window=smooth_window, mode=mode)
 
-    def _process(self, spikes: Optional[SpikingTimes] = None, **input_data: Any) -> FiringRates:
+    def _process(self, **input_data: Any) -> FiringRates:
         """Implement the template method called in the base class `process` method."""
-        assert spikes is not None
+        spikes = input_data["spikes"]
         f_binned = self.spikes_to_rates(spikes)
         f_smooth = self.smooth(f_binned)
         return f_smooth
