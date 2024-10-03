@@ -37,10 +37,33 @@ class FoldAssigner(Processor):
     """
     Assign samples (trials) to folds for cross-validation.
 
+    Conventions for the documentation:
+
+    - Attributes: Configuration parameters of the processor, passed to the *constructor*.
+    - Arguments: Input data to process, passed to the `process` method (base class).
+    - Returns: Output data after processing, returned by the `process` method (base class).
+
     Attributes
     ----------
     k : int
         Number of folds in which the samples will be divided.
+
+    Arguments
+    ---------
+    n_samples : int
+        Number of samples to assign to folds.
+        If not provided, it is inferred from the length of `strata`.
+        .. _n_samples:
+    strata : Strata
+        Labels of strata for stratified assignment. Shape: ``(n_samples,)``.
+        If not provided, `n_samples` samples are treated as belonging to a single stratum.
+        .. _strata:
+
+    Returns
+    -------
+    folds : Folds
+        Fold assignment for each sample. Shape: ``(n_samples,)``.
+        .. _folds:
 
     Methods
     -------
@@ -69,8 +92,7 @@ class FoldAssigner(Processor):
     See Also
     --------
     :class:`core.processors.preprocess.base_processor.Processor`
-        Base class for all processors. See definition of class-level attributes and template
-        methods.
+        Base class for all processors: see class-level attributes and template methods.
     """
 
     is_random = True
@@ -117,26 +139,7 @@ class FoldAssigner(Processor):
         return input_data
 
     def _process(self, strata: Optional[Strata] = None, **input_data: Any) -> Folds:
-        """
-        Implement the template method called in the base class `process` method.
-
-        Arguments
-        ---------
-        n_samples : int
-            Number of samples to assign to folds.
-            If not provided, it is inferred from the length of `strata`.
-            .. _n_samples:
-        strata : Strata
-            Labels of strata for stratified assignment. Shape: ``(n_samples,)``. If not provided,
-            all samples are treated as belonging to a single stratum based on the number of samples.
-            .. _strata:
-
-        Returns
-        -------
-        folds : Folds
-            Fold assignment for each sample. Shape: ``(n_samples,)``.
-            .. _folds:
-        """
+        """Implement the template method called in the base class `process` method."""
         assert strata is not None
         folds = self.assign(strata)
         return folds

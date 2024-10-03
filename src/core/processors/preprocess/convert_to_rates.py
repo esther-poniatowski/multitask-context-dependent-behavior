@@ -32,6 +32,12 @@ class FiringRatesConverter(Processor):
     """
     Convert raw spike times into firing rates.
 
+    Conventions for the documentation:
+
+    - Attributes: Configuration parameters of the processor, passed to the *constructor*.
+    - Arguments: Input data to process, passed to the `process` method (base class).
+    - Returns: Output data after processing, returned by the `process` method (base class).
+
     Attributes
     ----------
     t_bin: float
@@ -48,6 +54,21 @@ class FiringRatesConverter(Processor):
     n_t_smth: int
         Number of time bins in the smoothed firing rate time course ``f_smoothed``, depending on the
         convolution mode. See method `smooth` for details.
+
+    Arguments
+    ---------
+    spikes: SpikingTimes
+        Spiking times. Shape: ``(n_spikes,)``
+        .. _spikes:
+
+    Returns
+    -------
+    f_rates: FiringRates
+        Firing rate time course (in spikes/s), obtained in two steps:
+        1. Binning the spikes.
+        2. Smoothing the binned rates.
+        Shape: ``(n_t_smth,)`` (see attribute `n_t_smth`).
+        .. _f_rates:
 
     Methods
     -------
@@ -90,24 +111,7 @@ class FiringRatesConverter(Processor):
         super().__init__(t_bin=t_bin, t_max=t_max, smooth_window=smooth_window, mode=mode)
 
     def _process(self, spikes: Optional[SpikingTimes] = None, **input_data: Any) -> FiringRates:
-        """
-        Implement the template method called in the base class `process` method.
-
-        Parameters
-        ----------
-        spikes: SpikingTimes
-            Spiking times. Shape: ``(n_spikes,)``
-            .. _spikes:
-
-        Returns
-        -------
-        f_rates: FiringRates
-            Firing rate time course (in spikes/s), obtained in two steps:
-            1. Binning the spikes.
-            2. Smoothing the binned rates.
-            Shape: ``(n_t_smth,)`` (see attribute `n_t_smth`).
-            .. _f_rates:
-        """
+        """Implement the template method called in the base class `process` method."""
         assert spikes is not None
         f_binned = self.spikes_to_rates(spikes)
         f_smooth = self.smooth(f_binned)

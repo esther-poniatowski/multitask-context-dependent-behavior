@@ -37,12 +37,30 @@ class EnsembleAssigner(Processor):
     """
     Assign units (neurons) to ensembles ('batches' for data analysis).
 
+    Conventions for the documentation:
+
+    - Attributes: Configuration parameters of the processor, passed to the *constructor*.
+    - Arguments: Input data to process, passed to the `process` method (base class).
+    - Returns: Output data after processing, returned by the `process` method (base class).
+
     Attributes
     ----------
     ensemble_size : int
         Number of units included in each ensemble.
     n_ensembles_max : int, optional
         Maximum number of ensembles to generate.
+
+    Arguments
+    ---------
+    n_units : int
+        Number of units to assign to ensembles.
+        .. _n_units:
+
+    Returns
+    -------
+    ensembles : Ensembles
+        Ensemble assignments, containing the indices of the units forming each ensemble.
+        Shape: ``(n_ensembles, ensemble_size)``.
 
     Methods
     -------
@@ -92,20 +110,7 @@ class EnsembleAssigner(Processor):
         return input_data
 
     def _process(self, n_units: Optional[int] = None, **input_data: Any) -> Ensembles:
-        """Implement the template method called in the base class :meth:`process` method.
-
-        Parameters
-        ----------
-        n_units : int
-            Number of units to assign to ensembles.
-            .. _n_units:
-
-        Returns
-        -------
-        ensembles : Ensembles
-            Ensemble assignments, containing the indices of the units forming each ensemble.
-            Shape: ``(n_ensembles, ensemble_size)``.
-        """
+        """Implement the template method called in the base class `process` method."""
         assert n_units is not None
         ensembles = self.assign(n_units)  # shape: (n_ensembles, ensemble_size)
         # Adjust the number of ensembles if the maximum number is imposed
