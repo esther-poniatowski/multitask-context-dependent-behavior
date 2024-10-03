@@ -11,7 +11,7 @@ Classes
 # (configuration and data attributes are initialized by the base class constructor)
 # pylint: disable=useless-parent-delegation
 
-from typing import List, TypeAlias, Union, Any, Tuple, Optional, Dict
+from typing import List, TypeAlias, Union, Any, Tuple, Dict
 
 import numpy as np
 
@@ -85,9 +85,7 @@ class Stratifier(Processor):
     def __init__(self):
         super().__init__()  # no configuration parameters
 
-    def _pre_process(
-        self, features: Optional[Features] = None, **input_data: Any
-    ) -> Dict[str, Any]:
+    def _pre_process(self, **input_data: Any) -> Dict[str, Any]:
         """
         Validate the features to be used for stratification.
 
@@ -96,17 +94,15 @@ class Stratifier(Processor):
         ValueError
             If the number of samples is not equal across features.
         """
-        assert features is not None
+        features = input_data.get("features", [])
         n_samples = [len(feat) for feat in features]
         if not all(n == n_samples[0] for n in n_samples):
             raise ValueError(f"Unequal number of samples across features: {n_samples}")
         return input_data
 
-    def _process(
-        self, features: Optional[Features] = None, **input_data: Any
-    ) -> Tuple[Strata, Features]:
+    def _process(self, **input_data: Any) -> Tuple[Strata, Features]:
         """Implement the template method called in the base class `process` method."""
-        assert features is not None
+        features = input_data["features"]
         strata, feat_comb_raw = self.stratify(features)
         feat_types = self.get_feature_types(features)
         feat_comb = self.convert_feat_comb(feat_comb_raw, feat_types)

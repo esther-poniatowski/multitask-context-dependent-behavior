@@ -96,7 +96,7 @@ class EnsembleAssigner(Processor):
     def __init__(self, ensemble_size: int, n_ensembles_max: Optional[int] = None):
         super().__init__(ensemble_size=ensemble_size, n_ensembles_max=n_ensembles_max)
 
-    def _pre_process(self, n_units: int = 0, **input_data: Any) -> Dict[str, Any]:
+    def _pre_process(self, **input_data: Any) -> Dict[str, Any]:
         """
         Validate the argument `n_units` (number of units) compared to the ensemble size.
 
@@ -105,13 +105,14 @@ class EnsembleAssigner(Processor):
         ValueError
             If the number of units is lower than the ensemble size.
         """
+        n_units = input_data.get("n_units", 0)
         if n_units < self.ensemble_size:
             raise ValueError(f"n_units: {n_units} < ensemble_size: {self.ensemble_size}")
         return input_data
 
-    def _process(self, n_units: Optional[int] = None, **input_data: Any) -> Ensembles:
+    def _process(self, **input_data: Any) -> Ensembles:
         """Implement the template method called in the base class `process` method."""
-        assert n_units is not None
+        n_units = input_data["n_units"]
         ensembles = self.assign(n_units)  # shape: (n_ensembles, ensemble_size)
         # Adjust the number of ensembles if the maximum number is imposed
         if self.n_ensembles_max is not None and ensembles.shape[0] > self.n_ensembles_max:

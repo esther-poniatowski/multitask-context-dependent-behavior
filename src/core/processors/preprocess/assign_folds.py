@@ -12,16 +12,17 @@ Notes
 Folds correspond to subsets of samples (trials) used to train and test a model in cross-validation.
 
 The class `FoldAssigner` is only responsible of assigning each sample to one fold. Actual splitting
-samples into training and testing sets is carried out in the `CoordFold` class itself based
-on these fold assignments (methods `CoordFold.get_train` and `CoordFold.get_test`). This allows direct access to the
-samples in each set through the coordinate, without resorting to external cross-validation tools.
+samples into training and testing sets is carried out in the `CoordFold` class itself based on these
+fold assignments (methods `CoordFold.get_train` and `CoordFold.get_test`). This allows direct access
+to the samples in each set through the coordinate, without resorting to external cross-validation
+tools.
 """
 # Disable error codes for attributes which are not detected by the type checker:
 # (configuration and data attributes are initialized by the base class constructor)
 # mypy: disable-error-code="attr-defined"
 # pylint: disable=no-member
 
-from typing import TypeAlias, Any, Tuple, Optional, Dict
+from typing import TypeAlias, Any, Tuple, Dict
 
 import numpy as np
 
@@ -100,9 +101,7 @@ class FoldAssigner(Processor):
     def __init__(self, k: int):
         super().__init__(k=k)
 
-    def _pre_process(
-        self, n_samples: Optional[int] = None, strata: Optional[Strata] = None, **input_data: Any
-    ) -> Dict[str, Any]:
+    def _pre_process(self, **input_data: Any) -> Dict[str, Any]:
         """
         Ensure consistency between both inputs:
 
@@ -124,6 +123,8 @@ class FoldAssigner(Processor):
         - If `n_samples` is provided, then all samples are treated as belonging to a single stratum,
           therefore `strata` is a zero array of length `n_samples` (single label 0).
         """
+        n_samples = input_data.get("n_samples", None)
+        strata = input_data.get("strata", None)
         # Set the default value for the missing input
         if strata is None and n_samples is not None:
             strata = np.zeros(n_samples, dtype=np.int64)
@@ -134,13 +135,13 @@ class FoldAssigner(Processor):
         # Check if the resulting number of samples is lower than the number of folds
         if n_samples < self.k:
             raise ValueError(f"n_samples: {n_samples} < k: {self.k}")
-        # Override missing input data
-        input_data = {"n_samples": n_samples, "strata": strata}
+        # Update input data with new values
+        input_data.update({"n_samples": n_samples, "strata": strata})
         return input_data
 
-    def _process(self, strata: Optional[Strata] = None, **input_data: Any) -> Folds:
+    def _process(self, **input_data: Any) -> Folds:
         """Implement the template method called in the base class `process` method."""
-        assert strata is not None
+        strata = input_data["strata"]
         folds = self.assign(strata)
         return folds
 
