@@ -15,8 +15,7 @@ current approach inspires from the "hierarchical bootstrap" method, which levera
 combinations of trials. Thereby, the size of the final data set is less limited by the minimum
 number of trials across neurons.
 
-Dealing with imbalanced trial counts across units
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Dealing with imbalanced trial counts across units:
 
 - Determination of the final number of pseudo-trials: The algorithm aims to balance the
   representation of trials across units with extreme trial counts while still maintaining a minimal
@@ -43,8 +42,7 @@ Implementation
 # mypy: disable-error-code="attr-defined"
 # pylint: disable=no-member
 
-
-from typing import TypeAlias, Any, Tuple, Optional
+from typing import TypeAlias, Any, Tuple
 
 import numpy as np
 
@@ -56,7 +54,7 @@ Counts: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
 """Type alias for the number of trials per unit."""
 
 TrialsIndUnit: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
-"""Type alias for trials indices per unit."""
+"""Type alias for trials indices for one single unit."""
 
 PseudoTrials: TypeAlias = np.ndarray[Tuple[Any, Any], np.dtype[np.int64]]
 """Type alias for pseudo-trials indices."""
@@ -66,15 +64,36 @@ class Bootstrapper(Processor):
     """
     Generate pseudo-trials through an algorithm inspired by the hierarchical bootstrap method.
 
+    Conventions for the documentation:
+
+    - Attributes: Configuration parameters of the processor, including those passed to the
+      *constructor* AND additional configurations automatically computed from the latter.
+    - Arguments: Input data to process, passed to the `process` method (base class).
+    - Returns: Output data after processing, returned by the `process` method (base class).
+
     Attributes
     ----------
     n_pseudo : int
-        Total number of pseudo-trials to generate for the current run of the processor. This is a
-        global parameter which applies to all runs of the processor during its lifetime.
+        Total number of pseudo-trials to generate for the current run of the processor.
+
+    Arguments
+    ---------
+    counts : Counts
+        Numbers of trials available for each unit in the pseudo-population.
+        Shape: ``(n_units,)``.
+        .. _counts:
+
+    Returns
+    -------
+    pseudo_trials : PseudoTrials
+        Indices of the trials to pick from each unit to form each pseudo-trial.
+        Shape: ``(n_units, n_pseudo)``.
+        .. _pseudo_trials:
 
     Methods
     -------
     `pick_trials`
+    `combine_trials`
     `bootstrap`
     `eval_n_pseudo`
 
@@ -92,53 +111,47 @@ class Bootstrapper(Processor):
      [0 1 2 3 4]  # unit 1, 5 initial trials
      [0 1 2 3 4]] # unit 2, 6 initial trials
 
+    Warning
+    -------
+    For each unit, the indices of the trials might be *relative* to a subset of trials in the global
+    data set (e.g. one stratum). They do not necessarily match the original indices of those same
+    trials among all the trials of the unit.
+
     See Also
     --------
     :class:`core.processors.preprocess.base_processor.Processor`
-        Base class for all processors. See definition of class-level attributes and template
-        methods.
+        Base class for all processors: see class-level attributes and template methods.
     """
 
     is_random = True
 
-    def __init__(self, n_pseudo: int):
+    def __init__(self, n_pseudo: int) -> None:
         super().__init__(n_pseudo=n_pseudo)
 
-    def _process(self, counts: Optional[Counts] = None, **input_data: Any) -> PseudoTrials:
-        """
-        Implement the template method called in the base class `process` method.
-
-        Arguments
-        ---------
-        counts : Counts
-            Numbers of trials available for each unit in the pseudo-population.
-            Shape: ``(n_units,)``.
-            .. _counts:
-
-        Returns
-        -------
-        pseudo_trials : PseudoTrials
-            Indices of the trials to pick from each unit to form each pseudo-trial.
-            Shape: ``(n_units, n_pseudo)``.
-            .. _pseudo_trials:
-        """
-        assert counts is not None
-        pseudo_trials = self.bootstrap(counts)
+    def _process(self, **input_data: Any) -> PseudoTrials:
+        """Implement the template method called in the base class `process` method."""
+        counts = input_data["counts"]
+        pseudo_trials = self.combine_trials(counts, self.n_pseudo)
         return pseudo_trials
 
-    def pick_trials(self, n: int) -> TrialsIndUnit:
+    # --- Processing Methods -----------------------------------------------------------------------
+
+    def pick_trials(self, n: int, n_pseudo: int) -> TrialsIndUnit:
         """
-        Pick trials from a single unit for future inclusion among the pseudo-trials.
+        Pick trials's indices from a single unit for future inclusion among the pseudo-trials.
 
         Parameters
         ----------
         n : int
             Number of trials available for the considered unit.
+        n_pseudo : int
+            Number of pseudo-trials to generate.
 
         Returns
         -------
-        trials_unit : TrialsIndUnit
-            Trials indices selected for the considered unit.
+        idx : TrialsIndUnit
+            Trials indices selected for the considered unit. Shape: ``(n_pseudo,)``. Indices are
+            comprised between 0 and ``n - 1``.
 
         Notes
         -----
@@ -165,33 +178,40 @@ class Bootstrapper(Processor):
         :func:`numpy.repeat`
             Repeat elements of an array, here used to selected each trial at least ``q`` times.
         """
-        if n >= self.n_pseudo:
-            trials = np.atleast_1d(np.random.choice(n, size=self.n_pseudo, replace=False))
+        if n >= n_pseudo:
+            idx = np.atleast_1d(np.random.choice(n, size=n_pseudo, replace=False))
         else:
-            q = self.n_pseudo // n  # minimal number of times each trial is selected
-            r = self.n_pseudo % n  # number of trials selected additionally once
-            trials = np.repeat(np.arange(n), q)
-            trials = np.concatenate((trials, np.random.choice(n, size=r, replace=False)))
-        return trials
+            q = n_pseudo // n  # minimal number of times each trial is selected
+            r = n_pseudo % n  # number of trials selected additionally once
+            idx = np.repeat(np.arange(n), q)
+            idx = np.concatenate((idx, np.random.choice(n, size=r, replace=False)))
+        return idx
 
-    def bootstrap(self, counts: Counts) -> PseudoTrials:
+    def combine_trials(self, counts: Counts, n_pseudo: int) -> PseudoTrials:
         """
         Combine trials across units to form pseudo-trials.
 
         Arguments
         ---------
         counts: Counts
-            See :attr:`BootstrapperInputs.counts`.
+            Counts of available trials across units. Shape: ``(n_units,)``.
+        n_pseudo: int
+            See the argument :ref:`n_pseudo`.
 
         Returns
         -------
-        pseudo_trials: PseudoTrials
-            See :attr:`BootstrapperOutputs.pseudo_trials`.
+        idx : PseudoTrials
+            Indices of the trials to pick from each unit to generate the pseudo-trials. For each
+            unit, the indices are comprised between 0 and ``n - 1``, where ``n`` is the number of
+            available trials.
+            Shape: ``(n_units, n_pseudo)``.
         """
-        pseudo_trials = np.array([self.pick_trials(n) for n in counts])  # (n_units, n_pseudo)
-        for trials_unit in pseudo_trials:
+        idx = np.array([self.pick_trials(n, n_pseudo) for n in counts])
+        for trials_unit in idx:
             np.random.shuffle(trials_unit)  # shuffle within each unit to diversify pairings
-        return pseudo_trials
+        return idx
+
+    # --- Utility Methods --------------------------------------------------------------------------
 
     @staticmethod
     def eval_n_pseudo(counts: Counts, n_min: int = N_PSEUDO_MIN, alpha: float = 0.5) -> int:
@@ -202,9 +222,9 @@ class Bootstrapper(Processor):
         ---------
         counts : Counts
             See the argument :ref:`counts`.
-        n_min: int, default=N_PSEUDO_MIN
+        n_min : int, default=N_PSEUDO_MIN
             Minimum number of pseudo-trials required in a strata.
-        alpha: float, default=0.5
+        alpha : float, default=0.5
             Variability factor to adjust the number of pseudo-trials to achieve sufficient diversity
             in the combinations of trials.
 
