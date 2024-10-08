@@ -22,16 +22,17 @@ tools.
 # mypy: disable-error-code="attr-defined"
 # pylint: disable=no-member
 
-from typing import TypeAlias, Any, Tuple, Dict
+from typing import Literal, overload, TypeAlias, Any, Tuple, Union, List
 
 import numpy as np
 
 from core.processors.base_processor import Processor
-from core.processors.preprocess.stratify import Strata
 
+FoldLabels: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
+"""Type alias for fold labels assigned to each sample."""
 
-Folds: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
-"""Type alias for fold assignments."""
+FoldMembers: TypeAlias = List[np.ndarray[Tuple[Any], np.dtype[np.int64]]]
+"""Type alias for fold members, i.e. samples contained in each fold."""
 
 
 class FoldAssigner(Processor):
@@ -53,42 +54,33 @@ class FoldAssigner(Processor):
     ---------
     n_samples : int
         Number of samples to assign to folds.
-        If not provided, it is inferred from the length of `strata`.
         .. _n_samples:
-    strata : Strata
-        Labels of strata for stratified assignment. Shape: ``(n_samples,)``.
-        If not provided, `n_samples` samples are treated as belonging to a single stratum.
-        .. _strata:
+    mode : Literal["labels", "members"], default="labels"
+        Return either the fold labels or the fold members.
 
     Returns
     -------
-    folds : Folds
-        Fold assignment for each sample. Shape: ``(n_samples,)``.
-        .. _folds:
+    fold_labels : FoldLabels
+        Fold labels assigned to each sample. Shape: ``(n_samples,)``.
+        .. _fold_labels:
+    fold_members: FoldMembers
+        Samples contained in each fold. Shape: ``(k, n_samples // k)``.
+        .. _fold_members:
 
     Methods
     -------
     `assign`
-
-    Warning
-    -------
-    Provide either `n_samples` or `strata` as input to the processor.
+    `labels_to_members`
+    `members_to_labels`
 
     Examples
     --------
     Assign 10 samples to 3 folds:
 
     >>> assigner = FoldAssigner(k=3)
-    >>> folds = assigner.process(n_samples=10)
-    >>> print(folds)
+    >>> fold_labels = assigner.process(n_samples=10, mode="labels")
+    >>> print(fold_labels)
     [0 0 1 1 2 2 0 1 2 0]
-
-    Use stratified fold assignment:
-
-    >>> strata = np.array([0, 0, 1, 1, 2, 2], dtype=np.int64)
-    >>> folds = assigner.process(strata=strata)
-    >>> print(folds)
-    [0 0 1 1 2 2]
 
     See Also
     --------
@@ -101,63 +93,38 @@ class FoldAssigner(Processor):
     def __init__(self, k: int):
         super().__init__(k=k)
 
-    def _pre_process(self, **input_data: Any) -> Dict[str, Any]:
-        """
-        Ensure consistency between both inputs:
+    # --- Processing Methods -----------------------------------------------------------------------
 
-        - Check that exactly one input is provided as argument (not both, nor none).
-        - Set the default value for the missing attribute based on the other one.
+    @overload
+    def _process(self, mode: Literal["labels"] = "labels", **input_data: Any) -> FoldLabels: ...
 
-        Raises
-        ------
-        ValueError
-            If both `n_samples` and `strata` are missing.
-            If both `n_samples` and `strata` are provided.
-            If the number of samples is lower than the number of folds to form.
+    @overload
+    def _process(self, mode: Literal["members"] = "members", **input_data: Any) -> FoldMembers: ...
 
-        Notes
-        -----
-        Rules to assign default values:
-
-        - If `strata` is provided, then `n_samples` is equal to the length of `strata`.
-        - If `n_samples` is provided, then all samples are treated as belonging to a single stratum,
-          therefore `strata` is a zero array of length `n_samples` (single label 0).
-        """
-        n_samples = input_data.get("n_samples", None)
-        strata = input_data.get("strata", None)
-        # Set the default value for the missing input
-        if strata is None and n_samples is not None:
-            strata = np.zeros(n_samples, dtype=np.int64)
-        elif n_samples is None and strata is not None:
-            n_samples = strata.size
-        else:
-            raise ValueError("Invalid arguments: provide either `n_samples` or `strata`.")
-        # Check if the resulting number of samples is lower than the number of folds
-        if n_samples < self.k:
-            raise ValueError(f"n_samples: {n_samples} < k: {self.k}")
-        # Update input data with new values
-        input_data.update({"n_samples": n_samples, "strata": strata})
-        return input_data
-
-    def _process(self, **input_data: Any) -> Folds:
+    def _process(self, mode: str = "labels", **input_data: Any) -> Union[FoldLabels, FoldMembers]:
         """Implement the template method called in the base class `process` method."""
-        strata = input_data["strata"]
-        folds = self.assign(strata)
-        return folds
+        n_samples = input_data["n_samples"]
+        fold_members = self.assign(n_samples)
+        if mode == "members":
+            return fold_members
+        elif mode == "labels":
+            return self.members_to_labels(fold_members)
+        else:
+            raise ValueError(f"Invalid mode: {mode}")
 
-    def assign(self, strata: Strata) -> Folds:
+    def assign(self, n_samples: int) -> FoldMembers:
         """
-        Assign folds to each sample based on strata labels.
+        Assign each sample to one fold.
 
         Arguments
         ---------
-        strata: Strata
-            See the argument :ref:`strata`.
+        n_samples : int
+            See the argument :ref:`n_samples`.
 
         Returns
         -------
-        folds: Folds
-            See the return value :ref:`folds`.
+        fold_members: FoldMembers
+            See the return value :ref:`fold_members`.
 
         Implementation
         --------------
@@ -170,20 +137,54 @@ class FoldAssigner(Processor):
         See Also
         --------
         :func:`np.random.shuffle`
-        :func:`np.where`
-            Get the indices where a condition is matched.
-            Output (here): ``(array([i1, i2, ..., iN]),)`` where ``N`` is the number of
-            indices in the considered stratum. Only the first element of the tuple is used.
         :func:`np.array_split(arr, n)`
             Split an array of length ``l`` into ``n`` sub-arrays of maximally equal size.
             Output (list): ``l % n`` sub-arrays of size ``l // n + 1`` and ``n - l % n`` sub-arrays
             of size ``l // n``.
         """
-        folds = np.zeros(strata.size, dtype=np.int64)  # initialize folds
-        for stratum in np.unique(strata):
-            idx_stratum = np.where(strata == stratum)[0]  # indices of samples in the stratum
-            np.random.shuffle(idx_stratum)  # shuffle samples before splitting
-            split_indices = np.array_split(idx_stratum, self.k)  # split samples into k groups
-            for i_fold, idx_samples in enumerate(split_indices):
-                folds[idx_samples] = i_fold
-        return folds
+        idx = np.arange(n_samples)  # indices of the samples
+        np.random.shuffle(idx)  # shuffle samples before splitting
+        fold_members = np.array_split(idx, self.k)  # split samples into k groups
+        return fold_members
+
+    # --- Conversion Methods -----------------------------------------------------------------------
+
+    @staticmethod
+    def labels_to_members(fold_labels: FoldLabels) -> FoldMembers:
+        """
+        Convert fold labels to fold members.
+
+        Arguments
+        ---------
+        fold_labels : np.ndarray
+            See the return value :ref:`fold_labels`.
+
+        Returns
+        -------
+        fold_members : np.ndarray
+            See the return value :ref:`fold_members`.
+        """
+        n_folds = np.max(fold_labels) + 1
+        fold_members = [np.where(fold_labels == i)[0] for i in range(n_folds)]
+        return fold_members
+
+    @staticmethod
+    def members_to_labels(fold_members: FoldMembers) -> FoldLabels:
+        """
+        Convert fold members to fold labels.
+
+        Arguments
+        ---------
+        fold_members : np.ndarray
+            See the return value :ref:`fold_members`.
+
+        Returns
+        -------
+        fold_labels : np.ndarray
+            See the return value :ref:`fold_labels`.
+        """
+        n_samples = np.max(fold_members) + 1
+        fold_labels = np.full(n_samples, -1, dtype=np.int64)
+        for i_fold, idx_samples in enumerate(fold_members):
+            fold_labels[idx_samples] = i_fold
+        return fold_labels
