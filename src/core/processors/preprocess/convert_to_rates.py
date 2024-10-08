@@ -32,14 +32,8 @@ class FiringRatesConverter(Processor):
     """
     Convert raw spike times into firing rates.
 
-    Conventions for the documentation:
-
-    - Attributes: Configuration parameters of the processor, passed to the *constructor*.
-    - Arguments: Input data to process, passed to the `process` method (base class).
-    - Returns: Output data after processing, returned by the `process` method (base class).
-
-    Attributes
-    ----------
+    Configuration Attributes
+    ------------------------
     t_bin: float
         Time bin (in seconds).
     t_max: float
@@ -55,8 +49,8 @@ class FiringRatesConverter(Processor):
         Number of time bins in the smoothed firing rate time course ``f_smoothed``, depending on the
         convolution mode. See method `smooth` for details.
 
-    Arguments
-    ---------
+    Processing Arguments
+    --------------------
     spikes: SpikingTimes
         Spiking times. Shape: ``(n_spikes,)``
         .. _spikes:

@@ -64,20 +64,13 @@ class Bootstrapper(Processor):
     """
     Generate pseudo-trials through an algorithm inspired by the hierarchical bootstrap method.
 
-    Conventions for the documentation:
-
-    - Attributes: Configuration parameters of the processor, including those passed to the
-      *constructor* AND additional configurations automatically computed from the latter.
-    - Arguments: Input data to process, passed to the `process` method (base class).
-    - Returns: Output data after processing, returned by the `process` method (base class).
-
-    Attributes
-    ----------
+    Configuration Attributes
+    ------------------------
     n_pseudo : int
         Total number of pseudo-trials to generate for the current run of the processor.
 
-    Arguments
-    ---------
+    Processing Arguments
+    --------------------
     counts : Counts
         Numbers of trials available for each unit in the pseudo-population.
         Shape: ``(n_units,)``.

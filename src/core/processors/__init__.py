@@ -7,7 +7,16 @@ Classes implementing mid-level data processors used for data transformations in 
 
 Modules
 -------
-:mod:`core.processors.base_processor`
+`core.processors.base_processor`
+`core.processors.preprocess`
+
+Warning
+-------
+Convention for the documentation sections in the processor modules:
+
+- Configuration Attributes: Configuration parameters of the processor, passed to the *constructor*.
+- Processing Arguments: Input data to process, passed to the `process` method (base class).
+- Returns: Output data after processing, returned by the `process` method (base class).
 
 Notes
 -----
@@ -177,7 +186,6 @@ inputs can be recovered differently in those methods:
   value matching the expected type for the subsequent processing steps).
 - In the `_post_process` method, unpack the outputs from the tuple to access them directly within
   the method body by their index.
-
 
 **Manipulating Inputs and Outputs through the Pipeline**
 
