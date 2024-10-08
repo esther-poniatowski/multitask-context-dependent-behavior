@@ -1,420 +1,420 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.data_structures.base_data_struct` [module]
+`core.data_structures.base_data_struct` [module]
 
 Classes
 -------
-:class:`DataStructMeta` (metaclass)
-:class:`DataStructure` (abstract base class, generic)
+`LazyAttribute`
+`DataStructure` (abstract base class, generic)
+
+Notes
+-----
+Lazy Initialization of Content-Related Attributes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Content-related attributes (data and coordinates) are initialized as empty and can be set after the
+initialization of the data structure.
+
+Interactions with those attributes are handled by a dedicated descriptor. Roles of the descriptor:
+
+- For the client code, it raises an explicit error message and prevents using the data and
+  coordinates attributes *before* they are populated with actual values.
+- For type checkers, it eliminates warning messages raised when the attributes are manipulated
+  within the data structure methods (since they are declared as `Optional`).
+
+Separation of concerns for interacting with content-related attributes:
+
+- The `__subclass_init__` method of the data structure base class declares the content-related
+  attributes as instances of the lazy descriptor.
+- The constructor of the data structure class initializes *private* attributes with empty values
+  (`None`).
+- The `LazyAttribute` descriptor handles the interactions with to the content-related attributes
+  when their *public* name is used. The descriptor is involved in most of the data structure's
+  methods, which only *access* to the attributes through a unified interface.
+- Two dedicated setter methods in the data structure class (`set_data` and `set_coords`) allow
+  setting actual content in the attributes after consistency validation. Those methods use *private*
+  names (e.g., `_data`, `_coord_name`...) to bypass the descriptor.
+- The `__repr__` method uses the *private* names of the attributes to check their state (empty or
+  filled).
+
+Note: Moving the validation logic to the descriptor would make it complex and tightly coupled to
+specific data validation rules.
+
+Separation of concerns between the base and subclasses constructors
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- Base class constructor: Declare the content-related attributes (data and coordinates) with their
+  respective types, and initialize them with values if provided.
+- Subclass constructors: Assign the metadata attributes (identifiers for the data structure and
+  optional descriptive information) AND call the base class constructor with the content-related
+  arguments.
+
 """
-from abc import ABCMeta, abstractmethod
+from abc import ABC
 import copy
 from pathlib import Path
-from types import MappingProxyType
-from typing import Tuple, List, Dict, FrozenSet, Mapping, Type, TypeVar, Generic, Optional, Self
+from typing import Tuple, Mapping, Type, TypeVar, Generic, Optional, Self, Union
 
 import numpy as np
-import numpy.typing as npt
 
+from core.data_structures.core_data import CoreData, DimName
+
+# from core.coordinates.base_coord import Coordinate
 from utils.storage_rulers.base_path_ruler import PathRuler
 from utils.io_data.formats import TargetType
 from utils.io_data.loaders.base_loader import Loader
 from utils.io_data.loaders.impl_loaders import LoaderDILL
 from utils.io_data.savers.base_saver import Saver
 from utils.io_data.savers.impl_savers import SaverDILL
-from utils.misc.sequences import reverse_dict_container
 
 
-class DataStructMeta(ABCMeta):
-    """
-    Metaclass to create data structures classes (subclasses of :class:`DataStructure`).
-
-    Responsibilities:
-
-    - Ensure that the required class-level attributes are set in each data structure class it
-      creates.
-    - Set other class-level attributes to ensure their consistency with the provided values.
-
-    Class Attributes
-    ----------------
-    required_attributes: List[str]
-        Names of the class-level attributes which have to be defined in each data structure
-        subclass.
-
-    Attributes
-    ----------
-    dim2coord: Data.dim2coord
-    coord2type: Data.coord2type
-    dims: Data.dims
-    coords: Data.coords
-    coord2dim: Data.coord2dim
-    path_ruler: Data.path_ruler
-
-    Methods
-    -------
-    :meth:`__new__`
-    :meth:`check_class_attributes`
-    :meth:`set_class_attributes`
-    :meth:`reverse_mapping`
-
-    See Also
-    --------
-    :class:`abc.ABCMeta`: Metaclass for *abstract base classes*.
-
-    Warning
-    -------
-    In a metaclass, the instances are classes themselves (here, subclasses of :class:`DataStructure`).
-    """
-
-    required_attributes = ["dim2coord", "coord2type", "path_ruler"]
-
-    def __new__(mcs, name, bases, dct):
-        """
-        Create a subclass of :class:`DataStructure` after ensuring its consistency.
-
-        Parameters
-        ----------
-        dct: Dict[str, ...]
-            Dictionary of class attributes. Initially, it contains the attributes defined in the
-            body of the class being create by the metaclass. After the operations performed by the
-            metaclass, it is updated with new attributes.
-
-        Returns
-        -------
-        Type
-            New class (subclass of :class:`DataStructure`).
-
-        See Also
-        --------
-        :meth:`check_class_attributes`
-        :meth:`set_class_attributes`
-        :meth:`check_consistency`
-        :meth:`super().__new__`: Call the parent class constructor, here :class:`ABCMeta`.
-        """
-        mcs.check_class_attributes(dct)
-        mcs.set_class_attributes(dct)
-        mcs.check_consistency(dct)
-        return super().__new__(mcs, name, bases, dct)
-
-    @staticmethod
-    def check_class_attributes(dct):
-        """
-        Check that the required class-level attributes have been defined in the subclass body.
-
-        Raise
-        -----
-        ValueError
-            If any required attribute is missing in the subclass body.
-        """
-        for attr in DataStructMeta.required_attributes:
-            if attr not in dct:
-                raise ValueError(f"Missing attribute '{attr}'.")
-
-    @staticmethod
-    def set_class_attributes(dct):
-        """Set the class-level attributes related to dimensions and coordinates."""
-        dct["dims"] = tuple(dct["dim2coord"].keys())
-        dct["coord2dim"] = DataStructMeta.reverse_mapping(dct["dim2coord"])
-        dct["coords"] = tuple(dct["coord2dim"].keys())
-
-    @staticmethod
-    def check_consistency(dct):
-        """
-        Check that the class-level attributes related to coordinates are consistent with each other.
-
-        Implementation
-        --------------
-        To check that the keys in :attr:`Data.coord2type` (dict) match the strings in
-        :attr:`Data.coords` (tuple).
-        - Compare the sets of keys in the dictionary :attr:`Data.coord2type` and the content of
-          the tuple :attr:`Data.coords` by converting the latter to sets.
-        - Use the `dct` parameter to access those class-level attributes.
-
-        Raise
-        -----
-        ValueError
-            If the keys in :attr:`Data.coord2type` do not match :attr:`Data.coords`.
-        """
-        if set(dct["coord2type"].keys()) != set(dct["coords"]):
-            raise ValueError("Inconsistent keys in 'coord2type'.")
-
-    @staticmethod
-    def reverse_mapping(dim2coord: Dict[str, FrozenSet[str]]) -> Mapping[str, str]:
-        """
-        Create the attribute :attr:`Data.coord2dim` by reversing the mapping :attr:`Data.dim2coord`.
-
-        Parameters
-        ----------
-        dim2coord: Mapping[str, FrozenSet[str]]
-            See :attr:`Data.dim2coord`.
-
-        Returns
-        -------
-        coord2dim: Mapping[str, str]
-            See :attr:`Data.coord2dim`.
-
-        See Also
-        --------
-        :func:`utils.misc.sequences.reverse_dict_container`
-            Here, the output of the function is of the form {'coord': ['dim']}, since each
-            coordinate is associated with a single dimension.
-            To obtain single string values instead of lists, each list is unpacked.
-        """
-        rev_dct: Dict[str, List[str]] = reverse_dict_container(dim2coord)  # {'coord': ['dim']}}
-        return {coord: dim[0] for coord, dim in rev_dct.items()}
+class Coordinate(np.ndarray):
+    """TODO: Refactor the Coordinate class in ``core.coordinates.base_coord`` to inherit from
+    np.ndarray"""
 
 
 T = TypeVar("T")
 """Type variable representing the type of data in the generic Data class."""
 
+C = TypeVar("C", bound=Union[CoreData, Coordinate])
+"""Type variable representing the type of content attributes (CoreData, Coordinate)."""
 
-class DataStructure(Generic[T], metaclass=DataStructMeta):
+
+class LazyAttribute(Generic[C]):
+    """
+    Descriptor for lazy initialization of data and coordinates in the data structure.
+
+    Attributes
+    ----------
+    name: str
+        Name of the lazy attribute to handle.
+
+    Parameters
+    ----------
+    name: str
+        See the descriptor attribute `LazyAttribute.name`.
+    instance: DataStructure
+        Instance of the data structure which stores the attribute.
+    owner: Type[DataStructure]
+        Class of the data structure.
+
+    Raises
+    ------
+    AttributeError
+        If the lazy attribute is accessed before being populated with actual values.
+    """
+
+    def __init__(self, name):
+        self.name = f"_{name}"  # private attribute name
+
+    def __get__(self, instance: "DataStructure", owner: Type["DataStructure"]) -> C:
+        value = getattr(instance, self.name)
+        if value is None:
+            raise AttributeError(f"Unset attribute: '{self.name}'.")
+        return value
+
+
+class DataStructure(Generic[T], ABC):
     """
     Abstract base class for data structures, defining the interface to interact with data.
 
     Class Attributes
     ----------------
-    dims: Tuple[str]
-        Names of the dimensions (order matters).
-    coords : Tuple[str]
-        Names of each coordinate, specifying the attribute which stores the coordinate object.
-    dim2coord: Dict[str, FrozenSet[str]]
-        Mapping from dimensions to their associated coordinates.
-        Keys: Dimension names.
-        Values: Coordinates associated to each dimension.
-    coord2dim: Mapping[str, str]
-        Mapping from coordinates to their associated dimensions.
+    _REQUIRED_ATTRIBUTES : Tuple[str]
+        Names of the class-level attributes which have to be defined in each data structure
+        subclass.
+    dims : Tuple[str, ...]
+        Names of the dimensions, ordered to label the axes of the underlying data.
+    coords : Mapping[str, type]
+        Names of the coordinates (as attributes) and their expected types.
+    coords_to_dims : Mapping[str, Tuple[str, ...]]
+        Mapping from coordinates to their associated dimension(s) in the data structure.
         Keys: Coordinate names.
-        Values: Dimension names.
-    coord2type: Mapping[str, Type]
-        Mapping from coordinates to their types.
-        Keys: Coordinate names.
-        Values: Types of the coordinates, among the subclasses of :class:`Coordinate`.
-    _has_data: bool
-        Flag indicating if the data attribute has been filled with actual values.
-    _has_coords: bool
-        Flag indicating if the coordinates attributes have been filled with actual values.
-    path_ruler: Type[PathRuler]
-        Subclass of :class:`PathRuler` used to build paths to data files.
-    saver: Type[Saver], default=SaverPKL
-        Subclass of :class:`Saver` used to save data to files in a specific format.
-    loader: Type[Loader], default=LoaderPKL
-        Subclass of :class:`Loader` used to load data from files in a specific format.
+        Values: Dimension names, ordered to match the coordinate axes.
+    identifiers : Tuple[str, ...]
+        Names of the metadata attributes which jointly and uniquely identify each data structure
+        instance within its class. Handled by each subclass' constructor.
+    path_ruler : Type[PathRuler]
+        Subclass of `PathRuler` used to build the path to data file where the content of the data
+        structure instance can be saved or recovered.
+    saver : Type[Saver], default=SaverDILL
+        Subclass of `Saver` used to save data to a file in a specific format.
+    loader : Type[Loader], default=LoaderDILL
+        Subclass of `Loader` used to load data from a file in a specific format.
     tpe : TargetType, default='object'
-        Type of the loaded data (parameter for the method :meth:`Loader.load`).
+        Type of the loaded data (parameter for the method `Loader.load`).
 
     Attributes
     ----------
-    data: npt.NDArray
+    data: CoreData
         Actual data values to analyze.
     shape: Tuple[int]
-        Shape of the data array (delegated to the numpy array).
-    n: MappingProxyType[str, int]
-        Length of each dimension.
-        Keys: Dimension names.
-        Values: Number of elements.
+        (Property) Shape of the data array (delegated to the numpy array).
+    path: Path
+        (Property) Path to the file where the data can be stored.
 
     Methods
     -------
-    :meth:`__init__`
-    :meth:`set_data`
-    :meth:`set_dims`
-    :meth:`set_coords`
-    :meth:`__repr__`
-    :meth:`copy`
-    :meth:`path`
-    :meth:`load`
-    :meth:`save`
+    `get_coord`
+    `__getattr__`
+    `set_data`
+    `set_coords`
+    `load`
+    `save`
+    `copy`
+    `sel`
 
     Examples
     --------
-    Access the number of time points in data with a time dimension:
-    >>> data.n['time']
-
     Get the name of an axis:
+
     >>> data.dims[0]
+    "time"
 
     Get the axis of the time dimension:
-    >>> dims.index('time')
+
+    >>> data.get_axis('time')
+    0
+
+    Get the length of the time dimension:
+
+    >>> data.get_length('time')
+    10
+
+    Get the time coordinate (two equivalent approaches):
+
+    >>> data.time
+    array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+    >>> data.get_coord('time')
+    array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
 
     Warning
     -------
-    The dimensions and types of coordinates are *intrinsic* to each data structure, they are part of
-    its core property.
-    To ensure the integrity of the data structure, several attributes are read-only and/or
-    immutable: :attr:`data`, :attr:`dims`, :attr:`coords`, :attr:`shape`, :attr:`n`.
-    Moreover, for consistency, it is not recommended to transform the underlying numpy array through
-    :mod:`numpy` functions such as transpositions (dimension permutation), reshaping (dimension
-    fusion)...
+    The dimensions and types of coordinates are *intrinsic* properties of each data structure class.
+    To ensure the integrity of the data structure, it is not recommended to transform the underlying
+    numpy array through `numpy` functions such as transpositions (dimension permutation),
+    reshaping (dimension fusion)...
 
     See Also
     --------
-    :meth:`np.ndarray.setflags`: Used to make a numpy array immutable.
-    :class:`DataStructMeta`: Metaclass used to set class-level attributes.
     :class:`Generic`: Generic class to define a generic type.
+    :class:`ABC`: Abstract base class to define abstract methods and properties.
     :class:`Coordinate`: Base class for coordinates.
     :class:`PathRuler`: Base class for path managers.
     :class:`Loader`: Base class for loaders.
     :class:`Saver`: Base class for savers.
     :class:`TargetType`: Class to specify the type of the loaded data.
-
-    Notes
-    -----
-    Since :class:`DataStructMeta` inherits from :class:`abc.ABCMeta`, it is not necessary to make
-    :class:`DataStructure` inherit from :class:`abc.ABC`.
     """
 
-    # --- Dimensions and Coordinates ---
-    # Required - Set in each subclass
-    dim2coord: Mapping[str, FrozenSet[str]] = MappingProxyType({})
-    coord2type: Mapping[str, Type] = MappingProxyType({})
-    # Set by :class:`DataStructMeta` automatically
-    dims: Tuple[str, ...] = ()
-    coords: Tuple[str, ...] = ()
-    coord2dim: Mapping[str, str] = MappingProxyType({})
+    # --- Class-Level Configurations ---------------------------------------------------------------
+
+    # --- Schema of the Data Structure ---
+    _REQUIRED_ATTRIBUTES = ("dims", "coords", "coords_to_dims", "identifiers")
+    dims: Tuple[DimName, ...]
+    coords: Mapping[str, type]
+    coords_to_dims: Mapping[str, Tuple[DimName, ...]]
+    identifiers: Tuple[str, ...]
 
     # --- IO Handlers ---
-    # Required - Set in each subclass (here only declared)
-    path_ruler = PathRuler
     # Optional - Overridden in some subclasses (here default values)
+    path_ruler: Type[PathRuler]
     saver: Type[Saver] = SaverDILL
     loader: Type[Loader] = LoaderDILL
     tpe: TargetType = TargetType("object")  # for :class:`LoaderPKL`
 
-    def __init__(self, data: Optional[npt.NDArray], **kwargs) -> None:
+    def __init_subclass__(cls) -> None:
         """
-        Instantiate a data structure and check the consistency of the input values.
+        Hook method called when any subclass of `DataStructure` is created.
 
         Parameters
         ----------
-        data:
-            See :attr:`data`.
-        kwargs: Dict[str, ...]
-            Coordinates specific to the data structure subclass.
-            Keys: Coordinate names as specified in :attr:`coord2type`.
-            Values: Coordinate values, corresponding the the expected type of coordinate.
+        cls : Type[DataStructure]
+            Class of the concrete data structure subclass being created.
 
-        See Also
-        --------
-        :meth:`set_data`
-        :meth:`set_coords`
-        :meth:`set_dims`
+        Notes
+        -----
+        Responsibilities of this method:
+
+        - Ensure that the required class-level attributes are defined in each data structure
+          subclass.
+        - Declare lazily-initialized attributes (data and coordinates) by assigning the descriptor
+          `LazyAttribute` (*after* having checked the presence of the class-level attribute `coords`
+          among the required attributes).
+        - Make the `path` property abstract if the class-level attribute `path_loader` is set.
         """
-        self._has_data = False
-        self._has_coords = False
-        # If provided, initialize actual values
+        # Call parent hook (default behavior)
+        super().__init_subclass__()
+        # Check class-level attributes
+        for class_attr in cls._REQUIRED_ATTRIBUTES:
+            if not hasattr(cls, class_attr):
+                raise TypeError(f"<{cls.__name__}> Missing class-level attribute: '{class_attr}'.")
+        # Declare lazily-initialized attributes
+        setattr(cls, "data", LazyAttribute("data"))
+        for coord_name in cls.coords:
+            setattr(cls, coord_name, LazyAttribute(coord_name))
+        # Check `path` property based on `path_loader`
+        if getattr(cls, "path_loader", None) is not None:
+            if not hasattr(cls, "path"):
+                raise TypeError(f"<{cls.__name__}> Missing property: 'path'.")
+
+    # --- Instance-Level Manipulations -------------------------------------------------------------
+
+    def __init__(
+        self,
+        data: Optional[Union[CoreData, np.ndarray]],
+        **coords_args: Optional[Union[Coordinate, np.ndarray]],
+    ) -> None:
+        """
+        Instantiate a data structure and check the consistency of the input values (automatic).
+
+        Parameters
+        ----------
+        data : Optional[CoreData, np.ndarray]
+            Core data values to fill the attribute `data`.
+            Shape: Consistent with the dimensions expected for the data structure.
+        coords_args : Dict[str, Optional[Coordinate, np.ndarray]]
+            Coordinate values specific to the data structure subclass.
+            Keys: Coordinate names as specified in `coords_to_dims`.
+            Values: Coordinate values, corresponding to the expected type of coordinate.
+            .. _coord_args:
+
+        Implementation
+        --------------
+        To pass each individual coordinate to the setter method `set_coords`, it is necessary to use
+        the unpacking operator `**` and a dictionary rather than the following syntax:
+
+        ``self.set_coords(coord_name=coords_args[coord_name])``
+
+        Indeed, ``coord_name`` would always be treated as the *literal string* ``"coord_name"``
+        instead of the actual *value* of the variable ``coord_name``.
+        """
+        # Lazy initialization: declare private and empty content-related attributes
+        self._data: Optional[CoreData] = None
+        for coord_name in self.coords:
+            setattr(self, f"_{coord_name}", None)
+        # Fill with actual values if provided
         if data is not None:
             self.set_data(data)
-            self.set_coords(**kwargs)
-        # If not provided, initialize empty values of the expected types
-        else:
-            # Empty data array based on the dimensions
-            shape = (0,) * len(self.dims)
-            self.data = np.empty(shape=shape, dtype=np.float64)
-            self.set_dims()
-            # Empty coordinates based on the expected types
-            for coord, cls in self.coord2type.items():
-                setattr(self, coord, cls.empty())
+        for coord_name, coord_value in coords_args.items():
+            if coord_value is not None:  # pass individual coordinates to the setter method
+                self.set_coords(**{coord_name: coord_value})
 
-    def set_data(self, data: npt.NDArray) -> None:
+    def __repr__(self) -> str:
+        # NOTE: Use private attributes to examine the state of the data structure
+        data_status = "empty" if self._data is None else "filled"
+        active_coords = ", ".join(
+            [name for name in self.coords if getattr(self, f"_{name}") is not None]
+        )
+        return f"<{self.__class__.__name__}> Dims: {self.dims}, Data: {data_status}, Active coords: {active_coords}"
+
+    # --- Access to Attributes ---------------------------------------------------------------------
+
+    @property
+    def shape(self) -> Tuple[int, ...]:
+        """Shape of the data array (delegated to the numpy array)."""
+        return self.data.shape
+
+    def get_coord(self, coord_name: str) -> Coordinate:
         """
-        Set the attribute :attr:`data` with actual values.
+        Retrieve a coordinate using its attribute name. Useful to iterate over coordinates.
 
         Parameters
         ----------
-        data: npt.NDArray
-            See :attr:`data`.
+        coord_name : str
+            Name of the coordinate to retrieve.
+
+        Returns
+        -------
+        coord_values : Coordinate
+            Coordinate object stored in the data structure.
+        """
+        if coord_name not in self.coords:
+            raise KeyError(f"Invalid coordinate: '{coord_name}'")
+        return getattr(self, coord_name)
+
+    def __getattr__(self, name):
+        """
+        Delegate the access to nested attributes to the coordinate objects.
+
+        Parameters
+        ----------
+        name : str
+            Name of the attribute to get.
+        """
+        for obj in self.__dict__.values():
+            if hasattr(obj, name):
+                return getattr(obj, name)
+        raise AttributeError(f"Invalid attribute '{name}' for object '{self.__class__.__name__}'.")
+
+    # --- Set Data and Coordinates -----------------------------------------------------------------
+
+    def set_data(self, data: Union[CoreData, np.ndarray]) -> None:
+        """
+        Set the attribute `data` with actual values and check its consistency.
+
+        Parameters
+        ----------
+        data : Union[CoreData, np.ndarray]
+            See the attribute `data`.
 
         Raises
         ------
         ValueError
             If the number of dimensions of the input data is not consistent with the dimensions
             expected for the data structure.
-
-        See Also
-        --------
-        :meth:`np.ndarray.setflags`:
-            Used to make a numpy array immutable to prevent any modification.
-        :meth:`set_dims`:
-            Used to update the attributes :attr:`shape` and :attr:`n` based on the current data
-            values.
-        :attr:`_has_data`:
-            Set to True to indicate that the data attribute has been filled with actual values.
         """
-        # Check the number of dimensions is consistency with :attr:`dims`
         if data.ndim != len(self.dims):
-            raise ValueError(f"Invalid number of dimensions: {data.ndim} != {len(self.dims)}")
-        self.data = data
-        self.data.setflags(write=False)  # make immutable
-        self.set_dims()  # update the dimensions based on the data
-        self._has_data = True
+            raise ValueError(f"Invalid number of dimensions: data {data.ndim} != {len(self.dims)}")
+        if not isinstance(data, CoreData):  # convert to CoreData with the expected dims
+            data = CoreData(data, self.dims)
+        self._data = data  # store in private attribute (bypass descriptor)
 
-    def set_dims(self):
-        """Set the attributes :attr:`shape` and :attr:`n` based on :attr:`data`."""
-        self.shape = self.data.shape  # delegate to numpy array
-        self.n = MappingProxyType({dim: shape for dim, shape in zip(self.dims, self.shape)})
-
-    def set_coords(self, **kwargs) -> None:
+    def set_coords(self, **coords_args: Union[Coordinate, np.ndarray]) -> None:
         """
-        Set the coordinate attributes and check their consistency.
+        Set coordinate attributes (all or a subset) and check their consistency.
 
         Parameters
         ----------
-        kwargs: Dict[str, ...]
-            See :meth:`__init__`.
+        coords_args : Dict[str, Union[Coordinate, np.ndarray]]
+            See the argument :ref:`coords_args` in the constructor.
 
         Raises
         ------
         ValueError
-            If any required coordinate is missing in the keyword arguments.
-        TypeError
-            If the argument passed for one coordinate does not match its expected type.
+            If any argument has an unexpected coordinate name.
         ValueError
-            If the length of the argument passed for one coordinate does not match the length of its
-            associated data axis.
+            If the shape of the value passed for one coordinate does not match the sub-shape of the
+            axis to which it is associated in tha data structure.
 
         See Also
         --------
-        :attr:`coord2type`:
-            Used to check the presence and type of the coordinate values.
-        :attr:`n`:
-            Has to been set beforehand by the method :meth:`set_dims`.
-        :attr:`Coordinate.__len__`
-             assumed to be implemented in the coordinate classes.
-        :attr:`_has_coords`:
-            Set to True to indicate that the coordinate attributes have been filled with actual
-            values.
+        :meth:`CoreData.get_length`: Get the length of a dimension.
         """
-        for coord, tpe in self.coord2type.items():
-            # Check coordinate presence
-            if coord not in kwargs:
-                raise ValueError(f"Missing coordinate: {coord}")
-            # Check coordinate type
-            if not isinstance(kwargs[coord], tpe):
-                raise TypeError(f"Invalid type for coordinate '{coord}': {type(kwargs[coord])}")
-            # Check coordinate length
-            if len(kwargs[coord]) != self.n[self.coord2dim[coord]]:
-                raise ValueError(f"Invalid length for coordinate '{coord}': {len(kwargs[coord])}")
-            setattr(self, coord, kwargs[coord])
-        self._has_coords = True
+        for name, value in coords_args.items():
+            if name not in self.coords:
+                raise ValueError(f"Invalid coordinate name: '{name}'.")
+            if not isinstance(value, self.coords[name]):  # convert to the expected coordinate type
+                value = self.coords[name](value)
+            valid_shape = tuple(self.get_length(dim) for dim in self.coords_to_dims[name])
+            if value.shape != valid_shape:
+                raise ValueError(f"Invalid shape for '{name}': {value.shape} != {valid_shape}")
+            setattr(self, f"_{name}", value)  # store in private attribute (bypass descriptor)
 
-    def __repr__(self) -> str:
-        coord_names = list(self.coord2dim.keys())
-        return f"<{self.__class__.__name__}> Dims: {self.dims}, Coords: {coord_names}"
-
-    def copy(self) -> Self:
-        """Return a *deep copy* of the data structure."""
-        return copy.deepcopy(self)
+    # --- Data I/O ---------------------------------------------------------------------------------
 
     @property
-    @abstractmethod
     def path(self) -> Path:
-        """Abstract Property - Build the path to the file containing the data."""
-        return self.path_ruler().get_path()  # type: ignore[abstract] # pylint: disable=abstract-class-instantiated
+        """
+        Path to the file containing the data.
+
+        Warning
+        -------
+        This property is abstract as soon as the class-level attribute `path_loader` is set.
+        Implement it by passing the required arguments to the path ruler.
+        """
+        return self.path_ruler().get_path()
 
     def load(self) -> None:
-        """Retrieve an instance from the file at :attr:`path`."""
+        """Load an instance from the file at :attr:`path`."""
         loaded_obj = self.loader(path=self.path, tpe=self.tpe).load()
         self.__dict__.update(loaded_obj.__dict__)
 
@@ -422,34 +422,11 @@ class DataStructure(Generic[T], metaclass=DataStructMeta):
         """Save an instance to a file at :attr:`path` in the format specific to the saver."""
         self.saver(self.path, self).save()
 
-    def __getitem__(self, coord_name: str):
-        """
-        Retrieve a coordinate using its name as a string.
+    # --- Data Manipulations -----------------------------------------------------------------------
 
-        Parameters
-        ----------
-        coord_name: str
-            Name of the coordinate to retrieve.
-
-        Returns
-        -------
-        Coordinate
-            Coordinate object stored in the data structure.
-
-        Raises
-        ------
-        KeyError
-            If the coordinate name is not found in the data structure.
-
-        Example
-        -------
-        Access the coordinate 'time':
-        >>> data['time']
-        """
-        if coord_name in self.coord2dim:
-            return getattr(self, coord_name)
-        else:
-            raise KeyError(f"Coordinate '{coord_name}' not found in the data structure.")
+    def copy(self) -> Self:
+        """Return a *deep copy* of the data structure."""
+        return copy.deepcopy(self)
 
     def sel(self, **kwargs) -> Self:
         """
@@ -457,62 +434,36 @@ class DataStructure(Generic[T], metaclass=DataStructMeta):
 
         Parameters
         ----------
-        kwargs: Dict[str, Any]
-            Keys : Coordinate names.
-            Values : Selection criteria (single value, list or slice).
+        kwargs : Dict[str, Any]
+            Keys: Coordinate names.
+            Values: Selection criteria (single value, list or slice).
 
         Returns
         -------
-        Data
+        DataStructure
             New data structure containing the selected data.
 
         Example
         -------
         Select time points between 0 and 1 second:
+
         >>> data.sel(time=slice(0, 1))
+
         Select trials in task 'PTD':
+
         >>> data.sel(task='PTD')
+
         Select trials for stimuli 'R' and 'T':
+
         >>> data.sel(stim=['R', 'T'])
+
         Select error trials only:
+
         >>> data.sel(error=True)
+
         Select along multiple coordinates:
+
         >>> data.sel(time=slice(0, 1), task='PTD', stim=['R', 'T'])
         """
-        # Unpack the names of the coordinates present in the data structure
-        coord2dim = self.coord2dim
-        coord_attrs = list(coord2dim.keys())
-        # Initialize True masks for each dimensions to select all elements by default
-        masks = {dim: np.ones(shape, dtype=bool) for dim, shape in zip(self.dims, self.shape)}
-        # Update masks with the selection criteria on each coordinate
-        for name, label in kwargs.items():
-            if name in coord_attrs:
-                dim = coord2dim[name]  # dimension to which the coordinate applies
-                coord = getattr(self, name)  # coordinate object
-                # Create a boolean mask depending on the target label type
-                if isinstance(label, list):
-                    mask = np.isin(coord.values, label)
-                elif isinstance(label, slice):
-                    mask = np.zeros(coord.values.size, dtype=bool)
-                    mask[label] = True
-                elif isinstance(label, (int, str, bool)):
-                    mask = coord.values == label  # pylint: disable=superfluous-parens
-                else:
-                    raise TypeError(f"Invalid type for label '{label}'.")
-                # Apply this mask to the corresponding axis
-                masks[dim] = masks[dim] & mask
-        # Convert the boolean masks to integer indices
-        indices = {dim: np.where(mask)[0] for dim, mask in masks.items()}
-        # Combine masks along all dimensions (meshgrid)
-        mesh = np.ix_(*[indices[dim] for dim in self.dims])  # order masks by dimensions
-        # Select the data
-        new_data = self.data[mesh]
-        # Select the coordinates
-        new_coords = {name: getattr(self, name) for name in coord_attrs}
-        for name, _ in kwargs.items():
-            if name in coord_attrs:
-                new_coords[name] = coord[indices[coord2dim[name]]]
-        # Instantiate a new data structure with the selected data,
-        # by unpacking the new coordinates dictionary
-        raise NotImplementedError("Method not implemented yet.")
-        # return self.__class__(new_data, **new_coords)
+        # raise NotImplementedError("Not implemented yet.")
+        return self
