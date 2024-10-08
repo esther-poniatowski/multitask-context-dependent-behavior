@@ -38,32 +38,58 @@ Usage of the concrete builder:
 
 """
 from abc import ABC, abstractmethod
-from typing import TypeVar, Generic, Type
+from dataclasses import dataclass
+from typing import TypeVar, Generic, Type, Tuple, Optional
 
+# from core.coordinates.base_coord import Coordinate
+from core.data_structures.base_data_struct import Coordinate
+from core.data_structures.core_data import CoreData, DimName
 from core.data_structures.base_data_struct import DataStructure
 
 
-D = TypeVar("D", bound=DataStructure)
-"""Type variable representing the Data structure class associated with each builder."""
+@dataclass
+class DataBuilderInput:
+    """
+    Base class for builder inputs.
+
+    Notes
+    -----
+    Each subclass of `DataBuilder` should define a dataclass that inherits from this class.
+    """
 
 
-class DataBuilder(Generic[D], ABC):
+I = TypeVar("I")
+"""Type variable for the input data class associated with a specific builder."""
+
+O = TypeVar("O", bound=DataStructure)
+"""Type variable for the Data structure class produced by a specific builder."""
+
+
+class DataBuilder(Generic[I, O], ABC):
     """
     Abstract base class for building data structures.
 
     Class Attributes
     ----------------
-    data_class: type
+    product_class : type
         Class of the data structure to build.
+    TMP_DATA : Tuple[str]
+        Names of the internal data attributes used by the builder.
 
     Attributes
     ----------
-    data_structure: D
-        Data structure instance built by this builder.
+    product : O
+        Data structure instance being built.
 
     Methods
     -------
-    :meth:`build`
+    `build`
+    `reset`
+    `initialize_data_structure`
+    `get_dimensions`
+    `add_data`
+    `add_coords`
+    `get_product`
 
     See Also
     --------
@@ -72,28 +98,131 @@ class DataBuilder(Generic[D], ABC):
 
     Implementation
     --------------
-    The inputs are passed to the `build()` method rather than to the constructor, which allows to
-    reuse the same builder instance for building different instances of the product with different
-    inputs.
+    Separation of concerns between the builder's methods
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    - Constructor: Declare the data structure product to build (base class' constructor) and store
+      static configuration parameters (subclasses' constructors) which determine the behavior of the
+      builder across multiple builds.
+    - Main `build()` method: Receive dynamic inputs required to build a specific product instance.
+      Metadata (which only serve to determine the identity of the data structure product) are
+      transferred to the constructor of the data structure itself. Inputs to process are stored as
+      attributes in the builder for direct access during the building process. This method
+      orchestrates the creation of a data structure step-by-step and returns the complete product
+      instance.
+    - Specific methods to process internal data: Only deal with the data they receive from
+      `build()`.
+
+    Lazy Instantiation
+    ^^^^^^^^^^^^^^^^^^
+    The builder should fill data and coordinates using the `set_data` and `set_coords` methods
+    provided by the data structure itself. Those methods perform automatic validations so that the
+    builder can focus on the creation process.
     """
 
-    data_class: Type[D]
+    product_class: Type[O]
+    TMP_DATA: Tuple[str]
 
     def __init__(self) -> None:
-        self.data_structure: D
+        """Declare the data structure product to build."""
+        self.product: Optional[O]
+        self.reset()
+
+    def reset(self) -> None:
+        """Reset the builder's state: clear the product and internal data."""
+        self.product = None
+        for attr in self.TMP_DATA:
+            setattr(self, attr, None)
 
     @abstractmethod
-    def build(self, *args, **kwargs) -> D:
+    def build(self, **kwargs) -> O:
         """
-        Finalize the creation of the data structure by processing inputs through pipelines.
+        Orchestrate the creation of a data structure step-by-step.
 
         Arguments
         ---------
         args, kwargs:
-            Specific input objects required to build the product (data, metadata, etc.).
+            Specific input objects required to build the product (data, metadata...).
 
         Returns
         -------
         product_type
             Data structure instance built by this builder.
         """
+
+    def initialize_data_structure(self, **metadata) -> None:
+        """
+        Initialize an empty data structure product *with its metadata*.
+
+        Arguments
+        ---------
+        metadata: dict
+            Metadata corresponding to the arguments *required* by the constructor of the data
+            structure class.
+
+        Notes
+        -----
+        Metadata includes:
+
+        - Identifiers which uniquely characterize the data structure product.
+        - Descriptive parameters about configuration or content (if any).
+        """
+        self.product = self.product_class(**metadata)
+
+    def get_dimensions(self) -> Tuple[DimName, ...]:
+        """
+        Retrieve the dimensions of the data structure product by delegating to the product class.
+
+        Required to initialize the CoreData.
+        """
+        return self.product_class.dims
+
+    def add_data(self, data: CoreData) -> None:
+        """
+        Add actual data values to the data structure product via the data structure's setter.
+
+        Arguments
+        ---------
+        data: CoreData
+            Data values to store in the data structure's attribute `data`.
+
+        See Also
+        --------
+        :meth:`core.data_structures.core_data.CoreData`
+        :meth:`core.data_structures.base_data_struct.DataStructure.set_data`
+            Setter method provided by the data structure interface.
+        """
+        assert self.product is not None
+        self.product.set_data(data=data)
+
+    def add_coords(self, **coords: Coordinate) -> None:
+        """
+        Add actual coordinates to the data structure product via the data structure's setter.
+
+        Arguments
+        ---------
+        coords: Coordinate
+            Coordinate objects to store in the data structure's attributes corresponding to the keys
+            in the dictionary.
+
+        See Also
+        --------
+        :meth:`core.coordinates.base_coord.BaseCoord`
+        :meth:`core.data_structures.base_data_struct.DataStructure.set_coords`
+            Setter method provided by the data structure interface.
+        """
+        assert self.product is not None
+        self.product.set_coords(**coords)
+
+    def get_product(self) -> O:
+        """
+        Return the data structure product built by this builder and reset the builder's state.
+
+        Returns
+        -------
+        product_type
+            Data structure instance built by this builder.
+        """
+        assert self.product is not None
+        product = self.product
+        self.reset()
+        return product
