@@ -34,17 +34,13 @@ class Stratifier(Processor):
 
     Conventions for the documentation:
 
-    - Attributes: Configuration parameters of the processor, passed to the *constructor*.
-    - Arguments: Input data to process, passed to the `process` method (base class).
-    - Returns: Output data after processing, returned by the `process` method (base class).
-
     Class Attributes
     ----------------
     UNASSIGNED_STRATUM : int
         Default value for unassigned stratum labels. See method `stratify`.
 
-    Attributes
-    ----------
+    Configuration Attributes
+    ------------------------
     strata_def : FeatComb, optional
         Unique combinations of the feature values which define each single stratum.
         Length: ``n_strata``, number of strata labels.
@@ -52,8 +48,8 @@ class Stratifier(Processor):
         The index of each tuple corresponds to the stratum label.
         If not provided, it is computed from the input features.
 
-    Arguments
-    ---------
+    Processing Arguments
+    --------------------
     features : Features
         Features associated to the samples (e.g., task, context, stimulus).
         Length: ``n_features``.

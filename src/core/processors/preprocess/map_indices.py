@@ -28,14 +28,8 @@ class IndexMapper(Processor):
     """
     Map relative indices to absolute indices in a global data set.
 
-    Conventions for the documentation:
-
-    - Attributes: Configuration parameters of the processor, passed to the *constructor*.
-    - Arguments: Input data to process, passed to the `process` method (base class).
-    - Returns: Output data after processing, returned by the `process` method (base class).
-
-    Arguments
-    ---------
+    Processing Arguments
+    --------------------
     idx_absolute : Indices
         Indices of a subset of trials within a global data set ("absolute" indices).
         Shape: ``(n_samples,)``, with ``n_samples`` the number of samples in the *subset*.

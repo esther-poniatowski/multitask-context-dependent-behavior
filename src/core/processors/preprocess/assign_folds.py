@@ -39,19 +39,13 @@ class FoldAssigner(Processor):
     """
     Assign samples (trials) to folds for cross-validation.
 
-    Conventions for the documentation:
-
-    - Attributes: Configuration parameters of the processor, passed to the *constructor*.
-    - Arguments: Input data to process, passed to the `process` method (base class).
-    - Returns: Output data after processing, returned by the `process` method (base class).
-
-    Attributes
-    ----------
+    Configuration Attributes
+    ------------------------
     k : int
         Number of folds in which the samples will be divided.
 
-    Arguments
-    ---------
+    Processing Arguments
+    --------------------
     n_samples : int
         Number of samples to assign to folds.
         .. _n_samples:
