@@ -11,36 +11,7 @@ See Also
 import numpy as np
 import pytest
 
-from core.data_structures.core_data import DimName, CoreData
-
-
-# --- Test DimName class ---------------------------------------------------------------------------
-
-
-def test_valid_dim_name():
-    """
-    Test the `DimName` class with a valid dimension name.
-    """
-    DimName("time")
-
-
-def test_invalid_dim_name():
-    """
-    Test the `DimName` class with an invalid dimension name.
-    """
-    with pytest.raises(ValueError):
-        DimName("invalid_dim")
-
-
-def test_dim_alias():
-    """
-    Test the property `DimName.alias` to get the alias of a dimension name.
-    """
-    dim = DimName("time")
-    assert dim.alias == DimName._ALIASES["time"]  # pylint: disable=protected-access
-
-
-# --- Test CoreData class --------------------------------------------------------------------------
+from core.data_structures.core_data import CoreData
 
 
 @pytest.mark.parametrize("dims", argvalues=[None, ("time", "time")], ids=["default", "with_dims"])
@@ -99,50 +70,13 @@ def test_invalid_instantiation(dims):
         CoreData(values, dims=dims)
 
 
-@pytest.mark.parametrize("axis", argvalues=[0, 100], ids=["valid_idx", "out_of_bounds"])
-def test_get_dim(axis):
+def test_delegation():
     """
-    Test the `get_dim` method delegated to the `Dimensions` class.
-
-    Test Inputs
-    -----------
-    axis : int
-        Index of the dimension to retrieve.
-
-    Expected Output
-    ---------------
-    If the axis if inferior to the number of dimensions, the name of the dimension is returned.
-    Otherwise, an IdexError is raised.
+    Test the `get_axis` and `get_dim` methods delegated to the `Dimensions` class.
     """
     data = CoreData(np.zeros((5, 10)), dims=("time", "units"))
-    if axis < data.ndim:
-        assert data.get_dim(axis) == data.dims[axis]
-    else:
-        with pytest.raises(IndexError):
-            data.get_dim(axis)
-
-
-@pytest.mark.parametrize("dim", argvalues=["time", "invalid"], ids=["existent", "inexistent"])
-def test_get_axis(dim):
-    """
-    Test the `get_axis` method delegated to the `Dimensions` class.
-
-    Test Inputs
-    -----------
-    dim : int
-        Name the dimension to retrieve.
-
-    Expected Output
-    ---------------
-    If the dimension name exists in the object, the index of the dimension is returned.
-    Otherwise, a ValueError is raised.
-    """
-    data = CoreData(np.zeros((5, 10)), dims=("time", "units"))
-    if dim in data.dims:
-        assert data.get_axis(dim) == data.dims.index(dim)
-    else:
-        with pytest.raises(ValueError):
-            data.get_axis(dim)
+    assert data.get_axis("time") == 0
+    assert data.get_dim(0) == "time"
 
 
 def test_get_size():
@@ -199,7 +133,7 @@ def test_array_finalize_reduce_dims():
     assert broadcasted_data.dims == ("", "", "")
 
 
-def test_use_as_indexer():
+def test_as_indexer():
     """
     Test whether the core data object can be used as an indexer.
 
