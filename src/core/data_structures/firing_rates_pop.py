@@ -9,7 +9,7 @@ from typing import Optional, Union
 
 import numpy as np
 
-from core.data_structures.core_data import DimName, CoreData
+from core.data_structures.core_data import CoreData, Dimensions
 from core.coordinates.bio import CoordUnit
 from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim
 from core.coordinates.time import CoordTime
@@ -37,7 +37,7 @@ class FiringRatesPop(DataStructure):
     - ``task``  (dimension ``trials``)
     - ``ctx``   (dimension ``trials``),
     - ``stim``  (dimension ``trials``),
-    - `time``  (dimension ``time``)
+    - ``time``  (dimension ``time``)
 
     Identity Metadata: ``area``, ``training`
 
@@ -45,7 +45,7 @@ class FiringRatesPop(DataStructure):
 
     Attributes
     ----------
-    data : np.ndarray[Tuple[Any, Any, Any, Any, Any], np.float64]
+    data : CoreData
         Firing rates time courses of all the units in all the trials.
         Shape: ``(n_ens, n_units, n_folds, n_trials, n_t)``, with:
 
@@ -55,15 +55,16 @@ class FiringRatesPop(DataStructure):
         - ``n_trials``: Number of pseudo-trials in the reconstructed data set.
         - ``n_t``: Number of time points in a trial's time course.
 
-    units : np.ndarray[Tuple[Any, Any], np.str_]
-        Labels of the units in each ensemble of the pseudo-population.
-    task : np.ndarray[Tuple[Any], np.int64]
+    units : CoordUnit
+        Coordinate labels of the units in each ensemble of the pseudo-population.
+        Dimensions: ``ensembles``, ``units``.
+    task : CoordTask
         Coordinate labels for the task from which each trial comes.
-    ctx : np.ndarray[Tuple[Any], np.str_]
+    ctx : CoordCtx
         Coordinate labels for the context from which each trial comes.
-    stim : np.ndarray[Tuple[Any], np.str_]
+    stim : CoordStim
         Coordinate labels for the stimulus presented in each trial.
-    time : np.ndarray[Tuple[Any], np.float64]
+    time : CoordTime
         Time points of the firing rate time courses (in seconds).
     area : Area
         Brain area from which the units were recorded.
@@ -74,13 +75,7 @@ class FiringRatesPop(DataStructure):
     """
 
     # --- Schema Attributes ---
-    dims = (
-        DimName("ensembles"),
-        DimName("units"),
-        DimName("folds"),
-        DimName("trials"),
-        DimName("time"),
-    )
+    dims = Dimensions("ensembles", "units", "folds", "trials", "time")
     coords = MappingProxyType(
         {
             "units": CoordUnit,
@@ -92,11 +87,11 @@ class FiringRatesPop(DataStructure):
     )
     coords_to_dims = MappingProxyType(
         {
-            "units": (DimName("ensembles"), DimName("units")),
-            "task": (DimName("trials"),),
-            "ctx": (DimName("trials"),),
-            "stim": (DimName("trials"),),
-            "time": (DimName("time"),),
+            "units": Dimensions("ensembles", "units"),
+            "task": Dimensions("trials"),
+            "ctx": Dimensions("trials"),
+            "stim": Dimensions("trials"),
+            "time": Dimensions("time"),
         }
     )
     identifiers = ("area", "training")
@@ -124,14 +119,7 @@ class FiringRatesPop(DataStructure):
         self.training = Training(training)
         self.error = error
         # Set data and coordinate attributes via the base class constructor
-        super().__init__(
-            data=data,
-            units=units,
-            task=task,
-            ctx=ctx,
-            stim=stim,
-            time=time,
-        )
+        super().__init__(data=data, units=units, task=task, ctx=ctx, stim=stim, time=time)
 
     def __repr__(self) -> str:
         return (
