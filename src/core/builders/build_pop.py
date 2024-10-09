@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.builders.build_pop` [module]
+`core.builders.build_pop` [module]
 
 Classes
 -------
-:class:`PopulationBuilder`
+`PopulationBuilder`
 
 Notes
 -----
@@ -39,18 +39,18 @@ from typing import List, Tuple, Dict, Optional, Mapping
 
 import numpy as np
 
+from core.builders.base_builder import DataBuilder
 from core.coordinates.base_coord import Coordinate
+from core.coordinates.bio import CoordUnit
 from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim
 from core.coordinates.time import CoordTime
-from core.coordinates.bio import CoordUnit
 from core.data_structures.core_data import CoreData
 from core.data_structures.firing_rates import FiringRatesPop, FiringRatesUnit
-from core.builders.base_builder import DataBuilder
-from core.processors.preprocess.stratify import Stratifier, Strata
 from core.processors.preprocess.assign_ensembles import EnsembleAssigner, Ensembles
 from core.processors.preprocess.assign_folds import FoldAssigner, FoldLabels
 from core.processors.preprocess.bootstrap import Bootstrapper
 from core.processors.preprocess.map_indices import IndexMapper, Indices
+from core.processors.preprocess.stratify import Stratifier, Strata
 
 
 class PopulationBuilder(DataBuilder[List[FiringRatesUnit], FiringRatesPop]):
@@ -232,7 +232,7 @@ class PopulationBuilder(DataBuilder[List[FiringRatesUnit], FiringRatesPop]):
 
     @property
     def n_t(self) -> int:
-        return self.data_per_unit[0].get_length("time")
+        return self.data_per_unit[0].get_size("time")
 
     # --- Preliminary Operations -------------------------------------------------------------------
 

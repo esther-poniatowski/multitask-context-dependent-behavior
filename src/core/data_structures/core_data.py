@@ -40,6 +40,7 @@ class DimName(str):
     _OPTIONS = frozenset(
         [
             "",  # default dimension name
+            "spikes",
             "ensembles",
             "units",
             "folds",
@@ -51,6 +52,7 @@ class DimName(str):
     _ALIASES = MappingProxyType(
         {
             "": "",
+            "spikes": "spk",
             "ensembles": "ens",
             "units": "u",
             "folds": "f",
@@ -89,7 +91,7 @@ class CoreData(np.ndarray):
     default_dims
     get_dim
     get_axis
-    get_length
+    get_size
     transpose (overridden numpy method)
     T         (overridden numpy method)
     swapaxes  (overridden numpy method)
@@ -121,7 +123,7 @@ class CoreData(np.ndarray):
 
     Get the length of the dimension named "units":
 
-    >>> data.get_length("units")
+    >>> data.get_size("units")
     10
 
     See Also
@@ -155,7 +157,7 @@ class CoreData(np.ndarray):
 
     def __new__(
         cls,
-        input_array: Union[Iterable, np.ndarray],
+        values: Union[Iterable, np.ndarray],
         dims: Optional[Tuple[Union[str, DimName], ...]] = None,
     ) -> Self:
         """
@@ -163,7 +165,7 @@ class CoreData(np.ndarray):
 
         Parameters
         ----------
-        input_array : Union[Iterable, np.ndarray]
+        values : Union[Iterable, np.ndarray]
             Values to store in the object.
         dims : Tuple[str, ...]
             Names of the dimensions of the data.
@@ -173,7 +175,7 @@ class CoreData(np.ndarray):
         CoreData
             New instance of a `CoreData` object.
         """
-        obj = np.asarray(input_array).view(cls)  # create NumPy array and cast to current class
+        obj = np.asarray(values).view(cls)  # create NumPy array and cast to current class
         if dims is None:
             dims = cls.default_dims(obj)
         if len(dims) != obj.ndim:
@@ -258,7 +260,7 @@ class CoreData(np.ndarray):
             raise ValueError(f"Invalid dimension: '{dim}'.")
         return self.dims.index(dim)
 
-    def get_length(self, dim: Union[str, DimName]) -> int:
+    def get_size(self, dim: Union[str, DimName]) -> int:
         """
         Retrieve the length of a dimension.
 

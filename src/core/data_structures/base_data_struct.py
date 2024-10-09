@@ -177,7 +177,7 @@ class DataStructure(Generic[T], ABC):
 
     Get the length of the time dimension:
 
-    >>> data.get_length('time')
+    >>> data.get_size('time')
     10
 
     Get the time coordinate (two equivalent approaches):
@@ -387,24 +387,24 @@ class DataStructure(Generic[T], ABC):
 
         See Also
         --------
-        :meth:`CoreData.get_length`: Get the length of a dimension.
+        :meth:`CoreData.get_size`: Get the length of a dimension.
         """
         for name, value in coords_args.items():
             if name not in self.coords:
                 raise ValueError(f"Invalid coordinate name: '{name}'.")
             if not isinstance(value, self.coords[name]):  # convert to the expected coordinate type
                 value = self.coords[name](value)
-            valid_shape = tuple(self.get_length(dim) for dim in self.coords_to_dims[name])
+            valid_shape = tuple(self.get_size(dim) for dim in self.coords_to_dims[name])
             if value.shape != valid_shape:
                 raise ValueError(f"Invalid shape for '{name}': {value.shape} != {valid_shape}")
             setattr(self, f"_{name}", value)  # store in private attribute (bypass descriptor)
 
-    # --- Data I/O ---------------------------------------------------------------------------------
+    # --- I/O Handling -----------------------------------------------------------------------------
 
     @property
     def path(self) -> Path:
         """
-        Path to the file containing the data.
+        PLACEHOLDER METHOD - Path to the file containing the data.
 
         Warning
         -------
