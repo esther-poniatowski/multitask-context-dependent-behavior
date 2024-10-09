@@ -9,9 +9,7 @@ Classes
 `Dimensions`
 """
 from types import MappingProxyType
-from typing import Tuple, Optional, Self, Union, Iterable
-
-import numpy as np
+from typing import Self, Union, Iterable
 
 
 class DimName(str):

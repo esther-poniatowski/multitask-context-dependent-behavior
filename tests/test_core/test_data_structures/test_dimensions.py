@@ -8,7 +8,6 @@ See Also
 `core.data_structures.dimensions`: Tested module.
 """
 
-import numpy as np
 import pytest
 
 from core.data_structures.dimensions import DimName, Dimensions
@@ -40,7 +39,7 @@ def test_dim_alias():
     assert dim.alias == DimName._ALIASES["time"]  # pylint: disable=protected-access
 
 
-# --- Test Dimensions class ---------------------------------------------------------------------------
+# --- Test Dimensions class ------------------------------------------------------------------------
 
 
 def test_dimensions_init():
