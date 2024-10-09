@@ -8,16 +8,6 @@ See Also
 `core.data_structures.core_data`: Tested module.
 """
 
-# pyright: reportAttributeAccessIssue=false
-# pyright: reportRedeclaration=false
-# pylint: disable=missing-function-docstring
-# pylint: disable=missing-module-docstring
-# pylint: disable=missing-class-docstring
-# pylint: disable=redefined-outer-name
-
-
-from types import MappingProxyType
-
 import numpy as np
 import pytest
 
@@ -47,7 +37,7 @@ def test_dim_alias():
     Test the property `DimName.alias` to get the alias of a dimension name.
     """
     dim = DimName("time")
-    assert dim.alias == DimName._ALIASES["time"]
+    assert dim.alias == DimName._ALIASES["time"]  # pylint: disable=protected-access
 
 
 # --- Test CoreData class --------------------------------------------------------------------------
@@ -112,7 +102,7 @@ def test_invalid_instantiation(dims):
 @pytest.mark.parametrize("axis", argvalues=[0, 100], ids=["valid_idx", "out_of_bounds"])
 def test_get_dim(axis):
     """
-    Test the `get_dim` method to retrieve the name of a specific dimension by index.
+    Test the `get_dim` method delegated to the `Dimensions` class.
 
     Test Inputs
     -----------
@@ -135,7 +125,7 @@ def test_get_dim(axis):
 @pytest.mark.parametrize("dim", argvalues=["time", "invalid"], ids=["existent", "inexistent"])
 def test_get_axis(dim):
     """
-    Test the `get_axis` method to retrieve the index of a specific dimension by name.
+    Test the `get_axis` method delegated to the `Dimensions` class.
 
     Test Inputs
     -----------
