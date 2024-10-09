@@ -15,11 +15,12 @@ import numpy as np
 
 
 class DimName(str):
-    """Dimension names allowed in data structures.
+    """
+    Dimension names allowed in data structures.
 
     Class Attributes
     ----------------
-    _DEFAULT_DIM : str
+    DEFAULT : str
         Default dimension name. Used for consistency in the Core Data structures when no dimension
         name is provided.
     _OPTIONS : FrozenSet
@@ -40,23 +41,11 @@ class DimName(str):
     or to override the corresponding function.
     """
 
-    _DEFAULT_DIM = ""
-
-    _OPTIONS = frozenset(
-        [
-            _DEFAULT_DIM,
-            "spikes",
-            "ensembles",
-            "units",
-            "folds",
-            "trials",
-            "time",
-        ]
-    )
+    DEFAULT = ""
 
     _ALIASES = MappingProxyType(
         {
-            _DEFAULT_DIM: "",
+            DEFAULT: "",
             "spikes": "spk",
             "ensembles": "ens",
             "units": "u",
@@ -65,6 +54,8 @@ class DimName(str):
             "time": "t",
         }
     )
+
+    _OPTIONS = frozenset(_ALIASES.keys())
 
     def __new__(cls, value):
         if value not in cls._OPTIONS:
@@ -75,6 +66,81 @@ class DimName(str):
     def alias(self) -> str:
         """Get the alias for the dimension name."""
         return self._ALIASES[self]
+
+
+class Dimensions(tuple):
+    """
+    Tuple of dimension names to store within a data structure or core data object.
+
+    Provide utility methods to examine the dimensions, which can be used by wrapper objects via
+    delegation.
+
+    Parameters
+    ----------
+    args : Tuple[Union[str, DimName], ...]
+        Names of the dimensions. Each name can be either a valid string matching a dimension name,
+        or a `DimName` object.
+
+    Raises
+    ------
+    ValueError
+        If any of the dimension names is invalid.
+
+    Methods
+    -------
+    `get_dim`
+    `get_axis`
+
+    Notes
+    -----
+    - Strings are automatically converted to `DimName`.
+    - If any string is an invalid dimension name, it is detected by the `DimName` class.
+    """
+
+    def __new__(cls, *args):
+        names = tuple(DimName(arg) for arg in args)
+        return super().__new__(cls, names)
+
+    @property
+    def ndim(self) -> int:
+        """Get the number of dimensions."""
+        return len(self)
+
+    def get_dim(self, axis: int) -> DimName:
+        """
+        Get the name of a specific dimension by index.
+
+        Parameters
+        ----------
+        axis : int
+            Index of the axis.
+
+        Returns
+        -------
+        DimName
+            Name of the dimension.
+        """
+        if axis >= self.ndim:
+            raise IndexError(f"Invalid axis: {axis} >= array.ndim {self.ndim}.")
+        return self[axis]
+
+    def get_axis(self, dim: Union[str, DimName]) -> int:
+        """
+        Retrieve the axis (index) corresponding to one dimension by its name.
+
+        Parameters
+        ----------
+        dim : Union[str, DimName]
+            Name of the dimension.
+
+        Returns
+        -------
+        axis : int
+            Axis number associated with the dimension.
+        """
+        if dim not in self:
+            raise ValueError(f"Invalid dimension: '{dim}' not in {self}.")
+        return self.index(dim)
 
 
 class CoreData(np.ndarray):
@@ -94,13 +160,13 @@ class CoreData(np.ndarray):
     __array_finalize__
     __repr__
     default_dims
-    get_dim
-    get_axis
+    get_dim   (delegate to the `dims` attribute)
+    get_axis  (delegate to the `dims` attribute)
     get_size
-    transpose (overridden numpy method)
-    T         (overridden numpy method)
-    swapaxes  (overridden numpy method)
-    moveaxis  (overridden numpy method)
+    transpose (override numpy method)
+    T         (override numpy method)
+    swapaxes  (override numpy method)
+    moveaxis  (override numpy method)
 
     Examples
     --------
@@ -158,12 +224,12 @@ class CoreData(np.ndarray):
     """
 
     # Declare custom attributes at the class level to specify type hints
-    dims: Tuple[DimName, ...]
+    dims: Dimensions
 
     def __new__(
         cls,
         values: Union[Iterable, np.ndarray],
-        dims: Optional[Tuple[Union[str, DimName], ...]] = None,
+        dims: Optional[Union[Dimensions, Tuple[Union[str, DimName], ...]]] = None,
     ) -> Self:
         """
         Create a new instance of a `CoreData` object.
@@ -185,7 +251,7 @@ class CoreData(np.ndarray):
             dims = cls.default_dims(obj)
         if len(dims) != obj.ndim:
             raise ValueError(f"len(dims) = {len(dims)} != array.ndim = {obj.ndim}")
-        obj.dims = tuple(DimName(dim) for dim in dims)  # convert to DimName to validate
+        obj.dims = Dimensions(*dims)  # unpack tuple, automatic validation by `Dimensions`
         return obj
 
     def __array_finalize__(self, obj: Optional[np.ndarray]) -> None:
@@ -213,7 +279,7 @@ class CoreData(np.ndarray):
         return f"CoreData(shape={self.shape}, dims={self.dims}, array={super().__repr__()})"
 
     @staticmethod
-    def default_dims(obj) -> Tuple[DimName, ...]:
+    def default_dims(obj) -> Dimensions:
         """
         Create default dimension names: one empty string per dimension in the object.
 
@@ -227,43 +293,14 @@ class CoreData(np.ndarray):
         Tuple[DimName, ...]
             Default dimension names.
         """
-        return (DimName(""),) * obj.ndim
+        return Dimensions(DimName.DEFAULT) * obj.ndim
 
-    def get_dim(self, axis: int) -> DimName:
-        """
-        Get the name of a specific dimension by index.
-
-        Parameters
-        ----------
-        axis : int
-            Index of the axis.
-
-        Returns
-        -------
-        DimName
-            Name of the dimension.
-        """
-        if axis >= self.ndim:
-            raise IndexError(f"Invalid axis: {axis} >= array.ndim {self.ndim}.")
-        return self.dims[axis]
-
-    def get_axis(self, dim: Union[str, DimName]) -> int:
-        """
-        Retrieve the axis (index) corresponding to one dimension by its name.
-
-        Parameters
-        ----------
-        dim : Union[str, DimName]
-            Name of the dimension.
-
-        Returns
-        -------
-        axis : int
-            Axis number in the numpy array.
-        """
-        if dim not in self.dims:
-            raise ValueError(f"Invalid dimension: '{dim}'.")
-        return self.dims.index(dim)
+    def __getattr__(self, name):
+        """Delegate the `get_dim` and `get_axis` methods to the `dims` attribute."""
+        if name == "get_dim":
+            return self.dims.get_dim
+        if name == "get_axis":
+            return self.dims.get_axis
 
     def get_size(self, dim: Union[str, DimName]) -> int:
         """
@@ -297,9 +334,9 @@ class CoreData(np.ndarray):
         """
         transposed_array = super().transpose(*axes)
         if len(axes) == 0:  # default transpose: reverses axes
-            transposed_array.dims = self.dims[::-1]
+            transposed_array.dims = Dimensions(*self.dims[::-1])  # unpack tuple
         else:  # custom axis order: swap dimension names
-            transposed_array.dims = tuple(self.dims[i] for i in axes)
+            transposed_array.dims = Dimensions(self.dims[i] for i in axes)
         return transposed_array
 
     @property
