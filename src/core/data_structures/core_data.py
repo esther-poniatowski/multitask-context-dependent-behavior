@@ -19,6 +19,9 @@ class DimName(str):
 
     Class Attributes
     ----------------
+    _DEFAULT_DIM : str
+        Default dimension name. Used for consistency in the Core Data structures when no dimension
+        name is provided.
     _OPTIONS : FrozenSet
         Valid dimension names.
     _ALIASES : Mapping[str, str]
@@ -37,9 +40,11 @@ class DimName(str):
     or to override the corresponding function.
     """
 
+    _DEFAULT_DIM = ""
+
     _OPTIONS = frozenset(
         [
-            "",  # default dimension name
+            _DEFAULT_DIM,
             "spikes",
             "ensembles",
             "units",
@@ -51,7 +56,7 @@ class DimName(str):
 
     _ALIASES = MappingProxyType(
         {
-            "": "",
+            _DEFAULT_DIM: "",
             "spikes": "spk",
             "ensembles": "ens",
             "units": "u",
