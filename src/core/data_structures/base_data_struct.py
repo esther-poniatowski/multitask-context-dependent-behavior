@@ -56,7 +56,7 @@ from typing import Tuple, Mapping, Type, TypeVar, Generic, Optional, Self, Union
 
 import numpy as np
 
-from core.data_structures.core_data import CoreData, DimName
+from core.data_structures.core_data import CoreData, Dimensions
 
 # from core.coordinates.base_coord import Coordinate
 from utils.storage_rulers.base_path_ruler import PathRuler
@@ -122,7 +122,7 @@ class DataStructure(Generic[T], ABC):
     _REQUIRED_ATTRIBUTES : Tuple[str]
         Names of the class-level attributes which have to be defined in each data structure
         subclass.
-    dims : Tuple[str, ...]
+    dims : Dimensions
         Names of the dimensions, ordered to label the axes of the underlying data.
     coords : Mapping[str, type]
         Names of the coordinates (as attributes) and their expected types.
@@ -134,8 +134,8 @@ class DataStructure(Generic[T], ABC):
         Names of the metadata attributes which jointly and uniquely identify each data structure
         instance within its class. Handled by each subclass' constructor.
     path_ruler : Type[PathRuler]
-        Subclass of `PathRuler` used to build the path to data file where the content of the data
-        structure instance can be saved or recovered.
+        Subclass of `PathRuler` used to build the path to file where the content of the data
+        structure instance can be saved to and/or loaded from.
     saver : Type[Saver], default=SaverDILL
         Subclass of `Saver` used to save data to a file in a specific format.
     loader : Type[Loader], default=LoaderDILL
@@ -165,19 +165,21 @@ class DataStructure(Generic[T], ABC):
 
     Examples
     --------
-    Get the name of an axis:
+    Get the name of an axis (two equivalent approaches):
 
     >>> data.dims[0]
+    "time"
+    >>> data.get_dim(0) # delegated to the core data object
     "time"
 
     Get the axis of the time dimension:
 
-    >>> data.get_axis('time')
+    >>> data.get_axis('time') # delegated to the core data object
     0
 
-    Get the length of the time dimension:
+    Get the size of the time dimension:
 
-    >>> data.get_size('time')
+    >>> data.get_size('time') # delegated to the core data object
     10
 
     Get the time coordinate (two equivalent approaches):
@@ -209,13 +211,13 @@ class DataStructure(Generic[T], ABC):
 
     # --- Schema of the Data Structure ---
     _REQUIRED_ATTRIBUTES = ("dims", "coords", "coords_to_dims", "identifiers")
-    dims: Tuple[DimName, ...]
+    dims: Dimensions
     coords: Mapping[str, type]
-    coords_to_dims: Mapping[str, Tuple[DimName, ...]]
+    coords_to_dims: Mapping[str, Dimensions]
     identifiers: Tuple[str, ...]
 
     # --- IO Handlers ---
-    # Optional - Overridden in some subclasses (here default values)
+    # Optional - Overridden in subclasses if necessary (here default values)
     path_ruler: Type[PathRuler]
     saver: Type[Saver] = SaverDILL
     loader: Type[Loader] = LoaderDILL
@@ -228,7 +230,7 @@ class DataStructure(Generic[T], ABC):
         Parameters
         ----------
         cls : Type[DataStructure]
-            Class of the concrete data structure subclass being created.
+            Class of the concrete data structure being created.
 
         Notes
         -----
@@ -239,7 +241,6 @@ class DataStructure(Generic[T], ABC):
         - Declare lazily-initialized attributes (data and coordinates) by assigning the descriptor
           `LazyAttribute` (*after* having checked the presence of the class-level attribute `coords`
           among the required attributes).
-        - Make the `path` property abstract if the class-level attribute `path_loader` is set.
         """
         # Call parent hook (default behavior)
         super().__init_subclass__()
@@ -251,16 +252,12 @@ class DataStructure(Generic[T], ABC):
         setattr(cls, "data", LazyAttribute("data"))
         for coord_name in cls.coords:
             setattr(cls, coord_name, LazyAttribute(coord_name))
-        # Check `path` property based on `path_loader`
-        if getattr(cls, "path_loader", None) is not None:
-            if not hasattr(cls, "path"):
-                raise TypeError(f"<{cls.__name__}> Missing property: 'path'.")
 
     # --- Instance-Level Manipulations -------------------------------------------------------------
 
     def __init__(
         self,
-        data: Optional[Union[CoreData, np.ndarray]],
+        data: Optional[Union[CoreData, np.ndarray]] = None,
         **coords_args: Optional[Union[Coordinate, np.ndarray]],
     ) -> None:
         """
@@ -308,11 +305,6 @@ class DataStructure(Generic[T], ABC):
 
     # --- Access to Attributes ---------------------------------------------------------------------
 
-    @property
-    def shape(self) -> Tuple[int, ...]:
-        """Shape of the data array (delegated to the numpy array)."""
-        return self.data.shape
-
     def get_coord(self, coord_name: str) -> Coordinate:
         """
         Retrieve a coordinate using its attribute name. Useful to iterate over coordinates.
@@ -333,17 +325,28 @@ class DataStructure(Generic[T], ABC):
 
     def __getattr__(self, name):
         """
-        Delegate the access to nested attributes to the coordinate objects.
+        Delegate the access to nested attributes of the coordinate objects.
 
         Parameters
         ----------
         name : str
             Name of the attribute to get.
         """
-        for obj in self.__dict__.values():
-            if hasattr(obj, name):
-                return getattr(obj, name)
-        raise AttributeError(f"Invalid attribute '{name}' for object '{self.__class__.__name__}'.")
+        if name == "get_dim":
+            return self.dims.get_dim
+        elif name == "get_axis":
+            return self.dims.get_axis
+        elif name == "get_size":
+            return self.data.get_size
+        elif name == "shape":
+            return self.data.shape
+        else:
+            for obj in self.__dict__.values():
+                if hasattr(obj, name):
+                    return getattr(obj, name)
+            raise AttributeError(
+                f"Invalid attribute '{name}' for object '{self.__class__.__name__}'."
+            )
 
     # --- Set Data and Coordinates -----------------------------------------------------------------
 
@@ -394,33 +397,11 @@ class DataStructure(Generic[T], ABC):
                 raise ValueError(f"Invalid coordinate name: '{name}'.")
             if not isinstance(value, self.coords[name]):  # convert to the expected coordinate type
                 value = self.coords[name](value)
-            valid_shape = tuple(self.get_size(dim) for dim in self.coords_to_dims[name])
-            if value.shape != valid_shape:
-                raise ValueError(f"Invalid shape for '{name}': {value.shape} != {valid_shape}")
+            if self._data is not None:  # check consistency with the data structure dimensions
+                valid_shape = tuple(self.get_size(dim) for dim in self.coords_to_dims[name])
+                if value.shape != valid_shape:
+                    raise ValueError(f"Invalid shape for '{name}': {value.shape} != {valid_shape}")
             setattr(self, f"_{name}", value)  # store in private attribute (bypass descriptor)
-
-    # --- I/O Handling -----------------------------------------------------------------------------
-
-    @property
-    def path(self) -> Path:
-        """
-        PLACEHOLDER METHOD - Path to the file containing the data.
-
-        Warning
-        -------
-        This property is abstract as soon as the class-level attribute `path_loader` is set.
-        Implement it by passing the required arguments to the path ruler.
-        """
-        return self.path_ruler().get_path()
-
-    def load(self) -> None:
-        """Load an instance from the file at :attr:`path`."""
-        loaded_obj = self.loader(path=self.path, tpe=self.tpe).load()
-        self.__dict__.update(loaded_obj.__dict__)
-
-    def save(self) -> None:
-        """Save an instance to a file at :attr:`path` in the format specific to the saver."""
-        self.saver(self.path, self).save()
 
     # --- Data Manipulations -----------------------------------------------------------------------
 
@@ -467,3 +448,26 @@ class DataStructure(Generic[T], ABC):
         """
         # raise NotImplementedError("Not implemented yet.")
         return self
+
+    # --- I/O Handling -----------------------------------------------------------------------------
+
+    @property
+    def path(self) -> Path:
+        """
+        PLACEHOLDER METHOD - Path to the file containing the data.
+
+        Warning
+        -------
+        This property is abstract as soon as the class-level attribute `path_loader` is set.
+        Implement it by passing the required arguments to the path ruler.
+        """
+        return self.path_ruler().get_path()
+
+    def load(self) -> None:
+        """Load an instance from the file at :attr:`path`."""
+        loaded_obj = self.loader(path=self.path, tpe=self.tpe).load()
+        self.__dict__.update(loaded_obj.__dict__)
+
+    def save(self) -> None:
+        """Save an instance to a file at :attr:`path` in the format specific to the saver."""
+        self.saver(self.path, self).save()
