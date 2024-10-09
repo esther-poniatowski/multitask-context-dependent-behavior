@@ -320,7 +320,7 @@ class DataStructure(Generic[T], ABC):
             Coordinate object stored in the data structure.
         """
         if coord_name not in self.coords:
-            raise KeyError(f"Invalid coordinate: '{coord_name}'")
+            raise AttributeError(f"Invalid coordinate: '{coord_name}' not in {self.coords.keys()}.")
         return getattr(self, coord_name)
 
     def __getattr__(self, name):
