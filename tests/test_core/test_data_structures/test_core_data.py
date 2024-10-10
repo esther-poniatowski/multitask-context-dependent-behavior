@@ -14,7 +14,7 @@ import pytest
 from core.data_structures.core_data import CoreData
 
 
-@pytest.mark.parametrize("dims", argvalues=[None, ("time", "time")], ids=["default", "with_dims"])
+@pytest.mark.parametrize("dims", argvalues=[None, ("time", "units")], ids=["default", "with_dims"])
 def test_numpy_inheritance(dims):
     """
     Test the instantiation of a core data object which should behave as a numpy array.
