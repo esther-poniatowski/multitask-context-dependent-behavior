@@ -12,7 +12,7 @@ import numpy as np
 from core.constants import SMPL_RATE
 from core.coordinates.exp_structure import CoordBlock
 from core.data_structures.base_data_struct import DataStructure
-from core.data_structures.core_data import DimName, CoreData
+from core.data_structures.core_data import Dimensions, CoreData
 from utils.io_data.formats import TargetType
 from utils.io_data.loaders.impl_loaders import LoaderNPY
 from utils.storage_rulers.impl_path_rulers import SpikeTimesRawPath
@@ -71,9 +71,9 @@ class SpikeTimesRaw(DataStructure):
     """
 
     # --- Schema Attributes ---
-    dims = (DimName("spikes"),)
+    dims = Dimensions("spikes")
     coords = MappingProxyType({"block": CoordBlock})
-    coords_to_dims = MappingProxyType({"block": (DimName("spikes"),)})
+    coords_to_dims = MappingProxyType({"block": Dimensions("spikes")})
     identifiers = ("unit_id", "session_id")
 
     # --- IO Handlers ---
