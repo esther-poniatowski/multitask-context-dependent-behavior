@@ -103,6 +103,9 @@ class Dimensions(tuple):
             args = tuple(args[0])  # extract the single element, convert to tuple for type checking
         # Validate dimension names and via DimName
         names = tuple(DimName(arg) for arg in args)
+        # Check uniqueness of dimension names
+        if len(set(names)) != len(names):
+            raise ValueError(f"Duplicate dimension names: {names}")
         # Call the tuple constructor
         return super().__new__(cls, names)
 
