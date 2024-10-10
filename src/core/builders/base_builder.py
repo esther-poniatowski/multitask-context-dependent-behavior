@@ -186,8 +186,21 @@ class DataBuilder(Generic[I, O], ABC):
         Returns
         -------
         data : CoreData
+
+        See Also
+        --------
+        :func:`numpy.full`
+
+        Warning
+        -------
+        Here, `np.full` is used instead of `np.empty` to ensure that the content of the array is
+        predictable. With `np.empty`, the array is filled with random values that could remain if
+        filling is only partial.
+        Initialization with ``NaN`` values is only suitable for floating types. For integer types,
+        override this method. To mark uninitialized elements, use either a sentinel value state or
+        masked arrays.
         """
-        data = CoreData(np.empty(shape, dtype=np.float64), dims=self.product_class.dims)
+        data = CoreData(np.full(shape, np.nan), dims=self.product_class.dims)
         return data
 
     def add_data(self, data: CoreData) -> None:
