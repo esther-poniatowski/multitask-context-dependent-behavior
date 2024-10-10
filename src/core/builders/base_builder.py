@@ -120,7 +120,7 @@ class DataBuilder(Generic[I, O], ABC):
     """
 
     product_class: Type[O]
-    TMP_DATA: Tuple[str]
+    TMP_DATA: Tuple[str, ...]
 
     def __init__(self) -> None:
         """Declare the data structure product to build."""
