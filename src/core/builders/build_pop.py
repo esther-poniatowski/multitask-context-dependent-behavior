@@ -295,6 +295,7 @@ class PopulationBuilder(DataBuilder[List[FiringRatesUnit], FiringRatesPop]):
         -------
         data : CoreData
             Data array containing the firing rates of the pseudo-population in pseudo-trials.
+            Shape: ``(n_ensembles, ensemble_size, n_folds, n_trials, n_t)``.
             .. _data:
 
         Implementation
@@ -313,8 +314,13 @@ class PopulationBuilder(DataBuilder[List[FiringRatesUnit], FiringRatesPop]):
                     2. For the *whole ensemble*, generate the indices of the trials to select.
                     3. Fill the data array with the selected trials at the appropriate indices for
                        the considered fold and condition.
+
+        See Also
+        --------
+        :meth:`initialize_core_data`: Parent method to initialize an empty core data array.
         """
-        data = self.initialize_core_data()
+        shape = (self.n_ensembles, self.ensemble_size, self.n_folds, self.n_trials, self.n_t)
+        data = self.initialize_core_data(shape)  # parent method
         for ens, units in enumerate(self.ensembles):
             cond_pop = [self.stratify_by_condition(u_pop) for u_pop in units]
             for cond in self.conditions:
@@ -331,20 +337,6 @@ class PopulationBuilder(DataBuilder[List[FiringRatesUnit], FiringRatesPop]):
                     start, end = self.conditions_boundaries[cond]
                     idx_final = np.arange(start, end)
                     self.fill_data(data, ens, fold, idx_init=idx_pseudo, idx_final=idx_final)
-        return data
-
-    def initialize_core_data(self) -> CoreData:
-        """
-        Initialize the core data array with empty values.
-
-        Returns
-        -------
-        data : CoreData
-            Data array with empty values.
-            Shape: ``(n_ensembles, ensemble_size, n_folds, n_trials, n_t)``.
-        """
-        shape = (self.n_ensembles, self.ensemble_size, self.n_folds, self.n_trials, self.n_t)
-        data = CoreData(np.empty(shape, dtype=np.float64), dims=self.product_class.dims)
         return data
 
     def stratify_by_condition(self, u_pop: int) -> Strata:
