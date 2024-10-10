@@ -498,7 +498,8 @@ class PopulationBuilder(DataBuilder[List[FiringRatesUnit], FiringRatesPop]):
         idx_relative = bootstrapper.process(counts=counts, seed=self.seed)
         # Recover absolute indices in the global data set for each unit
         mapper = IndexMapper()
-        idx_pseudo = np.empty_like(idx_relative)  # (ensemble_size, n_pseudo)
+        idx_pseudo = np.ma.masked_array(np.empty_like(idx_relative), mask=True)
+        # shape: (ensemble_size, n_pseudo), values: masked as long as unset
         for u_ens, idx in enumerate(idx_pop):
             idx_pseudo[u_ens] = mapper.process(idx_relative=idx_relative[u_ens], idx_absolute=idx)
         return idx_pseudo
@@ -558,7 +559,7 @@ class PopulationBuilder(DataBuilder[List[FiringRatesUnit], FiringRatesPop]):
         - ``unit``: index of the unit in the population (from 0 to ``n_units``).
         - ``u``: index of the unit in the ensemble (from 0 to ``ensemble_size``).
         """
-        units = CoordUnit(np.empty((self.n_ensembles, self.ensemble_size), dtype=np.str_))
+        units = CoordUnit(np.full((self.n_ensembles, self.ensemble_size), "", dtype=np.str_))
         for ens, units_in_ensemble in enumerate(self.ensembles):
             for u, unit in units_in_ensemble:
                 units[ens, u] = self.data_per_unit[unit].name
@@ -575,7 +576,7 @@ class PopulationBuilder(DataBuilder[List[FiringRatesUnit], FiringRatesPop]):
         """
         # Initialize empty coordinates with as many trials as the total number of pseudo-trials
         coords = {
-            name: coord_tpe(np.empty((self.n_trials,), dtype=np.str_))
+            name: coord_tpe(np.full((self.n_trials,), "", dtype=np.str_))
             for name, coord_tpe in self.features_coords.items()
         }
         # Fill the coordinates by condition
