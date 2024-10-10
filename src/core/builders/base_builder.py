@@ -41,6 +41,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import TypeVar, Generic, Type, Tuple, Optional
 
+import numpy as np
+
 # from core.coordinates.base_coord import Coordinate
 from core.data_structures.base_data_struct import Coordinate
 from core.data_structures.core_data import CoreData, DimName
@@ -175,6 +177,18 @@ class DataBuilder(Generic[I, O], ABC):
         Required to initialize the CoreData.
         """
         return self.product_class.dims
+
+    def initialize_core_data(self, shape: Tuple[int, ...]) -> CoreData:
+        """
+        Initialize the core data array with empty values and the dimensions names inherent to the
+        class of the data structure product.
+
+        Returns
+        -------
+        data : CoreData
+        """
+        data = CoreData(np.empty(shape, dtype=np.float64), dims=self.product_class.dims)
+        return data
 
     def add_data(self, data: CoreData) -> None:
         """
