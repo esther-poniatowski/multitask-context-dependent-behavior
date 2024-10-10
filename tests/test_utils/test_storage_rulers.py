@@ -13,7 +13,7 @@ import os
 import pytest
 
 from utils.storage_rulers.base_path_ruler import PathRuler
-from utils.storage_rulers.impl_path_rulers import RawSpikeTimesPath
+from utils.storage_rulers.impl_path_rulers import SpikeTimesRawPath
 
 
 def test_get_root(tmp_path):
@@ -37,7 +37,7 @@ def test_get_root(tmp_path):
 
 def test_rawspktimes_path(tmp_path):
     """
-    Test :class:`RawSpikeTimesPath` for constructing the correct path.
+    Test :class:`SpikeTimesRawPath` for constructing the correct path.
 
     Test Inputs
     -----------
@@ -52,7 +52,7 @@ def test_rawspktimes_path(tmp_path):
     """
     unit = "avo052a-d1"
     session = "avo052a04_p_PTD"
-    path_manager = RawSpikeTimesPath(tmp_path)
+    path_manager = SpikeTimesRawPath(tmp_path)
     expected_path = tmp_path / "raw" / unit / session
     assert path_manager.get_path(unit, session) == expected_path, "Incorrect constructed path."
 

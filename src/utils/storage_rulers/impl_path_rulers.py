@@ -7,7 +7,7 @@ Implementations of path generation rules.
 
 Classes
 -------
-:class:`RawSpikeTimesPath`
+:class:`SpikeTimesRawPath`
 :class:`SpikesTrainsPath`
 :class:`FiringRatesUnitPath`
 :class:`FiringRatesPopPath`
@@ -32,8 +32,8 @@ from typing import Union
 from utils.storage_rulers.base_path_ruler import PathRuler
 
 
-class RawSpikeTimesPath(PathRuler):
-    """Path generation rules used by :class:`RawSpikeTimes` data structures."""
+class SpikeTimesRawPath(PathRuler):
+    """Path generation rules used by :class:`SpikeTimesRaw` data structures."""
 
     def get_path(self, unit: str, session: str) -> Path:
         """

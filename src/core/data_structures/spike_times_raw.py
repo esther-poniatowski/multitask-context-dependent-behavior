@@ -1,37 +1,40 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.data_structures.raw_spk_times` [module]
+`core.data_structures.raw_spk_times` [module]
 """
 from pathlib import Path
 from types import MappingProxyType
-from typing import Optional, cast, Self
+from typing import Optional, Self, Union
 
 import numpy as np
-import numpy.typing as npt
 
 from core.constants import SMPL_RATE
 from core.coordinates.exp_structure import CoordBlock
 from core.data_structures.base_data_struct import DataStructure
+from core.data_structures.core_data import DimName, CoreData
 from utils.io_data.formats import TargetType
 from utils.io_data.loaders.impl_loaders import LoaderNPY
-from utils.storage_rulers.impl_path_rulers import RawSpkTimesPath
+from utils.storage_rulers.impl_path_rulers import SpikeTimesRawPath
 
 
-class RawSpkTimes(DataStructure):
+class SpikeTimesRaw(DataStructure):
     """
     Raw spiking times for one unit (neuron) in one session of the experiment.
 
     Key Features
     ------------
-    Data       : ``data`` (type ``npt.NDArray[np.float64]``)
-    Dimensions : ``time``
-    Coordinates: ``block`` (type ``CoordBlock``)
-    Metadata   : ``unit_id``, ``session_id``, ``smpl_rate``
+    Dimensions : ``spikes``
+
+    Coordinates: ``block``
+
+    Identity Metadata: ``unit_id``, ``session_id``
+
+    Descriptive Metadata: ``smpl_rate``
 
     Attributes
     ----------
-    data: npt.NDArray[np.float64]
+    data: CoreData
         Spiking times for the unit in the session (in seconds).
         Times are reset at 0 in each block.
     block: CoordBlock
@@ -42,9 +45,14 @@ class RawSpkTimes(DataStructure):
         Unit's identifier.
     session_id: str
         Session's identifier.
-    smpl_rate: float
+    smpl_rate: float, default=:obj:`core.constants.SMPL_RATE`
         Sampling time for the recording (in seconds).
-        Default: :obj:`core.constants.SMPL_RATE`
+    n_blocks: int
+        (Property) Number of blocks in the session.
+
+    Methods
+    -------
+    `get_block`
 
     Notes
     -----
@@ -59,31 +67,35 @@ class RawSpkTimes(DataStructure):
 
     See Also
     --------
-    :class:`core.coordinates.exp_structure.CoordBlock`
+    `core.coordinates.exp_structure.CoordBlock`
     """
 
-    dim2coord = MappingProxyType({"time": frozenset(["block"])})
-    coord2type = MappingProxyType({"block": CoordBlock})
-    path_ruler = RawSpkTimesPath
+    # --- Schema Attributes ---
+    dims = (DimName("spikes"),)
+    coords = MappingProxyType({"block": CoordBlock})
+    coords_to_dims = MappingProxyType({"block": (DimName("spikes"),)})
+    identifiers = ("unit_id", "session_id")
+
+    # --- IO Handlers ---
+    path_ruler = SpikeTimesRawPath
     loader = LoaderNPY
     tpe = TargetType("ndarray_float")
+
+    # --- Key Features -----------------------------------------------------------------------------
 
     def __init__(
         self,
         unit_id: str,
         session_id: str,
         smpl_rate: float = SMPL_RATE,
-        data: Optional[npt.NDArray[np.float64]] = None,
-        block: Optional[CoordBlock] = None,
+        data: Optional[Union[CoreData, np.ndarray]] = None,
+        block: Optional[Union[CoordBlock, np.ndarray]] = None,
     ) -> None:
         # Set sub-class specific metadata
         self.unit_id = unit_id
         self.session_id = session_id
         self.smpl_rate = smpl_rate
-        # Declare data and coordinate attributes (avoid type errors)
-        self.data: npt.NDArray[np.float64]
-        self.block: CoordBlock
-        # Set data and coordinate attributes
+        # Set data and coordinate attributes via the base class constructor
         super().__init__(data=data, block=block)
 
     def __repr__(self) -> str:
@@ -93,23 +105,59 @@ class RawSpkTimes(DataStructure):
         )
 
     @property
+    def n_blocks(self) -> int:
+        """Number of blocks in the session."""
+        if len(self.block) != 0:  # avoid ValueError in max() if empty array (no spikes)
+            return self.block.max()
+        else:
+            return 0
+
+    def get_block(self, block: int) -> Self:
+        """
+        Extract the spiking times which occurred in one block of trials.
+
+        Parameters
+        ----------
+        block: int
+            Block number, comprised between 1 and the total number of blocks.
+
+        Returns
+        -------
+        SpikeTimesRaw
+            Spiking times for the unit in the specified block.
+        """
+        mask = self.block == block
+        new_data = self.data[mask]
+        new_block = self.block[mask]
+        sub_obj = self.__class__(
+            unit_id=self.unit_id,
+            session_id=self.session_id,
+            smpl_rate=self.smpl_rate,
+            data=new_data,
+            block=new_block,
+        )
+        return sub_obj
+
+    # --- IO Handling ------------------------------------------------------------------------------
+
+    @property
     def path(self) -> Path:
         return self.path_ruler().get_path(self.unit_id, self.session_id)
 
-    def load(self) -> None:  # pylint: disable=undefined-variable
+    def load(self) -> None:
         """
         Retrieve data from a file and extract separately the spiking times and the blocks of trials.
 
         Notes
         -----
-        The raw data of one neuron in one session is stored in a numpy array.
+        The raw data of one unit in one session is stored in a numpy array.
         Shape: ``(2, nspikes)``.
         ``raw[0]`` : Block of trials in which each spike occurred.
         ``raw[1]`` : Spiking times.
         Data type: ``float``.
         Thus, both spiking times and trial blocks are stored under type ``float``.
         Here, blocks of trials are converted to integers to match the format expected by the
-        coordinate :class:`CoordBlock`.
+        coordinate `CoordBlock`.
 
         Returns
         -------
@@ -132,31 +180,3 @@ class RawSpkTimes(DataStructure):
         # Create new instance filled with the loaded data
         obj = self.__class__(self.unit_id, self.session_id, self.smpl_rate, data=t_spk, block=block)
         self.__dict__.update(obj.__dict__)
-
-    @property
-    def n_blocks(self) -> int:
-        """Number of blocks in the session."""
-        if len(self.block) != 0:  # avoid ValueError in max() if empty array (no spikes)
-            return self.block.max()
-        else:
-            return 0
-
-    def get_block(self, blk: int) -> Self:
-        """
-        Extract the spiking times which occurred in one block of trials.
-
-        Parameters
-        ----------
-        blk: int
-            Block number, comprised between 1 and the total number of blocks.
-
-        Returns
-        -------
-        RawSpkTimes
-            Spiking times for the unit in the specified block.
-        """
-        mask = cast(npt.NDArray[np.bool_], self.block == blk)  # see overloaded __getitem__
-        data = self.data[mask]
-        block = self.block[mask]
-        sub_obj = self.__class__(self.unit_id, self.session_id, self.smpl_rate, data, block)
-        return sub_obj
