@@ -143,3 +143,46 @@ class CoordTime(Coordinate):
         return np.arange(n_smpl) * t_bin + t_min
 
     # pylint: enable=arguments-differ
+
+
+class CoordTimeEvent(Coordinate):
+    """
+    Coordinate labels for time stamps at which an experimental or behavioral event occurred.
+
+    Examples: stimulus onset, stimulus offset, shock delivery...
+
+    Attributes
+    ----------
+    values: npt.NDArray[np.float64]
+        Time labels (in seconds).
+        Shape : ``(n_trials,)`` with ``n_trials`` the number of trials in which the considered event
+        occurred.
+    """
+
+    def __init__(self, values: npt.NDArray[np.float64]):
+        super().__init__(values=values)
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__}>: {len(self)} events"
+
+    # pylint: disable=arguments-differ
+    @staticmethod
+    def build_labels(n_trials: int, t_event: float) -> npt.NDArray[np.float64]:
+        """
+        Build time labels for an experimental event.
+
+        Parameters
+        ----------
+        n_trials: int
+            Number of trials in which the event occurred.
+        t_event: float
+            Time of the event (in seconds).
+
+        Returns
+        -------
+        values: npt.NDArray[np.float64]
+            Time labels.
+        """
+        return np.full(n_trials, t_event)
+
+    # pylint: enable=arguments-differ
