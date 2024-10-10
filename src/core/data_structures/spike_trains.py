@@ -16,14 +16,14 @@ from core.coordinates.trials import CoordError
 from core.data_structures.base_data_struct import DataStructure
 from core.data_structures.core_data import Dimensions, CoreData
 from utils.io_data.formats import TargetType
-from utils.storage_rulers.impl_path_rulers import SpikesTrainsPath
+from utils.storage_rulers.impl_path_rulers import SpikeTrainsPath
 from utils.io_data.loaders.impl_loaders import LoaderPKL
 from utils.io_data.savers.impl_savers import SaverPKL
 
 CoordTimeEvent: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.float64]]
 
 
-class SpikesTrains(DataStructure):
+class SpikeTrains(DataStructure):
     """
     Spikes trains for one unit in a set of trials of the experiment (whole or part).
 
@@ -148,7 +148,7 @@ class SpikesTrains(DataStructure):
     identifiers = ("unit_id", "smpl_rate")
 
     # --- IO Handlers ---
-    path_ruler = SpikesTrainsPath
+    path_ruler = SpikeTrainsPath
     loader = LoaderPKL
     saver = SaverPKL
     tpe = TargetType("ndarray_float")

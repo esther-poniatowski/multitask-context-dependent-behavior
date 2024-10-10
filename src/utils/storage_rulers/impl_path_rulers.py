@@ -8,7 +8,7 @@ Implementations of path generation rules.
 Classes
 -------
 :class:`SpikeTimesRawPath`
-:class:`SpikesTrainsPath`
+:class:`SpikeTrainsPath`
 :class:`FiringRatesUnitPath`
 :class:`FiringRatesPopPath`
 :class:`DecoderPath`
@@ -71,8 +71,8 @@ class TrialsPropertiesPath(PathRuler):
         return self.root_data / "meta" / "trials" / site
 
 
-class SpikesTrainsPath(PathRuler):
-    """Path generation rules used by :class:`SpikesTrains` data structures."""
+class SpikeTrainsPath(PathRuler):
+    """Path generation rules used by :class:`SpikeTrains` data structures."""
 
     def get_path(self, unit: str) -> Path:
         """
