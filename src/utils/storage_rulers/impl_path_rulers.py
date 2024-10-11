@@ -32,8 +32,11 @@ from typing import Union
 from utils.storage_rulers.base_path_ruler import PathRuler
 
 
-class MetadataSessionPath(PathRuler):
-    """Path generation rules used by `MetadataSession` data structures."""
+# --- Raw Data -------------------------------------------------------------------------------------
+
+
+class SessionEventsPath(PathRuler):
+    """Path generation rules used by `SessionEvents` data structures."""
 
     def get_path(self, session: str) -> Path:
         """
@@ -46,9 +49,9 @@ class MetadataSessionPath(PathRuler):
         Returns
         -------
         Path
-            Format: ``{root}/raw/meta/{session}``
+            Format: ``{root}/raw/expt_events/{session}``
         """
-        return self.root_data / "raw" / "meta" / session
+        return self.root_data / "raw" / "expt_events" / session
 
 
 class SpikeTimesRawPath(PathRuler):
@@ -71,23 +74,26 @@ class SpikeTimesRawPath(PathRuler):
         return self.root_data / "raw" / unit / session
 
 
-class TrialsPropertiesPath(PathRuler):
-    """Path generation rules used by `TrialsProperties` data structures."""
+# --- Preprocessed Data ----------------------------------------------------------------------------
 
-    def get_path(self, site: str) -> Path:
+
+class SessionTrialsPath(PathRuler):
+    """Path generation rules used by `SessionTrials` data structures."""
+
+    def get_path(self, session: str) -> Path:
         """
-        Construct the path for the properties of the trials recorded in one site.
+        Construct the path for the properties of the trials recorded in one session.
 
         Parameters
         ----------
-        site: str
+        session: str
 
         Returns
         -------
         Path
-            Format: ``{root}/meta/trials/{site}``
+            Format: ``{root}/processed/sessions_info/{session}``
         """
-        return self.root_data / "meta" / "trials" / site
+        return self.root_data / "processed" / "sessions_info" / session
 
 
 class SpikeTrainsPath(PathRuler):
