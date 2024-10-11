@@ -112,7 +112,7 @@ class SpikeTimesRaw(DataStructure):
         else:
             return 0
 
-    def get_block(self, block: int) -> Self:
+    def get_block(self, block: int):
         """
         Extract the spiking times which occurred in one block of trials.
 
@@ -123,20 +123,15 @@ class SpikeTimesRaw(DataStructure):
 
         Returns
         -------
-        SpikeTimesRaw
-            Spiking times for the unit in the specified block.
+        raw_data : CoreData
+            Spiking times for the unit in the session which occurred in the specified block.
+
+        Warning
+        -------
+        This method returns the underlying data as a numpy array instead of a new instance of the
+        class. It is aimed to extract and manipulate data efficiently in builder pipelines.
         """
-        mask = self.block == block
-        new_data = self.data[mask]
-        new_block = self.block[mask]
-        sub_obj = self.__class__(
-            unit_id=self.unit_id,
-            session_id=self.session_id,
-            smpl_rate=self.smpl_rate,
-            data=new_data,
-            block=new_block,
-        )
-        return sub_obj
+        return self.data[self.block == block]
 
     # --- IO Handling ------------------------------------------------------------------------------
 
