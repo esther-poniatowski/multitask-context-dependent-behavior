@@ -11,25 +11,31 @@ Notes
 -----
 -
 """
+# pylint: disable=missing-function-docstring
 
-from typing import List, Tuple, Dict, Optional, Mapping
+from typing import List, Tuple, Optional, Any, TypeAlias
 
 import numpy as np
 
 from core.builders.base_builder import DataBuilder
 from core.coordinates.base_coord import Coordinate
-from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim
-from core.coordinates.time import CoordTime
+from core.coordinates.exp_condition import CoordTask, CoordCtx
+from core.coordinates.exp_structure import CoordRecNum
 from core.data_structures.core_data import CoreData
-from core.data_structures.firing_rates import FiringRatesPop, FiringRatesUnit
+from core.data_structures.spike_times_raw import SpikeTimesRaw
+from core.data_structures.spike_trains import SpikeTrains
+from core.processors.preprocess.align_spikes import SpikesAligner
+
+MetaDataSession: TypeAlias = Any
 
 
-class RasterBuilder(DataBuilder[List[FiringRatesUnit], FiringRatesPop]):
+class SpikeTrainsBuilder(DataBuilder[List[SpikeTimesRaw], SpikeTrains]):
     """
-    Build a `RasterUnit` data structure.
+    Build a `SpikeTrains` data structure.
 
-    - Inputs: List of data structures for a set of units in a population.
-    - Output: Reconstructed pseudo-trials in this pseudo-population.
+    - Inputs: List of raw spike times (flat structure) for a single unit in (several) recording
+      sessions.
+    - Output: Trial-based representation of the spike times into spike trains.
 
     Detailed inputs and outputs are documented in the `build` method.
 
@@ -39,541 +45,350 @@ class RasterBuilder(DataBuilder[List[FiringRatesUnit], FiringRatesPop]):
         See the base class attribute.
     TMP_DATA : Tuple[str]
         See the base class attribute.
-    DEFAULT_FEATURES : Mapping[str, Coordinate]
-        Default features to consider for stratification. See the attribute `features_coords`.
-
-    Configuration Parameters
-    ------------------------
-    ensemble_size : int
-        Number of units required to form each ensemble (imposed by the area with the lowest number
-        of units).
-    n_ensembles_max : int
-        Maximum number of ensembles to form from the population (to limit the number of ensembles
-        and computational cost for the areas with the largest populations).
-    k : int
-        Number of folds for cross-validation.
-    n_by_cond : Dict[Tuple[str, ...], int]
-        Number of pseudo-trials to generate *by condition*, common to all ensembles (determined
-        beforehand).
-        Keys: Experimental condition defined by a combination of features' values.
-        Values: Number of pseudo-trials to generate for the condition.
-    conditions : List[str]
-        (Derived) Names of the conditions to consider for stratification (task, context, stimulus).
-    conditions_boundaries : Dict[str, Tuple[int, int]]
-        (Derived) Start and end indices of the trials for each condition in the final data
-        structure.
-    features_coords: Dict[str, Coordinate]
-        Nature of the features to consider for stratification.
-        Keys: Names of coordinates along the trial dimension in the data structures of individual
-        units. Each corresponds to a field in the `n_by_cond` dictionary.
-        Values: Class of the coordinate to use for stratification.
-    has_errors : bool, default=False
-      Whether to include error trials in the pseudo-trials.
 
     Processing Attributes
     ---------------------
-    data_per_unit : List[FiringRatesUnit]
-        Firing rates of each unit in the population.
-    seed : int
-        Seed for the random number generator, used in the ensemble assignment.
-    ensembles : Ensembles
-        Indices of the units in each ensemble. Shape: ``(n_ensembles, ensemble_size)``.
-    n_ensembles : int
-        (Property) Number of ensembles to form.
-    n_units : int
-        (Property) Number of units in the population (length of the inputs `data_per_unit`).
-    n_trials : int
-        (Property) Number of pseudo-trials to form (sum of the number of pseudo-trials to generate
-        across conditions).
-    n_t : int
-        Number of time points (from the common time axis across units).
+    spikes_per_session : List[SpikeTimesRaw]
+        Raw spike times for the unit in each session.
+    metadata_per_session : List[MetaDataSession]
+        Metadata for each session, used to build the coordinates.
+    sessions_boundaries : List[Tuple[int, int]]
+        Start and end indices of the trials for each session in the final data structure.
 
     Methods
     -------
-    `allocate_conditions_indices`
-    `exclude_errors`
-    `generate_ensembles`
-    `construct_core_data`
-    `initialize_core_data`
-    `stratify_by_condition`
-    `get_indices_in_condition`
-    `get_indices_in_fold`
-    `generate_folds`
-    `generate_pseudo_trials`
-    `fill_data`
-    `construct_units_coord`
-    `construct_trial_coords`
-    `construct_time_coord`
     `build` (implementation of the base class method)
     """
 
-    product_class = FiringRatesPop
-    TMP_DATA = ("data_per_unit", "seed", "ensembles")
-    DEFAULT_FEATURES = MappingProxyType({"task": CoordTask, "ctx": CoordCtx, "stim": CoordStim})
+    product_class = SpikeTrains
+    TMP_DATA = ("spikes_per_session", "metadata_per_session")
 
-    def __init__(
-        self,
-        ensemble_size: int,
-        n_ensembles_max: int,
-        n_folds: int,
-        n_by_cond: Dict[str, int],
-        features_coords: Mapping[str, Coordinate] = DEFAULT_FEATURES,
-        has_errors: bool = False,
-    ) -> None:
+    def __init__(self) -> None:
         # Call the base class constructor: declare empty product and internal data
         super().__init__()
         # Store configuration parameters
-        self.ensemble_size = ensemble_size
-        self.n_ensembles_max = n_ensembles_max
-        self.n_folds = n_folds
-        self.n_by_cond = n_by_cond
-        self.conditions = list(n_by_cond.keys())
-        self.conditions_boundaries = self.allocate_conditions_indices()
-        self.features_coords = features_coords
-        self.has_errors = has_errors
+
         # Declare attributes to store inputs and intermediate results
-        self.data_per_unit: List[FiringRatesUnit]
-        self.seed: int
-        self.ensembles: Ensembles
+        self.spikes_per_session: List[SpikeTimesRaw]
+        self.metadata_per_session: List[MetaDataSession]
+        self.sessions_boundaries: List[Tuple[int, int]]
 
     def build(
         self,
-        area: Optional[str] = None,
-        training: Optional[bool] = None,
-        data_per_unit: Optional[List[FiringRatesUnit]] = None,
-        seed: int = 0,
-        **kwargs
-    ) -> FiringRatesPop:
+        unit_id: Optional[str] = None,
+        smpl_rate: Optional[float] = None,
+        spikes_per_session: Optional[List[SpikeTimesRaw]] = None,
+        metadata_per_session: Optional[List[MetaDataSession]] = None,
+        **kwargs,
+    ) -> SpikeTrains:
         """
         Implement the base class method.
 
         Parameters
         ----------
-        area : str
-            Brain area from which the units were recorded.
-        training : bool
-            Whether the units comes from trained or naive animals.
-        data_per_unit : List[FiringRatesUnit]
-            See the attribute `data_per_unit`.
-        seed : int
-            See the attribute `seed`.
+        unit_id : str
+            Identifier of the unit for which the spike trains are built.
+        smpl_rate : float
+            Sampling rate of the spike times (in Hz).
+        spikes_per_session : List[SpikeTimesRaw]
+            See the attribute `spikes_per_session`.
+        metadata_per_session : List[MetaDataSession]
+            See the attribute `metadata_per_session`.
 
         Returns
         -------
-        FiringRatesPop
+        product : SpikeTrains
             Data structure product instance.
         """
-        assert data_per_unit is not None and area is not None and training is not None
+        assert (
+            unit_id is not None
+            and smpl_rate is not None
+            and spikes_per_session is not None
+            and metadata_per_session is not None
+        )
         # Store inputs
-        self.data_per_unit = data_per_unit
-        self.seed = seed
+        assert len(spikes_per_session) == len(metadata_per_session)
+        self.spikes_per_session = spikes_per_session
+        self.metadata_per_session = metadata_per_session
         # Preliminary set up
-        if not self.has_errors:
-            self.data_per_unit = self.exclude_errors()
-        self.ensembles = self.generate_ensembles()
+        self.sessions_boundaries = self.allocate_sessions_indices()
         # Initialize the data structure with its metadata (base method)
-        self.initialize_data_structure(area=area, training=training)
+        self.initialize_data_structure(unit_id=unit_id, smpl_rate=smpl_rate)
         # Add core data values to the data structure
         data = self.construct_core_data()
         self.add_data(data)
         # Add coordinates in the data structure
-        units = self.construct_units_coord()
-        self.add_coords(units=units)
-        trial_coords = self.construct_trial_coords()
-        self.add_coords(**trial_coords)
-        time = self.construct_time_coord()
-        self.add_coords(time=time)
+        recnum = self.construct_new_coord("recnum", CoordRecNum)
+        block = self.construct_preexisting_coord("block")
+        slot = self.construct_preexisting_coord("slot")
+        task = self.construct_new_coord("task", CoordTask)
+        ctx = self.construct_new_coord("ctx", CoordCtx)
+        stim = self.construct_preexisting_coord("stim")
+        error = self.construct_preexisting_coord("error")
+        t_on = self.construct_preexisting_coord("t_on")
+        t_off = self.construct_preexisting_coord("t_off")
+        t_warn = self.construct_preexisting_coord("t_warn")
+        t_end = self.construct_preexisting_coord("t_end")
+        self.add_coords(recnum=recnum, block=block, slot=slot)
+        self.add_coords(task=task, ctx=ctx, stim=stim, error=error)
+        self.add_coords(t_on=t_on, t_off=t_off, t_warn=t_warn, t_end=t_end)
         return self.get_product()
 
     # --- Shape and Dimensions ---------------------------------------------------------------------
 
     @property
-    def n_units(self) -> int:
-        return len(self.data_per_unit)
-
-    @property
-    def n_ensembles(self) -> int:
-        return EnsembleAssigner.eval_n_ensembles(
-            self.n_units, self.ensemble_size, self.n_ensembles_max
-        )
+    def n_sessions(self) -> int:
+        """Number of sessions in which the unit was recorded."""
+        return len(self.spikes_per_session)
 
     @property
     def n_trials(self) -> int:
-        return sum(self.n_by_cond.values())
+        # TODO: Implement
+        """Total number of trials across all the sessions. 1st dimension of the data product."""
+        return sum(
+            session_info.count_trials(session_info) for session_info in self.metadata_per_session
+        )
 
     @property
-    def n_t(self) -> int:
-        return self.data_per_unit[0].get_size("time")
+    def n_spk_max(self) -> int:
+        """Maximum number of spikes across trials and sessions. 2nd dimension of the data product."""
+        # TODO: Implement
+        return max(
+            self.max_spikes_in_session(session_info, spike_times)
+            for session_info, spike_times in zip(self.metadata_per_session, self.spikes_per_session)
+        )
 
     # --- Preliminary Operations -------------------------------------------------------------------
 
-    def allocate_conditions_indices(self) -> Dict[str, Tuple[int, int]]:
+    def allocate_sessions_indices(self) -> List[Tuple[int, int]]:
         """
-        Set the start and end indices of the trials of each condition in the final data structure.
+        Set the start and end indices of the trials of each session in the final data structure.
 
         Those indices are used to ensure the consistency of the data between the core data and the
         coordinates for the trials dimension.
 
         Returns
         -------
-        condition_boundaries : Dict[str, Tuple[int, int]]
-            Start and end indices of the trials for each condition along the trials dimension in the
+        sessions_boundaries : List[Tuple[int, int]]
+            Start and end indices of the trials for each session along the trials dimension in the
             final data structure.
+            Length: ``n_sessions``. Each element is a tuple of two integers (start, end).
         """
-        conditions_boundaries = {}
+        sessions_boundaries: List[Tuple[int, int]] = []
         start = 0
-        for c in self.conditions:
-            end = start + self.n_by_cond[c]
-            self.conditions_boundaries[c] = (start, end)
+        for session_info in self.metadata_per_session:
+            end = start + session_info.count_trials()
+            self.sessions_boundaries.append((start, end))
             start = end
-        return conditions_boundaries
+        return sessions_boundaries
 
-    def exclude_errors(self) -> None:
+    def max_spikes_in_session(
+        self, session_info: MetaDataSession, spike_times: SpikeTimesRaw
+    ) -> int:
         """
-        Exclude error trials from the firing rates of each unit.
+        Determine the maximal number of spikes across trials in a single session.
+
+        Arguments
+        ---------
+        session_info : MetaDataSession
+            Metadata of the session.
+        spike_times : SpikeTimesRaw
+            Raw spike times for the unit in the session.
 
         Returns
         -------
-        List[FiringRatesUnit]
-            New data structure instances for the population, where error trials have been excluded.
+        n_spk_max : int
+            Maximal number of spikes across trials in the session.
         """
-        return [fr_unit.exclude_errors() for fr_unit in self.data_per_unit]
-
-    def generate_ensembles(self) -> None:
-        """
-        Generate the ensembles of units to form the pseudo-population.
-
-        Returns
-        -------
-        ensembles : Ensembles
-            See the attribute generated by this method.
-
-        See Also
-        --------
-        :meth:`EnsembleAssigner.assign`
-        """
-        assigner = EnsembleAssigner(self.ensemble_size, self.n_ensembles_max)
-        ensembles = assigner.process(n_units=self.n_units, seed=self.seed)
-        return ensembles
+        n_spk_max = 0
+        for b in range(spike_times.n_blocks):
+            for s in range(session_info.count_slots_in_block(b)):
+                n_spk = len(spike_times.get_spikes_in_slot(b, s))
+                n_spk_max = max(n_spk_max, n_spk)
+        return n_spk_max
 
     # --- Construct Core Data ----------------------------------------------------------------------
 
     def construct_core_data(self) -> CoreData:
         """
-        Construct the core data array containing the firing rates of the pseudo-population.
+        Construct the core data array containing the spike trains of the unit in the trials.
 
         Returns
         -------
         data : CoreData
-            Data array containing the firing rates of the pseudo-population in pseudo-trials.
+            Data array containing the spike times.
+            Shape: ``(n_trials, n_spk_max)``.
             .. _data:
+
+        Raises
+        ------
+        ValueError
+            If the number of blocks in the spike times does not match the number of blocks in the
+            session.
+            If the number of trials in the spike times does not match the number of trials in the
+            session.
 
         Implementation
         --------------
         1. Initialize the core data array with empty values.
-        2. Process each ensemble independently:
-            1. For each unit in the ensemble, stratify the trials by condition.
-            2. Process each condition independently, to preserve the indices of each condition in
-               the final data structure along the trials dimension (i.e. to match the indices of the
-               other components constructed by the method `construct_trial_coords`).
-                1. For each unit, extract the indices of the trials in the considered condition.
-                2. For each unit, assign folds to the trials within the considered condition.
-                3. Process each fold independently within the condition:
-                    1. For each unit, generate the indices of the trials within the considered fold
-                       (within the condition).
-                    2. For the *whole ensemble*, generate the indices of the trials to select.
-                    3. Fill the data array with the selected trials at the appropriate indices for
-                       the considered fold and condition.
+        2. Process each session independently. The spiking data of the session and the session's
+           metadata are considered in parallel to ensure their consistency.
+           1. Segment the spike times in the session into blocks of trials only once, to avoid
+              redundant operations.
+           2. Iterate over the trials mentioned in the session's metadata and retrieve the
+              information required to extract the spikes in this trial (slot): block, start and end
+              time of the trial. This approach ensures to consider trials in the appropriate order
+              to match the coordinates constructed from the sessions' metadata.
+           3. Fill the core data with the spiking times of the considered trial. To ensure the
+              correspondence of the trials' indices between the coordinates and the core data,
+              The index where data is added is the index of the slot being processed in addition to
+              an offset corresponding to the start index of the session in the final data structure.
+
+        See Also
+        --------
+        `DataBuilder.initialize_core_data`
+            Initialize the core data array with empty values (parent method).
+        `SpikesAligner.slice_epoch`
+            Extract spiking times within one epoch and reset them relative to the epoch start.
         """
-        data = self.initialize_core_data()
-        for ens, units in enumerate(self.ensembles):
-            cond_pop = [self.stratify_by_condition(u_pop) for u_pop in units]
-            for cond in self.conditions:
-                idx_cond = [self.get_indices_in_condition(cond, strata) for strata in cond_pop]
-                folds_pop = [
-                    self.generate_folds(len(idx), u_ens) for u_ens, idx in enumerate(idx_cond)
-                ]
-                for fold in range(self.n_folds):
-                    idx_cond_x_fold = [
-                        self.get_indices_in_fold(fold, fold_labels, idx)
-                        for fold_labels, idx in zip(folds_pop, idx_cond)
-                    ]
-                    idx_pseudo = self.generate_pseudo_trials(cond, idx_cond_x_fold)
-                    start, end = self.conditions_boundaries[cond]
-                    idx_final = np.arange(start, end)
-                    self.fill_data(data, ens, fold, idx_init=idx_pseudo, idx_final=idx_final)
+        aligner = SpikesAligner()
+        shape = (self.n_trials, self.n_spk_max)
+        data = self.initialize_core_data(shape)  # parent method
+        for (start, end), spike_times, session_info in zip(
+            self.sessions_boundaries, self.spikes_per_session, self.metadata_per_session
+        ):
+            spikes_in_blocks = self.segment_in_blocks(spike_times)
+            n_b_spk, n_b_sess = len(spikes_in_blocks), session_info.n_blocks
+            if n_b_spk != n_b_sess:
+                raise ValueError(f"Blocks mismatch: {n_b_spk} (spikes) != {n_b_sess} (session).")
+            for i, (block, slot, t_start, t_end) in enumerate(session_info.iter_slots()):
+                spikes_slot = aligner.slice_epoch(spikes_in_blocks[block], t_start, t_end)
+                idx_trial = start + i  # offset by the start index of the session
+                self.fill_data(data, spike_times=spikes_slot, idx_trial=idx_trial)
+            if i != end - 1:  # check that all trials have been filled at the end of the loop
+                raise ValueError(f"Trials mismatch: {i} (spikes) != {end} (session).")
         return data
 
-    def initialize_core_data(self) -> CoreData:
+    def segment_in_blocks(self, spike_times: SpikeTimesRaw) -> List[np.ndarray]:
         """
-        Initialize the core data array with empty values.
-
-        Returns
-        -------
-        data : CoreData
-            Data array with empty values.
-            Shape: ``(n_ensembles, ensemble_size, n_folds, n_trials, n_t)``.
-        """
-        shape = (self.n_ensembles, self.ensemble_size, self.n_folds, self.n_trials, self.n_t)
-        data = CoreData(np.empty(shape, dtype=np.float64), dims=self.product_class.dims)
-        return data
-
-    def stratify_by_condition(self, u_pop: int) -> Strata:
-        """
-        Stratify the trials of one unit by condition (task, context, stimulus).
+        Segment the spike times in the session into blocks of trials.
 
         Arguments
         ---------
-        u_pop : int
-            Index of the unit in the *population*. Used to retrieve the data of the unit.
-            .. _u_pop:
+        spike_times : SpikeTimesRaw
+            Raw spike times for the unit in the session.
 
         Returns
         -------
-        strata : Strata
-            Strata labels assigned to the trials of the considered unit.
-            Shape: ``(n_tr_unit,)``, number of trials available for this unit.
+        spikes_in_blocks : List[np.ndarray]
+            Spike times in each block of trials. Length: number of blocks in the session.
 
         See Also
         --------
-        :meth:`Stratifier.process`
+        `SpikeTimesRaw.get_block`
+            Extract the spiking times which occurred in one block of trials.
         """
-        strata_def = tuple(self.features_coords.keys())  # preserve order for stratum labels
-        stratifier = Stratifier(strata_def=strata_def)
-        fr_unit = self.data_per_unit[u_pop]  # get data from the unit
-        features = [fr_unit.get_coord(name) for name in self.features_coords.keys()]
-        strata = stratifier.process(features=features, return_comb=False)
-        return strata
+        return [spike_times.get_block(b) for b in range(spike_times.n_blocks)]
 
-    def get_indices_in_condition(self, cond: str, strata: int) -> Indices:
+    def fill_data(self, data: CoreData, spike_times, idx_trial: int) -> None:
         """
-        Get the indices of the trials of the unit which belong to a specific condition.
-
-        Arguments
-        ---------
-        cond : str
-            Name of the condition to consider.
-        strata : Strata
-            Strata labels assigned to the trials of the unit.
-
-        Returns
-        -------
-        idx_cond : Indices
-            Indices of the trials of the unit which belong to the considered condition, within the
-            global data set (all the trials of the unit).
-
-        See Also
-        --------
-        :meth:`Stratifier.get_stratum_indices`
-
-        `conditions` attribute: Used to get the label of the stratum, which corresponds to the index
-        of the condition in the list of conditions.
-        """
-        stratifier = Stratifier()
-        stratum_label = self.conditions.index(cond)
-        idx_cond = stratifier.get_stratum_indices(stratum_label, strata)
-        return idx_cond
-
-    def get_indices_in_fold(self, fold: int, fold_labels: FoldLabels, idx: Indices) -> Indices:
-        """
-        Get the indices of the trials of the unit which belong to a specific fold.
-
-        Arguments
-        ---------
-        fold : int
-            Index of the fold to extract.
-        fold_labels : FoldLabels
-            Fold labels assigned to a subset of trials of the unit. Shape: ``(n_samples_subset,)``.
-        idx : Indices
-            Indices of a subset of trials of the unit, within the global data set (all the trials of
-            the unit). Shape: ``(n_samples_subset,)``.
-
-        Returns
-        -------
-        idx_fold : Indices
-            Indices of the trials of the unit which belong to the considered fold, still within the
-            global data set. It is a subset of the input indices.
-
-        See Also
-        --------
-        :meth:`IndexMapper.process`
-        """
-        idx_relative = np.where(fold_labels == fold)[0]
-        mapper = IndexMapper()
-        idx_fold = mapper.process(idx_absolute=idx, idx_relative=idx_relative)
-        return idx_fold
-
-    def generate_folds(self, n_samples: int, u_ens: int) -> FoldLabels:
-        """
-        Assign trials to folds for one unit in one ensemble, for a specific condition.
-
-        Arguments
-        ---------
-        n_samples : int
-            Number of trials in the subset for a condition. Used for the argument `n_samples` of the
-            fold assigner.
-        u_ens : int
-            Index of the unit in the *ensemble*. Used for the argument `seed` of the fold assigner.
-
-        Notes
-        -----
-        - Folds are contained in a list of arrays rather than in a single array to handle the
-          variable number of trials per unit.
-        - Use the unit's index within the ensemble as the seed to ensure that the folds are
-          different for the same unit in different ensembles.
-        - Use the mode "labels" to get the fold labels directly, rather than the members. Fold
-          labels are then used for condition-based indexing to extract the indices of the trials in
-          the fold from the subset of trials in the condition.
-
-        Returns
-        -------
-        folds : FoldLabels
-            Fold labels assigned to the trials of the considered unit.
-            Shape: ``(n_samples,)``.
-            Values: Comprised between 0 and ``n_folds - 1``.
-
-        See Also
-        --------
-        :meth:`FoldAssigner.process`
-        """
-        assigner = FoldAssigner(k=self.n_folds)
-        folds = assigner.process(n_samples=n_samples, seed=u_ens, mode="labels")
-        return folds
-
-    def generate_pseudo_trials(self, cond, idx_pop) -> None:
-        """
-        Generate the indices of the trials to select for each unit in one ensemble, for one
-        condition and one fold.
-
-        Arguments
-        ---------
-        cond : str
-            Name of the condition to consider.
-        idx_pop : List[Indices]
-            Indices of the trials of the units in the ensemble which belong to the considered fold
-            and condition. Length: ``(ensemble_size,)``.
-
-        Returns
-        --------
-        idx_pseudo : np.ndarray
-            Indices of the trials to select for each unit in the ensemble for the considered
-            condition and fold.
-            Shape: ``(ensemble_size, n_pseudo_cond)``.
-
-        See Also
-        --------
-        :meth:`Bootstrapper.process`
-        :meth:`IndexMapper.process`
-        :attr:`n_by_cond`
-            Specifies the number of pseudo-trials to generate for the condition.
-        :attr:`seed`
-            Used to set the seed of the bootstrapper, since all the ensembles are different (no risk
-            of duplicates).
-        """
-        # Bootstrap trial indices
-        n_pseudo = self.n_by_cond[cond]
-        counts = [len(idx) for idx in idx_pop]
-        bootstrapper = Bootstrapper(n_pseudo=n_pseudo)
-        idx_relative = bootstrapper.process(counts=counts, seed=self.seed)
-        # Recover absolute indices in the global data set for each unit
-        mapper = IndexMapper()
-        idx_pseudo = np.empty_like(idx_relative)  # (ensemble_size, n_pseudo)
-        for u_ens, idx in enumerate(idx_pop):
-            idx_pseudo[u_ens] = mapper.process(idx_relative=idx_relative[u_ens], idx_absolute=idx)
-        return idx_pseudo
-
-    def fill_data(
-        self, data: CoreData, ens: int, fold: int, idx_init: np.ndarray, idx_final: np.ndarray
-    ):
-        """
-        Fill a part of the data array with the firing rates of the pseudo-population.
+        Fill a single trial of the data array with the spiking times in one slot.
 
         Arguments
         ---------
         data : CoreData
             See the return :ref:`data`.
-        ens : int
-            Index of the ensemble.
-        fold : int
-            Index of the fold.
-        idx_init : np.ndarray
-            Indices of the trials to select in the global data set for each unit.
-            Shape: ``(ensemble_size, n_trials)``, with ``n_trials`` the number of trials to select.
-        idx_final : np.ndarray
-            Indices in the final data array where the trials should be stored.
-            Shape: ``(n_trials,)``, with ``n_trials`` equal to the shape of the last dimension of
-            the argument `idx_init`.
+        spike_times : np.ndarray
+            Spiking times in the slot. Shape: ``(n_spk,)``, where ``n_spk`` is the number of spikes,
+            which is less or equal to the maximal number of spikes across all the trials.
+        idx_trial : np.ndarray
+            Index of the trial in the data array along the trials dimension (first dimension).
 
-        See Also
-        --------
-        :func:`np.put_along_axis`
-            Fill a part of an array with values along a specified axis. Here, it is used to avoid
-            mixing fancy indexing (with ``idx_final``) with basic indexing (with ``ens``, ``u_ens``,
-            ``fold``, and slice ``:`` for the time axis). The argument ``axis=0`` specifies that the
-            insertion happens along the trial dimension since it operates on the portion ``data[ens,
-            u_ens, fold]``. The argument ``idx_final[:, None]`` is used to broadcast the indices to
-            a 2D array to match the shape of the values to insert.
+        Notes
+        -----
+        Along the second dimension, the data array remains padded with NaN values for trials with
+        less than the maximal number of spikes.
         """
-        units = self.ensembles[ens]  # get the units in the ensemble
-        for u_ens, u_pop in enumerate(units):  # u_ens: in ensemble, u_pop: in population
-            rates = self.data_per_unit[u_pop].data[idx_init[u_ens]]
-            np.put_along_axis(data[ens, u_ens, fold], idx_final[:, None], rates, axis=0)
+        data[idx_trial, : len(spike_times)] = spike_times
 
     # --- Construct Coordinates --------------------------------------------------------------------
 
-    def construct_units_coord(self) -> CoordUnit:
+    def construct_new_coord(self, name, coord_class: type[Coordinate]) -> Coordinate:
         """
-        Construct the units coordinate for the pseudo-population (unit labels in each ensemble).
+        Construct a new coordinate  for the trials dimension containing session's information.
+
+        Each session is associated with one recording number, one task and one context, and yields
+        as many number of elements as the total number of trials it contains.
+
+        Parameters
+        ----------
+        name : str
+            Name of the coordinate to build.
+        coord_class : type[Coordinate]
+            Class of the coordinate to build. Used to convert the array of values into a coordinate
+            object of the appropriate type.
 
         Returns
         -------
-        units : CoordUnit
-            See the attribute `units` in the data structure product.
-
-        Warning
-        -------
-        Two indices are used to identify the units in the population:
-
-        - ``unit``: index of the unit in the population (from 0 to ``n_units``).
-        - ``u``: index of the unit in the ensemble (from 0 to ``ensemble_size``).
+        coord : Coordinate
+            Coordinate for the trial dimension in the data structure product.
         """
-        units = CoordUnit(np.empty((self.n_ensembles, self.ensemble_size), dtype=np.str_))
-        for ens, units_in_ensemble in enumerate(self.ensembles):
-            for u, unit in units_in_ensemble:
-                units[ens, u] = self.data_per_unit[unit].name
-        return units
+        values = [getattr(session_info, name) for session_info in self.metadata_per_session]
+        counts = [session_info.count_trials() for session_info in self.metadata_per_session]
+        arrays = [(np.repeat(v, c)) for v, c in zip(values, counts)]
+        coord = coord_class(np.concatenate(arrays))
+        self.check_coord_size(coord, name)
+        return coord
 
-    def construct_trial_coords(self) -> Dict[str, Coordinate]:
+    def construct_preexisting_coord(self, coord_name: str) -> Coordinate:
         """
-        Construct the trial coordinates for the pseudo-trials: task, context, stimulus.
+        Construct a coordinate for the trials dimension form the corresponding pre-existing
+        coordinates in the sessions's metadata.
+
+        Parameters
+        ----------
+        coord_name : str
+            Name of the coordinate to build, matching the attribute name in the metadata.
 
         Returns
         -------
-        coords : Dict[str, Coordinate]
-            Coordinates for the trial dimension in the data structure product.
-        """
-        # Initialize empty coordinates with as many trials as the total number of pseudo-trials
-        coords = {
-            name: coord_tpe(np.empty((self.n_trials,), dtype=np.str_))
-            for name, coord_tpe in self.features_coords.items()
-        }
-        # Fill the coordinates by condition
-        for cond, (start, end) in self.conditions_boundaries.items():
-            for value, name in zip(cond, self.features_coords.keys()):
-                coords[name][start:end] = value
-        return coords
+        coord : Coordinate
+            Coordinate for the trial dimension in the data structure product.
 
-    def construct_time_coord(self) -> CoordTime:
+        Notes
+        -----
+        - The order of the sessions is consistent with the core data by concatenating the
+          coordinates in the order of the sessions.
+        - Concatenation is possible since coordinate objects are subclass of numpy arrays.
+        - Concatenation is performed along the first axis (axis=0 by default) which results in a 1D
+          array of shape ``(n_trials,)`` (sine all the coordinates are 1D arrays).
+        - There is no need to specify the data type of the coordinate since it is inferred from the
+          pre-existing coordinates.
         """
-        Construct the time coordinate, if all the units share the same time axis.
+        coord = np.concatenate(
+            [getattr(session_info, coord_name) for session_info in self.metadata_per_session]
+        )
+        self.check_coord_size(coord, coord_name)
+        return coord
 
-        Returns
-        -------
-        time : CoordTime
-            See the attribute `time` in the data structure product.
+    def check_coord_size(self, coord: Coordinate, name: str) -> None:
         """
-        time_axis = self.data_per_unit[0].get_coord("time")  # time axis of the first unit
-        for fr_unit in self.data_per_unit[1:]:  # check consistency with other units
-            assert np.array_equal(fr_unit.get_coord("time"), time_axis)
-        time = CoordTime(time_axis)
-        return time
+        Check that the size of a coordinate matches the total number of trials.
+
+        Parameters
+        ----------
+        coord : Coordinate
+            Coordinate to check.
+        name : str
+            Name of the coordinate.
+
+        Raises
+        ------
+        ValueError
+            If the dimension of the coordinate does not match the total number of trials expected
+            when all the sessions are gathered.
+        """
+        if coord.size != self.n_trials:
+            raise ValueError(
+                f"Dimension mismatch for coordinate {name}: {coord.size} instead of {self.n_trials}."
+            )
