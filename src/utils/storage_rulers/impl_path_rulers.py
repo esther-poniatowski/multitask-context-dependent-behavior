@@ -156,6 +156,9 @@ class FiringRatesPopPath(PathRuler):
         return self.root_data / "processed" / "populations" / f"{area}_{training}"
 
 
+# --- Analyses and Models --------------------------------------------------------------------------
+
+
 class DecoderPath(PathRuler):
     """Path generation rules used by Decoder data structures."""
 
