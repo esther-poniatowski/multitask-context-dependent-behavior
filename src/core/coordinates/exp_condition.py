@@ -192,3 +192,51 @@ class CoordStim(CoordExpCond[Stimulus]):
 
     def __init__(self, values: npt.NDArray[np.str_]):
         super().__init__(values=values)
+
+
+class CoordEventDescription(Coordinate):
+    """
+    Coordinate labels for event descriptions.
+
+    Each element is a string which can comprise several event descriptions separated by commas.
+
+    Examples:
+
+    - ``'PreStimSilence , TORC_448_06_v501 , Reference'``
+    - ``'TRIALSTART'``
+
+    Attributes
+    ----------
+    values: npt.NDArray[np.str_]
+        Labels for the event descriptions associated with each measurement.
+
+    Methods
+    -------
+    :meth:`count_by_lab`
+
+    See Also
+    --------
+    :class:`core.coordinates.base_coord.Coordinate`
+    """
+
+    def __init__(self, values: npt.NDArray[np.str_]):
+        super().__init__(values=values)
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__}>: {len(self)} samples."
+
+    def build_labels(self, n_smpl: int) -> npt.NDArray[np.str_]:
+        """
+        Build basic labels filled with a *single* event description.
+
+        Parameters
+        ----------
+        n_smpl: int
+            Number of samples, i.e. of labels.
+
+        Returns
+        -------
+        values: npt.NDArray[np.str_]
+            Labels coordinate filled a single event description.
+        """
+        return np.full(n_smpl, "")
