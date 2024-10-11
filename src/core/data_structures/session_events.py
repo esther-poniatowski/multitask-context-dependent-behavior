@@ -11,8 +11,11 @@ import numpy as np
 
 from core.data_structures.base_data_struct import DataStructure
 from core.data_structures.core_data import Dimensions, CoreData
+from core.coordinates.exp_structure import CoordBlock
+from core.coordinates.time import CoordTimeEvent
+from core.coordinates.exp_condition import CoordEventDescription
 from utils.io_data.formats import TargetType
-from utils.io_data.loaders.impl_loaders import LoaderNPY
+from utils.io_data.loaders.impl_loaders import LoaderCSV
 from utils.storage_rulers.impl_path_rulers import SessionEventsPath
 
 
@@ -26,19 +29,27 @@ class SessionEvents(DataStructure):
 
     Coordinates:
 
-    -
+    - ``block``
+    - ``t_start``
+    - ``t_end``
+    - ``event``
 
     Identity Metadata: ``session_id``
 
     Attributes
     ----------
-    data: CoreData
+    data : CoreData
         Indices of the events in the session.
-    session_id: str
+    block : CoordBlock
+        Coordinate for the block of trials in which each event occurred.
+    t_start, t_end : CoordTimeEvent
+        Coordinates for the start and end times of each event.
+    event : CoordEvent
+        Coordinate for the nature of the event. Each element is a string which can comprise several
+        event descriptions separated by commas. Examples: ``'PreStimSilence , TORC_448_06_v501 ,
+        Reference'``, ``'TRIALSTART'``, etc.
+    session_id : str
         Session's identifier.
-
-    Methods
-    -------
 
     Notes
     -----
@@ -55,8 +66,8 @@ class SessionEvents(DataStructure):
 
     # --- IO Handlers ---
     path_ruler = SessionEventsPath
-    loader = LoaderNPY
-    tpe = TargetType("ndarray_float")
+    loader = LoaderCSV
+    tpe = TargetType("dataframe")
 
     # --- Key Features -----------------------------------------------------------------------------
 
@@ -64,11 +75,15 @@ class SessionEvents(DataStructure):
         self,
         session_id: str,
         data: Optional[Union[CoreData, np.ndarray]] = None,
+        block: Optional[Union[CoordBlock, np.ndarray]] = None,
+        t_start: Optional[Union[CoordTimeEvent, np.ndarray]] = None,
+        t_end: Optional[Union[CoordTimeEvent, np.ndarray]] = None,
+        event: Optional[Union[CoordEventDescription, np.ndarray]] = None,
     ) -> None:
         # Set sub-class specific metadata
         self.session_id = session_id
         # Set data and coordinate attributes via the base class constructor
-        super().__init__(data=data)
+        super().__init__(data=data, block=block, t_start=t_start, t_end=t_end, event=event)
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}>: Session {self.session_id}\n" + super().__repr__()
@@ -85,22 +100,64 @@ class SessionEvents(DataStructure):
 
         Notes
         -----
-        The raw data of one session is the output of a MATLAB script that parses .m files
-        (``exptevents.m``). The script generates a CSV file:
+        The raw data of one session is the CSV output of a MATLAB script that parses ``.m`` files
+        (``exptevents.m``).
 
+        Rows in the CSV file:
 
-        Returns
+        - Each row represents a single event from the experimental session.
+        - The data is organized chronologically based on the order of events in the original
+          'exptevents' structure.
+
+        Columns in the CSV file:
+
+        - ``TrialNum``: Block number in which the event occurred, extracted from the
+          ``exptevents.Trial`` field.
+        - ``Event``: Nature of the event, extracted from the ``exptevents.Note`` field.
+        - ``StartTime``: Start time of the event (in seconds) relative to relative to the start of
+          the session, extracted from the ``exptevents.StartTime`` field.
+        - ``StopTime``: Stop time of the event (in seconds) relative to relative to the start of the
+          session, extracted from the ``exptevents.StopTime`` field.
+
+        Numeric values (TrialNum, StartTime, StopTime) are stored as numbers, while the Event
+        description is stored as text.
+
+        Header of the CSV file: ``{'TrialNum', 'Event', 'StartTime', 'StopTime'}``
+
+        Examples
+        --------
+        Example of a row in the CSV file:
+
+        .. code-block:: text
+
+            TrialNum    Event                                           StartTime   StopTime
+            1           'PreStimSilence , TORC_448_06_v501 , Reference'	0.0	        0.4
+
+        Warning
         -------
-        Data
-
-        Raises
-        ------
-        ValueError
-            If the shape of the loaded data is not ``(2, nspikes)``
+        In the raw data, the term "trial" refers to a block of stimuli presentations.
+        In the subsequent analysis, the term "trial" refers to a single slot form one block.
         """
         # Load numpy array via LoaderNPY
-        raw = self.loader(path=self.path, tpe=self.tpe).load()
-        print("RAW", raw.shape)
+        raw = self.loader(path=self.path, tpe=self.tpe).load()  # dataframe
+        # Check the header of the CSV file
+        if not np.array_equal(raw.columns, ["TrialNum", "Event", "StartTime", "StopTime"]):
+            raise ValueError(f"Invalid header in the CSV file at {self.path}.")
+        # Build data (events indices)
+        n_events = raw.shape[0]
+        data = CoreData(np.arange(n_events), dims=("events",))
+        # Extract coordinates
+        block = CoordBlock(values=raw["TrialNum"].values.astype(np.int64))
+        t_start = CoordTimeEvent(values=raw["StartTime"].values)
+        t_end = CoordTimeEvent(values=raw["StopTime"].values)
+        event = CoordEventDescription(values=raw["Event"].values)
         # Create new instance filled with the loaded data
-        obj = self.__class__(self.session_id)  # TODO
-        self.__dict__.update(obj.__dict__)
+        obj = SessionEvents(
+            session_id=self.session_id,
+            data=data,
+            block=block,
+            t_start=t_start,
+            t_end=t_end,
+            event=event,
+        )
+        self.__dict__.update(obj.__dict__)  # update the instance with the new data
