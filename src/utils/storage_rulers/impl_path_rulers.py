@@ -32,8 +32,27 @@ from typing import Union
 from utils.storage_rulers.base_path_ruler import PathRuler
 
 
+class MetadataSessionPath(PathRuler):
+    """Path generation rules used by `MetadataSession` data structures."""
+
+    def get_path(self, session: str) -> Path:
+        """
+        Construct the path for the metadata of one session.
+
+        Parameters
+        ----------
+        session: str
+
+        Returns
+        -------
+        Path
+            Format: ``{root}/raw/meta/{session}``
+        """
+        return self.root_data / "raw" / "meta" / session
+
+
 class SpikeTimesRawPath(PathRuler):
-    """Path generation rules used by :class:`SpikeTimesRaw` data structures."""
+    """Path generation rules used by `SpikeTimesRaw` data structures."""
 
     def get_path(self, unit: str, session: str) -> Path:
         """
@@ -47,13 +66,13 @@ class SpikeTimesRawPath(PathRuler):
         Returns
         -------
         Path
-            Format: ``{root}/raw/{unit}/{session}``
+            Format: ``{root}/raw/spikes/{unit}/{session}``
         """
         return self.root_data / "raw" / unit / session
 
 
 class TrialsPropertiesPath(PathRuler):
-    """Path generation rules used by :class:`TrialsProperties` data structures."""
+    """Path generation rules used by `TrialsProperties` data structures."""
 
     def get_path(self, site: str) -> Path:
         """
@@ -72,7 +91,7 @@ class TrialsPropertiesPath(PathRuler):
 
 
 class SpikeTrainsPath(PathRuler):
-    """Path generation rules used by :class:`SpikeTrains` data structures."""
+    """Path generation rules used by `SpikeTrains` data structures."""
 
     def get_path(self, unit: str) -> Path:
         """
@@ -85,13 +104,13 @@ class SpikeTrainsPath(PathRuler):
         Returns
         -------
         Path
-            Format: ``{root}/processed/units/{unit}/spk``
+            Format: ``{root}/processed/units/{unit}_spk``
         """
-        return self.root_data / "processed" / "units" / unit / "spk"
+        return self.root_data / "processed" / "spike_trains" / f"{unit}_spk"
 
 
 class FiringRatesUnitPath(PathRuler):
-    """Path generation rules used by :class:`FiringRatesUnit` data structures."""
+    """Path generation rules used by `FiringRatesUnit` data structures."""
 
     def get_path(self, unit: str) -> Path:
         """
@@ -104,9 +123,9 @@ class FiringRatesUnitPath(PathRuler):
         Returns
         -------
         Path
-            Format: ``{root}/processed/units/{unit}/fr``
+            Format: ``{root}/processed/units/{unit}_fr``
         """
-        return self.root_data / "processed" / "units" / unit / "fr"
+        return self.root_data / "processed" / "units" / f"{unit}_fr"
 
 
 class FiringRatesPopPath(PathRuler):
