@@ -250,6 +250,8 @@ class SpikeTrainsBuilder(DataBuilder[List[SpikeTimesRaw], SpikeTrains]):
             Initialize the core data array with empty values (parent method).
         `SpikesAligner.slice_epoch`
             Extract spiking times within one epoch and reset them relative to the epoch start.
+        `SessionTrials.iter_trials`
+            Provide the relevant metadata to describe the trials in the session.
         """
         aligner = SpikesAligner()
         shape = (self.n_trials, self.n_spk_max)
@@ -261,7 +263,8 @@ class SpikeTrainsBuilder(DataBuilder[List[SpikeTimesRaw], SpikeTrains]):
             n_b_spk, n_b_sess = len(spikes_in_blocks), session_info.n_blocks
             if n_b_spk != n_b_sess:
                 raise ValueError(f"Blocks mismatch: {n_b_spk} (spikes) != {n_b_sess} (session).")
-            for i, (block, slot, t_start, t_end) in enumerate(session_info.iter_slots()):
+            i = None  # declare before entering the loop for subsequent check
+            for i, (block, slot, t_start, t_end) in enumerate(session_info.iter_trials()):
                 spikes_slot = aligner.slice_epoch(spikes_in_blocks[block], t_start, t_end)
                 idx_trial = start + i  # offset by the start index of the session
                 self.fill_data(data, spike_times=spikes_slot, idx_trial=idx_trial)
@@ -390,5 +393,5 @@ class SpikeTrainsBuilder(DataBuilder[List[SpikeTimesRaw], SpikeTrains]):
         """
         if coord.size != self.n_trials:
             raise ValueError(
-                f"Dimension mismatch for coordinate {name}: {coord.size} instead of {self.n_trials}."
+                f"Dimension mismatch ({name}): {coord.size} (coord) != {self.n_trials} (expected)."
             )
