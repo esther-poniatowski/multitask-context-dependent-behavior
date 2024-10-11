@@ -103,18 +103,18 @@ class SpikesAligner(Processor):
     _STIMS : frozenset
         Valid types of stimuli.
 
-    Attributes
-    ----------
+    Configuration Attributes
+    ------------------------
     d_pre, d_stim, d_post : float
         Durations of the pre-stimulus, stimulus, and post-stimulus periods (in seconds) for all
         the trials in the final dataset.
     d_warn : float
         Duration of the TORC stimulus (in seconds), within the total trial duration in task CLK.
 
-    Arguments
-    ---------
+    Processing Arguments
+    --------------------
     spikes : SpikingTimes
-        Spiking times during a whole trial (in seconds). Shape: ``(nspikes,)``.
+        Spiking times during a whole trial (in seconds). Shape: ``(n_spikes,)``.
         .. _spikes:
     task : Task
         Type of task from which the trial is extracted.
@@ -130,7 +130,7 @@ class SpikesAligner(Processor):
     -------
     aligned_spikes : SpikingTimes
         Spiking times aligned with the other trials in the final data set.
-        Shape: ``(nspikes,)``.
+        Shape: ``(n_spikes,)``.
         .. _aligned_spikes:
 
     Methods
@@ -215,6 +215,8 @@ class SpikesAligner(Processor):
             t_end1 = t_on
             t_start2 = t_on + self.d_warn
             t_end2 = t_start2 + self.d_stim + self.d_post
+        else:
+            raise ValueError(f"Invalid task-stimulus combination: {task}-{stim}")
         return t_start1, t_end1, t_start2, t_end2
 
     def slice_epoch(self, spikes: SpikingTimes, t_start: float, t_end: float) -> SpikingTimes:

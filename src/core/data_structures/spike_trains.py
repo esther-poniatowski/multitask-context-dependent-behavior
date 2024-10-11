@@ -5,13 +5,14 @@
 """
 from pathlib import Path
 from types import MappingProxyType
-from typing import Optional, Union, Tuple, Any, TypeAlias
+from typing import Optional, Union
 
 import numpy as np
 
 from core.constants import SMPL_RATE
 from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim
 from core.coordinates.exp_structure import CoordRecNum, CoordBlock, CoordSlot
+from core.coordinates.time import CoordTimeEvent
 from core.coordinates.trials import CoordError
 from core.data_structures.base_data_struct import DataStructure
 from core.data_structures.core_data import Dimensions, CoreData
@@ -19,8 +20,6 @@ from utils.io_data.formats import TargetType
 from utils.storage_rulers.impl_path_rulers import SpikeTrainsPath
 from utils.io_data.loaders.impl_loaders import LoaderPKL
 from utils.io_data.savers.impl_savers import SaverPKL
-
-CoordTimeEvent: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.float64]]
 
 
 class SpikeTrains(DataStructure):
@@ -44,9 +43,9 @@ class SpikeTrains(DataStructure):
     - ``t_off``  (dimension ``trials``)
     - ``t_end``  (dimension ``trials``)
 
-    Identity Metadata: ``unit_id``, ``smpl_rate``
+    Identity Metadata: ``unit_id``
 
-    Descriptive Metadata: ``area``, ``training``
+    Descriptive Metadata: ``smpl_rate``
 
     Attributes
     ----------
@@ -145,7 +144,7 @@ class SpikeTrains(DataStructure):
             "t_end": Dimensions("trials"),
         }
     )
-    identifiers = ("unit_id", "smpl_rate")
+    identifiers = ("unit_id",)
 
     # --- IO Handlers ---
     path_ruler = SpikeTrainsPath

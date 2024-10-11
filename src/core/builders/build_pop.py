@@ -146,7 +146,7 @@ class PopulationBuilder(DataBuilder[List[FiringRatesUnit], FiringRatesPop]):
         n_ensembles_max: int,
         n_folds: int,
         n_by_cond: Dict[str, int],
-        features_coords: Mapping[str, Coordinate] = DEFAULT_FEATURES,
+        features_coords: Mapping[str, type] = DEFAULT_FEATURES,
         has_errors: bool = False,
     ) -> None:
         # Call the base class constructor: declare empty product and internal data
