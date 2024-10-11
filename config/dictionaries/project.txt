@@ -8,6 +8,7 @@ D_SHOCK
 D_STIM
 D_WARN
 DPEG
+expt
 exptevents
 firingrates
 frates
