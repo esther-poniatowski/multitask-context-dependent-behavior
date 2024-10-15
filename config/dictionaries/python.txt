@@ -3,6 +3,7 @@ abspath
 abstractmethod
 allclose
 arange
+argmin
 argvalues
 asdict
 astuple
@@ -64,6 +65,7 @@ rollaxis
 savetxt
 scikit
 scipy
+searchsorted
 setattr
 setflags
 staticmethod
@@ -71,5 +73,6 @@ swapaxes
 sysconfig
 ufunc
 ufuncs
+vectorize
 writerows
 xarray
