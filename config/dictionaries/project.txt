@@ -19,14 +19,18 @@ nspikes
 ntpts
 ntrials
 Perigenual
+POSTSTIM
 Prelimbic
 preprocess
+PRESTIM
 proc_data
 proc_datas
 PSTH
 rawspktimes
 recnum
 sampl
+sess
+SHOCKON
 smpl
 smth
 spikefile
@@ -38,3 +42,4 @@ T_SHOCK
 Telesto
 tpts
 TRIALSTART
+TRIALSTOP
