@@ -1,200 +1,161 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.coordinates.base_coord` [module]
+`core.coordinates.base_coord` [module]
 
 Classes
 -------
-:class:`Coordinate`
+:`Coordinate`
 """
 
-from typing import Any, Type, TypeVar, Union, Generic, overload, Self
+from typing import Type, TypeVar, Union, Generic, Tuple, Any, Self, FrozenSet
 
-from abc import ABC, abstractmethod
-import copy
 import numpy as np
-import numpy.typing as npt
+from numpy.typing import ArrayLike
 
-from utils.misc.functions import filter_kwargs
+# from core.entities.base_entity import Entity
 
 
-C = TypeVar("C", bound="Coordinate")
-"""Type variable for Coordinate subclasses."""
+class Entity:
+    """Template for now."""
 
-L = TypeVar("L", np.int64, np.float64, np.str_)
+    OPTIONS: FrozenSet[Any]
+
+    @classmethod
+    def is_valid(cls, value):
+        """
+        Check if the value is among the valid options for the entity.
+        """
+        return value in cls.OPTIONS
+
+
+CoordDtype = TypeVar("CoordDtype", bound=np.generic)
 """Type variable for the labels of the coordinate."""
 
+EntityType = TypeVar("EntityType", bound=Entity)
+"""Type variable for the entity type associated with the coordinate."""
 
-class Coordinate(Generic[L], ABC):
+
+class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
     """
-    Abstract Base Class representing coordinates for one dimension of a data set.
+    Base class representing coordinates for one dimension of a data set.
+
+    Class Attributes
+    ----------------
+    entity : Type[Entity]
+        Entity represented by the coordinate. It determines the data type and the valid values for
+        the underlying numpy array.
+    dtype: Type[CoordDtype]
+        Data type for the coordinate labels.
+    metadata : Tuple[str, ...]
+        Names of the additional attributes storing metadata alongside with the coordinate values.
+    sentinel : Any
+        Sentinel value marking missing or unset coordinate values.
+        For float dtype: `np.nan`.
+        For integer dtype: usually ``-1`` (depending on the purpose of the coordinate).
+        For string dtype: usually empty string ``''``.
 
     Attributes
     ----------
-    values: npt.NDArray[L]
-        Labels of the coordinate associated with one data dimension.
-        Shape : ``(n_smpl,)``, where ``n_smpl`` should equal the length of the associated dimension
-        in the data set.
+    values : npt.ndarray[Tuple[Any, ...], np.dtype[CoordDtype]]
+        Labels of the coordinate associated with data dimension(s). Length : ``n_smpl``, total
+        number of samples labelled by the coordinates across its dimensions.
 
     Methods
     -------
-    :meth:`__init__`
-    :meth:`__repr__`
-    :meth:` __len__`
-    :meth:`__eq__`
-    :meth:`copy`
-    :meth:`__getitem__`
-    :meth:`build_labels` (abstract classmethod)
-    :meth:`create`       (classmethod)
-    :meth:`empty`        (classmethod)
-
-    Notes
-    -----
-    Each coordinate is associated with a *single* dimension of the data set.
-    Therefore, coordinate values are stored in 1D arrays (restriction compared to :mod:`xarray`).
+    `validate`
+    `from_shape`
     """
 
-    def __init__(self, values: npt.NDArray[L]):
-        self.values = values  # type: ignore[var-annotated]
+    ENTITY: Type[EntityType]
+    DTYPE: Type[CoordDtype]
+    METADATA: FrozenSet[str] = frozenset()  # default empty set
+    SENTINEL: Union[int, float, str]
 
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}> : {len(self)} samples."
-
-    def __len__(self) -> int:
+    def __new__(cls, values: ArrayLike) -> Self:
         """
-        Number of coordinate labels, computed dynamically to accommodate any change in shape.
-
-        Returns
-        -------
-        int
-        """
-        return self.values.size
-
-    def __eq__(self, other: Any) -> bool:
-        """
-        Check equality between two coordinates based on their underlying labels.
-
-        Parameters
-        ----------
-        other: Any
-            Object to compare with the coordinate.
-
-        Returns
-        -------
-        bool
-            True if all the elements in the numpy arrays are equal, False otherwise.
-        """
-        if not isinstance(other, type(self)):
-            return False
-        return np.array_equal(self.values, other.values)
-
-    def copy(self) -> Self:
-        """
-        Copy the coordinate object with all its attributes.
-
-        Returns
-        -------
-        Coordinate
-
-        See Also
-        --------
-        :func:`copy.deepcopy`
-        """
-        return copy.deepcopy(self)
-
-    @overload
-    def __getitem__(self, idx: int) -> L: ...
-
-    @overload
-    def __getitem__(self, idx: slice) -> Self: ...
-
-    @overload
-    def __getitem__(self, idx: npt.NDArray[np.bool_]) -> Self: ...
-
-    def __getitem__(self, idx: Union[int, slice, npt.NDArray[np.bool_]]) -> Union[L, Self]:
-        """
-        Index the coordinate labels by delegating to the underlying numpy array.
-
-        Parameters
-        ----------
-        idx: Union[int, slice, npt.NDArray[bool]]
-            Selection object accepted by numpy arrays: int, slice, boolean mask.
-
-        Returns
-        -------
-        Union[L, Self]
-            If the index is an integer, return the corresponding label.
-            Otherwise, return a new coordinate object whose labels are restricted to the selected
-            values. All the other attributes of the initial coordinate object are preserved.
-        """
-        if isinstance(idx, int):
-            return self.values[idx]
-        cpy = self.copy()
-        cpy.values = self.values[idx]
-        return cpy
-
-    @classmethod
-    @abstractmethod
-    def build_labels(cls, *args, **kwargs) -> npt.NDArray:
-        """
-        Generate basic coordinate labels from minimal parameters, outside of full coordinate object.
-
-        Parameters
-        ----------
-        *args, **kwargs
-            Arguments required to build basic labels, specific to each coordinate subclass.
+        Create a new coordinate object behaving as a numpy array.
 
         Notes
         -----
-        This *abstract* method requires actual implementations in subclasses, which may vary
-        substantially depending on the type of coordinate and the parameters that they admit.
-        In most coordinate sub-classes, a basic coordinate consists in an array filled with an
-        arbitrary number of a unique label.
-
-        Warnings
-        --------
-        In concrete implementations, the method's signature should *not* include variable and
-        keyword arguments (*args, **kwargs). Indeed, the method is used in the method
-        :meth:`create`, which applies the utility function :func:`filter_kwargs` to filter the
-        arguments of :meth:`build_labels`. This can only retain the arguments which are *explicit*
-        parameters of the method's signature.
+        In NumPy subclassing, no keyword arguments can be passed to the `__new__` method should only
+        directly impact the creation of the array, not being metadata attributes to store in the
+        instance. Any metadata should be explicitly specified in the signature.
         """
+        cls.validate(values)
+        obj = np.asarray(values, dtype=cls.DTYPE).view(cls)
+        return obj
+
+    def set_metadata(self, **metadata) -> None:
+        """
+        Set metadata attributes from a dictionary.
+
+        Notes
+        -----
+        Metadata is added if it corresponds to the attribute names specified in the class-level
+        attribute.
+        Otherwise, the corresponding instance attributes are initialized to `None`.
+        """
+        for attr in self.METADATA:
+            setattr(self, attr, metadata.get(attr, None))
+
+    def __array_finalize__(self, obj) -> None:
+        """
+        Create a new coordinate object from a previous one in a numpy operation.
+
+        Notes
+        -----
+        By default, metadata is retained from the parent object. Override this method in subclasses
+        to implement more fine-grained behavior.
+        """
+        if obj is None:
+            return
+        for attr in self.METADATA:
+            setattr(self, attr, getattr(obj, attr, None))
 
     @classmethod
-    def create(cls: Type[C], **kwargs: Any) -> C:
+    def validate(cls, values: ArrayLike, **kwargs) -> None:
         """
-        Create a basic coordinate object from minimal parameters.
+        Check the values consistency with the entity type.
 
         Parameters
         ----------
-        **kwargs: Any
-            Arguments required by the constructor of the specific coordinate subclass, except the
-            values of the coordinate since they are generated by the current method.
-            Pass *named* arguments to ensure their correct assignment.
+        values : ArrayLike
+            Values to check.
+        kwargs : Any
+            Any other arguments necessary for subclass-specific validation.
 
-        Returns
-        -------
-        Coordinate
-            Instance of the subclass with the generated labels.
+        Raises
+        ------
+        ValueError
+            If any element in the values is not among the valid options for the entity.
 
-        See Also
-        --------
-        :meth:`build_labels`
-        :func:`filter_kwargs`
+        Notes
+        -----
+        Override this method in subclasses for more efficient tests if necessary.
         """
-        build_args = filter_kwargs(cls.build_labels, **kwargs)
-        init_args = filter_kwargs(cls.__init__, **kwargs)
-        values = cls.build_labels(**build_args)
-        return cls(values=values, **init_args)
+        values = np.asarray(values)  # convert to numpy array for processing
+        is_valid = np.vectorize(cls.ENTITY.is_valid)(values)  # apply element-wise
+        if not np.all(is_valid):
+            raise ValueError(f"Invalid values for {cls.__name__}: {values[~is_valid]}")
 
     @classmethod
-    def empty(cls: Type[C]) -> C:
+    def from_shape(cls, shape: Tuple[int, ...], **metadata) -> Self:
         """
         Create an empty coordinate object with no labels.
+
+        Parameters
+        ----------
+        shape : Tuple[int, ...]
+            Shape of the array to create.
 
         Returns
         -------
         Coordinate
             Instance of the subclass with an empty array as labels.
         """
-        return cls(values=np.empty(0))
+        values = np.full(shape, cls.SENTINEL, dtype=cls.DTYPE)
+        return cls(values=values, **metadata)
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}> : {len(self)} samples."

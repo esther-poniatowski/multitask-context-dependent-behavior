@@ -1,113 +1,171 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.coordinates.time` [module]
+`core.coordinates.time` [module]
 
 Coordinate for labelling time stamps at which measurements were performed.
 
 Classes
 -------
-:class:`CoordTime`
+`CoordTime`
+`CoordTimeEvent`
 """
 
-from typing import Optional
+from typing import Optional, Self
 import warnings
 
 import numpy as np
-import numpy.typing as npt
+from numpy.typing import ArrayLike
 
 from coordinates.base_coord import Coordinate
-from core.constants import T_ON, T_OFF, T_SHOCK
 
 
-class CoordTime(Coordinate):
+class CoordTime(Coordinate[np.float64]):
     """
     Coordinate labels for time stamps at which measurements were performed.
 
+    Class Attributes
+    ----------------
+    DTYPE : np.float64
+        Data type of the time stamps, always float.
+    METADATA : FrozenSet[str]
+        Additional time markers.
+    SENTINEL : float
+        Sentinel value marking missing or unset time stamps, here `np.nan`.
+
     Attributes
     ----------
-    values: npt.NDArray[np.float64]
-        Time labels (in seconds).
+    values : npt.ndarray[Tuple[Any], np.float64]
+        Time labels (in seconds), one dimensional.
         Homogeneous sequence starting from 0 and incremented by the time bin.
         Shape : ``(n_smpl,)`` with ``n_smpl`` the number of time stamps.
-    t_bin: Optional[float]
+    t_bin : Optional[float]
         Time bin of the sampling (in seconds).
         None if the time stamps are not uniformly spaced or if the coordinate is empty.
-    t_on: float
+    t_on : Optional[float]
         Time of stimulus onset (in seconds).
-    t_off: float
+    t_off : Optional[float]
         Time of stimulus offset (in seconds).
-    t_shock: float
+    t_shock : Optional[float]
         Time of shock delivery (in seconds).
 
     Methods
     -------
-    :meth:`set_t_bin`
+    `validate`
+    `eval_t_bin`
+    `get_index`
+    `build_labels`
+
+    Notes
+    -----
+    No specific entity is associated with time.
 
     See Also
     --------
     :class:`core.coordinates.base_coord.Coordinate`
     """
 
-    def __init__(
-        self,
-        values: npt.NDArray[np.float64],
-        t_on: float = T_ON,
-        t_off: float = T_OFF,
-        t_shock: float = T_SHOCK,
+    DTYPE = np.float64
+    METADATA = frozenset(["t_on", "t_off", "t_shock", "t_bin"])
+    SENTINEL: float = np.nan
+
+    def __new__(
+        cls,
+        values: ArrayLike,
+        t_on: Optional[float] = None,
+        t_off: Optional[float] = None,
+        t_shock: Optional[float] = None,
+        t_bin: Optional[float] = None,
     ):
-        super().__init__(values=values)
-        self.set_t_bin()
-        self.t_on = t_on
-        self.t_off = t_off
-        self.t_shock = t_shock
+        obj = super().__new__(cls, values)
+        if t_bin is None:
+            t_bin = cls.eval_t_bin(values)
+        obj.t_bin = t_bin
+        obj.t_on = t_on
+        obj.t_off = t_off
+        obj.t_shock = t_shock
+        return obj
 
-    def __repr__(self):
-        return f"<{self.__class__.__name__}>: {len(self)} time points, bin = {self.t_bin} sec"
-
-    def set_t_bin(self):
+    @classmethod
+    def validate(cls, values: ArrayLike, **kwargs) -> None:
         """
-        Recover the time bin from the coordinate values.
+        Validate the time labels to ensure the existence of a time bin.
+
+        Override the base method since no entity is associated with time.
 
         Raises
         ------
         UserWarning
+            If a single time stamp is provided.
             If the time points are not uniformly spaced.
         """
-        if len(self.values) < 2:  # at least two elements required for `diff`
-            self.t_bin = None
+        values = np.asarray(values)
+        if len(values) < 2:  # at least two elements required for `diff`
+            warnings.warn("Single time stamp, time bin not defined.")
         else:
-            diffs = np.diff(self.values)  # shape : (n_smpl - 1,)
-            if np.allclose(diffs, diffs[0]):  # homogeneous sequence
-                self.t_bin = diffs[0]
-            else:
+            diffs = np.diff(values)  # shape : (n_smpl - 1,)
+            if not np.allclose(diffs, diffs[0]):  # inhomogeneous sequence
                 warnings.warn("Time points not uniformly spaced.")
-                self.t_bin = None
 
-    # pylint: disable=arguments-differ
-    @staticmethod
+    @classmethod
+    def eval_t_bin(cls, values: ArrayLike) -> float:
+        """
+        Evaluate the time bin for the coordinate.
+
+        Returns
+        -------
+        t_bin : float
+            See the attribute `t_bin`.
+            If only one time point is provided, the time bin cannot be defined and is evaluated to
+            `np.nan`.
+            Otherwise, it is evaluated from the distance between the two first time points.
+        """
+        values = np.asarray(values)
+        if len(values) < 2:
+            return np.nan
+        else:
+            return values[1] - values[0]
+
+    def get_index(self, t: float) -> int:
+        """
+        Get the index of the closest value to a specific time in the sequence.
+
+        Parameters
+        ----------
+        t : float
+            Time point to index.
+
+        Returns
+        -------
+        index : int
+            Index of the closest value in the time sequence.
+        """
+        return int(np.argmin(np.abs(self.values - t)))
+
+    @classmethod
     def build_labels(
-        n_smpl: Optional[int] = None,  # pylint: disable=arguments-differ
+        cls,
+        n_smpl: Optional[int] = None,
         t_bin: Optional[float] = None,
         t_min: float = 0,
         t_max: Optional[float] = None,
-    ) -> npt.NDArray[np.float64]:
+    ) -> Self:
         """
         Build basic time labels from minimal parameters.
 
         Parameters
         ----------
-        n_smpl: int, optional
+        n_smpl : int, optional
             Number of time points to generate.
-        t_bin: float, optional
+        t_bin : float, optional
             Time bin of the coordinate (in seconds).
-        t_min, t_max: float, optional
+        t_min, t_max : float, optional
             Time boundaries of the coordinate (in seconds).
 
         Returns
         -------
-        values: npt.NDArray[np.float64]
-            Time labels.
+        coord : CoordTime
+            Time coordinate instance.
 
         Notes
         -----
@@ -124,13 +182,11 @@ class CoordTime(Coordinate):
 
         Implementation
         --------------
-        To ensure the consistency of the time coordinate across methods,
-        it is always build from the number of time points and the time bin.
-        If ``n_smpl`` is not provided, it is computed as :
-        ``n_smpl = int((t_max - t_min) / t_bin)``
-        If ``t_bin`` does not divide the interval, ``int()`` truncates the division,
-        thus the last time point is not exactly ``t_max``,
-        but the closest multiple of ``t_bin`` below ``t_max``.
+        To ensure the consistency of the time coordinate across methods, it is always build from the
+        number of time points and the time bin. If ``n_smpl`` is not provided, it is computed as :
+        ``n_smpl = int((t_max - t_min) / t_bin)`` If ``t_bin`` does not divide the interval,
+        ``int()`` truncates the division, thus the last time point is not exactly ``t_max``, but the
+        closest multiple of ``t_bin`` below ``t_max``.
         """
         if n_smpl is not None and t_bin is not None and t_max is None:
             pass  # no need to adjust the parameters
@@ -140,12 +196,14 @@ class CoordTime(Coordinate):
             n_smpl = int((t_max - t_min) / t_bin)
         else:
             raise ValueError("Invalid parameter combination.")
-        return np.arange(n_smpl) * t_bin + t_min
+        values = np.arange(n_smpl) * t_bin + t_min
+        return cls(values=values, t_bin=t_bin)
 
-    # pylint: enable=arguments-differ
+    def __repr__(self):
+        return f"<{self.__class__.__name__}>: {len(self)} time points, bin = {self.t_bin} sec"
 
 
-class CoordTimeEvent(Coordinate):
+class CoordTimeEvent(Coordinate[np.float64]):
     """
     Coordinate labels for time stamps at which an experimental or behavioral event occurred.
 
@@ -153,36 +211,14 @@ class CoordTimeEvent(Coordinate):
 
     Attributes
     ----------
-    values: npt.NDArray[np.float64]
-        Time labels (in seconds).
-        Shape : ``(n_trials,)`` with ``n_trials`` the number of trials in which the considered event
-        occurred.
+    values : np.ndarray[Tuple[Any], np.float64]
+        Time labels (in seconds), one dimensional.
+        Shape: ``(n_smpl,)``, number of samples in which events occurred.
+
+    Notes
+    -----
+    No specific entity is associated with time events.
     """
 
-    def __init__(self, values: npt.NDArray[np.float64]):
-        super().__init__(values=values)
-
-    def __repr__(self):
-        return f"<{self.__class__.__name__}>: {len(self)} events"
-
-    # pylint: disable=arguments-differ
-    @staticmethod
-    def build_labels(n_trials: int, t_event: float) -> npt.NDArray[np.float64]:
-        """
-        Build time labels for an experimental event.
-
-        Parameters
-        ----------
-        n_trials: int
-            Number of trials in which the event occurred.
-        t_event: float
-            Time of the event (in seconds).
-
-        Returns
-        -------
-        values: npt.NDArray[np.float64]
-            Time labels.
-        """
-        return np.full(n_trials, t_event)
-
-    # pylint: enable=arguments-differ
+    DTYPE = np.float64
+    SENTINEL: float = np.nan

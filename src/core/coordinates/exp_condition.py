@@ -1,59 +1,53 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.coordinates.exp_condition` [module]
+`core.coordinates.exp_condition` [module]
 
 Coordinates for labelling experimental conditions.
 
 Classes
 -------
-:class:`CoordExpCond` (Generic)
-:class:`CoordTask`
-:class:`CoordCtx`
-:class:`CoordStim`
+`CoordExpCond` (Generic)
+`CoordTask`
+`CoordCtx`
+`CoordStim`
 """
 
-from typing import TypeVar, Type, Generic, Optional, Union, Dict, Self, overload
+from typing import TypeVar, Type, Optional, Union, Dict, Self, overload
 
 import numpy as np
-import numpy.typing as npt
 
 from coordinates.base_coord import Coordinate
 from core.entities.exp_condition import Task, Context, Stimulus
 
 
-C = TypeVar("C", Task, Context, Stimulus)
-"""Generic type variable for experimental conditions."""
+ExpCondition = TypeVar("ExpCondition", Task, Context, Stimulus)
+"""Generic type variable for experimental conditions entities."""
 
 
-class CoordExpCond(Coordinate, Generic[C]):
+class CoordExpCond(Coordinate[np.str_, ExpCondition]):
     """
     Coordinate labels representing one experimental condition among Task, Context, Stimulus.
 
     Class Attributes
     ----------------
-    condition: Type[C]
-        Subclass of :class:`Entity` corresponding to the type of experimental condition which is
+    ENTITY : Type[ExpCondition]
+        Subclass of `Entity` corresponding to the type of experimental condition which is
         represented by the coordinate.
-        It has to be defined in each subclass to match the specific condition type.
+    DTYPE : Type[np.str_]
+        Data type of the condition labels, always string. The `np.str_` dtype is equivalent to the
+        `np.unicode_` dtype. It encompasses strings in fixed-width.
 
     Attributes
     ----------
-    values: npt.NDArray[np.str_]
-        Labels for the condition associated with each measurement. All the conditions are
-        represented by string values, matching the values of the corresponding condition objects. It
-        contains the string values of the conditions stored in the attribute ``value`` of the
-        condition objects.
+    values : np.ndarray[Tuple[Any], np.str_]
+        Labels for the condition associated with each measurement.
 
     Methods
     -------
-    :meth:`count_by_lab`
-    :meth:`replace_label`
-
-    Notes
-    -----
-    Interactions with the coordinate values should be done through condition objects (instead of
-    strings themselves), to ensure the consistency of the data and types.
+    `count_by_lab`
+    `build_labels`
+    `replace_label`
 
     See Also
     --------
@@ -61,140 +55,113 @@ class CoordExpCond(Coordinate, Generic[C]):
     :mod:`core.entities.exp_condition`
     """
 
-    condition: Type[C]
-
-    def __init__(self, values: npt.NDArray[np.str_]):
-        super().__init__(values=values)
+    ENTITY: Type[ExpCondition]
+    DTYPE = np.str_
+    SENTINEL: str = ""
 
     def __repr__(self):
         counts = self.count_by_lab()
         format_counts = ", ".join([f"{cnd!r}: {n}" for cnd, n in counts.items()])
         return f"<{self.__class__.__name__}>: {len(self)} samples, {format_counts}."
 
-    # pylint: disable=arguments-differ
-    @staticmethod
-    def build_labels(n_smpl: int, cnd: C) -> npt.NDArray[np.str_]:
+    @classmethod
+    def build_labels(cls, n_smpl: int, cnd: ExpCondition) -> Self:
         """
         Build basic labels filled with a *single* condition.
 
         Parameters
         ----------
-        n_smpl: int
+        n_smpl : int
             Number of samples, i.e. of labels.
-        cnd: C
+        cnd : ExpCondition
             Condition which corresponds to the single label.
 
         Returns
         -------
-        values: npt.NDArray[np.str_]
+        values : Self
             Labels coordinate filled a single condition.
         """
-        return np.full(n_smpl, cnd.value)
+        values = np.full(n_smpl, cnd.value)
+        return cls(values)
 
-    # pylint: enable=arguments-differ
-    def replace_label(self, old: C, new: C) -> Self:
+    def replace_label(self, old: ExpCondition, new: ExpCondition) -> Self:
         """
         Replace one label by another one in the condition coordinate.
 
         Parameters
         ----------
-        old, new: C
+        old, new : C
             Conditions corresponding to the initial and new labels.
 
         Returns
         -------
-        values: npt.NDArray[np.str_]
+        value : Self
             Coordinate with updated condition labels.
         """
         new_coord = self.copy()
-        values = new_coord.values
-        values[values == old.value] = new.value
-        new_coord.values = values
+        new_coord[new_coord == old.value] = new.value
         return new_coord
 
     @overload
-    def count_by_lab(self, cnd: C) -> int: ...
+    def count_by_lab(self, cnd: ExpCondition) -> int: ...
 
     @overload
-    def count_by_lab(self) -> Dict[C, int]: ...
+    def count_by_lab(self) -> Dict[ExpCondition, int]: ...
 
-    def count_by_lab(self, cnd: Optional[C] = None) -> Union[int, Dict[C, int]]:
+    def count_by_lab(
+        self, cnd: Optional[ExpCondition] = None
+    ) -> Union[int, Dict[ExpCondition, int]]:
         """
         Count the number of samples in one condition or all conditions.
 
         Parameters
         ----------
-        cnd: str, optional
+        cnd : str, optional
             Condition to count in the coordinate.
             If None, give the number of samples in each condition.
 
         Returns
         -------
-        n_smpl: Union[int, Dict[C, int]]
-            If ``cnd`` is specified: Number of samples matching this condition.
-            Otherwise: Number of samples in each condition.
+        n_smpl : Union[int, Dict[C, int]]
+            If ``cnd`` is specified, number of samples matching this condition.
+            Otherwise, number of samples in each condition.
 
         Implementation
         --------------
-        The set of valid values for the condition is accessed by
-        ``self.condition.get_options()`` (list of possible instances).
+        The set of valid values for the condition is accessed by ``self.condition.get_options()``.
         """
         if cnd is not None:
-            return np.sum(self.values == cnd.value)
+            return np.sum(self == cnd.value)
         else:
-            options = self.condition.get_options()
-            return {self.condition(cnd): np.sum(self.values == cnd) for cnd in options}
+            options = self.ENTITY.get_options()
+            return {self.ENTITY(cnd): np.sum(self == cnd) for cnd in options}
 
 
 class CoordTask(CoordExpCond[Task]):
     """
     Coordinate labels for tasks.
-
-    See Also
-    --------
-    :class:`core.entities.exp_condition.Task`
-    :class:`core.coordinates.CoordExpCond`
     """
 
-    condition = Task
-
-    def __init__(self, values: npt.NDArray[np.str_]):
-        super().__init__(values=values)
+    ENTITY = Task
 
 
 class CoordCtx(CoordExpCond[Context]):
     """
     Coordinate labels for contexts.
-
-    See Also
-    --------
-    :class:`core.entities.exp_condition.Context`
-    :class:`core.coordinates.CoordExpCond`
     """
 
-    condition = Context
-
-    def __init__(self, values: npt.NDArray[np.str_]):
-        super().__init__(values=values)
+    ENTITY = Context
 
 
 class CoordStim(CoordExpCond[Stimulus]):
     """
     Coordinate labels for stimuli.
-
-    See Also
-    --------
-    :class:`core.entities.exp_condition.Stimulus`
-    :class:`core.coordinates.CoordExpCond`
     """
 
-    condition = Stimulus
-
-    def __init__(self, values: npt.NDArray[np.str_]):
-        super().__init__(values=values)
+    ENTITY = Stimulus
 
 
-class CoordEventDescription(Coordinate):
+class CoordEventDescription(Coordinate[np.str_]):
     """
     Coordinate labels for event descriptions.
 
@@ -210,33 +177,14 @@ class CoordEventDescription(Coordinate):
     values: npt.NDArray[np.str_]
         Labels for the event descriptions associated with each measurement.
 
-    Methods
-    -------
-    :meth:`count_by_lab`
+    Notes
+    -----
+    No specific entity is associated with event descriptions.
 
     See Also
     --------
     :class:`core.coordinates.base_coord.Coordinate`
     """
 
-    def __init__(self, values: npt.NDArray[np.str_]):
-        super().__init__(values=values)
-
-    def __repr__(self):
-        return f"<{self.__class__.__name__}>: {len(self)} samples."
-
-    def build_labels(self, n_smpl: int) -> npt.NDArray[np.str_]:
-        """
-        Build basic labels filled with a *single* event description.
-
-        Parameters
-        ----------
-        n_smpl: int
-            Number of samples, i.e. of labels.
-
-        Returns
-        -------
-        values: npt.NDArray[np.str_]
-            Labels coordinate filled a single event description.
-        """
-        return np.full(n_smpl, "")
+    DTYPE = np.str_
+    SENTINEL: str = ""
