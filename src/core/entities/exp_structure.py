@@ -19,7 +19,7 @@ from typing import Optional, Self, Tuple, Dict, Union, TypedDict
 
 from core.entities.base_entity import Entity
 from core.entities.exp_condition import Task, Context
-from core.entities.bio import Site
+from entities.bio_info import Site
 
 
 class Position(int, Entity[int]):
@@ -174,7 +174,7 @@ class Session(str, Entity[str]):
 
     See Also
     --------
-    :class:`core.entities.bio.Site`
+    :class:`core.entities.bio_info.Site`
     :class:`core.entities.exp_structure.Recording`
     :class:`core.entities.exp_condition.Task`
     :class:`core.entities.exp_condition.Context`
