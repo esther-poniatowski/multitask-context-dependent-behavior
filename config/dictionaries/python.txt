@@ -28,6 +28,7 @@ dtype
 expanduser
 fftconvolve
 frozenset
+functools
 getattr
 getenv
 getfixturevalue
