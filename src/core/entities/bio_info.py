@@ -17,7 +17,7 @@ import re
 from types import MappingProxyType
 from typing import FrozenSet, Self, Tuple, TypedDict
 
-from entities.base_entity import Entity
+from core.entities.base_entity import Entity
 
 
 class BrainInfo(str, Entity[str]):

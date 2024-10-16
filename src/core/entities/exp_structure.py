@@ -15,11 +15,11 @@ Classes
 """
 from functools import cached_property
 import re
-from typing import Optional, Self, Tuple, Dict, Union, TypedDict
+from typing import Optional, Self, Tuple, TypedDict
 
 from core.entities.base_entity import Entity
 from core.entities.exp_condition import Task, Context
-from entities.bio_info import Site
+from core.entities.bio_info import Site
 
 
 class Position(int, Entity[int]):
@@ -263,7 +263,6 @@ class Session(str, Entity[str]):
         SessionComponents
         """
         site_str, rec_str, ctx_str, task_str = self.split_id(self)
-        # Convert to the appropriate types
         site, ctx, task = Site(site_str), Context(ctx_str), Task(task_str)
         rec_int = Recording(int(rec_str))  # convert string to int first
         return {"site": site, "rec": rec_int, "ctx": ctx, "task": task}
