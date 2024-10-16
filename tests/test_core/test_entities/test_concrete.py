@@ -5,7 +5,7 @@
 
 See Also
 --------
-:mod:`core.entities.bio`
+:mod:`core.entities.bio_info`
 :mod:`core.entities.exp_structure`
 """
 
@@ -13,7 +13,7 @@ from typing import FrozenSet
 
 import pytest
 
-from core.entities.bio import Animal
+from entities.bio_info import Animal
 from core.entities.exp_structure import Recording
 
 

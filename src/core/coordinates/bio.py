@@ -16,7 +16,7 @@ from typing import Dict, Tuple, Any
 import numpy as np
 
 from coordinates.base_coord import Coordinate
-from core.entities.bio import CorticalDepth
+from entities.bio_info import CorticalDepth
 from core.entities.composites import Unit
 
 
