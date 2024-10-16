@@ -204,7 +204,7 @@ class Session(str, Entity[str]):
         --------
         :meth:`Site.is_valid`
         :meth:`Recording.is_valid` (method from the class `Position`)
-        :meth:`Context.is_valid`   (method from the class `ExpCondition` inheriting from `Entity`)
+        :meth:`Context.is_valid`   (method from the class `ExpFeature` inheriting from `Entity`)
         :meth:`Task.is_valid`      (idem)
         """
         site, rec, ctx, task = cls.split_id(value)
