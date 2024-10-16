@@ -1,30 +1,50 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.entities.exp_condition` [module]
+`core.entities.exp_condition` [module]
 
 Classes representing the experimental conditions of the behavioral paradigm.
 
 Classes
 -------
-:class:`Task`
-:class:`Context`
-:class:`Stimulus`
+`Task`
+`Context`
+`Stimulus`
 """
 
 from types import MappingProxyType
-from typing import FrozenSet, Mapping
+from typing import FrozenSet, Self
 
 from entities.base_entity import Entity
 
 
-class Task(Entity[str]):
+class ExpCondition(str, Entity[str]):
+    """
+    Experimental conditions in the behavioral paradigm, behaving like strings.
+
+    Define the `__new__` method to inherit from `str`.
+
+    Subclasses should define their own class-level attributes `OPTIONS` and `LABELS` (if applicable)
+    and their own methods (in addition to the base `Entity` methods).
+
+    See Also
+    --------
+    :meth:`Entity.is_valid`
+    """
+
+    def __new__(cls, value: str) -> Self:
+        if not cls.is_valid(value):  # method from Entity
+            raise ValueError(f"Invalid value for {cls.__name__}: {value}.")
+        return super().__new__(cls, value)
+
+
+class Task(ExpCondition):
     """
     Tasks performed by the animals (i.e. discrimination between two sounds categories).
 
     Class Attributes
     ----------------
-    _OPTIONS : FrozenSet[str]
+    OPTIONS : FrozenSet[str]
         Tasks represented by their short names (3 letters).
         PTD : Pure Tone Discrimination.
             Categories : Pure tone vs. White noise.
@@ -35,9 +55,9 @@ class Task(Entity[str]):
             Similar to PTD in terms of task structure.
     """
 
-    _OPTIONS: FrozenSet[str] = frozenset(["PTD", "CLK", "CCH"])
+    OPTIONS = frozenset(["PTD", "CLK", "CCH"])
 
-    _LABELS: Mapping[str, str] = MappingProxyType(
+    LABELS = MappingProxyType(
         {
             "PTD": "Pure Tone Discrimination",
             "CLK": "Click Rate Discrimination",
@@ -46,18 +66,18 @@ class Task(Entity[str]):
     )
 
 
-class Context(Entity[str]):
+class Context(ExpCondition):
     """
     Contexts, i.e. animals' engagement in a task.
 
     Class Attributes
     ----------------
-    _OPTIONS : FrozenSet[str]
+    OPTIONS : FrozenSet[str]
         Contexts represented by their short names (1 to 4 letters).
         a : Active context (only for trained animals).
             The animal performs an aversive Go/No-Go task.
-            It is presented with a licking spout and should refrain from licking
-            after the presentation of a target stimulus.
+            It is presented with a licking spout and should refrain from licking after the
+            presentation of a target stimulus.
         p : Passive context (for both trained and naive animals).
             The animal only listens to sounds without licking.
         p-pre : Pre-passive context (only for trained animals).
@@ -67,28 +87,28 @@ class Context(Entity[str]):
 
     Methods
     -------
-    :meth:`get_trained`
-    :meth:`get_naive`
+    `get_trained`
+    `get_naive`
     """
 
-    _OPTIONS: FrozenSet[str] = frozenset(["a", "p", "p-pre", "p-post"])
+    OPTIONS = frozenset(["a", "p", "p-pre", "p-post"])
 
-    @classmethod
-    def get_trained(cls) -> FrozenSet["Context"]:
-        """Contexts for trained animals (all)."""
-        return frozenset(cls(o) for o in cls._OPTIONS)
-
-    @classmethod
-    def get_naive(cls) -> FrozenSet["Context"]:
-        """Contexts for naive animals (only passive)."""
-        return frozenset([cls("p")])
-
-    _LABELS: Mapping[str, str] = MappingProxyType(
+    LABELS = MappingProxyType(
         {"p": "Passive", "a": "Active", "p-pre": "Pre-Passive", "p-post": "Post-Passive"}
     )
 
+    @classmethod
+    def get_trained(cls) -> FrozenSet[Self]:
+        """Contexts for trained animals (all)."""
+        return frozenset(cls(o) for o in cls.OPTIONS)
 
-class Stimulus(Entity[str]):
+    @classmethod
+    def get_naive(cls) -> FrozenSet[Self]:
+        """Contexts for naive animals (only passive)."""
+        return frozenset([cls("p")])
+
+
+class Stimulus(ExpCondition):
     """
     Behavioral category of the auditory stimuli in the Go/NoGo task.
 
@@ -100,7 +120,7 @@ class Stimulus(Entity[str]):
 
     Class Attributes
     ----------------
-    _OPTIONS : FrozenSet[str]
+    OPTIONS : FrozenSet[str]
         Stimuli represented by their short names (1 letter).
         R : Reference stimulus, i.e. Go (safe).
             In PTD : TORC sound.
@@ -113,20 +133,19 @@ class Stimulus(Entity[str]):
 
     Methods
     -------
-    :meth:`get_clk`
-    :meth:`get_ptd`
+    `get_clk`
+    `get_ptd`
     """
 
-    _OPTIONS: FrozenSet[str] = frozenset(["R", "T", "N"])
+    OPTIONS = frozenset(["R", "T", "N"])
+    LABELS = MappingProxyType({"R": "Reference", "T": "Target", "N": "Neutral"})
 
     @classmethod
-    def get_clk(cls) -> FrozenSet["Stimulus"]:
+    def get_clk(cls) -> FrozenSet[Self]:
         """Stimuli for task CLK (all)."""
-        return frozenset(cls(o) for o in cls._OPTIONS)
+        return frozenset(cls(o) for o in cls.OPTIONS)
 
     @classmethod
-    def get_ptd(cls) -> FrozenSet["Stimulus"]:
+    def get_ptd(cls) -> FrozenSet[Self]:
         """Stimuli for task PTD (no neutral)."""
         return frozenset([cls("R"), cls("T")])
-
-    _LABELS: Mapping[str, str] = MappingProxyType({"R": "Reference", "T": "Target", "N": "Neutral"})
