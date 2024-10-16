@@ -18,7 +18,7 @@ from typing import FrozenSet, Self
 from entities.base_entity import Entity
 
 
-class ExpCondition(str, Entity[str]):
+class ExpFeature(str, Entity[str]):
     """
     Experimental conditions in the behavioral paradigm, behaving like strings.
 
@@ -38,7 +38,7 @@ class ExpCondition(str, Entity[str]):
         return super().__new__(cls, value)
 
 
-class Task(ExpCondition):
+class Task(ExpFeature):
     """
     Tasks performed by the animals (i.e. discrimination between two sounds categories).
 
@@ -66,7 +66,7 @@ class Task(ExpCondition):
     )
 
 
-class Context(ExpCondition):
+class Context(ExpFeature):
     """
     Contexts, i.e. animals' engagement in a task.
 
@@ -108,7 +108,7 @@ class Context(ExpCondition):
         return frozenset([cls("p")])
 
 
-class Stimulus(ExpCondition):
+class Stimulus(ExpFeature):
     """
     Behavioral category of the auditory stimuli in the Go/NoGo task.
 

@@ -21,17 +21,17 @@ from coordinates.base_coord import Coordinate
 from core.entities.exp_condition import Task, Context, Stimulus
 
 
-ExpCondition = TypeVar("ExpCondition", Task, Context, Stimulus)
+ExpFeature = TypeVar("ExpFeature", Task, Context, Stimulus)
 """Generic type variable for experimental conditions entities."""
 
 
-class CoordExpCond(Coordinate[np.str_, ExpCondition]):
+class CoordExpCond(Coordinate[np.str_, ExpFeature]):
     """
     Coordinate labels representing one experimental condition among Task, Context, Stimulus.
 
     Class Attributes
     ----------------
-    ENTITY : Type[ExpCondition]
+    ENTITY : Type[ExpFeature]
         Subclass of `Entity` corresponding to the type of experimental condition which is
         represented by the coordinate.
     DTYPE : Type[np.str_]
@@ -55,7 +55,7 @@ class CoordExpCond(Coordinate[np.str_, ExpCondition]):
     :mod:`core.entities.exp_condition`
     """
 
-    ENTITY: Type[ExpCondition]
+    ENTITY: Type[ExpFeature]
     DTYPE = np.str_
     SENTINEL: str = ""
 
@@ -65,7 +65,7 @@ class CoordExpCond(Coordinate[np.str_, ExpCondition]):
         return f"<{self.__class__.__name__}>: {len(self)} samples, {format_counts}."
 
     @classmethod
-    def build_labels(cls, n_smpl: int, cnd: ExpCondition) -> Self:
+    def build_labels(cls, n_smpl: int, cnd: ExpFeature) -> Self:
         """
         Build basic labels filled with a *single* condition.
 
@@ -73,7 +73,7 @@ class CoordExpCond(Coordinate[np.str_, ExpCondition]):
         ----------
         n_smpl : int
             Number of samples, i.e. of labels.
-        cnd : ExpCondition
+        cnd : ExpFeature
             Condition which corresponds to the single label.
 
         Returns
@@ -84,7 +84,7 @@ class CoordExpCond(Coordinate[np.str_, ExpCondition]):
         values = np.full(n_smpl, cnd.value)
         return cls(values)
 
-    def replace_label(self, old: ExpCondition, new: ExpCondition) -> Self:
+    def replace_label(self, old: ExpFeature, new: ExpFeature) -> Self:
         """
         Replace one label by another one in the condition coordinate.
 
@@ -103,14 +103,12 @@ class CoordExpCond(Coordinate[np.str_, ExpCondition]):
         return new_coord
 
     @overload
-    def count_by_lab(self, cnd: ExpCondition) -> int: ...
+    def count_by_lab(self, cnd: ExpFeature) -> int: ...
 
     @overload
-    def count_by_lab(self) -> Dict[ExpCondition, int]: ...
+    def count_by_lab(self) -> Dict[ExpFeature, int]: ...
 
-    def count_by_lab(
-        self, cnd: Optional[ExpCondition] = None
-    ) -> Union[int, Dict[ExpCondition, int]]:
+    def count_by_lab(self, cnd: Optional[ExpFeature] = None) -> Union[int, Dict[ExpFeature, int]]:
         """
         Count the number of samples in one condition or all conditions.
 
