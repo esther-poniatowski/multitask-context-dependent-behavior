@@ -31,7 +31,8 @@ MetaDataSession: TypeAlias = Any
 
 class SpikeTrainsBuilder(DataBuilder[List[SpikeTimesRaw], SpikeTrains]):
     """
-    Build a `SpikeTrains` data structure.
+    Build a `SpikeTrains` data structure from the raw spike times for a single unit in multiple
+    sessions.
 
     - Inputs: List of raw spike times (flat structure) for a single unit in (several) recording
       sessions.
@@ -318,7 +319,7 @@ class SpikeTrainsBuilder(DataBuilder[List[SpikeTimesRaw], SpikeTrains]):
 
     def construct_new_coord(self, name, coord_class: type[Coordinate]) -> Coordinate:
         """
-        Construct a new coordinate  for the trials dimension containing session's information.
+        Construct a new coordinate for the trials dimension containing session's information.
 
         Each session is associated with one recording number, one task and one context, and yields
         as many number of elements as the total number of trials it contains.
