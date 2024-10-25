@@ -13,9 +13,7 @@ Notes
 """
 # pylint: disable=missing-function-docstring
 
-from typing import List, Tuple, Optional, Any, TypeAlias
-
-import numpy as np
+from typing import Optional
 
 from core.builders.base_builder import DataBuilder
 from core.coordinates.base_coord import Coordinate
@@ -24,13 +22,13 @@ from core.coordinates.exp_structure import CoordBlock, CoordSlot
 from core.coordinates.time import CoordTimeEvent
 from core.coordinates.trials import CoordError
 from core.data_structures.core_data import CoreData
-from core.data_structures.session_events import EventsProperties
-from core.data_structures.session_trials import SessionTrials
+from core.data_structures.events_properties import EventsProperties
+from core.data_structures.trials_properties import TrialsProperties
 
 
-class SessionTrialsBuilder(DataBuilder[EventsProperties, SessionTrials]):
+class TrialsPropertiesBuilder(DataBuilder[EventsProperties, TrialsProperties]):
     """
-    Build a `SessionTrials` data structure from a `EventsProperties` data structure.
+    Build a `TrialsProperties` data structure from a `EventsProperties` data structure.
 
     Class Attributes
     ----------------
@@ -49,7 +47,7 @@ class SessionTrialsBuilder(DataBuilder[EventsProperties, SessionTrials]):
     `build` (implementation of the base class method)
     """
 
-    product_class = SessionTrials
+    product_class = TrialsProperties
     TMP_DATA = ("session_events",)
 
     def __init__(self) -> None:
@@ -65,7 +63,7 @@ class SessionTrialsBuilder(DataBuilder[EventsProperties, SessionTrials]):
         session_id: Optional[str] = None,
         session_events: Optional[EventsProperties] = None,
         **kwargs,
-    ) -> SessionTrials:
+    ) -> TrialsProperties:
         """
         Implement the base class method.
 
@@ -78,7 +76,7 @@ class SessionTrialsBuilder(DataBuilder[EventsProperties, SessionTrials]):
 
         Returns
         -------
-        product : SessionTrials
+        product : TrialsProperties
             Data structure product instance.
         """
         assert session_id is not None and session_events is not None

@@ -251,7 +251,7 @@ class SpikeTrainsBuilder(DataBuilder[List[SpikeTimesRaw], SpikeTrains]):
             Initialize the core data array with empty values (parent method).
         `SpikesAligner.slice_epoch`
             Extract spiking times within one epoch and reset them relative to the epoch start.
-        `SessionTrials.iter_trials`
+        `TrialsProperties.iter_trials`
             Provide the relevant metadata to describe the trials in the session.
         """
         aligner = SpikesAligner()

@@ -18,7 +18,7 @@ from core.entities.exp_structure import Session
 
 # from utils.io_data.formats import TargetType
 # from utils.io_data.loaders.impl_loaders import LoaderNPY
-# from utils.storage_rulers.impl_path_rulers import SessionTrialsPath
+# from utils.storage_rulers.impl_path_rulers import TrialsPropertiesPath
 
 
 class TrialsProperties(DataStructure):
