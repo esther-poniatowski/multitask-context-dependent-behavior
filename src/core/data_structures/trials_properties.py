@@ -1,96 +1,118 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.data_structures.trials_properties` [module]
+`core.data_structures.trials_properties` [module]
 """
-from pathlib import Path
 from types import MappingProxyType
-from typing import Optional
+from typing import Optional, Union, Generator, List
 
 import numpy as np
-import numpy.typing as npt
 
-from core.constants import SMPL_RATE
-from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim
 from core.coordinates.exp_structure import CoordRecNum, CoordBlock, CoordSlot
+from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim
+from core.coordinates.time import CoordTimeEvent
 from core.coordinates.trials import CoordError
 from core.data_structures.base_data_struct import DataStructure
-from utils.storage_rulers.impl_path_rulers import TrialsPropertiesPath
-from utils.io_data.loaders.impl_loaders import LoaderPKL
-from utils.io_data.savers.impl_savers import SaverPKL
+from core.data_structures.core_data import Dimensions, CoreData
+from core.entities.exp_structure import Session
+
+# from utils.io_data.formats import TargetType
+# from utils.io_data.loaders.impl_loaders import LoaderNPY
+# from utils.storage_rulers.impl_path_rulers import SessionTrialsPath
 
 
 class TrialsProperties(DataStructure):
     """
-    Properties of a set of trials from one session or several sessions recorded at the same site.
+    Metadata about a set of trials the experiment.
+
+    Base class which contains the common attributes and methods for both single session and
+    multi-session trials properties.
 
     Key Features
     ------------
-    Data       : ``data`` (type ``npt.NDArray[np.int64]``)
     Dimensions : ``trials``
-    Coordinates: ``recnum`` (type ``CoordRecNum``)
-                 ``block`` (type ``CoordBlock``)
-                 ``slot`` (type ``CoordSlot``)
-                 ``task`` (type ``CoordTask``)
-                 ``ctx`` (type ``CoordCtx``)
-                 ``stim`` (type ``CoordStim``)
-                 ``error`` (type ``CoordError``)
-                 ``t_on`` (type ``npt.NDArray[np.float64]``)
-                 ``t_off`` (type ``npt.NDArray[np.float64]``)
-                 ``t_end`` (type ``npt.NDArray[np.float64]``)
-    Metadata   : ``smpl_rate``, ``site_id``, ``sessions_ids``
+
+    Coordinates:
+
+    - ``recnum`` (optional)
+    - ``block``
+    - ``slot``
+    - ``task`` (optional)
+    - ``ctx`` (optional)
+    - ``stim``
+    - ``t_on``
+    - ``t_off``
+    - ``t_warn``
+    - ``t_end``
+    - ``error``
 
     Attributes
     ----------
-    data: npt.NDArray[np.int64]
-        Trial identifiers. Shape: ``(n_trials, )``
-        Boundaries: From 1 to the total number of trials across all the sessions recorded at one
-        site (to ensure unique identifiers and consistency when merging sessions).
-    rec: CoordRecNum
-        Coordinate for dimension `trials`.
-    block: CoordBlock
-        Coordinate for dimension `trials`.
-    slot: CoordSlot
-        Coordinate for dimension `trials`.
-    task: CoordTask
-        Coordinate for dimension `trials`.
-    ctx: CoordCtx
-        Coordinate for dimension `trials`.
-    stim: CoordStim
-        Coordinate for dimension `trials`.
-    error: CoordError
-        Coordinate for dimension `trials`.
-    t_on: npt.NDArray[float]
-        Coordinate for dimension `trials`, container for :attr:`t_on` in :class:`Trials`.
-    t_off: npt.NDArray[float]
-        Coordinate for dimension `trials`, container for :attr:`t_off` in :class:`Trials`.
-    t_end: npt.NDArray[float]
-        Coordinate for dimension `trials`, container for :attr:`t_end` in :class:`Trials`.
-        Usually longer than the time of the last spike.
-    smpl_rate: float
-        Sampling time for the recording (in seconds).
-        Default: :obj:`core.constants.SMPL_RATE`
-    site_id: str
-        Identifier of the recording site.
-    sessions_ids: List[str]
-        Identifiers of the session(s) used to build the data structure.
+    session_ids : List[Session]
+        Identifier(s) of the session(s) from which the trials come.
+    data : CoreData
+        Indices of the trials relative to the considered set (e.g. session or experiment).
+    recnum : CoordRecNum
+        Coordinate for the recording number of each trial (identifying a session at a site).
+    block : CoordBlock
+        Coordinate for the block of trials to which each trial belongs in its session.
+    slot : CoordSlot
+        Coordinate for the slot of each trial within its block.
+    task : CoordTask, optional
+        Coordinate for the task of each trial.
+    ctx : CoordContext, optional
+        Coordinate for the context of each trial.
+    stim : CoordStim
+        Coordinate for the nature of the stimulus presented in each trial.
+    t_warn : CoordTimeEvent
+        Coordinate for the onset of the warning sound (only in task CLK).
+    t_on, t_off : CoordTimeEvent
+        Coordinates for the onset and offset times of the stimulus in each trial.
+    t_end : CoordTimeEvent
+        Coordinate for the end time of each trial.
+    error : CoordError
+        Coordinate for the behavioral outcome of each trial.
+    n_trials : int
+        (Property) Number of trials in the subset.
+    n_sessions : int
+        (Property)
+    n_blocks : int
+        (Property)
 
-    See Also
-    --------
-    :class:`core.coordinates.exp_structure.CoordRecNum`
-    :class:`core.coordinates.exp_structure.CoordBlock`
-    :class:`core.coordinates.exp_structure.CoordSlot`
-    :class:`core.coordinates.exp_condition.CoordTask`
-    :class:`core.coordinates.exp_condition.CoordCtx`
-    :class:`core.coordinates.exp_condition.CoordStim`
-    :class:`core.coordinates.trials.CoordError`
-    :class:`core.
+    Methods
+    -------
+    `iter_trials`
+
+    Notes
+    -----
+    This data structure can be used to reference trials in a single session or a full experiment
+    (multiple sessions). The structure differs in both cases:
+
+    For a single session:
+
+    - The attribute `session_ids` contains a single session identifier.
+    - The coordinates `recnum`, `task`, and `ctx` are optional, since they would contain a unique
+      label for all the trials.
+    - The property `n_blocks` indicates the number of blocks in the unique session.
+
+    For an experiment:
+
+    - The attribute `session_ids` contains several session identifiers.
+    - The coordinate `recnum` indicates the origin of each trial (i.e. the session from which it
+      comes from).
+    - The property `n_blocks` indicates the maximal number of blocks across the different sessions.
+
+    Raises
+    ------
+    ValueError
+        If the content of the coordinate `recnum` is not consistent with the sessions' IDs. This is
+        the case if the unique labels contained in the coordinate do not match the attribute `rec`
+        of the sessions' IDs.
     """
 
-    dim2coord = MappingProxyType(
-        {"trial": frozenset(["recnum", "block", "slot", "task", "ctx", "stim", "error"])}
-    )
-    coord2type = MappingProxyType(
+    # --- Schema Attributes ---
+    dims = Dimensions("trials")
+    coords = MappingProxyType(
         {
             "recnum": CoordRecNum,
             "block": CoordBlock,
@@ -98,50 +120,49 @@ class TrialsProperties(DataStructure):
             "task": CoordTask,
             "ctx": CoordCtx,
             "stim": CoordStim,
+            "t_on": CoordTimeEvent,
+            "t_off": CoordTimeEvent,
+            "t_warn": CoordTimeEvent,
+            "t_end": CoordTimeEvent,
             "error": CoordError,
-            "t_on": npt.NDArray[np.float64],
-            "t_off": npt.NDArray[np.float64],
-            "t_end": npt.NDArray[np.float64],
         }
     )
-    path_ruler = TrialsPropertiesPath
-    loader = LoaderPKL
-    saver = SaverPKL
+    coords_to_dims = MappingProxyType({name: Dimensions("trials") for name in coords.keys()})
+    identifiers = ("session_ids",)
+
+    # --- IO Handlers ---
+    # TODO
+
+    # --- Key Features ---
 
     def __init__(
         self,
-        site_id: str,
-        sessions_ids: list[str],
-        smpl_rate: float = SMPL_RATE,
-        data: Optional[npt.NDArray[np.int64]] = None,
-        recnum: Optional[CoordRecNum] = None,
-        block: Optional[CoordBlock] = None,
-        slot: Optional[CoordSlot] = None,
-        task: Optional[CoordTask] = None,
-        ctx: Optional[CoordCtx] = None,
-        stim: Optional[CoordStim] = None,
-        error: Optional[CoordError] = None,
-        t_on: Optional[npt.NDArray[np.float64]] = None,
-        t_off: Optional[npt.NDArray[np.float64]] = None,
-        t_end: Optional[npt.NDArray[np.float64]] = None,
+        session_ids: List[Session],
+        data: Optional[Union[CoreData, np.ndarray]] = None,
+        recnum: Optional[Union[CoordRecNum, np.ndarray]] = None,
+        block: Optional[Union[CoordBlock, np.ndarray]] = None,
+        slot: Optional[Union[CoordSlot, np.ndarray]] = None,
+        task: Optional[Union[CoordTask, np.ndarray]] = None,
+        ctx: Optional[Union[CoordCtx, np.ndarray]] = None,
+        stim: Optional[Union[CoordStim, np.ndarray]] = None,
+        t_on: Optional[Union[CoordTimeEvent, np.ndarray]] = None,
+        t_off: Optional[Union[CoordTimeEvent, np.ndarray]] = None,
+        t_warn: Optional[Union[CoordTimeEvent, np.ndarray]] = None,
+        t_end: Optional[Union[CoordTimeEvent, np.ndarray]] = None,
+        error: Optional[Union[CoordError, np.ndarray]] = None,
     ) -> None:
         # Set sub-class specific metadata
-        self.site_id = site_id
-        self.sessions_ids = sessions_ids
-        self.smpl_rate = smpl_rate
-        # Declare data and coordinate attributes (avoid type errors)
-        self.data: npt.NDArray[np.float64]
-        self.recnum: CoordRecNum
-        self.block: CoordBlock
-        self.slot: CoordSlot
-        self.task: CoordTask
-        self.ctx: CoordCtx
-        self.stim: CoordStim
-        self.error: CoordError
-        self.t_on: npt.NDArray[np.float64]
-        self.t_off: npt.NDArray[np.float64]
-        self.t_end: npt.NDArray[np.float64]
-        # Set data and coordinate attributes
+        self.session_ids = session_ids
+        # Check recording numbers
+        if recnum is not None:
+            unique_labels = np.unique(recnum)
+            sessions_recnums = [s.red for s in session_ids]
+            if not all(label in sessions_recnums for label in unique_labels):
+                raise ValueError(
+                    "Invalid recording numbers in coordinate: "
+                    f"{unique_labels} vs {sessions_recnums} in sessions' IDs."
+                )
+        # Set data and coordinate attributes via the base class constructor
         super().__init__(
             data=data,
             recnum=recnum,
@@ -150,15 +171,50 @@ class TrialsProperties(DataStructure):
             task=task,
             ctx=ctx,
             stim=stim,
-            error=error,
             t_on=t_on,
             t_off=t_off,
+            t_warn=t_warn,
             t_end=t_end,
+            error=error,
         )
 
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}>: Site {self.site_id}\n" + super().__repr__()
+    @property
+    def n_trials(self) -> int:
+        """Number of trials in the subset."""
+        return self.data.size
 
     @property
-    def path(self) -> Path:
-        return self.path_ruler().get_path(self.site_id)
+    def n_sessions(self) -> int:
+        """Number of sessions from which the trials come from."""
+        return len(self.session_ids)
+
+    @property
+    def n_blocks(self) -> int:
+        """Maximal number of blocks across session(s)."""
+        if len(self.block) != 0:  # avoid ValueError in max() if empty array
+            return self.block.max()
+        else:
+            return 0
+
+    def iter_trials(self) -> Generator:
+        """
+        Iterate over the trials in the session and yield their metadata.
+
+        Yields
+        ------
+        block : int
+            Block number of the trial.
+        slot : int
+            Slot number of the trial within its block.
+        t_start : float
+            Start time of the trial (onset of the stimulus).
+        t_end : float
+            End time of the trial.
+        """
+        for block, slot, t_on, t_end in zip(self.block, self.slot, self.t_on, self.t_end):
+            yield block, slot, t_on, t_end
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}>: Sessions {self.session_ids}\n" + super().__repr__()
+
+    # --- IO Handling ----
