@@ -32,8 +32,6 @@ class Stratifier(Processor):
     """
     Divide a set of samples in strata (groups) based on combinations of experimental features.
 
-    Conventions for the documentation:
-
     Class Attributes
     ----------------
     UNASSIGNED_STRATUM : int
