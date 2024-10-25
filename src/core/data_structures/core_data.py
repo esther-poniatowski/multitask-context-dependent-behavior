@@ -11,7 +11,7 @@ from typing import Tuple, Optional, Self, Union, Iterable
 
 import numpy as np
 
-from core.data_structures.dimensions import DimName, Dimensions
+from core.data_structures.core_dimensions import DimName, Dimensions
 
 
 class CoreData(np.ndarray):
