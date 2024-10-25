@@ -5,12 +5,12 @@
 
 See Also
 --------
-`core.data_structures.dimensions`: Tested module.
+`core.data_structures.core_dimensions`: Tested module.
 """
 
 import pytest
 
-from core.data_structures.dimensions import DimName, Dimensions
+from core.data_structures.core_dimensions import DimName, Dimensions
 
 
 # --- Test DimName class ---------------------------------------------------------------------------
