@@ -32,7 +32,7 @@ class SessionEvents(DataStructure):
     - ``block``
     - ``t_start``
     - ``t_end``
-    - ``event``
+    - ``description``
 
     Identity Metadata: ``session_id``
 
@@ -44,7 +44,7 @@ class SessionEvents(DataStructure):
         Coordinate for the block of trials in which each event occurred.
     t_start, t_end : CoordTimeEvent
         Coordinates for the start and end times of each event.
-    event : CoordEvent
+    description : CoordEventDescription
         Coordinate for the nature of the event. Each element is a string which can comprise several
         event descriptions separated by commas. Examples: ``'PreStimSilence , TORC_448_06_v501 ,
         Reference'``, ``'TRIALSTART'``, etc.
@@ -78,12 +78,14 @@ class SessionEvents(DataStructure):
         block: Optional[Union[CoordBlock, np.ndarray]] = None,
         t_start: Optional[Union[CoordTimeEvent, np.ndarray]] = None,
         t_end: Optional[Union[CoordTimeEvent, np.ndarray]] = None,
-        event: Optional[Union[CoordEventDescription, np.ndarray]] = None,
+        description: Optional[Union[CoordEventDescription, np.ndarray]] = None,
     ) -> None:
         # Set sub-class specific metadata
         self.session_id = session_id
         # Set data and coordinate attributes via the base class constructor
-        super().__init__(data=data, block=block, t_start=t_start, t_end=t_end, event=event)
+        super().__init__(
+            data=data, block=block, t_start=t_start, t_end=t_end, description=description
+        )
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}>: Session {self.session_id}\n" + super().__repr__()
@@ -150,7 +152,7 @@ class SessionEvents(DataStructure):
         block = CoordBlock(values=raw["TrialNum"].values.astype(np.int64))
         t_start = CoordTimeEvent(values=raw["StartTime"].values)
         t_end = CoordTimeEvent(values=raw["StopTime"].values)
-        event = CoordEventDescription(values=raw["Event"].values)
+        description = CoordEventDescription(values=raw["Event"].values)
         # Create new instance filled with the loaded data
         obj = SessionEvents(
             session_id=self.session_id,
@@ -158,6 +160,6 @@ class SessionEvents(DataStructure):
             block=block,
             t_start=t_start,
             t_end=t_end,
-            event=event,
+            description=description,
         )
         self.__dict__.update(obj.__dict__)  # update the instance with the new data
