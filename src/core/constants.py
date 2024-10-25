@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.constants` [module]
+`core.constants` [module]
 
 Constants and global variables for the whole package.
 
@@ -11,9 +11,9 @@ Examples
 --------
 Access a constant in another module:
 
-.. code-block:: python
+>>> from core.constants import CONSTANT_NAME
+>>> print(CONSTANT_NAME)
 
-        from core.constants import CONSTANT_NAME
 """
 
 # --- Time and Durations ---
