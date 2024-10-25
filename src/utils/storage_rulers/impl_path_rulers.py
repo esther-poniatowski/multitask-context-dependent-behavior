@@ -35,8 +35,8 @@ from utils.storage_rulers.base_path_ruler import PathRuler
 # --- Raw Data -------------------------------------------------------------------------------------
 
 
-class SessionEventsPath(PathRuler):
-    """Path generation rules used by `SessionEvents` data structures."""
+class EventsPropertiesPath(PathRuler):
+    """Path generation rules used by `EventsProperties` data structures."""
 
     def get_path(self, session: str) -> Path:
         """

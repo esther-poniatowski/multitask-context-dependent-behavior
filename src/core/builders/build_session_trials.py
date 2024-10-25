@@ -24,13 +24,13 @@ from core.coordinates.exp_structure import CoordBlock, CoordSlot
 from core.coordinates.time import CoordTimeEvent
 from core.coordinates.trials import CoordError
 from core.data_structures.core_data import CoreData
-from core.data_structures.session_events import SessionEvents
+from core.data_structures.session_events import EventsProperties
 from core.data_structures.session_trials import SessionTrials
 
 
-class SessionTrialsBuilder(DataBuilder[SessionEvents, SessionTrials]):
+class SessionTrialsBuilder(DataBuilder[EventsProperties, SessionTrials]):
     """
-    Build a `SessionTrials` data structure from a `SessionEvents` data structure.
+    Build a `SessionTrials` data structure from a `EventsProperties` data structure.
 
     Class Attributes
     ----------------
@@ -41,7 +41,7 @@ class SessionTrialsBuilder(DataBuilder[SessionEvents, SessionTrials]):
 
     Processing Attributes
     ---------------------
-    session_events : SessionEvents
+    session_events : EventsProperties
         Raw meta data about the events which occurred in the session.
 
     Methods
@@ -58,12 +58,12 @@ class SessionTrialsBuilder(DataBuilder[SessionEvents, SessionTrials]):
         # Store configuration parameters
 
         # Declare attributes to store inputs and intermediate results
-        self.session_events: Optional[SessionEvents] = None
+        self.session_events: Optional[EventsProperties] = None
 
     def build(
         self,
         session_id: Optional[str] = None,
-        session_events: Optional[SessionEvents] = None,
+        session_events: Optional[EventsProperties] = None,
         **kwargs,
     ) -> SessionTrials:
         """
@@ -73,7 +73,7 @@ class SessionTrialsBuilder(DataBuilder[SessionEvents, SessionTrials]):
         ----------
         session_id : str
             Identifier of the session.
-        session_events : SessionEvents
+        session_events : EventsProperties
             See the attribute `session_events`.
 
         Returns

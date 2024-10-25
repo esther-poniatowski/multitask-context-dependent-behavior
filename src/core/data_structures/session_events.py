@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.data_structures.session_events` [module]
+`core.data_structures.events_properties` [module]
 """
 from pathlib import Path
 from types import MappingProxyType
@@ -16,12 +16,12 @@ from core.coordinates.time import CoordTimeEvent
 from core.coordinates.exp_condition import CoordEventDescription
 from utils.io_data.formats import TargetType
 from utils.io_data.loaders.impl_loaders import LoaderCSV
-from utils.storage_rulers.impl_path_rulers import SessionEventsPath
+from utils.storage_rulers.impl_path_rulers import EventsPropertiesPath
 
 
-class SessionEvents(DataStructure):
+class EventsProperties(DataStructure):
     """
-    Metadata about one the events in one recording session of the experiment (raw).
+    Metadata about the events occurring in one recording session of the experiment (raw).
 
     Key Features
     ------------
@@ -45,7 +45,7 @@ class SessionEvents(DataStructure):
     t_start, t_end : CoordTimeEvent
         Coordinates for the start and end times of each event.
     description : CoordEventDescription
-        Coordinate for the nature of the event. Each element is a string which can comprise several
+        Coordinate for the nature of each event. Each element is a string comprising one or more
         event descriptions separated by commas. Examples: ``'PreStimSilence , TORC_448_06_v501 ,
         Reference'``, ``'TRIALSTART'``, etc.
     session_id : str
@@ -65,7 +65,7 @@ class SessionEvents(DataStructure):
     identifiers = ("session_id",)
 
     # --- IO Handlers ---
-    path_ruler = SessionEventsPath
+    path_ruler = EventsPropertiesPath
     loader = LoaderCSV
     tpe = TargetType("dataframe")
 
@@ -154,7 +154,7 @@ class SessionEvents(DataStructure):
         t_end = CoordTimeEvent(values=raw["StopTime"].values)
         description = CoordEventDescription(values=raw["Event"].values)
         # Create new instance filled with the loaded data
-        obj = SessionEvents(
+        obj = EventsProperties(
             session_id=self.session_id,
             data=data,
             block=block,
