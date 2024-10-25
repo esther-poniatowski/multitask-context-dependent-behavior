@@ -5,7 +5,7 @@
 """
 from pathlib import Path
 from types import MappingProxyType
-from typing import Optional, Self, Union
+from typing import Optional, Union
 
 import numpy as np
 

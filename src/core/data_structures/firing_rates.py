@@ -23,7 +23,7 @@ from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim
 from core.coordinates.time import CoordTime
 from core.coordinates.trials import CoordError
 from core.data_structures.base_data_struct import DataStructure
-from core.entities.bio import Area, Training
+from entities.bio_info import Area, Training
 from utils.io_data.formats import TargetType
 from utils.storage_rulers.impl_path_rulers import FiringRatesPopPath
 from utils.io_data.loaders.impl_loaders import LoaderPKL
