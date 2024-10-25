@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.parse` [package]
+`core.processors.parse` [package]
 
 Parse the raw data to extract metadata for each session.
 
