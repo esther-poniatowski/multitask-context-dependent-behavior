@@ -65,14 +65,14 @@ class ZScorer(Processor):
     Processing Arguments
     --------------------
     x : np.ndarray
-        Data samples to z-score.
-        Number of dimensions: any.
+        Data samples to z-score. Shape: Any, as long as it is compatible with the configuration
+        parameters `axes`, `mu` and `sigma` (if provided).
         .. _x:
 
     Returns
     -------
     z : np.ndarray
-        Z-scored data.
+        Z-scored data. Shape: Identical to the shape of `x`.
 
     Methods
     -------
@@ -80,7 +80,37 @@ class ZScorer(Processor):
 
     Examples
     --------
+    Z-score a uni-dimensional set of samples based on global mean and std.
+    Here, :math:`\\mu = 1.5` and :math:`\\sigma = 0.5`.
 
+    >>> x = np.array([1, 2, 1, 2, 1, 2])
+    >>> zscorer = ZScorer()
+    >>> z = zscorer.process(x=x)
+    >>> print(z)
+    array([-1.,  1., -1.,  1., -1.,  1.])
+
+    Z-score a 2-D set of samples along rows (axis 1).
+    Here, :math:`\\mu = [1.5, 0.5]` and :math:`\\sigma = [0.5, 0.5]`.
+
+    >>> x = np.array([[1, 2, 1, 2],
+    ...               [0, 1, 0, 1]])
+    >>> zscorer = ZScorer(axes=1)
+    >>> z = zscorer.process(x=x)
+    >>> print(z)
+    array([[ 1.,  1.,  1.,  1.],
+           [-1.,  1., -1.,  1.]])
+
+    Z-score a 2-D set of samples with a custom mean and std.
+
+    >>> x = np.array([[1, 2, 1, 2],
+    ...               [0, 1, 0, 1]])
+    >>> mu = np.array([2, 3])
+    >>> sigma = np.array([1, 2])
+    >>> zscorer = ZScorer(mu=mu, sigma=sigma)
+    >>> z = zscorer.process(x=x)
+    >>> print(z)
+    array([[-1., -0.5, -1., -0.5],
+              [-1., -1., -1., -1.]])
 
     See Also
     --------
@@ -115,6 +145,10 @@ class ZScorer(Processor):
             If the shape of `x` does not contain the axes specified in the configuration parameter
             `axes`.
             If the shape of `x` is incompatible to broadcast with `mu` and `sigma`.
+
+        See Also
+        --------
+        :func:`np.broadcast_shapes`: Check if two shapes are broadcast-compatible.
         """
         x = input_data.get("x", np.zeros((0,)))
         # Check if axes are within the range of x's dimensions
