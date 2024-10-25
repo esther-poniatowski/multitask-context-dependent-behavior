@@ -128,6 +128,46 @@ class Entity(Generic[BaseT]):
         """Get the full labels for the valid values."""
         return cls.LABELS
 
+    def __getattr__(self, name: str) -> Any:
+        """
+        Mimic the behavior of an enumeration class to access the allowed values as attributes of the
+        class (dot notation on the class name).
+
+        Examples
+        --------
+        For an entity `CoreObject` with two valid values, `a` and `b`:
+
+        >>> a = CoreObject.a
+        >>> print(a)
+        a
+
+        Parameters
+        ----------
+        name : str
+            Name of the attribute to access.
+
+        Returns
+        -------
+        Self
+            Instance of the class with the value corresponding to the attribute name, if it is a
+            valid option.
+
+        Raises
+        ------
+        AttributeError
+            If the name is not a valid option in `OPTIONS` or the parent class does not define the
+            attribute (or does not implement a `__getattr__` method).
+
+        Notes
+        -----
+
+        """
+        if name in self.OPTIONS:
+            return self.__class__(name)  # type: ignore[call-arg]
+        if hasattr(super(), "__getattr__"):  # fallback to parent class if possible
+            return super().__getattr__(name)  # type: ignore[misc]
+        raise AttributeError(f"Invalid attribute for {self.__class__.__name__}: {name}")
+
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}>({super().__repr__()})"
 
@@ -136,7 +176,7 @@ class Entity(Generic[BaseT]):
         cls, values: Iterable[BaseT], container: Type[Union[List, Tuple, Set]] = list
     ) -> Union[List[BaseT], Tuple[BaseT, ...], Set[BaseT]]:
         """
-        Create multiple entities from an iterable of values and stores them in a container.
+        Create multiple entities from an iterable of values and store them in a container.
 
         Parameters
         ----------
