@@ -77,8 +77,8 @@ class SpikeTimesRawPath(PathRuler):
 # --- Preprocessed Data ----------------------------------------------------------------------------
 
 
-class SessionTrialsPath(PathRuler):
-    """Path generation rules used by `SessionTrials` data structures."""
+class TrialsPropertiesPath(PathRuler):
+    """Path generation rules used by `TrialsProperties` data structures."""
 
     def get_path(self, session: str) -> Path:
         """
