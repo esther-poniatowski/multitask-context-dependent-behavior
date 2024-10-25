@@ -42,6 +42,7 @@ issubclass
 issubdtype
 issubset
 iterdir
+keepdims
 loadtxt
 makedirs
 matplotlib
