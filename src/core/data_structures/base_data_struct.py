@@ -276,13 +276,21 @@ class DataStructure(Generic[T], ABC):
 
         Implementation
         --------------
-        To pass each individual coordinate to the setter method `set_coords`, it is necessary to use
-        the unpacking operator `**` and a dictionary rather than the following syntax:
+        Valid syntax to pass coordinates to the setter method `set_coords`:
+
+        ``self.set_coords(**{coord_name: coord_value})``
+
+        Invalid syntax:
 
         ``self.set_coords(coord_name=coords_args[coord_name])``
 
-        Indeed, ``coord_name`` would always be treated as the *literal string* ``"coord_name"``
+        Explanation: ``coord_name`` would always be treated as the *literal string* ``"coord_name"``
         instead of the actual *value* of the variable ``coord_name``.
+
+        The check for `None` values in the `coords_args` dictionary is necessary to allow subclasses
+        to define default values for some coordinates. This way, only non-empty coordinates are set
+        in the data structure as attributes.
+
         """
         # Lazy initialization: declare private and empty content-related attributes
         self._data: Optional[CoreData] = None
