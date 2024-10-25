@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.processors.preprocess.align_spikes` [module]
+`core.processors.preprocess.align_spikes` [module]
 
 Classes
 -------
@@ -89,12 +89,6 @@ class SpikesAligner(Processor):
     Align spiking times from a single trial with the other trials in a data set.
 
     Provide utility functions for epoch slicing, concatenation and alignment.
-
-    Conventions for the documentation:
-
-    - Attributes: Configuration parameters of the processor, passed to the *constructor*.
-    - Arguments: Input data to process, passed to the `process` method (base class).
-    - Returns: Output data after processing, returned by the `process` method (base class).
 
     Class Attributes
     ----------------
