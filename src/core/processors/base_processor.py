@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.processors.base_processor` [module]
+`core.processors.base_processor` [module]
 
 Classes
 -------
@@ -9,7 +9,7 @@ Classes
 
 Notes
 -----
-Each subclass of `Processor` should define a dataclass that inherits from this class.
+Each subclass of `Processor` should inherit from this class.
 """
 from abc import ABC, abstractmethod
 from typing import Tuple, Any, Optional, Dict, TypeVar, Generic, Union
