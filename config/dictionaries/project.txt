@@ -10,6 +10,7 @@ D_WARN
 Denoise
 denoising
 DPEG
+EPAIRS
 expt
 exptevents
 firingrates
