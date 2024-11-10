@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`utils.io_data.loaders.base_loader` [module]
+`utils.io_data.base_loader` [module]
 
 Common interface to load data from files.
 
 Classes
 -------
-:class:`Loader` (ABC, Generic)
+`Loader` (ABC, Generic)
 """
 
 from abc import ABC
@@ -42,12 +42,15 @@ class Loader(ABC, Generic[T]):
     tpe: TargetType
         Target type for the retrieved data.
         It determines the method used to load the data and the type of the returned object.
+    server: LocalServer
+        Utility to manage the local file system. It is used to check the existence of the file and
+        to enforce the correct file extension.
 
     Methods
     -------
-    :meth:`load`
-    :meth:`_load`
-    :meth:`_check_type`
+    `load`
+    `_load`
+    `_check_type`
 
     Raises
     ------
@@ -56,20 +59,26 @@ class Loader(ABC, Generic[T]):
     FileNotFoundError
         If the file to load does not exist.
 
+    Examples
+    --------
+    Load the content of a CSV file to a DataFrame:
+
+    >>> loader = LoaderCSVtoDataFrame("path/to/data.csv")
+    >>> data = loader.load()
+
     See Also
     --------
-    :class:`utils.io_data.formats.FileExt`: File extensions.
-    :class:`utils.io_data.formats.TargetType`: Target types.
-    :class:`abc.ABC`: Abstract base class.
-    :class:`utils.path_system.manage_local.LocalServer`: Utility class.
+    `utils.io_data.formats.FileExt`: File extensions.
+    `utils.io_data.formats.TargetType`: Target types.
+    `utils.path_system.manage_local.LocalServer`: Utility class.
 
     Notes
     -----
     In the constructor parameters, target types are specified by strings identifiers rather than
     actual TargetType objects, for facilitating the instantiation of the loader. This identifier is
     used to instantiate the TargetType object in the constructor.
-    To select the appropriate identifier for a target type, inspect the attributes of the class
-    :class:`TargetType` and choose one of the types used by the specific loader subclass.
+    To select the appropriate identifier for a target type, inspect the attributes of the
+    `TargetType` class and choose one of the types used by the specific loader subclass.
     """
 
     ext: FileExt
@@ -95,16 +104,19 @@ class Loader(ABC, Generic[T]):
 
         See Also
         --------
-        :meth:`utils.path_system.manage_local.LocalServer.enforce_ext`
+        `utils.path_system.manage_local.LocalServer.enforce_ext`
             Enforce the correct file extension.
-        :meth:`utils.path_system.manage_local.LocalServer.is_file`
+        `utils.path_system.manage_local.LocalServer.is_file`
             Check the existence of a file at a path in the system.
         """
-        self.server.is_file(self.path)
         self.path = self.server.enforce_ext(self.path, self.ext)
+        self.server.is_file(self.path)
         self._check_type()
-        data = self._load()
-        print(f"[SUCCESS] Loaded: {self.path} Type: {self.tpe.value}")
+        try:
+            data = self._load()
+        except Exception as exc:
+            print(f"Loading failed for path {self.path} with loader {self.__class__.__name__}")
+            raise exc
         return data
 
     def _load(self) -> T:
@@ -127,9 +139,8 @@ class Loader(ABC, Generic[T]):
         Raises
         ------
         ValueError
-            If the target type is not supported, it is not a key in the dictionary
-            :obj:`load_methods`, which means that the method to load this format is not implemented
-            in the loader.
+            If the target type is not supported, it is not a key in the dictionary `load_methods`,
+            which means that the method to load this format is not implemented in the loader.
         """
         if self.tpe not in self.load_methods:
             raise TypeError(

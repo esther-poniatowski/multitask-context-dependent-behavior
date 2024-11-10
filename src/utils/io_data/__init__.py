@@ -27,28 +27,6 @@ Goals of this Subpackage :
   New methods can be added without affecting the existing dataset classes.
 
 
-Comparison of File Formats :
-
-Structure of Allowed Data
-- CSV    : Tabular data with rows and columns.
-- NetCDF : Multi-dimensional arrays with associated metadata.
-- Pickle : Arbitrary Python objects, including complex data structures.
-
-Compatibility with Other Interfaces
-- CSV    : Spreadsheet programs (Excel), databases, data analysis tools (pandas).
-- NetCDF : Scientific data analysis tools (xarray, pandas), netCDF libraries (netCDF4, h5netcdf).
-- Pickle : Python specific (pickle).
-
-Encoding Type
-- CSV    : Text-based (typically UTF-8).
-- NetCDF : Binary.
-- Pickle : Binary.
-
-Memory Performance
-- CSV    : Moderate, text-based format can be inefficient for large datasets.
-- NetCDF : High, optimized for large multi-dimensional arrays.
-- Pickle : High, efficient serialization of complex Python objects.
-
 Implementation
 --------------
 **Abstract Base Classes and Concrete Implementations**

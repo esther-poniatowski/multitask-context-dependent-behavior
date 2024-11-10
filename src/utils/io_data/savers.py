@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`utils.io_data.savers.impl_savers` [module]
+:mod:`utils.io_data.savers` [module]
 
 Save data from files in specific formats.
 
@@ -16,7 +16,7 @@ Classes
 See Also
 --------
 :class:`utils.io_data.formats.FileExt`: File extensions.
-:class:`utils.io_data.savers.base_saver.Saver`: Base class for savers.
+:class:`utils.io_data.base_saver.Saver`: Base class for savers.
 """
 
 import pickle
@@ -29,7 +29,7 @@ import numpy as np
 import pandas as pd
 
 from utils.io_data.formats import FileExt
-from utils.io_data.savers.base_saver import Saver
+from utils.io_data.base_saver import Saver
 
 
 class SaverPKL(Saver):

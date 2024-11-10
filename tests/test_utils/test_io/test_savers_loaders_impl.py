@@ -17,8 +17,8 @@ paths with appropriate extensions in order to recover the data manually without 
 
 See Also
 --------
-:mod:`utils.io_data.savers.impl_savers`: Tested module.
-:mod:`utils.io_data.loaders.impl_loaders`: Tested module.
+:mod:`utils.io_data.savers`: Tested module.
+:mod:`utils.io_data.loarders`: Tested module.
 """
 from pathlib import Path
 
@@ -37,14 +37,14 @@ from mock_data.python_objects import (
     expected_from_list,
 )
 from mock_data.match_content import PATH_MOCK_DATA, data_list_yml, data_dict_yml
-from utils.io_data.loaders.impl_loaders import (
+from utils.io_data.loarders import (
     LoaderCSV,
     LoaderNPY,
     LoaderPKL,
     LoaderDILL,
     LoaderYAML,
 )
-from utils.io_data.savers.impl_savers import SaverCSV, SaverNPY, SaverPKL, SaverDILL
+from utils.io_data.savers import SaverCSV, SaverNPY, SaverPKL, SaverDILL
 
 
 @pytest.mark.parametrize(
