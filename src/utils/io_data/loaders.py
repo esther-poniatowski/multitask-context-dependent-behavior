@@ -19,7 +19,7 @@ See Also
 --------
 :class:`utils.io_data.formats.FileExt`
 :class:`utils.io_data.formats.TargetType`
-:class:`utils.io_data.loaders.base_loader.Loader`
+:class:`utils.io_data.base_loader.Loader`
 
 Implementation
 --------------
@@ -43,7 +43,7 @@ import pandas as pd
 import yaml
 
 from utils.io_data.formats import FileExt, TargetType
-from utils.io_data.loaders.base_loader import Loader
+from utils.io_data.base_loader import Loader
 
 
 class LoaderPKL(Loader):
