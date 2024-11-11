@@ -84,8 +84,7 @@ from typing import Dict, List, Union, Optional
 
 import yaml
 
-from utils.io_data.loaders.impl_loaders import LoaderYAML
-from utils.io_data.formats import TargetType
+from utils.io_data.loaders import LoaderYAML
 from utils.path_system.local_server import LocalServer
 from utils.path_system.remote_server import RemoteServer
 
@@ -189,6 +188,8 @@ class TransferManager:
             self.local_server.is_dir(local_full_path)
             source = f"{self.user}@{self.host}:{remote_full_path}"
             destination = str(local_full_path)
+        else:
+            raise ValueError(f"[ERROR] Invalid direction: {self.direction}")
         # Transfer files or directories
         print(f"[INFO] Transfer from {source} to {destination}")
         self._run_rsync(source, destination)
@@ -280,11 +281,11 @@ class TransferManager:
 
         See Also
         --------
-        :class:`utils.io_data.loaders.impl_loaders.LoaderYAML`
+        :class:`utils.io_data.loaders.LoaderYAML`
         """
         path = Path(path).resolve()  # absolute path
         try:
-            loader = LoaderYAML(path, tpe=TargetType.DICT)
+            loader = LoaderYAML(path)
             raw_map = loader.load()
             print(f"[SUCCESS] Load directory structure from YAML file at: {path}")
             if not isinstance(raw_map, list):  # ensure correct structure

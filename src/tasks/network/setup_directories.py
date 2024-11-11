@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`tasks.network.setup_directories` [module]
+`tasks.network.setup_directories` [module]
 
 Organize directory structures on a server (local or remote) based on a YAML configuration.
 
@@ -89,7 +89,7 @@ Format of the python object after loading the YAML:
 
 Classes
 -------
-:class:`DirectoryOrganizer`
+`DirectoryOrganizer`
 """
 
 import argparse
@@ -100,8 +100,7 @@ import yaml
 
 from utils.path_system.local_server import LocalServer
 from utils.path_system.remote_server import RemoteServer
-from utils.io_data.loaders.impl_loaders import LoaderYAML
-from utils.io_data.formats import TargetType
+from utils.io_data.loaders import LoaderYAML
 
 
 StructureType = Dict[str, Union[Dict, str]]
@@ -130,10 +129,10 @@ class DirectoryOrganizer:
 
     Methods
     -------
-    :meth:`get_root_local` (static method)
-    :meth:`create_directories`
-    :meth:`check_dir_exists`
-    :meth:`load_directory_structure`
+    `get_root_local` (static method)
+    `create_directories`
+    `check_dir_exists`
+    `load_directory_structure`
     """
 
     def __init__(
@@ -162,10 +161,10 @@ class DirectoryOrganizer:
         ---------
         current_path : Path
             Current root path for directory creation.
-            If not provided, the attribute :attr:`root_path` is used.
+            If not provided, the `root_path` attribute is used.
         structure : Dict[str, Union[Dict, str]]
             Directory structure to create.
-            If not provided, the instance attribute :attr:`directory_structure` is used.
+            If not provided, the instance `directory_structure` attribute is used.
 
         Notes
         -----
@@ -194,7 +193,7 @@ class DirectoryOrganizer:
                         self.server.create_dir(dir_path)
                     else:
                         print(f"[DRY-RUN] Would create directory: {dir_path}")
-                except Exception as exc:
+                except Exception as exc:  # pylint: disable=broad-except
                     print(f"[ERROR] Failed to create directory {dir_path}: {exc}")
             if isinstance(new_struct, dict):  # recursively create subdirectories
                 self.create_directories(dir_path, new_struct)
@@ -215,11 +214,11 @@ class DirectoryOrganizer:
 
         See Also
         --------
-        :class:`utils.io_data.loaders.impl_loaders.LoaderYAML`
+        :class:`utils.io_data.loaders.LoaderYAML`
         """
         path = Path(path).resolve()  # absolute path
         try:
-            loader = LoaderYAML(path, tpe=TargetType.DICT)
+            loader = LoaderYAML(path)
             directory_structure = loader.load()
             print(f"[SUCCESS] Load directory structure from YAML file at: {path}")
             if not isinstance(directory_structure, dict):  # ensure correct structure
