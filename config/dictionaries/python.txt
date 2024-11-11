@@ -42,6 +42,7 @@ issubclass
 issubdtype
 issubset
 iterdir
+itertools
 keepdims
 loadtxt
 makedirs
