@@ -11,6 +11,7 @@ Classes
 `Task`
 `Context`
 `Stimulus`
+`BehaviorOutcome`
 """
 
 from types import MappingProxyType
@@ -57,7 +58,6 @@ class Task(ExpFeature):
     """
 
     OPTIONS = frozenset(["PTD", "CLK", "CCH"])
-
     LABELS = MappingProxyType(
         {
             "PTD": "Pure Tone Discrimination",
@@ -93,7 +93,6 @@ class Context(ExpFeature):
     """
 
     OPTIONS = frozenset(["a", "p", "p-pre", "p-post"])
-
     LABELS = MappingProxyType(
         {"p": "Passive", "a": "Active", "p-pre": "Pre-Passive", "p-post": "Post-Passive"}
     )
@@ -150,3 +149,19 @@ class Stimulus(ExpFeature):
     def get_ptd(cls) -> FrozenSet[Self]:
         """Stimuli for task PTD (no neutral)."""
         return frozenset([cls("R"), cls("T")])
+
+
+class BehaviorOutcome(ExpFeature):
+    """
+    Behavioral outcomes of the animals' responses.
+
+    Class Attributes
+    ----------------
+    OPTIONS : FrozenSet[str]
+        Outcomes represented by their short names (2 to 4 letters).
+        Go : Lick.
+        NoGo : Refrain from licking.
+    """
+
+    OPTIONS = frozenset(["Go", "NoGo"])
+    LABELS = MappingProxyType({"Go": "Lick", "NoGo": "No Lick"})
