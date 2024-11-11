@@ -17,8 +17,8 @@ from typing import TypeVar, Type, Optional, Union, Dict, Self, overload
 
 import numpy as np
 
-from coordinates.base_coord import Coordinate
-from core.entities.exp_condition import Task, Context, Stimulus
+from core.coordinates.base_coord import Coordinate
+from core.entities.exp_features import Task, Context, Stimulus
 
 
 ExpFeature = TypeVar("ExpFeature", Task, Context, Stimulus)
@@ -51,8 +51,8 @@ class CoordExpCond(Coordinate[np.str_, ExpFeature]):
 
     See Also
     --------
-    :class:`core.coordinates.base_coord.Coordinate`
-    :mod:`core.entities.exp_condition`
+    `core.coordinates.base_coord.Coordinate`
+    `core.entities.exp_features`
     """
 
     ENTITY: Type[ExpFeature]

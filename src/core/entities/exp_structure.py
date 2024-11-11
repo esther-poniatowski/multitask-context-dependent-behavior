@@ -18,7 +18,7 @@ import re
 from typing import Optional, Self, Tuple, TypedDict
 
 from core.entities.base_entity import Entity
-from core.entities.exp_condition import Task, Context
+from core.entities.exp_features import Task, Context
 from core.entities.bio_info import Site
 
 
@@ -174,10 +174,10 @@ class Session(str, Entity[str]):
 
     See Also
     --------
-    :class:`core.entities.bio_info.Site`
-    :class:`core.entities.exp_structure.Recording`
-    :class:`core.entities.exp_condition.Task`
-    :class:`core.entities.exp_condition.Context`
+    `core.entities.bio_info.Site`
+    `core.entities.exp_structure.Recording`
+    `core.entities.exp_features.Task`
+    `core.entities.exp_features.Context`
     """
 
     ID_PATTERN = re.compile(

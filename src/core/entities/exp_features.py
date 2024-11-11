@@ -21,13 +21,13 @@ import numpy as np
 
 from core.entities.base_entity import Entity
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # prevent circular imports (`exp_condition` is imported coordinate modules)
     from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim
 
 
 class ExpFeature(str, Entity[str]):
     """
-    Experimental conditions in the behavioral paradigm, behaving like strings.
+    Base class for experimental conditions in the behavioral paradigm, behaving like strings.
 
     Define the `__new__` method to inherit from `str`.
 
@@ -36,7 +36,7 @@ class ExpFeature(str, Entity[str]):
 
     See Also
     --------
-    :meth:`Entity.is_valid`
+    `Entity.is_valid`
     """
 
     def __new__(cls, value: str) -> Self:
@@ -225,10 +225,10 @@ class ExpCondition:
 
     See Also
     --------
-    :class:`Task`
-    :class:`Context`
-    :class:`Stimulus`
-    :class:`ExpConditionUnion`
+    `Task`
+    `Context`
+    :`Stimulus`
+    `ExpConditionUnion`
     """
 
     COMBINATIONS = frozenset(
