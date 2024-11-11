@@ -15,7 +15,7 @@ Classes
 """
 
 from types import MappingProxyType
-from typing import FrozenSet, Self
+from typing import FrozenSet, Self, List
 
 from core.entities.base_entity import Entity
 
@@ -38,6 +38,11 @@ class ExpFeature(str, Entity[str]):
         if not cls.is_valid(value):  # method from Entity
             raise ValueError(f"Invalid value for {cls.__name__}: {value}.")
         return super().__new__(cls, value)
+
+    @classmethod
+    def get_features(cls) -> List[Self]:
+        """Return the list of all features instances corresponding to the options."""
+        return [cls(option) for option in cls.OPTIONS]
 
 
 class Task(ExpFeature):
