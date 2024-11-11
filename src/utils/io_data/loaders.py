@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`utils.io_data.loaders_loaders` [module]
+`utils.io_data.loaders_loaders` [module]
 
 Load data from files in specific formats.
 
@@ -9,153 +9,148 @@ Any object which needs to load data can interact with one Loader subclass.
 
 Classes
 -------
-:class:`LoaderPKL`
-:class:`LoaderDILL`
-:class:`LoaderNPY`
-:class:`LoaderCSV`
-:class:`LoaderYAML`
+`LoaderPKL`
+`LoaderDILL`
+`LoaderNPY`
+`LoaderCSVtoList`
+`LoaderCSVtoArray`
+`LoaderCSVtoArrayFloat`
+`LoaderCSVtoArrayInt`
+`LoaderCSVtoArrayStr`
+`LoaderCSVtoDataFrame`
+`LoaderYAML`
 
 See Also
 --------
-:class:`utils.io_data.formats.FileExt`
-:class:`utils.io_data.formats.TargetType`
-:class:`utils.io_data.base_loader.Loader`
+`utils.io_data.base_io.FileExt`
+`utils.io_data.base_loader.Loader`
 
 Implementation
 --------------
-When a single target type is supported by a specific loader, it is defined as a class attribute in
-the loader class and set as the default value for the :attr:`tpe` parameter in the constructor. It
-should match the identifier of the only key in the dictionary :attr:`load_methods`.
-
-This solution is chosen instead of overriding the constructor of the subclass and removing the
-:attr:`tpe` parameter from the signature. Indeed, this would not respect the Liskov Substitution
-Principle, which is problematic especially in the abstract :class:`DataStructure` class.
+Each Loader subclass implements the abstract method `_load` to load data from a specific file format
+to a specific target type.
 """
 import pickle
-from types import MappingProxyType
 from typing import Any, Union, List, Dict
 
 import csv
 import dill
 import numpy as np
-import numpy.typing as npt
 import pandas as pd
 import yaml
 
-from utils.io_data.formats import FileExt, TargetType
+from utils.io_data.base_io import FileExt
 from utils.io_data.base_loader import Loader
 
 
 class LoaderPKL(Loader):
-    """Load data from a Pickle file."""
+    """
+    Load any Python object from a Pickle file.
 
-    ext = FileExt.PKL
-    tpe = TargetType("object")
-    load_methods = {tpe: "_load"}
+    See Also
+    --------
+    `pickle.load`
+    """
 
-    def __init__(self, path, tpe=tpe):
-        """Override the base class method since the type does not need to be specified."""
-        super().__init__(path, tpe=tpe)
+    EXT = FileExt("pkl")
 
     def _load(self) -> Any:
-        """
-        Load any Python object from a Pickle file.
-
-        Override the abstract method in the base class to load any Python object without requiring a
-        key in the dictionary :obj:`load_methods`.
-
-        See Also
-        --------
-        :func:`pickle.load`
-        """
+        """Implement the abstract method of the `Loader` base class."""
         with self.path.open("rb") as file:
             return pickle.load(file)
 
 
 class LoaderDILL(Loader):
-    """Load data from a Dill file. See :class:`LoaderPKL` for more details."""
+    """
+    Load any Python object from a pickle file using the Dill library.
 
-    ext = FileExt.PKL
-    tpe = TargetType("object")
-    load_methods = {tpe: "_load"}
+    This module extends the `pickle` module to serialize a larger range of Python objects.
 
-    def __init__(self, path, tpe=tpe):
-        """Override the base class method since the type does not need to be specified."""
-        super().__init__(path, tpe=tpe)
+    See Also
+    --------
+    `dill.load`
+    """
+
+    EXT = FileExt("pkl")
 
     def _load(self) -> Any:
-        """
-        Load any Python object from a Dill file.
-
-        See Also
-        --------
-        :func:`dill.load`
-        """
+        """Implement the abstract method of the `Loader` base class."""
         with self.path.open("rb") as file:
             return dill.load(file)
 
 
 class LoaderNPY(Loader):
-    """Load data from a NPY file."""
+    """
+    Load data from a NPY file to a numpy array.
 
-    ext = FileExt.NPY
-    tpe = TargetType.NDARRAY
-    load_methods = MappingProxyType(
-        {
-            TargetType.NDARRAY: "_load_numpy",
-            TargetType.NDARRAY_FLOAT: "_load_numpy",
-            TargetType.NDARRAY_INT: "_load_numpy",
-            TargetType.NDARRAY_STR: "_load_numpy",
-        }
-    )
+    See Also
+    --------
+    `numpy.load`
+    """
 
-    def __init__(self, path, tpe=tpe):
-        """Override the base class method since the type is fixed."""
-        super().__init__(path, tpe=tpe)
+    EXT = FileExt("npy")
 
-    def _load_numpy(self) -> npt.NDArray:
-        """Load a NPY file into a numpy array.
-
-        See Also
-        --------
-        :func:`numpy.load`
-        """
+    def _load(self) -> np.ndarray:
+        """Implement the abstract method of the `Loader` base class."""
         return np.load(self.path)
 
 
-class LoaderCSV(Loader):
-    """Load data from a CSV file."""
+class LoaderCSVtoList(Loader):
+    """
+    Load data from a CSV file to a list of lists.
 
-    ext = FileExt.CSV
-    load_methods = MappingProxyType(
-        {
-            TargetType.LIST: "_load_list",
-            TargetType.NDARRAY_FLOAT: "_load_numpy",
-            TargetType.NDARRAY_INT: "_load_numpy",
-            TargetType.NDARRAY_STR: "_load_numpy",
-            TargetType.DATAFRAME: "_load_dataframe",
-        }
-    )
-    map_data_types = MappingProxyType(
-        {
-            TargetType.NDARRAY_FLOAT: "float",
-            TargetType.NDARRAY_INT: "int",
-            TargetType.NDARRAY_STR: "str",
-        }
-    )
+    See Also
+    --------
+    `csv.reader`
+    """
 
-    def _load_list(self) -> List:
-        """Load a CSV file into a list of lists.
+    EXT = FileExt("csv")
 
-        See Also
-        --------
-        :func:`csv.reader`
-        """
+    def _load(self) -> List:
+        """Implement the abstract method of the `Loader` base class."""
         with self.path.open("r", newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             return [row for row in reader]
 
-    def _load_numpy(self) -> npt.NDArray:
+
+class LoaderCSVtoArray(Loader):
+    """
+    Load data from a CSV file to a numpy array.
+
+    Class Attributes
+    ----------------
+    DTYPE : str, default="float"
+        Data type of the array contents, passed as argument in the loader function `numpy.loadtxt`.
+        Valid values: `int`, `float`, `str`, `complex`, `bool`, `object`.
+
+    Notes
+    -----
+    This class is refined by three subclasses to specify the data type of the array contents:
+
+    - `LoaderCSVtoArrayFloat`
+    - `LoaderCSVtoArrayInt`
+    - `LoaderCSVtoArrayStr`
+
+    Those subclasses only redefine the attribute :attr:`DTYPE` to specify the data type.
+
+    Warning
+    -------
+    If the data type is not specified, the default type is ``float``.
+
+    Unexpected behaviors may occur if the data type is not specified:
+
+    - Integer data is converted to ``float`` (default type).
+    - String data raise a ValueError.
+
+    See Also
+    --------
+    `csv.reader`
+    """
+
+    EXT = FileExt("csv")
+    DTYPE = "float"
+
+    def _load(self) -> np.ndarray:
         """Load a CSV file into a numpy array.
 
         Warning
@@ -163,41 +158,60 @@ class LoaderCSV(Loader):
         The attribute :obj:`tpe` should specify not only ``npt.NDArray``, but also the precise *data
         type* of the array contents.
 
-        - For float data : npt.NDArray[np.float64]
-        - For integer data : npt.NDArray[np.int64]
-        - For string data : npt.NDArray[np.str_]
-
-        If the data type is not specified, the default type is ``float``:
-        - Integer data is converted to ``float`` (default type).
-        - String data raise a ValueError.
+        - For float data : np.ndarray[np.float64]
+        - For integer data : np.ndarray[np.int64]
+        - For string data : np.ndarray[np.str_]
 
         See Also
         --------
-        :func:`numpy.loadtxt`
-        :attr:`map_data_types`
+        `numpy.loadtxt(file, delimiter, dtype)`
+            Load data from a text file. It is used instead of the `csv` module for efficiency: it
+            loads the CSV file at once, while the `csv` module reads the file line by line.
         """
-        if self.tpe in self.map_data_types:
-            dtype = self.map_data_types[self.tpe]
-        else:
-            dtype = "float"  # default type
-        return np.loadtxt(self.path, delimiter=",", dtype=dtype)
+        return np.loadtxt(self.path, delimiter=",", dtype=self.DTYPE)
 
-    def _load_dataframe(self) -> pd.DataFrame:
-        """Load a CSV file into a pandas DataFrame.
 
-        See Also
-        --------
-        :func:`pandas.read_csv`
-        """
+class LoaderCSVtoArrayFloat(LoaderCSVtoArray):
+    """Load data from a CSV file to a numpy array of floats."""
+
+    DTYPE = "float"
+
+
+class LoaderCSVtoArrayInt(LoaderCSVtoArray):
+    """Load data from a CSV file to a numpy array of integers."""
+
+    DTYPE = "int"
+
+
+class LoaderCSVtoArrayStr(LoaderCSVtoArray):
+    """Load data from a CSV file to a numpy array of strings."""
+
+    DTYPE = "str"
+
+
+class LoaderCSVtoDataFrame(Loader):
+    """
+    Load data from a CSV file to a pandas DataFrame.
+
+    See Also
+    --------
+    `pandas.read_csv`
+    """
+
+    EXT = FileExt("csv")
+
+    def _load(self) -> pd.DataFrame:
+        """Implement the abstract method of the `Loader` base class."""
         return pd.read_csv(self.path)
 
 
 class LoaderYAML(Loader):
-    """Load data from a YAML file.
+    """
+    Load data from a YAML file to the corresponding Python object: list or dictionary.
 
     See Also
     --------
-    :func:`yaml.safe_load`: Parse a YAML file and return the corresponding Python object.
+    `yaml.safe_load`: Parse a YAML file and return the corresponding Python object.
 
     Notes
     -----
@@ -263,15 +277,9 @@ class LoaderYAML(Loader):
         }
     """
 
-    ext = FileExt.YAML
-    load_methods = MappingProxyType(
-        {
-            TargetType.DICT: "_load",
-            TargetType.LIST: "_load",
-        }
-    )
+    EXT = FileExt("yml")
 
     def _load(self) -> Union[Dict, List]:
-        """Load a YAML file into the corresponding Python object."""
+        """Implement the abstract method of the `Loader` base class."""
         with self.path.open("r", encoding="utf-8") as file:
             return yaml.safe_load(file)

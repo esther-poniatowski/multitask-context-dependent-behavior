@@ -11,8 +11,6 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Union, Optional
 
-from utils.io_data.formats import FileExt
-
 
 class ServerInterface(ABC):
     """
@@ -120,39 +118,3 @@ class ServerInterface(ABC):
         path: str or Path
             Full path to the directory to be created.
         """
-
-    def enforce_ext(self, path: Union[str, Path], ext: Union[str, FileExt]) -> Path:
-        """
-        Enforce a specific file extension on a path.
-
-        If the file extension is missing or incorrect, it is added or corrected.
-
-        Parameters
-        ----------
-        path: str or Path
-        ext: str or FileExt
-            File extension to enforce.
-
-        Returns
-        -------
-        Path
-            Path with the correct file extension.
-
-        Raises
-        ------
-        ValueError
-            If the extension does not start with a period.
-
-        See Also
-        --------
-        :meth:`pathlib.Path.with_suffix`
-            If there is already an extension, it is replaced.
-            If there is no extension, it is added.
-        """
-        if isinstance(path, str):
-            path = Path(path)
-        if isinstance(ext, FileExt):
-            ext = ext.value  # convert to string
-        if not ext.startswith("."):
-            raise ValueError(f"Invalid extension: {ext}")
-        return path.with_suffix(ext)
