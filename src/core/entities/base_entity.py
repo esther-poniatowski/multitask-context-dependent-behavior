@@ -47,7 +47,7 @@ class Entity(Generic[BaseT]):
 
     Methods
     -------
-    `is_valid``
+    `is_valid`
     `full_label`
     `get_options`
     `get_labels`
