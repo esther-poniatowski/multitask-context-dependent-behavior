@@ -13,8 +13,7 @@ from core.constants import SMPL_RATE
 from core.coordinates.exp_structure import CoordBlock
 from core.data_structures.base_data_struct import DataStructure
 from core.data_structures.core_data import Dimensions, CoreData
-from utils.io_data.formats import TargetType
-from utils.io_data.loaders.impl_loaders import LoaderNPY
+from utils.io_data.loaders import LoaderNPY
 from utils.storage_rulers.impl_path_rulers import SpikeTimesRawPath
 
 
@@ -79,7 +78,6 @@ class SpikeTimesRaw(DataStructure):
     # --- IO Handlers ---
     path_ruler = SpikeTimesRawPath
     loader = LoaderNPY
-    tpe = TargetType("ndarray_float")
 
     # --- Key Features -----------------------------------------------------------------------------
 
@@ -164,7 +162,7 @@ class SpikeTimesRaw(DataStructure):
             If the shape of the loaded data is not ``(2, nspikes)``
         """
         # Load numpy array via LoaderNPY
-        raw = self.loader(path=self.path, tpe=self.tpe).load()
+        raw = self.loader(path=self.path).load()
         print("RAW", raw.shape)
         # Check shape
         if raw.ndim != 2 or raw.shape[0] != 2:
