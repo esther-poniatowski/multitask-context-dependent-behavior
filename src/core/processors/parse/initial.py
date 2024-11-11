@@ -14,48 +14,10 @@ from typing import Literal, TypeAlias
 import numpy as np
 import numpy.typing as npt
 
+# type: ignore
+# pylint: disable=all
 
 # ------ EVENTSinfo - TRIALSinfo - Information about all trials ------
-
-
-def Extract_Events_in_Session(session, PATHS):
-    """Extracts events in *one* session.
-    The events are gathered in a CSV file exported from the .m files (MATLAB script).
-    Fields (columns)        Example
-    ----------------        -------
-        TrialNum (int)      1
-        Event (str)         'PreStimSilence , TORC_448_06_v501 , Reference'
-        StartTime (float)   0.40
-        StopTime (float)    1.65
-    For the field 'Event', each string has to be split into its different elements, i.e. :
-        * the type of event (e.g. 'TRIALSTART', 'PreStimSilence', 'Stim'...),
-        * the precise stimulus identity ('TORC_448_06_v501', '2000'...)
-        * the type (category) of the stimulus (Reference'/'Target').
-    PROCEDURE : s.split(' , ')
-    WARNING : The relevant events are labelled by 'Stim'. However, it is necessary to extract *all* the events (even irrelevant ones : 'TRIALSTART', 'PreStimSilence', 'PostStimSilence', 'TRIALSTOP'), because it is not possible to directly merge the information from different lines of the CSV file corresponding to a single trial (since each trial is associated to multiple events, described on several lines).
-    The task of gathering all the (relevant) events of the same trial is performed by another function.
-    ------------------
-    Inputs :
-        session (str)   Name of the session.
-    Outputs:
-        Events (dict)   All events in the session.
-                        Keys indicate different types of information about an event (see below).
-                        Values are lists, each index corresponds to one *event*.
-                        Indices match across lists for different keys.
-        Keys                    Values
-        ----                    ------
-        TrialNum (list of int)  Trial number within the session.
-        Event (list of list)    Information about the event.
-                                    event[0]            TRIALSTART / PreStimSilence / Stim / PostStimSilence / BEHAVIOR,SHOCKON / TRIALSTOP
-                                    event[1] (optional) TORC_424_08_v501 / 2000 / 8000 ...
-                                    event[2] (optional) Reference / Target
-                                    event[3] (optional) 0dB
-        StartTime (list of float)   Starting time of the event (in sec).
-        StopTime (list of float)    End time of the event (in sec).
-    """
-    Events = Open_CSVFile_ExptEvents(session, PATHS)
-    Events["Event"] = [s.split(" , ") for s in Events["Event"]]
-    return Events
 
 
 def Gathers_Events_in_Trials(session, Events, TrialTrev=Reverse_Dictionary(TRIAL_TYPES)):
@@ -64,7 +26,6 @@ def Gathers_Events_in_Trials(session, Events, TrialTrev=Reverse_Dictionary(TRIAL
     Pre-stimulus and post-stimulus durations can be recovered from the time intervals between the different stimuli.
     ------------------
     Inputs :
-        session (str)       Name of the session.
         Events (dict)       All events in the session (see Extract_Events_in_Session()).
                             Keys : 'TrialNum', 'Event', 'StartTime', 'StopTime'.
         TrialTrev (dict)    Dictionary associating trial types as tuples to their index in TRIAL_TYPES.
@@ -75,7 +36,6 @@ def Gathers_Events_in_Trials(session, Events, TrialTrev=Reverse_Dictionary(TRIAL
                             Indices match across lists for different keys.
         Keys                        Values
         --------------------        -------
-        Session (list of str)       Common session of all the trials (repeated).
         TrialNum (list of int)      Trial number within the session (>= 1)
         TrialType (int)             Code indicating the sequence of stimuli presentations.
                                     Convention (See TRIAL_TYPES defined in GLOBAL_VARIABLES) :
@@ -89,39 +49,29 @@ def Gathers_Events_in_Trials(session, Events, TrialTrev=Reverse_Dictionary(TRIAL
         Duration (list of float)    Duration of the trials (in sec).
     """
     # Initialize dictionary
-    Trials = {"TrialNum": Unique(Events["TrialNum"])}  # all trials in the session
-    Ntrials = len(Trials["TrialNum"])
-    Trials["Session"] = [session] * Ntrials  # same session for all trials
     Trials["Error"] = [False] * Ntrials  # success by default for all trials
     Trials["TargType"] = [None] * Ntrials  # no target by default for all trials
-    Trials["StimTimes"] = [
-        [] for _ in range(Ntrials)
-    ]  # empty list to be appended with times of stimuli
-    Trials["Stimulus"] = [
-        [] for _ in range(Ntrials)
-    ]  # empty list to be appended with types of stimuli
+    Trials["StimTimes"] = [[] for _ in range(Ntrials)]
+    Trials["Stimulus"] = [[] for _ in range(Ntrials)]
     Trials["Duration"] = [0] * Ntrials  # initialize to 0 by default
     # WARNING : do not use the syntax [[]]*Ntrials because lists would not be independent
     # 1/ Sweep events to fill StimTimes, TargType, Error
     for num, event, t_start, t_end in zip(
         Events["TrialNum"], Events["Event"], Events["StartTime"], Events["StopTime"]
     ):
-        i = num - 1  # index of the trial, decremented by 1 to start at 0 instead of 1
-        event_type = event[
-            0
-        ]  # TRIALSTART/PreStimSilence/Stim/PostStimSilence/TRIALSTOP/BEHAVIOR,SHOCKON
+        i = num - 1  # index decremented by 1 to start at 0
+        event_type = event[0]
+        # TRIALSTART/PreStimSilence/Stim/PostStimSilence/TRIALSTOP/BEHAVIOR,SHOCKON
         if event_type == "Stim":  # filter only Reference and Target events
             sound_type = event[1]  # nature of the sound : TORC, pure tone rate, click rate...
             stim_type = event[2]  # target/reference
             Trials["StimTimes"][i].append((t_start, t_end))  # append the time boundaries
             if stim_type == "Target":
                 Trials["Stimulus"][i].append("T")  # append a target
-                if (":" not in sound_type) and (
-                    "TORC" not in sound_type
-                ):  # avoid some complex strings in CCH tasks and pre-click noise in CLK
-                    sound_type = float(
-                        sound_type.replace("[", "").replace("]", "")
-                    )  # e.g. '[20]' for CLK
+                if (":" not in sound_type) and ("TORC" not in sound_type):
+                    # avoid some complex strings in CCH tasks and pre-click noise in CLK
+                    sound_type = float(sound_type.replace("[", "").replace("]", ""))
+                    # e.g. '[20]' for CLK
                 Trials["TargType"][i] = sound_type
             else:  # append a reference
                 Trials["Stimulus"][i].append("R")
@@ -136,10 +86,10 @@ def Gathers_Events_in_Trials(session, Events, TrialTrev=Reverse_Dictionary(TRIAL
             Trials["StimTimes"][i] = [
                 (t1[0], t2[1])
                 for t1, t2 in zip(Trials["StimTimes"][i][::2], Trials["StimTimes"][i][1::2])
-            ]  # by pairs of 2 tuples TROC/Click : (t0_TORC, t1_TORC), (t0_clk, t1_clk) -> (t0_TORC, t1_clk)
-            Trials["Stimulus"][i] = Trials["Stimulus"][i][
-                ::2
-            ]  # keep one element out of 2 : [R_TORC, R_clk, T_TORC, T_clk] -> [R, T]
+            ]
+            # by pairs of 2 tuples TROC/Click : (t0_TORC, t1_TORC), (t0_clk, t1_clk) -> (t0_TORC, t1_clk)
+            Trials["Stimulus"][i] = Trials["Stimulus"][i][::2]
+            # keep one element out of 2 : [R_TORC, R_clk, T_TORC, T_clk] -> [R, T]
     # 3/ Determine TrialType based on the nature of stimuli in each trial
     StimSeqs = [
         tuple([x == "T" for x in Stimuli]) for Stimuli in Trials["Stimulus"]
