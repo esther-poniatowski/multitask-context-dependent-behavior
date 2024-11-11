@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`utils.io_data.savers` [module]
+`utils.io_data.savers` [module]
 
 Save data from files in specific formats.
 
@@ -9,69 +9,56 @@ Any object which needs to save data can interact with one Saver subclass.
 
 Classes
 -------
-:class:`SaverPKL`
-:class:`SaverNPY`
-:class:`SaverCSV`
+`SaverPKL`
+`SaverDILL`
+`SaverNPY`
+`SaverCSVList`
+`SaverCSVArray`
+`SaverCSVDataFrame`
+
 
 See Also
 --------
-:class:`utils.io_data.formats.FileExt`: File extensions.
-:class:`utils.io_data.base_saver.Saver`: Base class for savers.
+`utils.io_data.base_io.FileExt`: File extensions.
+`utils.io_data.base_saver.Saver`: Base class for savers.
 """
 
 import pickle
-from types import MappingProxyType
-from typing import Any
+from typing import Any, List
 
 import csv
 import dill
 import numpy as np
 import pandas as pd
 
-from utils.io_data.formats import FileExt
+from utils.io_data.base_io import FileExt
 from utils.io_data.base_saver import Saver
 
 
 class SaverPKL(Saver):
     """
-    Save data in the Pickle format.
+    Save any Python object in the Pickle format.
 
-    Notes
-    -----
-    Any object can be saved in a Pickle file, therefore the class attribute :attr:`save_methods` is
-    not needed.
-    Since it is not possible to enumerate all the types that can be saved in a Pickle file, the
-    method :meth:`_save` is overridden to dodge the checking step of the base method.
+    See Also
+    --------
+    `pickle.dump`
     """
 
-    ext = FileExt.PKL
+    EXT = FileExt("pkl")
 
-    def save(self):
-        """
-        Save any Python object to a Pickle file.
-
-        Warning
-        -------
-        Override the base method to avoid the checking step.
-
-        See Also
-        --------
-        :func:`pickle.dump`
-        """
-        self.server.check_parent(self.path)
-        self.path = self.server.enforce_ext(self.path, self.ext)
+    def _save(self, data: Any) -> None:
+        """Implement the abstract method of the `Loader` base class."""
         with self.path.open("wb") as file:
-            pickle.dump(self.data, file)
-        print(f"[SUCCESS] Saved to {self.path}")
+            pickle.dump(data, file)
 
 
 class SaverDILL(Saver):
     """
-    Save data in the Dill format.
+    Save any Python object in the Pickle format using the Dill library.
 
     Notes
     -----
-    See :class:`SaverPKL` for explanations.
+    This module extends the `pickle` module to serialize a larger range of Python objects.
 
     Objects handled by the Dill format and not by the Pickle format (examples):
 
@@ -83,128 +70,116 @@ class SaverDILL(Saver):
 
     See Also
     --------
-    :func:`dill.dump`
+    `dill.dump`
     """
 
-    ext = FileExt.PKL
+    EXT = FileExt("pkl")
 
-    def save(self):
-        """
-        Save any Python object to a Dill file.
-
-        Warning
-        -------
-        Override the base method to avoid the checking step.
-
-        See Also
-        --------
-        :func:`dill.dump`
-        """
-        self.server.check_parent(self.path)
-        self.path = self.server.enforce_ext(self.path, self.ext)
+    def _save(self, data: Any) -> None:
+        """Implement the abstract method of the `Loader` base class."""
         with self.path.open("wb") as file:
-            dill.dump(self.data, file)
-        print(f"[SUCCESS] Saved to {self.path}")
+            dill.dump(data, file)
 
 
 class SaverNPY(Saver):
-    """Save data in the NPY format."""
-
-    ext = FileExt.NPY
-    save_methods = MappingProxyType({np.ndarray: "_save_numpy"})
-
-    def _save_numpy(self) -> None:
-        """
-        Save a numpy array to a NPY file.
-
-        See Also
-        --------
-        :func:`numpy.save`
-        """
-        np.save(self.path, self.data)
-
-
-class SaverCSV(Saver):
     """
-    Save data in the CSV format.
+    Save a numpy array in the NPY format.
 
-    Attributes
-    ----------
-    save_index : bool, default=False
-        Flag to determine whether to save the index of a DataFrame)
-        (additional attribute compared to the base class).
+    See Also
+    --------
+    `numpy.save`
     """
 
-    ext = FileExt.CSV
-    save_methods = MappingProxyType(
-        {list: "_save_list", np.ndarray: "_save_numpy", pd.DataFrame: "_save_dataframe"}
-    )
+    EXT = FileExt("npy")
 
-    def __init__(self, path: str, data: Any, save_index: bool = False) -> None:
-        super().__init__(path, data)
-        self.save_index = save_index
+    def _save(self, data: np.ndarray) -> None:
+        """Implement the abstract method of the `Loader` base class."""
+        np.save(self.path, data)
 
-    def _save_list(self):
-        """Save a list of lists to a CSV file.
 
-        Warning
-        -------
-        The content of the list is written as strings.
+class SaverCSVList(Saver):
+    """
+    Save a list of lists to a CSV file.
 
-        See Also
-        --------
-        :func:`csv.writer`
-        """
+    See Also
+    --------
+    `csv.writer`
+    """
+
+    EXT = FileExt("csv")
+
+    def _save(self, data: List) -> None:
+        """Implement the abstract method of the `Loader` base class."""
         with self.path.open("w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
-            writer.writerows(self.data)
+            writer.writerows(data)
 
-    def _save_numpy(self):
-        """Save a numpy array to a CSV file.
 
-        Warning
-        -------
-        The content of the array is written as strings.
-        The saved file does not store the original data type,
-        so when loading the data back, it is necessary to specify
-        the desired data type explicitly.
+class SaverCSVArray(Saver):
+    """
+    Save a numpy array to a CSV file.
 
-        See Also
-        --------
-        :func:`numpy.savetxt`
-            Parameter ``fmt``: Format for writing data.
-            - ``'%s'``  : strings
-            - ``'%d'``  : integers
-            - ``'%f'``  : floats
-            If not specified, the default format are:
-            - ``'%.18e'`` for floating-point numbers
-            - string representation for other types
-            Thus, differentiation between ``int`` and ``float`` is not automatic.
-            Parameter ``delimiter`` : Here, comma (``'``) by default.
-        """
-        if np.issubdtype(self.data.dtype, np.integer):
+    Warning
+    -------
+    The content of the array is written as strings. Thus, when loading the data back, the original data
+    type is not preserved.
+
+    Parameter ``fmt``: Format for writing data.
+
+    - ``'%s'``  : strings
+    - ``'%d'``  : integers
+    - ``'%f'``  : floats
+
+    If not specified, the default format are:
+
+    - ``'%.18e'`` for floating-point numbers
+    - string representation for other types
+
+    Thus, differentiation between ``int`` and ``float`` is not automatic.
+    Parameter ``delimiter`` : Here, comma (``'``) by default.
+
+    See Also
+    --------
+    `numpy.savetxt(path, data, delimiter, fmt)`
+    """
+
+    EXT = FileExt("csv")
+
+    def _save(self, data: np.ndarray) -> None:
+        """Implement the abstract method of the `Loader` base class."""
+        if np.issubdtype(data.dtype, np.integer):
             fmt = "%d"
-        elif np.issubdtype(self.data.dtype, np.floating):
+        elif np.issubdtype(data.dtype, np.floating):
             fmt = "%.18e"
         else:
             fmt = "%s"
-        np.savetxt(self.path, self.data, delimiter=",", fmt=fmt)
+        np.savetxt(self.path, data, delimiter=",", fmt=fmt)
 
-    def _save_dataframe(self):
-        """Save a pandas DataFrame to a CSV file.
 
-        Notes
-        -----
-        The index is saved or not based on the `save_index` attribute.
-        If True, the DataFrame index is saved as an additional column.
-        It is relevant if the index contains meaningful row labels
-        (e.g., timestamps, unique identifiers...),
-        but not if the index is just a default integer index.
-        Dropping the index ensures that the CSV file format is compatible
-        with other tools that expect data without an extra index column.
+class SaverCSVDataFrame(Saver):
+    """
+    Save a pandas DataFrame to a CSV file.
 
-        See Also
-        --------
-        :meth:`pandas.DataFrame.to_csv`
-        """
-        self.data.to_csv(self.path, index=self.save_index)
+    Class Attributes
+    ----------------
+    SAVE_INDEX : bool, default=False
+        Flag indicating whether to save the DataFrame index as an additional column. It is passed to
+        the `to_csv` as the `index` parameter.
+
+    Notes
+    -----
+    Saving the index is relevant if the index contains meaningful row labels (e.g., timestamps,
+    unique identifiers...), but not if the index is just a default integer index. Dropping the index
+    ensures that the CSV file format is compatible with other tools that expect data without an
+    extra index column. Here, by default, the index is not saved.
+
+    See Also
+    --------
+    `pandas.DataFrame.to_csv`
+    """
+
+    EXT = FileExt("csv")
+    SAVE_INDEX = False
+
+    def _save(self, data: pd.DataFrame) -> None:
+        data.to_csv(self.path, index=self.SAVE_INDEX)

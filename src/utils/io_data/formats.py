@@ -5,7 +5,6 @@
 
 Classes
 -------
-:class:`FileExt`
 :class:`TargetType`
 
 See Also
@@ -14,16 +13,6 @@ See Also
 """
 
 from enum import Enum
-
-
-class FileExt(Enum):
-    """Extensions for file formats."""
-
-    CSV = ".csv"
-    NC = ".nc"
-    NPY = ".npy"
-    PKL = ".pkl"
-    YAML = ".yml"
 
 
 class TargetType(Enum):
