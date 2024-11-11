@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_utils.test_io.test_savers_loaders_impl` [module]
+`test_utils.test_io.test_savers_loaders_impl` [module]
 
 Notes
 -----
 Saver and Loader subclasses are tested together to ensure their consistent interaction. Contrary to
-the tests in :mod:`test_core.test_io_data.test_saver_base` and :mod:`test_core.io_data.test_loader_base`,
-here the focus is on the specific *content* of the data which is saved and loaded, rather than on
-general checks carried out in the base classes.
+the tests in the modules `test_core.test_io_data.test_saver_base` and
+`test_core.io_data.test_loader_base`, here the focus is on the specific *content* of the data which
+is saved and loaded, rather than on general checks carried out in the base classes.
 
 Implementation
 --------------
@@ -17,12 +17,12 @@ paths with appropriate extensions in order to recover the data manually without 
 
 See Also
 --------
-:mod:`utils.io_data.savers`: Tested module.
-:mod:`utils.io_data.loarders`: Tested module.
+`utils.io_data.savers`: Tested module.
+`utils.io_data.loaders`: Tested module.
 """
-from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from mock_data.python_objects import (
@@ -37,30 +37,41 @@ from mock_data.python_objects import (
     expected_from_list,
 )
 from mock_data.match_content import PATH_MOCK_DATA, data_list_yml, data_dict_yml
-from utils.io_data.loarders import (
-    LoaderCSV,
+from utils.io_data.loaders import (
+    LoaderCSVtoList,
+    LoaderCSVtoArrayFloat,
+    LoaderCSVtoArrayInt,
+    LoaderCSVtoArrayStr,
+    LoaderCSVtoDataFrame,
     LoaderNPY,
     LoaderPKL,
     LoaderDILL,
     LoaderYAML,
 )
-from utils.io_data.savers import SaverCSV, SaverNPY, SaverPKL, SaverDILL
+from utils.io_data.savers import (
+    SaverCSVList,
+    SaverCSVArray,
+    SaverCSVDataFrame,
+    SaverNPY,
+    SaverPKL,
+    SaverDILL,
+)
 
 
 @pytest.mark.parametrize(
-    "data, expected, tpe",
+    "data, expected, loader_class, saver_class",
     argvalues=[
-        (data_list, expected_from_list, "list"),
-        (data_array_float, data_array_float, "ndarray_float"),
-        (data_array_int, data_array_int, "ndarray_int"),
-        (data_array_str, data_array_str, "ndarray_str"),
-        (data_df, data_df, "dataframe"),
+        (data_list, expected_from_list, LoaderCSVtoList, SaverCSVList),
+        (data_array_float, data_array_float, LoaderCSVtoArrayFloat, SaverCSVArray),
+        (data_array_int, data_array_int, LoaderCSVtoArrayInt, SaverCSVArray),
+        (data_array_str, data_array_str, LoaderCSVtoArrayStr, SaverCSVArray),
+        (data_df, data_df, LoaderCSVtoDataFrame, SaverCSVDataFrame),
     ],
     ids=["list", "numpy_float", "numpy_int", "numpy_str", "dataframe"],
 )
-def test_saver_loader_csv(tmp_path, data, expected, tpe):
+def test_saver_loader_csv(tmp_path, data, expected, loader_class, saver_class):
     """
-    Test for :class:`saver_module.SaverCSV` and :class:`loader_module.LoaderCSV`.
+    Test for `SaverCSV` and `LoaderCSV` classes.
 
     Test Inputs
     -----------
@@ -87,23 +98,23 @@ def test_saver_loader_csv(tmp_path, data, expected, tpe):
     """
     # Save a CSV file with the desired data using the Saver class
     filepath = tmp_path / "test.csv"
-    saver = SaverCSV(filepath, data)
-    saver.save()
+    saver = saver_class(filepath)
+    saver.save(data)
     # Load the data
-    loader = LoaderCSV(filepath, tpe)
+    loader = loader_class(filepath)
     content = loader.load()
     # Compare the loaded data with the expected data
-    if tpe == "list":
+    if isinstance(data, list):
         assert content == expected, "Content mismatch"
-    elif "ndarray" in tpe:
+    elif isinstance(data, np.ndarray):
         assert np.array_equal(content, expected), "Content mismatch"
-    elif tpe == "dataframe":
+    elif isinstance(data, pd.DataFrame):
         assert content.equals(expected), "Content mismatch"
 
 
 def test_saver_loader_npy(tmp_path):
     """
-    Test for :class:`saver_module.SaverNPY` and :class:`loader_module.LoaderNPY`.
+    Test for `SaverNPY` and `LoaderNPY` classes.
 
     Test Inputs
     -----------
@@ -117,8 +128,8 @@ def test_saver_loader_npy(tmp_path):
     """
     # Save a NPY file with the desired data using the Saver class
     filepath = tmp_path / "test.npy"
-    saver = SaverNPY(filepath, data_array)
-    saver.save()
+    saver = SaverNPY(filepath)
+    saver.save(data_array)
     # Load the data
     loader = LoaderNPY(filepath)
     content = loader.load()
@@ -133,7 +144,7 @@ def test_saver_loader_npy(tmp_path):
 )
 def test_saver_loader_pkl(tmp_path, data, is_custom_class):
     """
-    Test for :class:`saver_module.SaverPKL` and :class:`loader_module.LoaderPKL`.
+    Test for `SaverPKL` and `LoaderPKL`.
 
     Test Inputs
     -----------
@@ -157,8 +168,8 @@ def test_saver_loader_pkl(tmp_path, data, is_custom_class):
     """
     # Save a Pickle file with the desired data using the Saver class
     filepath = tmp_path / "test.pkl"
-    saver = SaverPKL(filepath, data)
-    saver.save()
+    saver = SaverPKL(filepath)
+    saver.save(data)
     # Load the data
     loader = LoaderPKL(filepath)
     content = loader.load()
@@ -172,7 +183,7 @@ def test_saver_loader_pkl(tmp_path, data, is_custom_class):
 
 def test_saver_loader_dill(tmp_path):
     """
-    Test for :class:`saver_module.SaverDILL` and :class:`loader_module.LoaderDILL`.
+    Test for `SaverDILL` and `LoaderDILL`.
 
     Test Inputs
     -----------
@@ -191,8 +202,8 @@ def test_saver_loader_dill(tmp_path):
     If the data is a custom class, use the :meth:`__eq__` method for comparison.
     """
     filepath = tmp_path / "test.dill"
-    saver = SaverDILL(filepath, data_dict)
-    saver.save()
+    saver = SaverDILL(filepath)
+    saver.save(data_dict)
     loader = LoaderDILL(filepath)
     content = loader.load()
     for key, value in data_dict.items():
@@ -200,14 +211,14 @@ def test_saver_loader_dill(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "tpe, expected, filename",
+    "expected, filename",
     argvalues=[
-        ("list", data_list_yml, "data_list.yml"),
-        ("dict", data_dict_yml, "data_dict.yml"),
+        (data_list_yml, "data_list.yml"),
+        (data_dict_yml, "data_dict.yml"),
     ],
     ids=["list", "dict"],
 )
-def test_loader_yaml(tpe, expected, filename):
+def test_loader_yaml(expected, filename):
     """
     Test for :class:`loader_module.LoaderYAML`.
 
@@ -226,6 +237,6 @@ def test_loader_yaml(tpe, expected, filename):
     Retrieve data from the mock data directory whose path is relative to the current python file.
     """
     filepath = PATH_MOCK_DATA / filename
-    loader = LoaderYAML(filepath, tpe)
+    loader = LoaderYAML(filepath)
     content = loader.load()
     assert content == expected, "Content mismatch"
