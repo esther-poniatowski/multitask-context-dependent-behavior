@@ -23,11 +23,10 @@ from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim
 from core.coordinates.time import CoordTime
 from core.coordinates.trials import CoordError
 from core.data_structures.base_data_struct import DataStructure
-from entities.bio_info import Area, Training
-from utils.io_data.formats import TargetType
+from core.entities.bio_info import Area, Training
 from utils.storage_rulers.impl_path_rulers import FiringRatesPopPath
-from utils.io_data.loaders.impl_loaders import LoaderPKL
-from utils.io_data.savers.impl_savers import SaverPKL
+from utils.io_data.loaders import LoaderDILL
+from utils.io_data.savers import SaverDILL
 
 
 class FiringRates(DataStructure):
@@ -84,9 +83,8 @@ class FiringRates(DataStructure):
             "stim": CoordStim,
         }
     )
-    loader = LoaderPKL
-    saver = SaverPKL
-    tpe = TargetType("ndarray_float")
+    loader = LoaderDILL
+    saver = SaverDILL
 
     @property
     def path(self) -> Path:
@@ -182,9 +180,8 @@ class FiringRatesPop(DataStructure):
         }
     )
     path_ruler = FiringRatesPopPath
-    loader = LoaderPKL
-    saver = SaverPKL
-    tpe = TargetType("ndarray_float")
+    loader = LoaderDILL
+    saver = SaverDILL
 
     def __init__(
         self,

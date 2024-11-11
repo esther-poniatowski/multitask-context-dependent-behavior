@@ -16,11 +16,10 @@ from core.coordinates.time import CoordTime
 
 # from core.coordinates.trials import CoordError
 from core.data_structures.base_data_struct import DataStructure
-from entities.bio_info import Area, Training
-from utils.io_data.formats import TargetType
+from core.entities.bio_info import Area, Training
 from utils.storage_rulers.impl_path_rulers import FiringRatesPopPath
-from utils.io_data.loaders.impl_loaders import LoaderPKL
-from utils.io_data.savers.impl_savers import SaverPKL
+from utils.io_data.loaders import LoaderDILL
+from utils.io_data.savers import SaverDILL
 
 
 class FiringRatesPop(DataStructure):
@@ -98,14 +97,13 @@ class FiringRatesPop(DataStructure):
 
     # --- IO Handlers ---
     path_ruler = FiringRatesPopPath
-    loader = LoaderPKL
-    saver = SaverPKL
-    tpe = TargetType("ndarray_float")
+    loader = LoaderDILL
+    saver = SaverDILL
 
     def __init__(
         self,
         area: Union[Area, str],
-        training: Union[Training, str],
+        training: Union[Training, bool],
         error: bool = False,
         data: Optional[Union[CoreData, np.ndarray]] = None,
         units: Optional[Union[CoordUnit, np.ndarray]] = None,
@@ -116,7 +114,9 @@ class FiringRatesPop(DataStructure):
     ):
         # Set sub-class specific metadata
         self.area = Area(area)
-        self.training = Training(training)
+        if isinstance(training, bool):
+            training = Training(training)
+        self.training = training
         self.error = error
         # Set data and coordinate attributes via the base class constructor
         super().__init__(data=data, units=units, task=task, ctx=ctx, stim=stim, time=time)
@@ -129,4 +129,4 @@ class FiringRatesPop(DataStructure):
 
     @property
     def path(self) -> Path:
-        return self.path_ruler().get_path(self.area, self.training)
+        return self.path_ruler().get_path(self.area, self.training == 1)

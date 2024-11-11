@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.data_structures.spikes_trains` [module]
+`core.data_structures.spikes_trains` [module]
 """
 from pathlib import Path
 from types import MappingProxyType
@@ -16,10 +16,9 @@ from core.coordinates.time import CoordTimeEvent
 from core.coordinates.trials import CoordError
 from core.data_structures.base_data_struct import DataStructure
 from core.data_structures.core_data import Dimensions, CoreData
-from utils.io_data.formats import TargetType
 from utils.storage_rulers.impl_path_rulers import SpikeTrainsPath
-from utils.io_data.loaders.impl_loaders import LoaderPKL
-from utils.io_data.savers.impl_savers import SaverPKL
+from utils.io_data.loaders import LoaderDILL
+from utils.io_data.savers import SaverDILL
 
 
 class SpikeTrains(DataStructure):
@@ -148,9 +147,8 @@ class SpikeTrains(DataStructure):
 
     # --- IO Handlers ---
     path_ruler = SpikeTrainsPath
-    loader = LoaderPKL
-    saver = SaverPKL
-    tpe = TargetType("ndarray_float")
+    loader = LoaderDILL
+    saver = SaverDILL
 
     def __init__(
         self,

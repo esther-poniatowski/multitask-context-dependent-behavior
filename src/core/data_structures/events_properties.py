@@ -14,8 +14,7 @@ from core.data_structures.core_data import Dimensions, CoreData
 from core.coordinates.exp_structure import CoordBlock
 from core.coordinates.time import CoordTimeEvent
 from core.coordinates.exp_condition import CoordEventDescription
-from utils.io_data.formats import TargetType
-from utils.io_data.loaders.impl_loaders import LoaderCSV
+from utils.io_data.loaders import LoaderCSVtoDataFrame
 from utils.storage_rulers.impl_path_rulers import EventsPropertiesPath
 
 
@@ -66,8 +65,7 @@ class EventsProperties(DataStructure):
 
     # --- IO Handlers ---
     path_ruler = EventsPropertiesPath
-    loader = LoaderCSV
-    tpe = TargetType("dataframe")
+    loader = LoaderCSVtoDataFrame
 
     # --- Key Features -----------------------------------------------------------------------------
 
@@ -141,7 +139,7 @@ class EventsProperties(DataStructure):
         In the subsequent analysis, the term "trial" refers to a single slot form one block.
         """
         # Load numpy array via LoaderNPY
-        raw = self.loader(path=self.path, tpe=self.tpe).load()  # dataframe
+        raw = self.loader(path=self.path).load()  # dataframe
         # Check the header of the CSV file
         if not np.array_equal(raw.columns, ["TrialNum", "Event", "StartTime", "StopTime"]):
             raise ValueError(f"Invalid header in the CSV file at {self.path}.")

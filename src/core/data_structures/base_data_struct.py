@@ -60,11 +60,10 @@ from core.data_structures.core_data import CoreData, Dimensions
 
 # from core.coordinates.base_coord import Coordinate
 from utils.storage_rulers.base_path_ruler import PathRuler
-from utils.io_data.formats import TargetType
-from utils.io_data.loaders.base_loader import Loader
-from utils.io_data.loaders.impl_loaders import LoaderDILL
-from utils.io_data.savers.base_saver import Saver
-from utils.io_data.savers.impl_savers import SaverDILL
+from utils.io_data.base_loader import Loader
+from utils.io_data.loaders import LoaderDILL
+from utils.io_data.base_saver import Saver
+from utils.io_data.savers import SaverDILL
 
 
 class Coordinate(np.ndarray):
@@ -140,8 +139,6 @@ class DataStructure(Generic[T], ABC):
         Subclass of `Saver` used to save data to a file in a specific format.
     loader : Type[Loader], default=LoaderDILL
         Subclass of `Loader` used to load data from a file in a specific format.
-    tpe : TargetType, default='object'
-        Type of the loaded data (parameter for the method `Loader.load`).
 
     Attributes
     ----------
@@ -198,13 +195,10 @@ class DataStructure(Generic[T], ABC):
 
     See Also
     --------
-    :class:`Generic`: Generic class to define a generic type.
-    :class:`ABC`: Abstract base class to define abstract methods and properties.
-    :class:`Coordinate`: Base class for coordinates.
-    :class:`PathRuler`: Base class for path managers.
-    :class:`Loader`: Base class for loaders.
-    :class:`Saver`: Base class for savers.
-    :class:`TargetType`: Class to specify the type of the loaded data.
+    `Coordinate`: Base class for coordinates.
+    `PathRuler`: Base class for path managers.
+    `Loader`: Base class for loaders.
+    `Saver`: Base class for savers.
     """
 
     # --- Class-Level Configurations ---------------------------------------------------------------
@@ -221,7 +215,6 @@ class DataStructure(Generic[T], ABC):
     path_ruler: Type[PathRuler]
     saver: Type[Saver] = SaverDILL
     loader: Type[Loader] = LoaderDILL
-    tpe: TargetType = TargetType("object")  # for :class:`LoaderPKL`
 
     def __init_subclass__(cls) -> None:
         """
@@ -473,9 +466,9 @@ class DataStructure(Generic[T], ABC):
 
     def load(self) -> None:
         """Load an instance from the file at :attr:`path`."""
-        loaded_obj = self.loader(path=self.path, tpe=self.tpe).load()
+        loaded_obj = self.loader(path=self.path).load()
         self.__dict__.update(loaded_obj.__dict__)
 
     def save(self) -> None:
         """Save an instance to a file at :attr:`path` in the format specific to the saver."""
-        self.saver(self.path, self).save()
+        self.saver(self.path).save(self)
