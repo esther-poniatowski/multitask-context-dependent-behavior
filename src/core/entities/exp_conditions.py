@@ -10,25 +10,25 @@ Classes
 `ExpCondition`
 """
 
-from typing import Self, Optional, Iterable, Union, TYPE_CHECKING
+from typing import Self, Optional, Iterable, Union, List, TYPE_CHECKING
+from itertools import product
 
 import numpy as np
 
-from core.entities.exp_features import Task, Context, Stimulus
+from core.entities.exp_features import Task, Context, Stimulus, BehaviorOutcome
 
 if TYPE_CHECKING:  # prevent circular imports (`exp_condition` is imported coordinate modules)
-    from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim
+    from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim, CoordOutcome
 
 
 class ExpCondition:
     """
-    Experimental condition defined by the combination of a task, a context, and a stimulus.
+    Experimental condition defined by the combination of several experimental features, among:
 
-    Class Attributes
-    ----------------
-    COMBINATIONS : FrozenSet[Tuple[Task, Context, Stimulus]]
-        All possible combinations of task, context, and stimulus (i.e. Cartesian product of the
-        three sets of options).
+    - task
+    - context
+    - stimulus
+    - behavior outcome
 
     Attributes
     ----------
@@ -38,10 +38,23 @@ class ExpCondition:
         Context in which the animal is engaged.
     stimulus : Stimulus
         Stimulus category presented to the animal.
+    outcome : BehaviorOutcome
+        Outcome of the animal's behavior.
+
+    Methods
+    -------
+    `match`
+    `get_combinations`
 
     Notes
     -----
-    Partial conditions can be defined by setting some attributes to `None`.
+    Partial conditions can be defined by specifying only the features of interest. The remaining
+    features are set to `None` by default.
+
+    Warning
+    -------
+    Instantiate with keyword arguments to avoid confusion between the features, especially when
+    partial conditions are defined.
 
     Examples
     --------
@@ -50,38 +63,38 @@ class ExpCondition:
     >>> task = Task('PTD')
     >>> context = Context('a')
     >>> stimulus = Stimulus('R')
-    >>> condition = ExpCondition(task, context, stimulus)
-    >>> condition.task
+    >>> condition1 = ExpCondition(task=task, context=context, stimulus=stimulus)
+    >>> condition1.task
     'PTD'
 
     Initialize directly with strings:
 
-    >>> condition = ExpCondition('PTD', 'a', 'R')
+    >>> condition2 = ExpCondition(task='CLK', context='p', stimulus='T')
 
-    Initialize a partial condition without specifying the stimulus:
+    Initialize a partial condition without specifying the context:
 
-    >>> condition = ExpCondition(task='PTD', context='a')
+    >>> condition3 = ExpCondition(task'PTD', stimulus='R', outcome='Go')
+    >>> print(condition3)
+    ExpCondition(task=PTD, context=None, stimulus=R, outcome=Go)
 
     Combine two conditions into a union:
 
-    >>> condition1 = ExpCondition('PTD', 'a', 'R')
-    >>> condition2 = ExpCondition('CLK', 'p', 'T')
     >>> union = condition1 + condition2
     >>> union.conditions
-    [ExpCondition('PTD', 'a', 'R'), ExpCondition('CLK', 'p', 'T')]
+    [ExpCondition(task='PTD', context='a', stimulus='R'), ExpCondition(task='CLK', context='p', stimulus='T')]
 
     Combine an arbitrary number of conditions into a union:
 
-    >>> union = ExpCondition.union(condition1, condition2)
+    >>> union = ExpCondition.union(condition1, condition2, condition3)
     >>> union.conditions
-    [ExpCondition('PTD', 'a', 'R'), ExpCondition('CLK', 'p', 'T')]
+    [ExpCondition(task='PTD', context='a', stimulus='R'), ExpCondition(task='CLK', context='p', stimulus='T'), ExpCondition(task='PTD', context=None, stimulus='R', outcome='Go')]
 
     Filter samples based on a condition:
 
     >>> task_coord = np.array(['PTD', 'CLK', 'PTD'])
     >>> ctx_coord = np.array(['a', 'p', 'a'])
     >>> stim_coord = np.array(['R', 'T', 'R'])
-    >>> mask = condition.match(task_coord, ctx_coord, stim_coord)
+    >>> mask = condition1.match(task=task_coord, context=ctx_coord, stim=stim_coord)
     >>> mask
     array([ True, False,  True])
 
@@ -89,22 +102,17 @@ class ExpCondition:
     --------
     `Task`
     `Context`
-    :`Stimulus`
+    `Stimulus`
+    `BehaviorOutcome`
     `ExpConditionUnion`
     """
-
-    COMBINATIONS = frozenset(
-        (task, context, stimulus)
-        for task in Task.OPTIONS
-        for context in Context.OPTIONS
-        for stimulus in Stimulus.OPTIONS
-    )
 
     def __init__(
         self,
         task: Optional[Union[Task, str]] = None,
         context: Optional[Union[Context, str]] = None,
         stimulus: Optional[Union[Stimulus, str]] = None,
+        outcome: Optional[Union[BehaviorOutcome, str]] = None,
     ):
         if isinstance(task, str):
             task = Task(task)
@@ -112,23 +120,40 @@ class ExpCondition:
             context = Context(context)
         if isinstance(stimulus, str):
             stimulus = Stimulus(stimulus)
+        if isinstance(outcome, str):
+            outcome = BehaviorOutcome(outcome)
         self.task = task
         self.context = context
         self.stimulus = stimulus
+        self.outcome = outcome
+
+    def __repr__(self) -> str:
+        return (
+            f"ExpCondition("
+            f"task={self.task}, "
+            f"context={self.context}, "
+            f"stimulus={self.stimulus}, "
+            f"outcome={self.outcome})"
+        )
 
     def match(
-        self, task_coord: "CoordTask", ctx_coord: "CoordCtx", stim_coord: "CoordStim"
+        self,
+        task: Optional["CoordTask"] = None,
+        ctx: Optional["CoordCtx"] = None,
+        stim: Optional["CoordStim"] = None,
+        outcome: Optional["CoordOutcome"] = None,
     ) -> np.ndarray:
         """
         Generate a boolean mask to index a set of samples based on a condition.
 
         Arguments
         ---------
-        task_coord, ctx_coord, stim_coord : np.ndarray
-            Arrays of task, context, and stimulus labels for each sample, respectively.
+        task, ctx, stim, outcome : Coordinate
+            Coordinates of task, context, stimulus and behavior outcome labels for each sample.
             .. _task_coord:
             .. _ctx_coord:
             .. _stim_coord:
+            .. _outcome_coord:
 
         Returns
         -------
@@ -136,13 +161,21 @@ class ExpCondition:
             Boolean mask to index samples that match the condition.
             .. _mask:
         """
-        mask = np.ones(len(task_coord), dtype=bool)
-        if self.task:
-            mask &= task_coord == self.task
-        if self.context:
-            mask &= ctx_coord == self.context
-        if self.stimulus:
-            mask &= stim_coord == self.stimulus
+        # Identify the specified coordinates to filter (not None)
+        coords = [c for c in (task, ctx, stim, outcome) if c is not None]
+        if not coords:
+            raise ValueError("No coordinate provided to match the condition.")
+        # Retrive the number of samples from one specified coordinate
+        mask = np.ones(len(coords[0]), dtype=bool)
+        # Apply conditions only for specified instance feature and corresponding coordinate
+        if self.task and task is not None:
+            mask &= task == self.task
+        if self.context and ctx is not None:
+            mask &= ctx == self.context
+        if self.stimulus and stim is not None:
+            mask &= stim == self.stimulus
+        if self.outcome and outcome is not None:
+            mask &= outcome == self.outcome
         return mask
 
     def __add__(self, other: Self) -> "ExpConditionUnion":
@@ -158,8 +191,44 @@ class ExpCondition:
         """
         return ExpConditionUnion(conditions)
 
-    def __repr__(self) -> str:
-        return f"ExpCondition(task={self.task}, context={self.context}, stimulus={self.stimulus})"
+    @staticmethod
+    def get_combinations(*features) -> List:
+        """
+        Get all possible combinations of the values of experimental features of interest.
+
+        Arguments
+        ---------
+        features : Tuple[ExpFeature]
+            Classes of the experimental features to consider, among: `Task`, `Context`, `Stimulus`,
+            `BehaviorOutcome`.
+
+        Returns
+        -------
+        combinations : List[Tuple[ExpFeature, ...]]
+            Cartesian product of feature instances in the selected experimental features.
+
+        Notes
+        -----
+        The values of each experimental feature are retrieved by the `get_features` method of the
+        features classes.
+
+        Examples
+        --------
+        Get all possible combinations of task, context, and stimulus:
+
+        >>> combinations = ExpCondition.get_combinations(Task, Stimulus, BehaviorOutcome)
+
+        Get all possible combinations of task, stimulus and behavior outcome:
+
+        >>> combinations = ExpCondition.get_combinations(Task, Stimulus, BehaviorOutcome)
+
+        See Also
+        --------
+        `itertools.product`: Cartesian product of input iterables.
+        """
+        feature_values = [feature_class.get_features() for feature_class in features]
+        combinations = list(product(*feature_values))
+        return combinations
 
 
 class ExpConditionUnion:
@@ -181,21 +250,28 @@ class ExpConditionUnion:
     def __init__(self, conditions: Iterable[ExpCondition]) -> None:
         self.conditions = list(conditions)
 
-    def match(self, task_coord, ctx_coord, stim_coord) -> np.ndarray:
+    def match(
+        self,
+        task: Optional["CoordTask"] = None,
+        ctx: Optional["CoordCtx"] = None,
+        stim: Optional["CoordStim"] = None,
+        outcome: Optional["CoordOutcome"] = None,
+    ) -> np.ndarray:
         """
         Generate a boolean mask to index samples that match any of the conditions.
 
         Arguments
         ---------
-        task_coord, ctx_coord, stim_coord : np.ndarray
-            See :ref:`task_coord`, :ref:`ctx_coord`, and :ref:`stim_coord`.
+        task, ctx, stim, outcome : np.ndarray
+            See :ref:`task`, :ref:`ctx`, and :ref:`stim`.
 
         Returns
         -------
         mask : np.ndarray
-            See :ref:`mask`.
+            Boolean mask to index samples that match any of the conditions.
         """
-        mask = np.zeros(len(task_coord), dtype=bool)
-        for condition in self.conditions:
-            mask |= condition.match(task_coord, ctx_coord, stim_coord)
+        # Get the masks for each condition in the union using the match method of ExpCondition
+        all_masks = [condition.match(task, ctx, stim, outcome) for condition in self.conditions]
+        # Combine all masks with a logical OR operation
+        mask = np.logical_or.reduce(all_masks)
         return mask
