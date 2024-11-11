@@ -1,26 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_core.test_coordinates.test_exp_condition` [module]
+`test_core.test_coordinates.test_exp_features` [module]
 
 See Also
 --------
-:mod:`core.coordinates.exp_condition`: Tested module.
+`core.coordinates.exp_features`: Tested module.
 
 Notes
 -----
 Those tests focus on the functionalities which are *specific* to
 one concrete subclass of coordinates.
 
-The tests are performed on the :class:`CoordTask`subclass,
-but apply for all subclasses of :class:`CoordExpCond`.
+The tests are performed on the `CoordTask`subclass, but apply for all subclasses of `CoordExpCond`.
 """
 
 import numpy as np
 import pytest
 
 from core.coordinates.exp_condition import CoordTask
-from core.entities.exp_condition import Task
+from core.entities.exp_features import Task
 
 
 N_SMPL = 10
