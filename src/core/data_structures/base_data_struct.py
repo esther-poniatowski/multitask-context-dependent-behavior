@@ -437,7 +437,7 @@ class DataStructure(Generic[T], ABC):
 
         Select trials for stimuli 'R' and 'T':
 
-        >>> data.sel(stim=['R', 'T'])
+        >>> data.sel(categ=['R', 'T'])
 
         Select error trials only:
 
@@ -445,7 +445,7 @@ class DataStructure(Generic[T], ABC):
 
         Select along multiple coordinates:
 
-        >>> data.sel(time=slice(0, 1), task='PTD', stim=['R', 'T'])
+        >>> data.sel(time=slice(0, 1), task='PTD', categ=['R', 'T'])
         """
         # raise NotImplementedError("Not implemented yet.")
         return self

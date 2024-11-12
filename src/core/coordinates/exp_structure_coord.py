@@ -22,7 +22,8 @@ from core.entities.exp_structure import Recording, Block, Slot
 
 
 ConcretePosition = TypeVar("ConcretePosition", Recording, Block, Slot)
-"""Generic type variable for concrete position entities."""
+"""Generic type variable for concrete position entities. Used to keep a generic type for the
+experimental factor while specifying the data type of the coordinate labels."""
 
 
 class CoordPosition(Coordinate[np.int64, ConcretePosition]):
@@ -64,8 +65,8 @@ class CoordPosition(Coordinate[np.int64, ConcretePosition]):
 
     See Also
     --------
-    :class:`core.coordinates.base_coord.Coordinate`
-    :mod:`core.entities.exp_structure`
+    `core.coordinates.base_coord.Coordinate`
+    `core.entities.exp_structure`
     """
 
     ENTITY: Type[ConcretePosition]

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.entities` [subpackage]
+`core.entities` [subpackage]
 
 Define classes representing the entities manipulated in the package.
 
@@ -10,11 +10,12 @@ It constitutes a type in itself, with its own attributes, methods and properties
 
 Modules
 -------
-:mod:`base_entity`
-:mod:`exp_condition`
-:mod:`exp_structure`
-:mod:`bio`
-:mod:`composites`
+`base_entity`
+`exp_factors`
+`exp_condition`
+`exp_structure`
+`bio_info`
+
 
 Notes
 -----

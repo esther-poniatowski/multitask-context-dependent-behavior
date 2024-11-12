@@ -7,7 +7,7 @@ Classes representing the experimental features describing the behavioral paradig
 
 Classes
 -------
-`ExpFeature`
+`ExpFactor`
 `Task`
 `Attention`
 `Category`
@@ -21,7 +21,7 @@ from typing import FrozenSet, Self, List
 from core.entities.base_entity import Entity
 
 
-class ExpFeature(str, Entity[str]):
+class ExpFactor(str, Entity[str]):
     """
     Base class for experimental conditions in the behavioral paradigm, behaving like strings.
 
@@ -46,7 +46,7 @@ class ExpFeature(str, Entity[str]):
         return [cls(option) for option in cls.OPTIONS]
 
 
-class Task(ExpFeature):
+class Task(ExpFactor):
     """
     Tasks performed by the animals, defined by the two sounds categories to discriminate.
 
@@ -71,7 +71,7 @@ class Task(ExpFeature):
     )
 
 
-class Attention(ExpFeature):
+class Attention(ExpFactor):
     """
     Attentional state, defined bh the animals' engagement in a task (by assumption).
 
@@ -112,7 +112,7 @@ class Attention(ExpFeature):
         return frozenset([cls("p")])
 
 
-class Category(ExpFeature):
+class Category(ExpFactor):
     """
     Behavioral category of the stimuli in the Go/NoGo task.
 
@@ -157,7 +157,7 @@ class Category(ExpFeature):
         return frozenset([cls("R"), cls("T")])
 
 
-class Stimulus(ExpFeature):
+class Stimulus(ExpFactor):
     """
     Sensory (physical) nature of the auditory stimuli presented to the animals.
 
@@ -189,7 +189,7 @@ class Stimulus(ExpFeature):
     )
 
 
-class Behavior(ExpFeature):
+class Behavior(ExpFactor):
     """
     Behavioral choice, i.e. animals' response.
 
@@ -204,3 +204,35 @@ class Behavior(ExpFeature):
 
     OPTIONS = frozenset(["Go", "NoGo"])
     LABELS = MappingProxyType({"Go": "Lick", "NoGo": "No Lick"})
+
+
+class EventDescription(ExpFactor):
+    """
+    Valid descriptions of events in the raw data.
+
+    Class Attributes
+    ----------------
+    OPTIONS : FrozenSet[str]
+        Event descriptions (4 to 9 letters):
+
+        - 'TRIALSTART': Marks the start of a block.
+        - 'PreStimSilence': Marks the pre-stimulus silence period within a slot.
+        - 'Stim': Marks the presentation of a stimulus within a slot.
+        - 'PostStimSilence': Marks the post-stimulus silence period within a slot.
+        - 'BEHAVIOR,SHOCKON': Marks the occurrence of a shock on an error trial.
+        - 'TRIALSTOP': Marks the end of a block.
+    """
+
+    OPTIONS = frozenset(
+        ["TRIALSTART", "PreStimSilence", "Stim", "PostStimSilence", "BEHAVIOR,SHOCKON", "TRIALSTOP"]
+    )
+    LABELS = MappingProxyType(
+        {
+            "TRIALSTART": "Block Start",
+            "PreStimSilence": "Pre-Stimulus Silence",
+            "Stim": "Stimulus Presentation",
+            "PostStimSilence": "Post-Stimulus Silence",
+            "BEHAVIOR,SHOCKON": "Shock Delivery",
+            "TRIALSTOP": "Block Stop",
+        }
+    )

@@ -10,14 +10,17 @@ Classes
 `CoordError`
 """
 
-from typing import Dict, Self
+from typing import Dict, Self, TypeAlias
 
 import numpy as np
 
-from coordinates.base_coord import Coordinate
+from core.coordinates.base_coord import Coordinate
+
+Error: TypeAlias = bool
+"""Type alias for the error labels in the data set."""
 
 
-class CoordError(Coordinate[np.bool_]):
+class CoordError(Coordinate[np.bool_, TypeAlias]):
     """
     Coordinate labels for error and success trials in the data set.
 
@@ -37,6 +40,7 @@ class CoordError(Coordinate[np.bool_]):
     Methods
     -------
     `count_by_lab`
+    `build_labels`
 
     Notes
     -----
@@ -44,7 +48,7 @@ class CoordError(Coordinate[np.bool_]):
 
     See Also
     --------
-    :class:`core.coordinates.base_coord.Coordinate`
+    `core.coordinates.base_coord.Coordinate`
     """
 
     DTYPE = np.bool_
@@ -69,7 +73,7 @@ class CoordError(Coordinate[np.bool_]):
     @classmethod
     def build_labels(cls, n_smpl: int, value: bool = False) -> Self:
         """
-        Build basic labels filled with one single behavioral outcome.
+        Build basic labels filled with one single behavioral choice.
 
         Parameters
         ----------

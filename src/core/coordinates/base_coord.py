@@ -5,28 +5,15 @@
 
 Classes
 -------
-:`Coordinate`
+`Coordinate`
 """
 
-from typing import Type, TypeVar, Union, Generic, Tuple, Any, Self, FrozenSet
+from typing import Type, TypeVar, Union, Generic, Tuple, Self, FrozenSet
 
 import numpy as np
 from numpy.typing import ArrayLike
 
-# from core.entities.base_entity import Entity
-
-
-class Entity:
-    """Template for now."""
-
-    OPTIONS: FrozenSet[Any]
-
-    @classmethod
-    def is_valid(cls, value):
-        """
-        Check if the value is among the valid options for the entity.
-        """
-        return value in cls.OPTIONS
+from core.entities.base_entity import Entity
 
 
 CoordDtype = TypeVar("CoordDtype", bound=np.generic)

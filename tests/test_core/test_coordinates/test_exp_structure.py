@@ -19,7 +19,7 @@ but apply for all subclasses of :class:`CoordPosition`.
 import numpy as np
 import pytest
 
-from core.coordinates.exp_structure import CoordRecNum
+from core.coordinates.exp_structure_coord import CoordRecNum
 from core.entities.exp_structure import Recording
 
 

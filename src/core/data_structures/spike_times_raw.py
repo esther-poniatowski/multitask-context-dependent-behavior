@@ -10,7 +10,7 @@ from typing import Optional, Union
 import numpy as np
 
 from core.constants import SMPL_RATE
-from core.coordinates.exp_structure import CoordBlock
+from core.coordinates.exp_structure_coord import CoordBlock
 from core.data_structures.base_data_struct import DataStructure
 from core.data_structures.core_data import Dimensions, CoreData
 from utils.io_data.loaders import LoaderNPY

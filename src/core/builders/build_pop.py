@@ -41,9 +41,9 @@ import numpy as np
 
 from core.builders.base_builder import DataBuilder
 from core.coordinates.base_coord import Coordinate
-from core.coordinates.bio import CoordUnit
-from core.coordinates.exp_condition import CoordTask, CoordAttention, CoordStim
-from core.coordinates.time import CoordTime
+from core.coordinates.bio_info_coord import CoordUnit
+from core.coordinates.exp_factor_coord import CoordTask, CoordAttention, CoordCategory
+from core.coordinates.time_coord import CoordTime
 from core.data_structures.core_data import CoreData
 from core.data_structures.firing_rates import FiringRatesPop, FiringRatesUnit
 from core.processors.preprocess.assign_ensembles import EnsembleAssigner, Ensembles
@@ -87,7 +87,8 @@ class PopulationBuilder(DataBuilder[List[FiringRatesUnit], FiringRatesPop]):
         Keys: Experimental condition defined by a combination of features' values.
         Values: Number of pseudo-trials to generate for the condition.
     conditions : List[str]
-        (Derived) Names of the conditions to consider for stratification (task, attentional state, stimulus).
+        (Derived) Names of the conditions to consider for stratification (task, attentional state,
+        stimulus).
     conditions_boundaries : Dict[str, Tuple[int, int]]
         (Derived) Start and end indices of the trials for each condition in the final data
         structure.
@@ -139,7 +140,7 @@ class PopulationBuilder(DataBuilder[List[FiringRatesUnit], FiringRatesPop]):
     product_class = FiringRatesPop
     TMP_DATA = ("data_per_unit", "seed", "ensembles")
     DEFAULT_FEATURES = MappingProxyType(
-        {"task": CoordTask, "attn": CoordAttention, "stim": CoordStim}
+        {"task": CoordTask, "attn": CoordAttention, "categ": CoordCategory}
     )
 
     def __init__(

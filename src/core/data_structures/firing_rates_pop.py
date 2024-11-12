@@ -10,9 +10,9 @@ from typing import Optional, Union
 import numpy as np
 
 from core.data_structures.core_data import CoreData, Dimensions
-from core.coordinates.bio import CoordUnit
-from core.coordinates.exp_condition import CoordTask, CoordAttention, CoordStim
-from core.coordinates.time import CoordTime
+from core.coordinates.bio_info_coord import CoordUnit
+from core.coordinates.exp_factor_coord import CoordTask, CoordAttention, CoordCategory
+from core.coordinates.time_coord import CoordTime
 
 # from core.coordinates.trials import CoordError
 from core.data_structures.base_data_struct import DataStructure
@@ -35,7 +35,7 @@ class FiringRatesPop(DataStructure):
     - ``units`` (dimensions ``ensembles``, ``units``)
     - ``task``  (dimension ``trials``)
     - ``attn``   (dimension ``trials``),
-    - ``stim``  (dimension ``trials``),
+    - ``categ``  (dimension ``trials``),
     - ``time``  (dimension ``time``)
 
     Identity Metadata: ``area``, ``training`
@@ -61,7 +61,7 @@ class FiringRatesPop(DataStructure):
         Coordinate labels for the task from which each trial comes.
     attn : CoordAttention
         Coordinate labels for the attentional state from which each trial comes.
-    stim : CoordStim
+    categ : CoordCategory
         Coordinate labels for the stimulus presented in each trial.
     time : CoordTime
         Time points of the firing rate time courses (in seconds).
@@ -80,7 +80,7 @@ class FiringRatesPop(DataStructure):
             "units": CoordUnit,
             "task": CoordTask,
             "attn": CoordAttention,
-            "stim": CoordStim,
+            "categ": CoordCategory,
             "time": CoordTime,
         }
     )
@@ -89,7 +89,7 @@ class FiringRatesPop(DataStructure):
             "units": Dimensions("ensembles", "units"),
             "task": Dimensions("trials"),
             "attn": Dimensions("trials"),
-            "stim": Dimensions("trials"),
+            "categ": Dimensions("trials"),
             "time": Dimensions("time"),
         }
     )
@@ -109,7 +109,7 @@ class FiringRatesPop(DataStructure):
         units: Optional[Union[CoordUnit, np.ndarray]] = None,
         task: Optional[Union[CoordTask, np.ndarray]] = None,
         attn: Optional[Union[CoordAttention, np.ndarray]] = None,
-        stim: Optional[Union[CoordStim, np.ndarray]] = None,
+        categ: Optional[Union[CoordCategory, np.ndarray]] = None,
         time: Optional[Union[CoordTime, np.ndarray]] = None,
     ):
         # Set sub-class specific metadata
@@ -119,7 +119,7 @@ class FiringRatesPop(DataStructure):
         self.training = training
         self.error = error
         # Set data and coordinate attributes via the base class constructor
-        super().__init__(data=data, units=units, task=task, attn=attn, stim=stim, time=time)
+        super().__init__(data=data, units=units, task=task, attn=attn, categ=categ, time=time)
 
     def __repr__(self) -> str:
         return (

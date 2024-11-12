@@ -11,9 +11,9 @@ import numpy as np
 
 from core.data_structures.base_data_struct import DataStructure
 from core.data_structures.core_data import Dimensions, CoreData
-from core.coordinates.exp_structure import CoordBlock
-from core.coordinates.time import CoordTimeEvent
-from core.coordinates.exp_condition import CoordEventDescription
+from core.coordinates.exp_structure_coord import CoordBlock
+from core.coordinates.time_coord import CoordTimeEvent
+from core.coordinates.exp_factor_coord import CoordEventDescription
 from utils.io_data.loaders import LoaderCSVtoDataFrame
 from utils.storage_rulers.impl_path_rulers import EventsPropertiesPath
 
