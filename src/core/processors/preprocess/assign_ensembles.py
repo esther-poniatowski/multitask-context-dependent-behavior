@@ -33,7 +33,7 @@ Ensembles: TypeAlias = np.ndarray[Tuple[Any, Any], np.dtype[np.int64]]
 """Type alias for ensemble assignments."""
 
 
-class EnsembleAssigner(Processor):
+class EnsembleAssigner(Processor[Any, Ensembles]):
     """
     Assign units (neurons) to ensembles ('batches' for data analysis).
 
