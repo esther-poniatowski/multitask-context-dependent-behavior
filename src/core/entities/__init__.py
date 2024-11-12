@@ -29,26 +29,26 @@ Here, an enum class may define :
 
 Examples
 --------
-Get the valid labels for Context objects :
+Get the valid labels for Attention objects :
 
 .. code-block:: python
 
-    from core.entities import Context
-    print(list(Context.get_options()))
+    from core.entities import Attention
+    print(list(Attention.get_options()))
     # Output: ('a', 'p', 'p-pre', 'p-post')
 
 Get the contexts for naive animals :
 
 .. code-block:: python
 
-    print(Context.naive())
+    print(Attention.naive())
     # Output: ('p')
 
-Get the full label for the context 'a' :
+Get the full label for the attentional state 'a' :
 
 .. code-block:: python
 
-        ctx = Context('a')
-        print(ctx.full_label)
+        attn = Attention('a')
+        print(attn.full_label)
         # Output: 'Active'
 """

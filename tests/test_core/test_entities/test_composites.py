@@ -67,4 +67,4 @@ def test_session_init():
     assert session.id == "avo052a04_p_PTD"
     assert session.site.id == "avo052a"
     assert session.task.value == "PTD"
-    assert session.ctx.value == "p"
+    assert session.attn.value == "p"

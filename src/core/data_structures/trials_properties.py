@@ -9,7 +9,7 @@ from typing import Optional, Union, Generator, List
 import numpy as np
 
 from core.coordinates.exp_structure import CoordRecNum, CoordBlock, CoordSlot
-from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim
+from core.coordinates.exp_condition import CoordTask, CoordAttention, CoordStim
 from core.coordinates.time import CoordTimeEvent
 from core.coordinates.trials import CoordError
 from core.data_structures.base_data_struct import DataStructure
@@ -37,7 +37,7 @@ class TrialsProperties(DataStructure):
     - ``block``
     - ``slot``
     - ``task`` (optional)
-    - ``ctx`` (optional)
+    - ``attn`` (optional)
     - ``stim``
     - ``t_on``
     - ``t_off``
@@ -59,8 +59,8 @@ class TrialsProperties(DataStructure):
         Coordinate for the slot of each trial within its block.
     task : CoordTask, optional
         Coordinate for the task of each trial.
-    ctx : CoordContext, optional
-        Coordinate for the context of each trial.
+    attn : CoordContext, optional
+        Coordinate for the attentional state of each trial.
     stim : CoordStim
         Coordinate for the nature of the stimulus presented in each trial.
     t_warn : CoordTimeEvent
@@ -90,7 +90,7 @@ class TrialsProperties(DataStructure):
     For a single session:
 
     - The attribute `session_ids` contains a single session identifier.
-    - The coordinates `recnum`, `task`, and `ctx` are optional, since they would contain a unique
+    - The coordinates `recnum`, `task`, and `attn` are optional, since they would contain a unique
       label for all the trials.
     - The property `n_blocks` indicates the number of blocks in the unique session.
 
@@ -117,7 +117,7 @@ class TrialsProperties(DataStructure):
             "block": CoordBlock,
             "slot": CoordSlot,
             "task": CoordTask,
-            "ctx": CoordCtx,
+            "attn": CoordAttention,
             "stim": CoordStim,
             "t_on": CoordTimeEvent,
             "t_off": CoordTimeEvent,
@@ -142,7 +142,7 @@ class TrialsProperties(DataStructure):
         block: Optional[Union[CoordBlock, np.ndarray]] = None,
         slot: Optional[Union[CoordSlot, np.ndarray]] = None,
         task: Optional[Union[CoordTask, np.ndarray]] = None,
-        ctx: Optional[Union[CoordCtx, np.ndarray]] = None,
+        attn: Optional[Union[CoordAttention, np.ndarray]] = None,
         stim: Optional[Union[CoordStim, np.ndarray]] = None,
         t_on: Optional[Union[CoordTimeEvent, np.ndarray]] = None,
         t_off: Optional[Union[CoordTimeEvent, np.ndarray]] = None,
@@ -168,7 +168,7 @@ class TrialsProperties(DataStructure):
             block=block,
             slot=slot,
             task=task,
-            ctx=ctx,
+            attn=attn,
             stim=stim,
             t_on=t_on,
             t_off=t_off,

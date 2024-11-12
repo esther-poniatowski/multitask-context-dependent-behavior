@@ -9,7 +9,8 @@ Classes
 -------
 `ExpFeature`
 `Task`
-`Context`
+`Attention`
+`Category`
 `Stimulus`
 `Behavior`
 """
@@ -47,7 +48,7 @@ class ExpFeature(str, Entity[str]):
 
 class Task(ExpFeature):
     """
-    Tasks performed by the animals (i.e. discrimination between two sounds categories).
+    Tasks performed by the animals, defined by the two sounds categories to discriminate.
 
     Class Attributes
     ----------------
@@ -70,14 +71,14 @@ class Task(ExpFeature):
     )
 
 
-class Context(ExpFeature):
+class Attention(ExpFeature):
     """
-    Contexts, i.e. animals' engagement in a task.
+    Attentional state, defined bh the animals' engagement in a task (by assumption).
 
     Class Attributes
     ----------------
     OPTIONS : FrozenSet[str]
-        Contexts represented by their short names (1 to 4 letters):
+        Attentional states represented by their short names (1 to 4 letters):
 
         - 'a': Active context (only for trained animals). The animal engages in an aversive Go/No-Go
           task. It is presented with a licking spout and should refrain from licking after the
@@ -137,7 +138,7 @@ class Category(ExpFeature):
     Notes
     -----
     The same stimuli labels are used for consistency in both active and passive contexts, even
-    though they are meaningful only in the active context. Moreover, the exact nature of the sound
+    though they are meaningful only in the active attentional state. Moreover, the exact nature of the sound
     under a given label differ across tasks.
 
     """

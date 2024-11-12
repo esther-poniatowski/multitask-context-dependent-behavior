@@ -49,7 +49,7 @@ class Stratifier(Processor):
     Processing Arguments
     --------------------
     features : Features
-        Features associated to the samples (e.g., task, context, stimulus).
+        Features associated to the samples (e.g., task, attentional state, stimulus).
         Length: ``n_features``.
         Shape of each element (feature): ``(n_samples,)``.
         .. _features:

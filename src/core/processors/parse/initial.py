@@ -248,7 +248,7 @@ def Build_EVENTSinfo_TRIALSinfo(UNITSinfo, PATHS, D=D):
 
 
 def Update_Contexts(SESSIONSinfo, SESSIONS, verbose=False):
-    """Updates the context with pre-passive and post-passive sessions of a *common* site.
+    """Updates the attentional state with pre-passive and post-passive sessions of a *common* site.
     NOTE : Common sessions recorded on the same site on the same recording day are found in the dictionary SESSIONS.
     That is why this step is not performed during the sweeping of sessions in Build_SESSIONSinfo :
     this sweeping does not take into account the link between different sessions of the same site.
@@ -277,7 +277,7 @@ def Update_Contexts(SESSIONSinfo, SESSIONS, verbose=False):
         SessionsOfSite = [SessionsOfSite[i] for i in I]
         Recordings = [Recordings[i] for i in I]
         Contexts = [SESSIONSinfo.loc[session, "Context"] for session in SessionsOfSite]
-        # Update the context in SESSIONSinfo
+        # Update the attentional state in SESSIONSinfo
         I_act = Indices_Elements(Contexts, "a")
         if len(I_act) > 0:  # at least one active session
             # deal with the first active session
@@ -328,10 +328,10 @@ def Build_SESSIONSinfo(TRIALSinfo, SESSIONS):
     Nsess = len(Sessions)
     for s, session in enumerate(Sessions):
         print(f"Session {s}/{Nsess} | {session}")
-        site, rec, task, ctx = Session_Features(session)
+        site, rec, task, attn = Session_Features(session)
         NTrials = len(TRIALSinfo.loc[session, "TrialNum"])
         for key, value in zip(
-            KEYS, [session, site, rec, task, ctx, NTrials]
+            KEYS, [session, site, rec, task, attn, NTrials]
         ):  # WARNING : ensure the order of the value matches that in KEYS
             SESSIONSinfo[key].append(value)
     SESSIONSinfo["NT"] = [0] * Nsess

@@ -32,7 +32,7 @@ Each data structure object encapsulates :
   involved in common operations. Examples: time bin, smoothing window.
 - Core data: Actual values to analyze or process. Examples: spike times, firing rates.
 - Coordinates: Labels associated to the dimensions, used to index and access specific data values.
-  Examples: time stamps, experimental conditions for each trial (task, stimulus, context).
+  Examples: time stamps, experimental conditions for each trial (task, stimulus, attentional state).
 - Specific methods to manipulate data structures. Examples: methods for loading/saving data from/to
   files, methods for selecting data based on coordinates.
 
@@ -157,19 +157,19 @@ arguments:
 Examples
 --------
 Define a data structure subclass with a time dimension and a trial dimension associated with three
-coordinates: task, context and stimulus.
+coordinates: task, attentional state and stimulus.
 
 .. code-block:: python
 
     class ExampleData(Data):
         dim2coord = MappingProxyType({
         "time": frozenset(["time"]),
-        "trials": frozenset(['task', 'ctx', 'stim'])
+        "trials": frozenset(['task', 'attn', 'stim'])
         })
         coord2type = MappingProxyType({
             'time': CoordTime,
             'task': CoordTask,
-            'ctx': CoordCtx,
+            'attn': CoordAttention,
             'stim': CoordStim,
         }
         path_ruler = PathRulerExample
@@ -179,7 +179,7 @@ coordinates: task, context and stimulus.
                     data: Optional[npt.NDArray] = None,
                     time: Optional[CoordTime] = None,
                     task: Optional[CoordTask] = None,
-                    ctx: Optional[CoordCtx] = None,
+                    attn: Optional[CoordAttention] = None,
                     stim: Optional[CoordStim] = None,
                     **kwargs # to respect the signature of the base class constructor
                     ) -> None:
@@ -187,7 +187,7 @@ coordinates: task, context and stimulus.
             # Assign subclass-specific metadata
             self.id = id_
             # Call the base class constructor to handle data and coordinates
-            super().__init__(data, time=time, task=task, ctx=ctx, stim=stim)
+            super().__init__(data, time=time, task=task, attn=attn, stim=stim)
 
         # Implement the path by calling the path manager method with the required arguments
         @property

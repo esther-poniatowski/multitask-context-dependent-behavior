@@ -15,10 +15,10 @@ from itertools import product
 
 import numpy as np
 
-from core.entities.exp_features import Task, Context, Stimulus, Behavior, ExpFeature
+from core.entities.exp_features import Task, Attention, Stimulus, Behavior, ExpFeature
 
 if TYPE_CHECKING:  # prevent circular imports (`exp_condition` is imported coordinate modules)
-    from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim, CoordOutcome
+    from core.coordinates.exp_condition import CoordTask, CoordAttention, CoordStim, CoordOutcome
 
 
 class ExpCondition:
@@ -26,7 +26,7 @@ class ExpCondition:
     Experimental condition defined by the combination of several experimental features, among:
 
     - task
-    - context
+    - attentional state
     - stimulus
     - behavior outcome
 
@@ -34,8 +34,8 @@ class ExpCondition:
     ----------
     task : Task
         Task performed by the animal.
-    context : Context
-        Context in which the animal is engaged.
+    attention : Attention
+        Attentional state in which the animal is engaged.
     stimulus : Stimulus
         Stimulus category presented to the animal.
     outcome : Behavior
@@ -58,50 +58,50 @@ class ExpCondition:
 
     Examples
     --------
-    Initialize a condition for the task PTD, in the active context, with the reference stimulus:
+    Initialize a condition for the task PTD, in the active attention, with the reference stimulus:
 
     >>> task = Task('PTD')
-    >>> context = Context('a')
+    >>> attention = Attention('a')
     >>> stimulus = Stimulus('R')
-    >>> condition1 = ExpCondition(task=task, context=context, stimulus=stimulus)
+    >>> condition1 = ExpCondition(task=task, attention=attention, stimulus=stimulus)
     >>> condition1.task
     'PTD'
 
     Initialize directly with strings:
 
-    >>> condition2 = ExpCondition(task='CLK', context='p', stimulus='T')
+    >>> condition2 = ExpCondition(task='CLK', attention='p', stimulus='T')
 
-    Initialize a partial condition without specifying the context:
+    Initialize a partial condition without specifying the attention:
 
     >>> condition3 = ExpCondition(task='PTD', stimulus='R', outcome='Go')
     >>> print(condition3)
-    ExpCondition(task=PTD, context=None, stimulus=R, outcome=Go)
+    ExpCondition(task=PTD, attention=None, stimulus=R, outcome=Go)
 
     Combine two conditions into a union:
 
     >>> union = condition1 + condition2
     >>> union.conditions
-    [ExpCondition(task='PTD', context='a', stimulus='R'), ExpCondition(task='CLK', context='p', stimulus='T')]
+    [ExpCondition(task='PTD', attention='a', stimulus='R'), ExpCondition(task='CLK', attention='p', stimulus='T')]
 
     Combine an arbitrary number of conditions into a union:
 
     >>> union = ExpCondition.union(condition1, condition2, condition3)
     >>> union.conditions
-    [ExpCondition(task='PTD', context='a', stimulus='R'), ExpCondition(task='CLK', context='p', stimulus='T'), ExpCondition(task='PTD', context=None, stimulus='R', outcome='Go')]
+    [ExpCondition(task='PTD', attention='a', stimulus='R'), ExpCondition(task='CLK', attention='p', stimulus='T'), ExpCondition(task='PTD', attention=None, stimulus='R', outcome='Go')]
 
     Filter samples based on a condition:
 
     >>> task_coord = np.array(['PTD', 'CLK', 'PTD'])
     >>> ctx_coord = np.array(['a', 'p', 'a'])
     >>> stim_coord = np.array(['R', 'T', 'R'])
-    >>> mask = condition1.match(task=task_coord, ctx=ctx_coord, stim=stim_coord)
+    >>> mask = condition1.match(task=task_coord, attn=ctx_coord, stim=stim_coord)
     >>> mask
     array([ True, False,  True])
 
     See Also
     --------
     `Task`
-    `Context`
+    `Attention`
     `Stimulus`
     `Behavior`
     `ExpConditionUnion`
@@ -110,20 +110,20 @@ class ExpCondition:
     def __init__(
         self,
         task: Task | str | None = None,
-        context: Context | str | None = None,
+        attention: Attention | str | None = None,
         stimulus: Stimulus | str | None = None,
         outcome: Behavior | str | None = None,
     ):
         if isinstance(task, str):
             task = Task(task)
-        if isinstance(context, str):
-            context = Context(context)
+        if isinstance(attention, str):
+            attention = Attention(attention)
         if isinstance(stimulus, str):
             stimulus = Stimulus(stimulus)
         if isinstance(outcome, str):
             outcome = Behavior(outcome)
         self.task = task
-        self.context = context
+        self.attention = attention
         self.stimulus = stimulus
         self.outcome = outcome
 
@@ -131,7 +131,7 @@ class ExpCondition:
         return (
             f"ExpCondition("
             f"task={self.task}, "
-            f"context={self.context}, "
+            f"attention={self.attention}, "
             f"stimulus={self.stimulus}, "
             f"outcome={self.outcome})"
         )
@@ -139,7 +139,7 @@ class ExpCondition:
     def match(
         self,
         task: "CoordTask" | None = None,
-        ctx: "CoordCtx" | None = None,
+        attn: "CoordAttention" | None = None,
         stim: "CoordStim" | None = None,
         outcome: "CoordOutcome" | None = None,
     ) -> np.ndarray:
@@ -148,8 +148,8 @@ class ExpCondition:
 
         Arguments
         ---------
-        task, ctx, stim, outcome : Coordinate
-            Coordinates of task, context, stimulus and behavior outcome labels for each sample.
+        task, attn, stim, outcome : Coordinate
+            Coordinates of task, attentional state, stimulus and behavior outcome labels for each sample.
             .. _task_coord:
             .. _ctx_coord:
             .. _stim_coord:
@@ -162,7 +162,7 @@ class ExpCondition:
             .. _mask:
         """
         # Identify the specified coordinates to filter (not None)
-        coords = [c for c in (task, ctx, stim, outcome) if c is not None]
+        coords = [c for c in (task, attn, stim, outcome) if c is not None]
         if not coords:
             raise ValueError("No coordinate provided to match the condition.")
         # Retrieve the number of samples from one specified coordinate
@@ -170,8 +170,8 @@ class ExpCondition:
         # Apply conditions only for specified instance feature and corresponding coordinate
         if self.task and task is not None:
             mask &= task == self.task
-        if self.context and ctx is not None:
-            mask &= ctx == self.context
+        if self.attention and attn is not None:
+            mask &= attn == self.attention
         if self.stimulus and stim is not None:
             mask &= stim == self.stimulus
         if self.outcome and outcome is not None:
@@ -199,7 +199,7 @@ class ExpCondition:
         Arguments
         ---------
         features : Tuple[ExpFeature]
-            Classes of the experimental features to consider, among: `Task`, `Context`, `Stimulus`,
+            Classes of the experimental features to consider, among: `Task`, `Attention`, `Stimulus`,
             `Behavior`.
 
         Returns
@@ -214,7 +214,7 @@ class ExpCondition:
 
         Examples
         --------
-        Get all possible combinations of task, context, and stimulus:
+        Get all possible combinations of task, attentional state, and stimulus:
 
         >>> combinations = ExpCondition.get_combinations(Task, Stimulus, Behavior)
 
@@ -234,7 +234,7 @@ class ExpCondition:
     def generate_conditions(
         tasks: Sequence[Task] | Task | None = None,
         stimuli: Sequence[Stimulus] | Stimulus | None = None,
-        contexts: Sequence[Context] | Context | None = None,
+        contexts: Sequence[Attention] | Attention | None = None,
         outcomes: Sequence[Behavior] | Behavior | None = None,
     ) -> List["ExpCondition"]:
         """
@@ -253,12 +253,12 @@ class ExpCondition:
 
         Examples
         --------
-        Generate all possible conditions for two tasks, a fixed context, two stimuli and both
+        Generate all possible conditions for two tasks, a fixed attentional state, two stimuli and both
         outcomes:
 
         >>> conditions = ExpCondition.generate_conditions(
         ...     tasks=[Task("PTD"), Task("CLK")],
-        ...     contexts=[Context("a")],
+        ...     contexts=[Attention("a")],
         ...     stimuli=[Stimulus("R"), Stimulus("T")],
         ...     outcomes=[Behavior("Go"), Behavior("NoGo")]
         ... )
@@ -328,7 +328,7 @@ class ExpConditionUnion:
     def match(
         self,
         task: "CoordTask" | None = None,
-        ctx: "CoordCtx" | None = None,
+        attn: "CoordAttention" | None = None,
         stim: "CoordStim" | None = None,
         outcome: "CoordOutcome" | None = None,
     ) -> np.ndarray:
@@ -337,8 +337,8 @@ class ExpConditionUnion:
 
         Arguments
         ---------
-        task, ctx, stim, outcome : np.ndarray
-            See :ref:`task`, :ref:`ctx`, and :ref:`stim`.
+        task, attn, stim, outcome : np.ndarray
+            See :ref:`task`, :ref:`attn`, and :ref:`stim`.
 
         Returns
         -------
@@ -346,7 +346,7 @@ class ExpConditionUnion:
             Boolean mask to index samples that match any of the conditions.
         """
         # Get the masks for each condition in the union using the match method of ExpCondition
-        all_masks = [condition.match(task, ctx, stim, outcome) for condition in self.conditions]
+        all_masks = [condition.match(task, attn, stim, outcome) for condition in self.conditions]
         # Combine all masks with a logical OR operation
         mask = np.logical_or.reduce(all_masks)
         return mask

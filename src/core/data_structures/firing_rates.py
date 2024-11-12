@@ -19,7 +19,7 @@ from core.constants import (
     T_SHOCK,
     SMOOTH_WINDOW,
 )
-from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim
+from core.coordinates.exp_condition import CoordTask, CoordAttention, CoordStim
 from core.coordinates.time import CoordTime
 from core.coordinates.trials import CoordError
 from core.data_structures.base_data_struct import DataStructure
@@ -41,7 +41,7 @@ class FiringRates(DataStructure):
                  ``block`` (type ``CoordBlock``)
                  ``slot`` (type ``CoordSlot``)
                  ``task`` (type ``CoordTask``)
-                 ``ctx`` (type ``CoordCtx``)
+                 ``attn`` (type ``CoordAttention``)
                  ``stim`` (type ``CoordStim``)
     Metadata   : ``n_t``, ``n_trials``
                  ``t_max``, ``t_on``, ``t_off``, ``t_shock``,
@@ -60,7 +60,7 @@ class FiringRates(DataStructure):
         Coordinate for dimension `time`.
     task: CoordTask
         Coordinate for dimension `trials`.
-    ctx: CoordCtx
+    attn: CoordAttention
         Coordinate for dimension `trials`.
     stim: CoordStim
         Coordinate for dimension `trials`.
@@ -74,12 +74,12 @@ class FiringRates(DataStructure):
         Smoothing window size used to generate the firing rate time courses (in seconds).
     """
 
-    dim2coord = MappingProxyType({"trial": frozenset(["task", "ctx", "stim"])})
+    dim2coord = MappingProxyType({"trial": frozenset(["task", "attn", "stim"])})
     coord2type = MappingProxyType(
         {
             "time": CoordTime,
             "task": CoordTask,
-            "ctx": CoordCtx,
+            "attn": CoordAttention,
             "stim": CoordStim,
         }
     )
@@ -126,7 +126,7 @@ class FiringRatesPop(DataStructure):
                  ``block`` (type ``CoordBlock``)
                  ``slot`` (type ``CoordSlot``)
                  ``task`` (type ``CoordTask``)
-                 ``ctx`` (type ``CoordCtx``)
+                 ``attn`` (type ``CoordAttention``)
                  ``stim`` (type ``CoordStim``)
                  ``error`` (type ``CoordError``)
     Metadata   : ``n_units``, ``n_t``, ``n_trials``
@@ -149,7 +149,7 @@ class FiringRatesPop(DataStructure):
         Coordinate for dimension `time`.
     task: CoordTask
         Coordinate for dimension `trials`.
-    ctx: CoordCtx
+    attn: CoordAttention
         Coordinate for dimension `trials`.
     stim: CoordStim
         Coordinate for dimension `trials`.
@@ -169,12 +169,12 @@ class FiringRatesPop(DataStructure):
         Training condition of the animals from which the units were recorded.
     """
 
-    dim2coord = MappingProxyType({"trial": frozenset(["task", "ctx", "stim", "error"])})
+    dim2coord = MappingProxyType({"trial": frozenset(["task", "attn", "stim", "error"])})
     coord2type = MappingProxyType(
         {
             "time": CoordTime,
             "task": CoordTask,
-            "ctx": CoordCtx,
+            "attn": CoordAttention,
             "stim": CoordStim,
             "error": CoordError,
         }
@@ -196,7 +196,7 @@ class FiringRatesPop(DataStructure):
         data: Optional[npt.NDArray[np.float64]] = None,
         time: Optional[CoordTime] = None,
         task: Optional[CoordTask] = None,
-        ctx: Optional[CoordCtx] = None,
+        attn: Optional[CoordAttention] = None,
         stim: Optional[CoordStim] = None,
         error: Optional[CoordError] = None,
     ):
@@ -212,7 +212,7 @@ class FiringRatesPop(DataStructure):
         # Declare data and coordinate attributes (avoid type errors)
         self.data: npt.NDArray[np.float64]
         self.task: CoordTask
-        self.ctx: CoordCtx
+        self.attn: CoordAttention
         self.stim: CoordStim
         self.error: CoordError
         # Set data and coordinate attributes
@@ -220,7 +220,7 @@ class FiringRatesPop(DataStructure):
             data=data,
             time=time,
             task=task,
-            ctx=ctx,
+            attn=attn,
             stim=stim,
             error=error,
         )
