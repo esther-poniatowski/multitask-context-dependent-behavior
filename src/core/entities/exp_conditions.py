@@ -15,7 +15,7 @@ from itertools import product
 
 import numpy as np
 
-from core.entities.exp_features import Task, Context, Stimulus, BehaviorOutcome, ExpFeature
+from core.entities.exp_features import Task, Context, Stimulus, Behavior, ExpFeature
 
 if TYPE_CHECKING:  # prevent circular imports (`exp_condition` is imported coordinate modules)
     from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim, CoordOutcome
@@ -38,7 +38,7 @@ class ExpCondition:
         Context in which the animal is engaged.
     stimulus : Stimulus
         Stimulus category presented to the animal.
-    outcome : BehaviorOutcome
+    outcome : Behavior
         Outcome of the animal's behavior.
 
     Methods
@@ -103,7 +103,7 @@ class ExpCondition:
     `Task`
     `Context`
     `Stimulus`
-    `BehaviorOutcome`
+    `Behavior`
     `ExpConditionUnion`
     """
 
@@ -112,7 +112,7 @@ class ExpCondition:
         task: Task | str | None = None,
         context: Context | str | None = None,
         stimulus: Stimulus | str | None = None,
-        outcome: BehaviorOutcome | str | None = None,
+        outcome: Behavior | str | None = None,
     ):
         if isinstance(task, str):
             task = Task(task)
@@ -121,7 +121,7 @@ class ExpCondition:
         if isinstance(stimulus, str):
             stimulus = Stimulus(stimulus)
         if isinstance(outcome, str):
-            outcome = BehaviorOutcome(outcome)
+            outcome = Behavior(outcome)
         self.task = task
         self.context = context
         self.stimulus = stimulus
@@ -200,7 +200,7 @@ class ExpCondition:
         ---------
         features : Tuple[ExpFeature]
             Classes of the experimental features to consider, among: `Task`, `Context`, `Stimulus`,
-            `BehaviorOutcome`.
+            `Behavior`.
 
         Returns
         -------
@@ -216,11 +216,11 @@ class ExpCondition:
         --------
         Get all possible combinations of task, context, and stimulus:
 
-        >>> combinations = ExpCondition.get_combinations(Task, Stimulus, BehaviorOutcome)
+        >>> combinations = ExpCondition.get_combinations(Task, Stimulus, Behavior)
 
         Get all possible combinations of task, stimulus and behavior outcome:
 
-        >>> combinations = ExpCondition.get_combinations(Task, Stimulus, BehaviorOutcome)
+        >>> combinations = ExpCondition.get_combinations(Task, Stimulus, Behavior)
 
         See Also
         --------
@@ -235,7 +235,7 @@ class ExpCondition:
         tasks: Sequence[Task] | Task | None = None,
         stimuli: Sequence[Stimulus] | Stimulus | None = None,
         contexts: Sequence[Context] | Context | None = None,
-        outcomes: Sequence[BehaviorOutcome] | BehaviorOutcome | None = None,
+        outcomes: Sequence[Behavior] | Behavior | None = None,
     ) -> List["ExpCondition"]:
         """
         Generate all possible conditions for a set of experimental features.
@@ -260,7 +260,7 @@ class ExpCondition:
         ...     tasks=[Task("PTD"), Task("CLK")],
         ...     contexts=[Context("a")],
         ...     stimuli=[Stimulus("R"), Stimulus("T")],
-        ...     outcomes=[BehaviorOutcome("Go"), BehaviorOutcome("NoGo")]
+        ...     outcomes=[Behavior("Go"), Behavior("NoGo")]
         ... )
 
         Notes
