@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.coordinates` [subpackage]
+`core.coordinates` [subpackage]
 
 Classes representing coordinates (labels) associated to the data structures.
 
@@ -39,12 +39,12 @@ A coordinate object can be obtained via several pathways :
 
 Modules
 -------
-:mod:`base_coord`
-:mod:`time`
-:mod:`exp_condition`
-:mod:`exp_structure`
-:mod:`trials`
-:mod:`bio`
+`base_coord`
+`time_coord`
+`exp_factor_coord`
+`exp_structure_coord`
+`trials_coord`
+`bio_info_coord`
 
 
 Implementation
@@ -59,7 +59,7 @@ Implementing Specific Coordinates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Each specific type of coordinate is implemented as a concrete subclass which inherits from
-:class:`Coordinate`.
+the `Coordinate` abstract base class.
 
 To be valid, each coordinate subclass must perform the following steps:
 
@@ -70,20 +70,20 @@ Implement a Custom Constructor
   constructor.
 - Set class-specific attributes (if needed) to store metadata along with the coordinate labels. Any
   additional parameter should be assigned a *default value* in the constructor signature. This is
-  necessary because the method :meth:`empty` defined in the *base class* calls the *subclass*
+  necessary because the `empty` method defined in the *base class* calls the *subclass*
   constructor, but remains agnostic to any subclass-specific extra parameter.
 
 Comply with the Interface
 .........................
 
-- Implement the required abstract methods (e.g. :meth:`build_labels`).
+- Implement the required abstract methods (e.g. `build_labels`).
 
 
 Customize the Coordinate Class (Optional)
 .........................................
 
-- Override some base class methods to adapt the behavior (e.g. :meth:`__repr__`).
-- Add methods to add manipulations specific to the coordinate family (e.g. :meth:`count_by_lab`).
+- Override some base class methods to adapt the behavior (e.g. `__repr__`).
+- Add methods to add manipulations specific to the coordinate family (e.g. `count_by_lab`).
 
 
 Notes
@@ -93,9 +93,9 @@ embedded (e.g. name of the associated dimension in the data structure instance).
 managed by the data structures themselves. This design enhances modularity and decouples the
 coordinate classes from the data set classes to which they apply.
 
-Disable the pylint error `arguments-differ` for the :meth:`build_labels` method in each concrete
-subclass. Indeed, the method signature is necessarily different from the abstract method signature
-since it depends on the specific sub-class features.
+Disable the pylint error `arguments-differ` for the `build_labels` method in each concrete subclass.
+Indeed, the method signature is necessarily different from the abstract method signature since it
+depends on the specific sub-class features.
 
 Examples
 --------
