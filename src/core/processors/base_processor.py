@@ -45,7 +45,6 @@ class Processor(ABC, Generic[I, O]):
     `process`
     `_pre_process`
     `_process` (abstract, required in subclasses)
-    `_post_process`
     `set_random_state`
 
     Notes
@@ -81,7 +80,7 @@ class Processor(ABC, Generic[I, O]):
         config = ", ".join(f"{attr}={getattr(self, attr)}" for attr in self.config_params)
         return f"<{self.__class__.__name__}(config={config})"
 
-    def process(self, seed: Optional[int] = None, **input_data: I) -> Union[O, Tuple[O, ...]]:
+    def process(self, seed: Optional[int] = None, **input_data: I) -> O:
         """
         Main processing method: receives input data, execute processing operations, return results.
 
@@ -115,7 +114,6 @@ class Processor(ABC, Generic[I, O]):
         - Pre-processing (optional): Validate input data, set default values, and perform
           additional subclass-specific pre-processing if necessary.
         - Processing: Execute the subclass-specific operations to compute its target results.
-        - Postprocessing (optional): Perform subclass-specific post-processing if necessary.
 
         Example
         -------
@@ -126,23 +124,17 @@ class Processor(ABC, Generic[I, O]):
 
         Implementation
         --------------
-        The methods `_pre_process`, `_process`, and `_post_process` should be consistent in the
-        types of their inputs and outputs:
+        The methods `_pre_process`and `_process` should be consistent in the types of their inputs
+        and outputs:
 
         - `_process` takes a dictionary and returns a tuple, to behave like the `process` method.
         - `_pre_process` takes and returns a dictionary, to insert in the pipeline while preserving
           the same format as the input data.
-        - `_post_process` takes a tuple and returns a tuple, for the same reason.
         """
         if self.is_random:
             self.set_random_state(seed)
         input_data = self._pre_process(**input_data)
         output_data = self._process(**input_data)  # subclass-specific logic (required)
-        if not isinstance(output_data, tuple):  # if single output: format as a tuple
-            output_data = (output_data,)
-        output_data = self._post_process(*output_data)
-        if len(output_data) == 1:  # if single output: return as a single value (not a tuple)
-            return output_data[0]
         return output_data
 
     def _pre_process(self, **input_data: I) -> Dict[str, I]:
@@ -171,7 +163,7 @@ class Processor(ABC, Generic[I, O]):
         return input_data
 
     @abstractmethod
-    def _process(self, **input_data: I) -> Union[O, Tuple[O, ...]]:
+    def _process(self, **input_data: I) -> O:
         """
         Orchestrate the specific operations performed by the concrete processor.
 
@@ -187,30 +179,6 @@ class Processor(ABC, Generic[I, O]):
         Any
             Output data computed by the processor, in a format similar to :ref:`output_data`.
         """
-
-    def _post_process(self, *output_data: O) -> Union[O, Tuple[O, ...]]:
-        """
-        Post-processing operations. Optionally overridden in concrete processor subclasses.
-
-        Parameters
-        ----------
-        output_data : Any
-            See the returned value :ref:`output_data`.
-
-        Returns
-        -------
-        Any
-            Post-processed output data, in a format similar to :ref:`output_data`.
-
-        Notes
-        -----
-        Examples of subclass-specific post-processing:
-
-        - Check the consistency of the output data.
-        - Clear temporary data in case they had been stored during processing.
-        - Logging.
-        """
-        return output_data
 
     def set_random_state(self, seed) -> None:
         """
