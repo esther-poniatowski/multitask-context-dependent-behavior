@@ -10,12 +10,12 @@ Classes
 `ExpCondition`
 """
 
-from typing import Self, Optional, Iterable, Union, List, TYPE_CHECKING
+from typing import Self, Iterable, List, Sequence, TYPE_CHECKING
 from itertools import product
 
 import numpy as np
 
-from core.entities.exp_features import Task, Context, Stimulus, BehaviorOutcome
+from core.entities.exp_features import Task, Context, Stimulus, BehaviorOutcome, ExpFeature
 
 if TYPE_CHECKING:  # prevent circular imports (`exp_condition` is imported coordinate modules)
     from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim, CoordOutcome
@@ -73,7 +73,7 @@ class ExpCondition:
 
     Initialize a partial condition without specifying the context:
 
-    >>> condition3 = ExpCondition(task'PTD', stimulus='R', outcome='Go')
+    >>> condition3 = ExpCondition(task='PTD', stimulus='R', outcome='Go')
     >>> print(condition3)
     ExpCondition(task=PTD, context=None, stimulus=R, outcome=Go)
 
@@ -94,7 +94,7 @@ class ExpCondition:
     >>> task_coord = np.array(['PTD', 'CLK', 'PTD'])
     >>> ctx_coord = np.array(['a', 'p', 'a'])
     >>> stim_coord = np.array(['R', 'T', 'R'])
-    >>> mask = condition1.match(task=task_coord, context=ctx_coord, stim=stim_coord)
+    >>> mask = condition1.match(task=task_coord, ctx=ctx_coord, stim=stim_coord)
     >>> mask
     array([ True, False,  True])
 
@@ -109,10 +109,10 @@ class ExpCondition:
 
     def __init__(
         self,
-        task: Optional[Union[Task, str]] = None,
-        context: Optional[Union[Context, str]] = None,
-        stimulus: Optional[Union[Stimulus, str]] = None,
-        outcome: Optional[Union[BehaviorOutcome, str]] = None,
+        task: Task | str | None = None,
+        context: Context | str | None = None,
+        stimulus: Stimulus | str | None = None,
+        outcome: BehaviorOutcome | str | None = None,
     ):
         if isinstance(task, str):
             task = Task(task)
@@ -138,10 +138,10 @@ class ExpCondition:
 
     def match(
         self,
-        task: Optional["CoordTask"] = None,
-        ctx: Optional["CoordCtx"] = None,
-        stim: Optional["CoordStim"] = None,
-        outcome: Optional["CoordOutcome"] = None,
+        task: "CoordTask" | None = None,
+        ctx: "CoordCtx" | None = None,
+        stim: "CoordStim" | None = None,
+        outcome: "CoordOutcome" | None = None,
     ) -> np.ndarray:
         """
         Generate a boolean mask to index a set of samples based on a condition.
@@ -165,7 +165,7 @@ class ExpCondition:
         coords = [c for c in (task, ctx, stim, outcome) if c is not None]
         if not coords:
             raise ValueError("No coordinate provided to match the condition.")
-        # Retrive the number of samples from one specified coordinate
+        # Retrieve the number of samples from one specified coordinate
         mask = np.ones(len(coords[0]), dtype=bool)
         # Apply conditions only for specified instance feature and corresponding coordinate
         if self.task and task is not None:
@@ -230,6 +230,81 @@ class ExpCondition:
         combinations = list(product(*feature_values))
         return combinations
 
+    @staticmethod
+    def generate_conditions(
+        tasks: Sequence[Task] | Task | None = None,
+        stimuli: Sequence[Stimulus] | Stimulus | None = None,
+        contexts: Sequence[Context] | Context | None = None,
+        outcomes: Sequence[BehaviorOutcome] | BehaviorOutcome | None = None,
+    ) -> List["ExpCondition"]:
+        """
+        Generate all possible conditions for a set of experimental features.
+
+        Arguments
+        ---------
+        tasks, stimuli, contexts, outcomes : List[ExpFeature] | ExpFeature, optional
+            Instances of tasks, contexts, stimuli, and behavior outcomes to consider to generate the
+            experimental conditions of interest.
+
+        Returns
+        -------
+        conditions : List[ExpCondition]
+            Conditions generated from the Cartesian product of the selected features.
+
+        Examples
+        --------
+        Generate all possible conditions for two tasks, a fixed context, two stimuli and both
+        outcomes:
+
+        >>> conditions = ExpCondition.generate_conditions(
+        ...     tasks=[Task("PTD"), Task("CLK")],
+        ...     contexts=[Context("a")],
+        ...     stimuli=[Stimulus("R"), Stimulus("T")],
+        ...     outcomes=[BehaviorOutcome("Go"), BehaviorOutcome("NoGo")]
+        ... )
+
+        Notes
+        -----
+        For each feature, if a single instance is provided, it considered as fixed and will be used
+        for all conditions.
+        If no instance is provided, it is set to `None` in all the experimental conditions.
+        """
+        # Ensure each argument is a list or None
+        tasks_seq = ExpCondition.format_to_combine(tasks)
+        stimuli_seq = ExpCondition.format_to_combine(stimuli)
+        contexts_seq = ExpCondition.format_to_combine(contexts)
+        outcomes_seq = ExpCondition.format_to_combine(outcomes)
+        # Generate all combinations of the provided features
+        # Output: List[Tuple[ExpFeature, ...]]
+        combinations = product(tasks_seq, contexts_seq, stimuli_seq, outcomes_seq)
+        # Create and return a list of ExpCondition instances from the combinations
+        return [ExpCondition(t, c, s, o) for t, c, s, o in combinations]
+
+    @staticmethod
+    def format_to_combine(
+        arg: Sequence[ExpFeature] | ExpFeature | None,
+    ) -> Sequence[ExpFeature | None]:
+        """
+        Helper function to ensure each argument is a list or None.
+
+        Arguments
+        ---------
+        arg : Any
+            Argument to ensure is a list or None.
+
+        Returns
+        -------
+        arg : List[Any]
+            If the argument is a list, it is returned as is.
+            If it is a single element of None, it is returned as a list with a single element.
+        """
+        if isinstance(arg, list) and all(isinstance(a, ExpFeature) or a is None for a in arg):
+            return arg
+        elif isinstance(arg, ExpFeature) or arg is None:
+            return [arg]
+        else:
+            raise ValueError(f"Invalid argument type: {type(arg)}")
+
 
 class ExpConditionUnion:
     """
@@ -252,10 +327,10 @@ class ExpConditionUnion:
 
     def match(
         self,
-        task: Optional["CoordTask"] = None,
-        ctx: Optional["CoordCtx"] = None,
-        stim: Optional["CoordStim"] = None,
-        outcome: Optional["CoordOutcome"] = None,
+        task: "CoordTask" | None = None,
+        ctx: "CoordCtx" | None = None,
+        stim: "CoordStim" | None = None,
+        outcome: "CoordOutcome" | None = None,
     ) -> np.ndarray:
         """
         Generate a boolean mask to index samples that match any of the conditions.
