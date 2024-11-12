@@ -18,7 +18,7 @@ import re
 from typing import Optional, Self, Tuple, TypedDict
 
 from core.entities.base_entity import Entity
-from core.entities.exp_features import Task, Context
+from core.entities.exp_features import Task, Attention
 from core.entities.bio_info import Site
 
 
@@ -164,7 +164,7 @@ class Session(str, Entity[str]):
         Recording number at this site (used for ordering the sessions).
     task : Task
         Task performed during the session.
-    ctx : Context
+    attn : Attention
         Engagement of the animal in the task.
 
     Methods
@@ -177,11 +177,11 @@ class Session(str, Entity[str]):
     `core.entities.bio_info.Site`
     `core.entities.exp_structure.Recording`
     `core.entities.exp_features.Task`
-    `core.entities.exp_features.Context`
+    `core.entities.exp_features.Attention`
     """
 
     ID_PATTERN = re.compile(
-        f"^(?P<site>{Site.SITE_PATTERN})(?P<rec>[0-9]{2})_(?P<ctx>[a-z])_(?P<task>[A-Z]{3})$"
+        f"^(?P<site>{Site.SITE_PATTERN})(?P<rec>[0-9]{2})_(?P<attn>[a-z])_(?P<task>[A-Z]{3})$"
     )
     DEFAULT_VALUE = ""
 
@@ -204,16 +204,16 @@ class Session(str, Entity[str]):
         --------
         :meth:`Site.is_valid`
         :meth:`Recording.is_valid` (method from the class `Position`)
-        :meth:`Context.is_valid`   (method from the class `ExpFeature` inheriting from `Entity`)
+        :meth:`Attention.is_valid`   (method from the class `ExpFeature` inheriting from `Entity`)
         :meth:`Task.is_valid`      (idem)
         """
-        site, rec, ctx, task = cls.split_id(value)
-        if not all([site, rec, ctx, task]):  # checks for any empty string or zero
+        site, rec, attn, task = cls.split_id(value)
+        if not all([site, rec, attn, task]):  # checks for any empty string or zero
             return False
         return (
             Site.is_valid(site)
             and Recording.is_valid(int(rec))  # convert string to int first
-            and Context.is_valid(ctx)
+            and Attention.is_valid(attn)
             and Task.is_valid(task)
         )
 
@@ -222,17 +222,17 @@ class Session(str, Entity[str]):
         """
         Split the session ID into its components.
 
-        Format of the session's ID: ``{site}{rec}_{ctx}_{task}`` (e.g. ``'avo052a04_p_PTD'``).
+        Format of the session's ID: ``{site}{rec}_{attn}_{task}`` (e.g. ``'avo052a04_p_PTD'``).
 
         - {site} [...] Identifier for the site, as defined in `Site.is_valid` (e.g. ``'avo052a'``)
         - {rec}  [2 digits] Recording number at this site (e.g. ``'04'``)
-        - {ctx}  [1 letter] Context of the session, passive or active (``'p'`` or ``'a'``)
+        - {attn}  [1 letter] Attention of the session, passive or active (``'p'`` or ``'a'``)
         - {task} [3 letters] Task performed during the session (``'PTD'``, ``'CLK'``, ``'CCH'``)
 
         Returns
         -------
         Tuple[str, str, str, str]
-            Site, recording number, context, task.
+            Site, recording number, attentional state, task.
 
         Example
         -------
@@ -243,14 +243,14 @@ class Session(str, Entity[str]):
         match = cls.ID_PATTERN.match(value)
         if not match:
             return (cls.DEFAULT_VALUE,) * 4
-        return match.group("site"), match.group("rec"), match.group("ctx"), match.group("task")
+        return match.group("site"), match.group("rec"), match.group("attn"), match.group("task")
 
     class SessionComponents(TypedDict):
         """Typed dictionary for the components of a session ID."""
 
         site: Site
         rec: Recording
-        ctx: Context
+        attn: Attention
         task: Task
 
     @cached_property
@@ -263,9 +263,9 @@ class Session(str, Entity[str]):
         SessionComponents
         """
         site_str, rec_str, ctx_str, task_str = self.split_id(self)
-        site, ctx, task = Site(site_str), Context(ctx_str), Task(task_str)
+        site, attn, task = Site(site_str), Attention(ctx_str), Task(task_str)
         rec_int = Recording(int(rec_str))  # convert string to int first
-        return {"site": site, "rec": rec_int, "ctx": ctx, "task": task}
+        return {"site": site, "rec": rec_int, "attn": attn, "task": task}
 
     @property
     def site(self) -> Site:
@@ -282,11 +282,11 @@ class Session(str, Entity[str]):
         return self.id_components["rec"]
 
     @property
-    def ctx(self) -> Context:
+    def attn(self) -> Attention:
         """
-        Context of the session.
+        Attention of the session.
         """
-        return self.id_components["ctx"]
+        return self.id_components["attn"]
 
     @property
     def task(self) -> Task:

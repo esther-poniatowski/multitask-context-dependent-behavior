@@ -9,7 +9,7 @@ Classes
 -------
 `CoordExpCond` (Generic)
 `CoordTask`
-`CoordCtx`
+`CoordAttention`
 `CoordStim`
 """
 
@@ -18,16 +18,16 @@ from typing import TypeVar, Type, Optional, Union, Dict, Self, overload
 import numpy as np
 
 from core.coordinates.base_coord import Coordinate
-from core.entities.exp_features import Task, Context, Stimulus
+from core.entities.exp_features import Task, Attention, Stimulus
 
 
-ExpFeature = TypeVar("ExpFeature", Task, Context, Stimulus)
+ExpFeature = TypeVar("ExpFeature", Task, Attention, Stimulus)
 """Generic type variable for experimental conditions entities."""
 
 
 class CoordExpCond(Coordinate[np.str_, ExpFeature]):
     """
-    Coordinate labels representing one experimental condition among Task, Context, Stimulus.
+    Coordinate labels representing one experimental condition among Task, Attention, Stimulus.
 
     Class Attributes
     ----------------
@@ -143,12 +143,12 @@ class CoordTask(CoordExpCond[Task]):
     ENTITY = Task
 
 
-class CoordCtx(CoordExpCond[Context]):
+class CoordAttention(CoordExpCond[Attention]):
     """
     Coordinate labels for contexts.
     """
 
-    ENTITY = Context
+    ENTITY = Attention
 
 
 class CoordStim(CoordExpCond[Stimulus]):

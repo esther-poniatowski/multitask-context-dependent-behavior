@@ -19,7 +19,7 @@ import numpy as np
 
 from core.builders.base_builder import DataBuilder
 from core.coordinates.base_coord import Coordinate
-from core.coordinates.exp_condition import CoordTask, CoordCtx
+from core.coordinates.exp_condition import CoordTask, CoordAttention
 from core.coordinates.exp_structure import CoordRecNum
 from core.data_structures.core_data import CoreData
 from core.data_structures.spike_times_raw import SpikeTimesRaw
@@ -123,7 +123,7 @@ class SpikeTrainsBuilder(DataBuilder[List[SpikeTimesRaw], SpikeTrains]):
         block = self.construct_preexisting_coord("block")
         slot = self.construct_preexisting_coord("slot")
         task = self.construct_new_coord("task", CoordTask)
-        ctx = self.construct_new_coord("ctx", CoordCtx)
+        attn = self.construct_new_coord("attn", CoordAttention)
         stim = self.construct_preexisting_coord("stim")
         error = self.construct_preexisting_coord("error")
         t_on = self.construct_preexisting_coord("t_on")
@@ -131,7 +131,7 @@ class SpikeTrainsBuilder(DataBuilder[List[SpikeTimesRaw], SpikeTrains]):
         t_warn = self.construct_preexisting_coord("t_warn")
         t_end = self.construct_preexisting_coord("t_end")
         self.add_coords(recnum=recnum, block=block, slot=slot)
-        self.add_coords(task=task, ctx=ctx, stim=stim, error=error)
+        self.add_coords(task=task, attn=attn, stim=stim, error=error)
         self.add_coords(t_on=t_on, t_off=t_off, t_warn=t_warn, t_end=t_end)
         return self.get_product()
 
@@ -321,7 +321,7 @@ class SpikeTrainsBuilder(DataBuilder[List[SpikeTimesRaw], SpikeTrains]):
         """
         Construct a new coordinate for the trials dimension containing session's information.
 
-        Each session is associated with one recording number, one task and one context, and yields
+        Each session is associated with one recording number, one task and one attentional state, and yields
         as many number of elements as the total number of trials it contains.
 
         Parameters

@@ -11,7 +11,7 @@ import numpy as np
 
 from core.data_structures.core_data import CoreData, Dimensions
 from core.coordinates.bio import CoordUnit
-from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim
+from core.coordinates.exp_condition import CoordTask, CoordAttention, CoordStim
 from core.coordinates.time import CoordTime
 
 # from core.coordinates.trials import CoordError
@@ -34,7 +34,7 @@ class FiringRatesPop(DataStructure):
 
     - ``units`` (dimensions ``ensembles``, ``units``)
     - ``task``  (dimension ``trials``)
-    - ``ctx``   (dimension ``trials``),
+    - ``attn``   (dimension ``trials``),
     - ``stim``  (dimension ``trials``),
     - ``time``  (dimension ``time``)
 
@@ -59,8 +59,8 @@ class FiringRatesPop(DataStructure):
         Dimensions: ``ensembles``, ``units``.
     task : CoordTask
         Coordinate labels for the task from which each trial comes.
-    ctx : CoordCtx
-        Coordinate labels for the context from which each trial comes.
+    attn : CoordAttention
+        Coordinate labels for the attentional state from which each trial comes.
     stim : CoordStim
         Coordinate labels for the stimulus presented in each trial.
     time : CoordTime
@@ -79,7 +79,7 @@ class FiringRatesPop(DataStructure):
         {
             "units": CoordUnit,
             "task": CoordTask,
-            "ctx": CoordCtx,
+            "attn": CoordAttention,
             "stim": CoordStim,
             "time": CoordTime,
         }
@@ -88,7 +88,7 @@ class FiringRatesPop(DataStructure):
         {
             "units": Dimensions("ensembles", "units"),
             "task": Dimensions("trials"),
-            "ctx": Dimensions("trials"),
+            "attn": Dimensions("trials"),
             "stim": Dimensions("trials"),
             "time": Dimensions("time"),
         }
@@ -108,7 +108,7 @@ class FiringRatesPop(DataStructure):
         data: Optional[Union[CoreData, np.ndarray]] = None,
         units: Optional[Union[CoordUnit, np.ndarray]] = None,
         task: Optional[Union[CoordTask, np.ndarray]] = None,
-        ctx: Optional[Union[CoordCtx, np.ndarray]] = None,
+        attn: Optional[Union[CoordAttention, np.ndarray]] = None,
         stim: Optional[Union[CoordStim, np.ndarray]] = None,
         time: Optional[Union[CoordTime, np.ndarray]] = None,
     ):
@@ -119,7 +119,7 @@ class FiringRatesPop(DataStructure):
         self.training = training
         self.error = error
         # Set data and coordinate attributes via the base class constructor
-        super().__init__(data=data, units=units, task=task, ctx=ctx, stim=stim, time=time)
+        super().__init__(data=data, units=units, task=task, attn=attn, stim=stim, time=time)
 
     def __repr__(self) -> str:
         return (

@@ -18,7 +18,7 @@ Notes
   for each unit when its folds are generated, which is the case if the unit does not have the same
   index in the population in both ensembles (which is likely to be the case since the units are
   shuffled when forming ensembles).
-- Folds assignments and bootstrapping are *stratified* by condition (task, context, stimulus, +fold
+- Folds assignments and bootstrapping are *stratified* by condition (task, attentional state, stimulus, +fold
   for bootstrap) to balance trial types across groups. Shuffling is performed in those operations by
   the dedicated processors, to balance across folds the task variables which have not been
   considered in stratification (i.e. positional information: recording number, block number, slot
@@ -42,7 +42,7 @@ import numpy as np
 from core.builders.base_builder import DataBuilder
 from core.coordinates.base_coord import Coordinate
 from core.coordinates.bio import CoordUnit
-from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim
+from core.coordinates.exp_condition import CoordTask, CoordAttention, CoordStim
 from core.coordinates.time import CoordTime
 from core.data_structures.core_data import CoreData
 from core.data_structures.firing_rates import FiringRatesPop, FiringRatesUnit
@@ -87,7 +87,7 @@ class PopulationBuilder(DataBuilder[List[FiringRatesUnit], FiringRatesPop]):
         Keys: Experimental condition defined by a combination of features' values.
         Values: Number of pseudo-trials to generate for the condition.
     conditions : List[str]
-        (Derived) Names of the conditions to consider for stratification (task, context, stimulus).
+        (Derived) Names of the conditions to consider for stratification (task, attentional state, stimulus).
     conditions_boundaries : Dict[str, Tuple[int, int]]
         (Derived) Start and end indices of the trials for each condition in the final data
         structure.
@@ -138,7 +138,9 @@ class PopulationBuilder(DataBuilder[List[FiringRatesUnit], FiringRatesPop]):
 
     product_class = FiringRatesPop
     TMP_DATA = ("data_per_unit", "seed", "ensembles")
-    DEFAULT_FEATURES = MappingProxyType({"task": CoordTask, "ctx": CoordCtx, "stim": CoordStim})
+    DEFAULT_FEATURES = MappingProxyType(
+        {"task": CoordTask, "attn": CoordAttention, "stim": CoordStim}
+    )
 
     def __init__(
         self,
@@ -341,7 +343,7 @@ class PopulationBuilder(DataBuilder[List[FiringRatesUnit], FiringRatesPop]):
 
     def stratify_by_condition(self, u_pop: int) -> Strata:
         """
-        Stratify the trials of one unit by condition (task, context, stimulus).
+        Stratify the trials of one unit by condition (task, attentional state, stimulus).
 
         Arguments
         ---------
@@ -567,7 +569,7 @@ class PopulationBuilder(DataBuilder[List[FiringRatesUnit], FiringRatesPop]):
 
     def construct_trial_coords(self) -> Dict[str, Coordinate]:
         """
-        Construct the trial coordinates for the pseudo-trials: task, context, stimulus.
+        Construct the trial coordinates for the pseudo-trials: task, attentional state, stimulus.
 
         Returns
         -------

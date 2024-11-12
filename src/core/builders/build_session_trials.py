@@ -154,7 +154,7 @@ class TrialsPropertiesBuilder(DataBuilder[EventsProperties, TrialsProperties]):
         """
         Construct a new coordinate  for the trials dimension containing session's information.
 
-        Each session is associated with one recording number, one task and one context, and yields
+        Each session is associated with one recording number, one task and one attentional state, and yields
         as many number of elements as the total number of trials it contains.
 
         Parameters

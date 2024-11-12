@@ -10,7 +10,7 @@ Classes representing coordinates (labels) associated to the data structures.
 Coordinates are designed to represent
 
 Each class of coordinate represents one family of coordinate, which corresponds to a common type of
-labels associated with the dimensions of the data sets. (e.g. time stamps, tasks, context,
+labels associated with the dimensions of the data sets. (e.g. time stamps, tasks, attentional state,
 stimuli...). Each instance of a coordinate class represents one specific set of labels within the
 family (e.g. set of stimuli on each trial in an experiment).
 

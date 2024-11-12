@@ -10,7 +10,7 @@ from typing import Optional, Union
 import numpy as np
 
 from core.constants import SMPL_RATE
-from core.coordinates.exp_condition import CoordTask, CoordCtx, CoordStim
+from core.coordinates.exp_condition import CoordTask, CoordAttention, CoordStim
 from core.coordinates.exp_structure import CoordRecNum, CoordBlock, CoordSlot
 from core.coordinates.time import CoordTimeEvent
 from core.coordinates.trials import CoordError
@@ -35,7 +35,7 @@ class SpikeTrains(DataStructure):
     - ``block``  (dimension ``trials``)
     - ``slot``   (dimension ``trials``)
     - ``task``   (dimension ``trials``)
-    - ``ctx``    (dimension ``trials``)
+    - ``attn``    (dimension ``trials``)
     - ``stim``   (dimension ``trials``)
     - ``error``  (dimension ``trials``)
     - ``t_on``   (dimension ``trials``)
@@ -60,7 +60,7 @@ class SpikeTrains(DataStructure):
         Coordinate for dimension `trials`.
     task: CoordTask
         Coordinate for dimension `trials`.
-    ctx: CoordCtx
+    attn: CoordAttention
         Coordinate for dimension `trials`.
     stim: CoordStim
         Coordinate for dimension `trials`.
@@ -108,7 +108,7 @@ class SpikeTrains(DataStructure):
     `core.coordinates.exp_structure.CoordBlock`
     `core.coordinates.exp_structure.CoordSlot`
     `core.coordinates.exp_condition.CoordTask`
-    `core.coordinates.exp_condition.CoordCtx`
+    `core.coordinates.exp_condition.CoordAttention`
     `core.coordinates.exp_condition.CoordStim`
     `core.coordinates.trials.CoordError`
     """
@@ -121,7 +121,7 @@ class SpikeTrains(DataStructure):
             "block": CoordBlock,
             "slot": CoordSlot,
             "task": CoordTask,
-            "ctx": CoordCtx,
+            "attn": CoordAttention,
             "stim": CoordStim,
             "error": CoordError,
             "t_on": CoordTimeEvent,
@@ -135,7 +135,7 @@ class SpikeTrains(DataStructure):
             "block": Dimensions("trials"),
             "slot": Dimensions("trials"),
             "task": Dimensions("trials"),
-            "ctx": Dimensions("trials"),
+            "attn": Dimensions("trials"),
             "stim": Dimensions("trials"),
             "error": Dimensions("trials"),
             "t_on": Dimensions("trials"),
@@ -159,7 +159,7 @@ class SpikeTrains(DataStructure):
         block: Optional[Union[CoordBlock, np.ndarray]] = None,
         slot: Optional[Union[CoordSlot, np.ndarray]] = None,
         task: Optional[Union[CoordTask, np.ndarray]] = None,
-        ctx: Optional[Union[CoordCtx, np.ndarray]] = None,
+        attn: Optional[Union[CoordAttention, np.ndarray]] = None,
         stim: Optional[Union[CoordStim, np.ndarray]] = None,
         error: Optional[Union[CoordError, np.ndarray]] = None,
         t_on: Optional[Union[CoordTimeEvent, np.ndarray]] = None,
@@ -176,7 +176,7 @@ class SpikeTrains(DataStructure):
             block=block,
             slot=slot,
             task=task,
-            ctx=ctx,
+            attn=attn,
             stim=stim,
             error=error,
             t_on=t_on,
