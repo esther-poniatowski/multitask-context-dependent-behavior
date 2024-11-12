@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_core.test_coordinates.test_time` [module]
+`test_core.test_coordinates.test_time` [module]
 
 See Also
 --------
-:mod:`core.coordinates.time`: Tested module.
+`core.coordinates.time`: Tested module.
 
 Notes
 -----
-Those tests focus on the functionalities which are *specific* to
-one concrete subclass of coordinates.
+Those tests focus on the functionalities which are *specific* to one concrete subclass of coordinates.
 """
 
 import numpy as np
 import pytest
 
-from core.coordinates.time import CoordTime
+from core.coordinates.time_coord import CoordTime
 
 
 N_SMPL = 10

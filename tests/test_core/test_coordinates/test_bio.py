@@ -13,8 +13,8 @@ See Also
 import numpy as np
 import pytest
 
-from core.coordinates.bio import CoordUnit, CoordDepth
-from entities.bio_info import CorticalDepth
+from core.coordinates.bio_info_coord import CoordUnit, CoordDepth
+from core.entities.bio_info import CorticalDepth
 from core.entities.composites import Unit
 
 

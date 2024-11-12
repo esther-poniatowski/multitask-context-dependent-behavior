@@ -1,5 +1,6 @@
 # Words used in the experiment
 Bootstrapper
+categ
 D_CLK
 D_POST
 D_PRE
@@ -33,6 +34,7 @@ PSTH
 rawspktimes
 recnum
 recnums
+regressand
 sampl
 sess
 SHOCKON

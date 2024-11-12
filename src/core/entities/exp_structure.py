@@ -18,7 +18,7 @@ import re
 from typing import Optional, Self, Tuple, TypedDict
 
 from core.entities.base_entity import Entity
-from core.entities.exp_features import Task, Attention
+from core.entities.exp_factors import Task, Attention
 from core.entities.bio_info import Site
 
 
@@ -204,7 +204,7 @@ class Session(str, Entity[str]):
         --------
         :meth:`Site.is_valid`
         :meth:`Recording.is_valid` (method from the class `Position`)
-        :meth:`Attention.is_valid`   (method from the class `ExpFeature` inheriting from `Entity`)
+        :meth:`Attention.is_valid`   (method from the class `ExpFactor` inheriting from `Entity`)
         :meth:`Task.is_valid`      (idem)
         """
         site, rec, attn, task = cls.split_id(value)

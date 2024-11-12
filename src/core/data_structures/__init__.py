@@ -164,13 +164,13 @@ coordinates: task, attentional state and stimulus.
     class ExampleData(Data):
         dim2coord = MappingProxyType({
         "time": frozenset(["time"]),
-        "trials": frozenset(['task', 'attn', 'stim'])
+        "trials": frozenset(['task', 'attn', 'categ'])
         })
         coord2type = MappingProxyType({
             'time': CoordTime,
             'task': CoordTask,
             'attn': CoordAttention,
-            'stim': CoordStim,
+            'categ': CoordCategory,
         }
         path_ruler = PathRulerExample
 
@@ -180,14 +180,14 @@ coordinates: task, attentional state and stimulus.
                     time: Optional[CoordTime] = None,
                     task: Optional[CoordTask] = None,
                     attn: Optional[CoordAttention] = None,
-                    stim: Optional[CoordStim] = None,
+                    categ: Optional[CoordCategory] = None,
                     **kwargs # to respect the signature of the base class constructor
                     ) -> None:
 
             # Assign subclass-specific metadata
             self.id = id_
             # Call the base class constructor to handle data and coordinates
-            super().__init__(data, time=time, task=task, attn=attn, stim=stim)
+            super().__init__(data, time=time, task=task, attn=attn, categ=categ)
 
         # Implement the path by calling the path manager method with the required arguments
         @property

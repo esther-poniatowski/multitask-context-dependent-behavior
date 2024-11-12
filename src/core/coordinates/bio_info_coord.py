@@ -15,9 +15,9 @@ from typing import Dict, Tuple, Any
 
 import numpy as np
 
-from coordinates.base_coord import Coordinate
-from entities.bio_info import CorticalDepth
-from core.entities.composites import Unit
+from core.coordinates.base_coord import Coordinate
+from core.entities.bio_info import CorticalDepth
+from core.entities.bio_info import Unit
 
 
 class CoordUnit(Coordinate[np.str_, Unit]):

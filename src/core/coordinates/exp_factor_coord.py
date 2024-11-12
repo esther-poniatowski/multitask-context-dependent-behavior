@@ -7,10 +7,13 @@ Coordinates for labelling experimental conditions.
 
 Classes
 -------
-`CoordExpCond` (Generic)
+`CoordExpFactor` (Generic)
 `CoordTask`
 `CoordAttention`
-`CoordStim`
+`CoordCategory`
+`CoordStimulus`
+`CoordBehavior`
+`CoordEventDescription`
 """
 
 from typing import TypeVar, Type, Optional, Union, Dict, Self, overload
@@ -18,20 +21,29 @@ from typing import TypeVar, Type, Optional, Union, Dict, Self, overload
 import numpy as np
 
 from core.coordinates.base_coord import Coordinate
-from core.entities.exp_features import Task, Attention, Stimulus
+from core.entities.exp_factors import (
+    Task,
+    Attention,
+    Stimulus,
+    Category,
+    Behavior,
+    EventDescription,
+    ExpFactor,
+)
 
 
-ExpFeature = TypeVar("ExpFeature", Task, Attention, Stimulus)
-"""Generic type variable for experimental conditions entities."""
+ExpFactorType = TypeVar("ExpFactorType", bound=ExpFactor)
+"""Generic type variable for experimental conditions. Used to keep a generic type for the
+experimental factor while specifying the data type of the coordinate labels."""
 
 
-class CoordExpCond(Coordinate[np.str_, ExpFeature]):
+class CoordExpFactor(Coordinate[np.str_, ExpFactorType]):
     """
     Coordinate labels representing one experimental condition among Task, Attention, Stimulus.
 
     Class Attributes
     ----------------
-    ENTITY : Type[ExpFeature]
+    ENTITY : Type[ExpFactor]
         Subclass of `Entity` corresponding to the type of experimental condition which is
         represented by the coordinate.
     DTYPE : Type[np.str_]
@@ -55,7 +67,7 @@ class CoordExpCond(Coordinate[np.str_, ExpFeature]):
     `core.entities.exp_features`
     """
 
-    ENTITY: Type[ExpFeature]
+    ENTITY: Type[ExpFactorType]
     DTYPE = np.str_
     SENTINEL: str = ""
 
@@ -65,7 +77,7 @@ class CoordExpCond(Coordinate[np.str_, ExpFeature]):
         return f"<{self.__class__.__name__}>: {len(self)} samples, {format_counts}."
 
     @classmethod
-    def build_labels(cls, n_smpl: int, cnd: ExpFeature) -> Self:
+    def build_labels(cls, n_smpl: int, cnd: ExpFactor) -> Self:
         """
         Build basic labels filled with a *single* condition.
 
@@ -73,7 +85,7 @@ class CoordExpCond(Coordinate[np.str_, ExpFeature]):
         ----------
         n_smpl : int
             Number of samples, i.e. of labels.
-        cnd : ExpFeature
+        cnd : ExpFactor
             Condition which corresponds to the single label.
 
         Returns
@@ -81,10 +93,10 @@ class CoordExpCond(Coordinate[np.str_, ExpFeature]):
         values : Self
             Labels coordinate filled a single condition.
         """
-        values = np.full(n_smpl, cnd.value)
+        values = np.full(n_smpl, cnd)
         return cls(values)
 
-    def replace_label(self, old: ExpFeature, new: ExpFeature) -> Self:
+    def replace_label(self, old: ExpFactor, new: ExpFactor) -> Self:
         """
         Replace one label by another one in the condition coordinate.
 
@@ -99,16 +111,16 @@ class CoordExpCond(Coordinate[np.str_, ExpFeature]):
             Coordinate with updated condition labels.
         """
         new_coord = self.copy()
-        new_coord[new_coord == old.value] = new.value
+        new_coord[new_coord == old] = new
         return new_coord
 
     @overload
-    def count_by_lab(self, cnd: ExpFeature) -> int: ...
+    def count_by_lab(self, cnd: ExpFactor) -> int: ...
 
     @overload
-    def count_by_lab(self) -> Dict[ExpFeature, int]: ...
+    def count_by_lab(self) -> Dict[ExpFactor, int]: ...
 
-    def count_by_lab(self, cnd: Optional[ExpFeature] = None) -> Union[int, Dict[ExpFeature, int]]:
+    def count_by_lab(self, cnd: Optional[ExpFactor] = None) -> Union[int, Dict[ExpFactor, int]]:
         """
         Count the number of samples in one condition or all conditions.
 
@@ -129,13 +141,13 @@ class CoordExpCond(Coordinate[np.str_, ExpFeature]):
         The set of valid values for the condition is accessed by ``self.condition.get_options()``.
         """
         if cnd is not None:
-            return np.sum(self == cnd.value)
+            return np.sum(self == cnd)
         else:
             options = self.ENTITY.get_options()
             return {self.ENTITY(cnd): np.sum(self == cnd) for cnd in options}
 
 
-class CoordTask(CoordExpCond[Task]):
+class CoordTask(CoordExpFactor[Task]):
     """
     Coordinate labels for tasks.
     """
@@ -143,15 +155,23 @@ class CoordTask(CoordExpCond[Task]):
     ENTITY = Task
 
 
-class CoordAttention(CoordExpCond[Attention]):
+class CoordAttention(CoordExpFactor[Attention]):
     """
-    Coordinate labels for contexts.
+    Coordinate labels for attentional states.
     """
 
     ENTITY = Attention
 
 
-class CoordStim(CoordExpCond[Stimulus]):
+class CoordCategory(CoordExpFactor[Category]):
+    """
+    Coordinate labels for categories.
+    """
+
+    ENTITY = Category
+
+
+class CoordStimulus(CoordExpFactor[Stimulus]):
     """
     Coordinate labels for stimuli.
     """
@@ -159,30 +179,17 @@ class CoordStim(CoordExpCond[Stimulus]):
     ENTITY = Stimulus
 
 
-class CoordEventDescription(Coordinate[np.str_]):
+class CoordBehavior(CoordExpFactor[Behavior]):
+    """
+    Coordinate labels for behavioral choices of the animals.
+    """
+
+    ENTITY = Behavior
+
+
+class CoordEventDescription(Coordinate[np.str_, EventDescription]):
     """
     Coordinate labels for event descriptions.
-
-    Each element is a string which can comprise several event descriptions separated by commas.
-
-    Examples:
-
-    - ``'PreStimSilence , TORC_448_06_v501 , Reference'``
-    - ``'TRIALSTART'``
-
-    Attributes
-    ----------
-    values: npt.NDArray[np.str_]
-        Labels for the event descriptions associated with each measurement.
-
-    Notes
-    -----
-    No specific entity is associated with event descriptions.
-
-    See Also
-    --------
-    :class:`core.coordinates.base_coord.Coordinate`
     """
 
-    DTYPE = np.str_
-    SENTINEL: str = ""
+    ENTITY = EventDescription

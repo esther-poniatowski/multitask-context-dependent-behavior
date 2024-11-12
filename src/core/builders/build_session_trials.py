@@ -17,10 +17,10 @@ from typing import Optional
 
 from core.builders.base_builder import DataBuilder
 from core.coordinates.base_coord import Coordinate
-from core.coordinates.exp_condition import CoordStim
-from core.coordinates.exp_structure import CoordBlock, CoordSlot
-from core.coordinates.time import CoordTimeEvent
-from core.coordinates.trials import CoordError
+from core.coordinates.exp_factor_coord import CoordCategory
+from core.coordinates.exp_structure_coord import CoordBlock, CoordSlot
+from core.coordinates.time_coord import CoordTimeEvent
+from core.coordinates.trials_coord import CoordError
 from core.data_structures.core_data import CoreData
 from core.data_structures.events_properties import EventsProperties
 from core.data_structures.trials_properties import TrialsProperties
@@ -92,7 +92,7 @@ class TrialsPropertiesBuilder(DataBuilder[EventsProperties, TrialsProperties]):
         # Add coordinates in the data structure
         block: CoordBlock
         slot: CoordSlot
-        stim: CoordStim
+        categ: CoordCategory
         t_on: CoordTimeEvent
         t_off: CoordTimeEvent
         t_warn: CoordTimeEvent
@@ -101,7 +101,7 @@ class TrialsPropertiesBuilder(DataBuilder[EventsProperties, TrialsProperties]):
         self.add_coords(
             block=block,
             slot=slot,
-            stim=stim,
+            categ=categ,
             t_on=t_on,
             t_off=t_off,
             t_warn=t_warn,

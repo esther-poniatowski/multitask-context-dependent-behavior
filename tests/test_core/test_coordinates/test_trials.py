@@ -16,7 +16,7 @@ one concrete subclass of coordinates.
 import numpy as np
 import pytest
 
-from core.coordinates.trials import CoordError, CoordFold
+from core.coordinates.trials_coord import CoordError, CoordFold
 
 
 N_SMPL = 10

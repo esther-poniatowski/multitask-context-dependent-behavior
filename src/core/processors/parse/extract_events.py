@@ -55,7 +55,7 @@ Processing Flow:
     * Update slot information for Stim, PostStimSilence, and other events.
 4. Aggregate results from all blocks and slots.
 
-Output: The parser returns numpy arrays for slot_number, block_number, stim, t_on, t_off, t_warn,
+Output: The parser returns numpy arrays for slot_number, block_number, categ, t_on, t_off, t_warn,
 t_end, and error, representing the processed session data.
 
 TODO: Determine slot's t_end based on the next slot's t_on
@@ -79,6 +79,7 @@ import numpy as np
 from core.processors.base_processor import Processor
 
 
+# TODO: Replace by EventType from core.entities.exp_factors
 class EventType(str, Enum):
     """
     Enum class for the valid types of events in the raw data.
@@ -100,6 +101,7 @@ class EventType(str, Enum):
     TRIALSTOP = "TRIALSTOP"
 
 
+# TODO: Replace by Category from core.entities.exp_factors
 class StimulusCategory:
     """Represent stimulus category.
 
@@ -233,7 +235,7 @@ class SlotManager:
         Slot number within the bock to which it belongs.
     block_number : int
         Block number in which the slot occurred.
-    stim : Optional[str]
+    categ : Optional[str]
         Stimulus identity.
     t_on : Optional[float]
         Start time of the slot (onset of the stimulus).
@@ -261,7 +263,7 @@ class SlotManager:
 
     slot_number: int
     block_number: int
-    stim: Optional[str] = None
+    categ: Optional[str] = None
     t_on: Optional[float] = None
     t_off: Optional[float] = None
     t_warn: Optional[float] = None
@@ -331,7 +333,7 @@ class BlockManager:
         if event.is_type(EventType.PRESTIM):
             self.start_slot()
         elif event.is_type(EventType.STIM):
-            setattr(self.current_slot, "stim", event.stimulus)
+            setattr(self.current_slot, "categ", event.stimulus)
             setattr(self.current_slot, "t_on", event.t_start)
         elif event.is_type(EventType.POSTSTIM):
             setattr(self.current_slot, "t_off", event.t_end)
@@ -364,12 +366,12 @@ class SessionParser(Processor):
 
         - slot_number: Number of the slot within the block.
         - block_number: Number of the block to which the slot belongs.
-        - stim: Nature of the stimulus presented in the slot.
+        - categ: Nature of the stimulus presented in the slot.
         - t_on: Onset time of the stimulus presentation within the slot.
         - t_off: Offset time of the stimulus presentation within the slot.
         - t_warn: Onset of the warning sound (in the CLK task only).
         - t_end: End time of the slot.
-        - error: Behavioral outcome of the slot, if Target (True if the shock was delivered).
+        - error: Behavioral choice of the slot, if Target (True if the shock was delivered).
 
         Length of each array: ``(n_slots,)``
 
@@ -393,7 +395,7 @@ class SessionParser(Processor):
     ... ]
     >>> parser = SessionParser()
     >>> results = parser.process(events=events) # all output arrays in a tuple
-    >>> slot, block, stim, t_on, t_off, t_warn, t_end, error = results # unpack
+    >>> slot, block, categ, t_on, t_off, t_warn, t_end, error = results # unpack
 
     See Also
     --------
@@ -448,10 +450,10 @@ class SessionParser(Processor):
         all_slots = [slot for block in self.blocks for slot in block.slots]
         slot_number = np.array([slot.slot_number for slot in all_slots])
         block_number = np.array([slot.block_number for slot in all_slots])
-        stim = np.array([slot.stim for slot in all_slots])
+        categ = np.array([slot.categ for slot in all_slots])
         t_on = np.array([slot.t_on for slot in all_slots])
         t_off = np.array([slot.t_off for slot in all_slots])
         t_warn = np.array([slot.t_warn for slot in all_slots])
         t_end = np.array([slot.t_end for slot in all_slots])
         error = np.array([slot.error for slot in all_slots])
-        return slot_number, block_number, stim, t_on, t_off, t_warn, t_end, error
+        return slot_number, block_number, categ, t_on, t_off, t_warn, t_end, error

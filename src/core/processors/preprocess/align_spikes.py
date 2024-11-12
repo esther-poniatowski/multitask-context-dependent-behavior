@@ -26,7 +26,7 @@ discontinuous epochs should be artificially joined.
 The relevant epochs to extract depend on:
 
 - The actual times of stimulus onset and offset in the specific trial (``t_on`` and ``t_off``).
-- The type of stimulus to align and the task from which it is extracted (``stim`` and ``task``).
+- The type of stimulus to align and the task from which it is extracted (``categ`` and ``task``).
 
 Stimuli might be cropped if their actual duration ``t_off - t_on`` is longer than the
 duration ``d_stim`` set for the whole dataset.
@@ -113,7 +113,7 @@ class SpikesAligner(Processor):
     task : Task
         Type of task from which the trial is extracted.
         .. _task:
-    stim : Stim
+    categ : Stim
         Type of stimulus presented during the trial.
         .. _stim:
     t_on, t_off : float
@@ -138,7 +138,7 @@ class SpikesAligner(Processor):
     Align spikes with default duration parameters:
 
     >>> aligner = SpikesAligner()
-    >>> aligned_spikes = aligner.process(spikes=spikes, task=task, stim=stim, t_on=t_on, t_off=t_off)
+    >>> aligned_spikes = aligner.process(spikes=spikes, task=task, categ=categ, t_on=t_on, t_off=t_off)
     >>> print(strata)
     [0 0 1]
 
@@ -170,26 +170,26 @@ class SpikesAligner(Processor):
             If the input values are inconsistent.
         """
         task = input_data.get("task", None)
-        stim = input_data.get("stim", None)
+        categ = input_data.get("categ", None)
         if task not in self._TASKS:
             raise ValueError(f"Invalid task: {task}")
-        if stim not in self._STIMS:
-            raise ValueError(f"Invalid stimulus: {stim}")
+        if categ not in self._STIMS:
+            raise ValueError(f"Invalid stimulus: {categ}")
         return input_data
 
     def _process(self, **input_data: Any) -> SpikingTimes:
         """Implement the template method called in the base class `process` method."""
         spikes = input_data["spikes"]
         task = input_data["task"]
-        stim = input_data["stim"]
+        categ = input_data["categ"]
         t_on = input_data["t_on"]
         t_off = input_data["t_off"]
-        t_start1, t_end1, t_start2, t_end2 = self.eval_times(task, stim, t_on, t_off)
+        t_start1, t_end1, t_start2, t_end2 = self.eval_times(task, categ, t_on, t_off)
         spk_joined = self.join_epochs(spikes, t_start1, t_end1, t_start2, t_end2)
         return spk_joined
 
     def eval_times(
-        self, task: Task, stim: Stim, t_on: float, t_off: float
+        self, task: Task, categ: Stim, t_on: float, t_off: float
     ) -> Tuple[float, float, float, float]:
         """
         Determine the times boundaries of the epochs to extract in one specific trial in order to
@@ -201,16 +201,16 @@ class SpikesAligner(Processor):
             Time boundaries of the first and second epochs to extract in the specific trial.
         """
         t_start1 = t_on - self.d_pre
-        if self.task == "PTD" or (task == "CLK" and stim == "N"):  # excise Click train
+        if self.task == "PTD" or (task == "CLK" and categ == "N"):  # excise Click train
             t_end1 = t_on + self.d_stim
             t_start2 = t_off
             t_end2 = t_off + self.d_post
-        elif self.task == "CLK" and (stim == "T" or stim == "R"):  # excise TORC
+        elif self.task == "CLK" and (categ == "T" or categ == "R"):  # excise TORC
             t_end1 = t_on
             t_start2 = t_on + self.d_warn
             t_end2 = t_start2 + self.d_stim + self.d_post
         else:
-            raise ValueError(f"Invalid task-stimulus combination: {task}-{stim}")
+            raise ValueError(f"Invalid task-stimulus combination: {task}-{categ}")
         return t_start1, t_end1, t_start2, t_end2
 
     def slice_epoch(self, spikes: SpikingTimes, t_start: float, t_end: float) -> SpikingTimes:

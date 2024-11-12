@@ -139,7 +139,7 @@ def Find_StimTypes(ttype, TRIAL_TYPES=TRIAL_TYPES):
     Outputs :
         Stimuli (list of str)  Sequence of '0', 'R' and 'T' corresponding to the stimuli in the trial.
     """
-    return ["0"] + ["R" if stim == 0 else "T" for stim in TRIAL_TYPES[ttype][1:]]
+    return ["0"] + ["R" if categ == 0 else "T" for categ in TRIAL_TYPES[ttype][1:]]
 
 
 def Build_EVENTSinfo_TRIALSinfo(UNITSinfo, PATHS, D=D):

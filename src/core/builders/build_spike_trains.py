@@ -9,7 +9,7 @@ Classes
 
 Notes
 -----
--
+
 """
 # pylint: disable=missing-function-docstring
 
@@ -19,8 +19,8 @@ import numpy as np
 
 from core.builders.base_builder import DataBuilder
 from core.coordinates.base_coord import Coordinate
-from core.coordinates.exp_condition import CoordTask, CoordAttention
-from core.coordinates.exp_structure import CoordRecNum
+from core.coordinates.exp_factor_coord import CoordTask, CoordAttention
+from core.coordinates.exp_structure_coord import CoordRecNum
 from core.data_structures.core_data import CoreData
 from core.data_structures.spike_times_raw import SpikeTimesRaw
 from core.data_structures.spike_trains import SpikeTrains
@@ -124,14 +124,14 @@ class SpikeTrainsBuilder(DataBuilder[List[SpikeTimesRaw], SpikeTrains]):
         slot = self.construct_preexisting_coord("slot")
         task = self.construct_new_coord("task", CoordTask)
         attn = self.construct_new_coord("attn", CoordAttention)
-        stim = self.construct_preexisting_coord("stim")
+        categ = self.construct_preexisting_coord("categ")
         error = self.construct_preexisting_coord("error")
         t_on = self.construct_preexisting_coord("t_on")
         t_off = self.construct_preexisting_coord("t_off")
         t_warn = self.construct_preexisting_coord("t_warn")
         t_end = self.construct_preexisting_coord("t_end")
         self.add_coords(recnum=recnum, block=block, slot=slot)
-        self.add_coords(task=task, attn=attn, stim=stim, error=error)
+        self.add_coords(task=task, attn=attn, categ=categ, error=error)
         self.add_coords(t_on=t_on, t_off=t_off, t_warn=t_warn, t_end=t_end)
         return self.get_product()
 

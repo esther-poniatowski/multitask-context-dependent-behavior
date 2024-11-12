@@ -55,7 +55,7 @@ def coords_attr() -> Mapping[str, type]:
     MappingProxyType:
         Type of each coordinate (here only numpy arrays for simplicity).
     """
-    return MappingProxyType({"time": np.ndarray, "task": np.ndarray, "stim": np.ndarray})
+    return MappingProxyType({"time": np.ndarray, "task": np.ndarray, "categ": np.ndarray})
 
 
 @pytest.fixture
@@ -69,7 +69,7 @@ def coords_to_dims() -> Mapping[str, Dimensions]:
         Mapping between coordinates and their associated dimensions.
     """
     return MappingProxyType(
-        {"time": Dimensions("time"), "task": Dimensions("trials"), "stim": Dimensions("trials")}
+        {"time": Dimensions("time"), "task": Dimensions("trials"), "categ": Dimensions("trials")}
     )
 
 

@@ -8,10 +8,10 @@ from typing import Optional, Union, Generator, List
 
 import numpy as np
 
-from core.coordinates.exp_structure import CoordRecNum, CoordBlock, CoordSlot
-from core.coordinates.exp_condition import CoordTask, CoordAttention, CoordStim
-from core.coordinates.time import CoordTimeEvent
-from core.coordinates.trials import CoordError
+from core.coordinates.exp_structure_coord import CoordRecNum, CoordBlock, CoordSlot
+from core.coordinates.exp_factor_coord import CoordTask, CoordAttention, CoordCategory
+from core.coordinates.time_coord import CoordTimeEvent
+from core.coordinates.trials_coord import CoordError
 from core.data_structures.base_data_struct import DataStructure
 from core.data_structures.core_data import Dimensions, CoreData
 from core.entities.exp_structure import Session
@@ -38,7 +38,7 @@ class TrialsProperties(DataStructure):
     - ``slot``
     - ``task`` (optional)
     - ``attn`` (optional)
-    - ``stim``
+    - ``categ``
     - ``t_on``
     - ``t_off``
     - ``t_warn``
@@ -61,7 +61,7 @@ class TrialsProperties(DataStructure):
         Coordinate for the task of each trial.
     attn : CoordContext, optional
         Coordinate for the attentional state of each trial.
-    stim : CoordStim
+    categ : CoordCategory
         Coordinate for the nature of the stimulus presented in each trial.
     t_warn : CoordTimeEvent
         Coordinate for the onset of the warning sound (only in task CLK).
@@ -70,7 +70,7 @@ class TrialsProperties(DataStructure):
     t_end : CoordTimeEvent
         Coordinate for the end time of each trial.
     error : CoordError
-        Coordinate for the behavioral outcome of each trial.
+        Coordinate for the behavioral choice of each trial.
     n_trials : int
         (Property) Number of trials in the subset.
     n_sessions : int
@@ -118,7 +118,7 @@ class TrialsProperties(DataStructure):
             "slot": CoordSlot,
             "task": CoordTask,
             "attn": CoordAttention,
-            "stim": CoordStim,
+            "categ": CoordCategory,
             "t_on": CoordTimeEvent,
             "t_off": CoordTimeEvent,
             "t_warn": CoordTimeEvent,
@@ -137,18 +137,18 @@ class TrialsProperties(DataStructure):
     def __init__(
         self,
         session_ids: List[Session],
-        data: Optional[Union[CoreData, np.ndarray]] = None,
-        recnum: Optional[Union[CoordRecNum, np.ndarray]] = None,
-        block: Optional[Union[CoordBlock, np.ndarray]] = None,
-        slot: Optional[Union[CoordSlot, np.ndarray]] = None,
-        task: Optional[Union[CoordTask, np.ndarray]] = None,
-        attn: Optional[Union[CoordAttention, np.ndarray]] = None,
-        stim: Optional[Union[CoordStim, np.ndarray]] = None,
-        t_on: Optional[Union[CoordTimeEvent, np.ndarray]] = None,
-        t_off: Optional[Union[CoordTimeEvent, np.ndarray]] = None,
-        t_warn: Optional[Union[CoordTimeEvent, np.ndarray]] = None,
-        t_end: Optional[Union[CoordTimeEvent, np.ndarray]] = None,
-        error: Optional[Union[CoordError, np.ndarray]] = None,
+        data: CoreData | np.ndarray | None = None,
+        recnum: CoordRecNum | np.ndarray | None = None,
+        block: CoordBlock | np.ndarray | None = None,
+        slot: CoordSlot | np.ndarray | None = None,
+        task: CoordTask | np.ndarray | None = None,
+        attn: CoordAttention | np.ndarray | None = None,
+        categ: CoordCategory | np.ndarray | None = None,
+        t_on: CoordTimeEvent | np.ndarray | None = None,
+        t_off: CoordTimeEvent | np.ndarray | None = None,
+        t_warn: CoordTimeEvent | np.ndarray | None = None,
+        t_end: CoordTimeEvent | np.ndarray | None = None,
+        error: CoordError | np.ndarray | None = None,
     ) -> None:
         # Set sub-class specific metadata
         self.session_ids = session_ids
@@ -169,7 +169,7 @@ class TrialsProperties(DataStructure):
             slot=slot,
             task=task,
             attn=attn,
-            stim=stim,
+            categ=categ,
             t_on=t_on,
             t_off=t_off,
             t_warn=t_warn,
