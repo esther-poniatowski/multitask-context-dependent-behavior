@@ -11,7 +11,7 @@ Classes
 `Task`
 `Context`
 `Stimulus`
-`BehaviorOutcome`
+`Behavior`
 """
 
 from types import MappingProxyType
@@ -52,14 +52,12 @@ class Task(ExpFeature):
     Class Attributes
     ----------------
     OPTIONS : FrozenSet[str]
-        Tasks represented by their short names (3 letters).
-        PTD : Pure Tone Discrimination.
-            Categories : Pure tone vs. White noise.
-        CLK : Click Rate Discrimination.
-            Categories : Click trains at fast and slow rates.
-        CCH : sComplex Chord Discrimination.
-            Categories : Two complex chords.
-            Similar to PTD in terms of task structure.
+        Tasks represented by their short names (3 letters):
+
+        - 'PTD': Pure Tone Discrimination. Stimuli: Pure tone vs. White noise.
+        - 'CLK': Click Rate Discrimination. Stimuli: Click trains at fast and slow rates.
+        - 'CCH': Complex Chord Discrimination. Stimuli: Two complex chords. Similar to 'PTD' in
+          terms of task structure.
     """
 
     OPTIONS = frozenset(["PTD", "CLK", "CCH"])
@@ -79,17 +77,17 @@ class Context(ExpFeature):
     Class Attributes
     ----------------
     OPTIONS : FrozenSet[str]
-        Contexts represented by their short names (1 to 4 letters).
-        a : Active context (only for trained animals).
-            The animal performs an aversive Go/No-Go task.
-            It is presented with a licking spout and should refrain from licking after the
-            presentation of a target stimulus.
-        p : Passive context (for both trained and naive animals).
-            The animal only listens to sounds without licking.
-        p-pre : Pre-passive context (only for trained animals).
-            It corresponds to a passive session before an active session.
-        p-post : Post-passive context (only for trained animals).
-            It corresponds to a passive session after an active session.
+        Contexts represented by their short names (1 to 4 letters):
+
+        - 'a': Active context (only for trained animals). The animal engages in an aversive Go/No-Go
+          task. It is presented with a licking spout and should refrain from licking after the
+          presentation of a target stimulus.
+        - 'p': Passive context (for both trained and naive animals). The animal only listens to
+          sounds without the possibility to lick.
+        - 'p-pre': Pre-passive context (only for trained animals). Sup-type of 'p': Passive session
+          before an active session.
+        - 'p-post': Post-passive context (only for trained animals). Sup-type of 'p': Passive
+          session after an active session.
 
     Methods
     -------
@@ -113,9 +111,28 @@ class Context(ExpFeature):
         return frozenset([cls("p")])
 
 
-class Stimulus(ExpFeature):
+class Category(ExpFeature):
     """
-    Behavioral category of the auditory stimuli in the Go/NoGo task.
+    Behavioral category of the stimuli in the Go/NoGo task.
+
+    Class Attributes
+    ----------------
+    OPTIONS : FrozenSet[str]
+        Stimuli represented by their short names (1 letter):
+
+        - 'R': Reference stimulus, i.e. Go (safe).
+          In PTD : TORC sound.
+          In CLK : Click train at either fast or slow rate.
+        - 'T': Target stimulus, i.e. NoGo (dangerous).
+          In PTD : Pure tone.
+          In CLK : Click train at the other rate.
+        - 'N': Neutral stimulus.
+          In CLK (only) : TORC sound.
+
+    Methods
+    -------
+    `get_clk`
+    `get_ptd`
 
     Notes
     -----
@@ -123,23 +140,6 @@ class Stimulus(ExpFeature):
     though they are meaningful only in the active context. Moreover, the exact nature of the sound
     under a given label differ across tasks.
 
-    Class Attributes
-    ----------------
-    OPTIONS : FrozenSet[str]
-        Stimuli represented by their short names (1 letter).
-        R : Reference stimulus, i.e. Go (safe).
-            In PTD : TORC sound.
-            In CLK : Click train at either fast or slow rate.
-        T : Target stimulus, i.e. NoGo (dangerous).
-            In PTD : Pure tone.
-            In CLK : Click train at the other rate.
-        N : Neutral stimulus.
-            In CLK (only) : TORC sound.
-
-    Methods
-    -------
-    `get_clk`
-    `get_ptd`
     """
 
     OPTIONS = frozenset(["R", "T", "N"])
@@ -156,16 +156,49 @@ class Stimulus(ExpFeature):
         return frozenset([cls("R"), cls("T")])
 
 
-class BehaviorOutcome(ExpFeature):
+class Stimulus(ExpFeature):
     """
-    Behavioral outcomes of the animals' responses.
+    Sensory (physical) nature of the auditory stimuli presented to the animals.
 
     Class Attributes
     ----------------
     OPTIONS : FrozenSet[str]
-        Outcomes represented by their short names (2 to 4 letters).
-        Go : Lick.
-        NoGo : Refrain from licking.
+        Stimuli represented by their short names (3 to 4 letters):
+
+        - 'TORC': Time-Orthogonal Ripple Counter, noise-like sound. Either a reference in PTD or a
+          neutral stimulus in CLK.
+        - 'Tone': Pure tone. Always a target in PTD.
+        - 'ClickT': Click train at a given rate. Always a target in CLK.
+        - 'ClickR': Click train at a different rate. Always a reference in CLK.
+
+    Notes
+    -----
+    To refer to both categories of click rates, the labels "ClickT" and "ClickR" are used since
+    the exact rates associated to targets and references differ across animals in the CLK task.
+    """
+
+    OPTIONS = frozenset(["TORC", "Click", "Tone", "Noise"])
+    LABELS = MappingProxyType(
+        {
+            "TORC": "Time-Orthogonal Ripple Counter",
+            "Click": "Click Train",
+            "Tone": "Pure Tone",
+            "Noise": "White Noise",
+        }
+    )
+
+
+class Behavior(ExpFeature):
+    """
+    Behavioral choice, i.e. animals' response.
+
+    Class Attributes
+    ----------------
+    OPTIONS : FrozenSet[str]
+        Behavioral choices represented by their short names (2 to 4 letters):
+
+        - 'Go': Lick.
+        - 'NoGo': Refrain from licking.
     """
 
     OPTIONS = frozenset(["Go", "NoGo"])
