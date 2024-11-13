@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`test_core.test_coordinates.test_exp_features` [module]
+`test_core.test_coordinates.test_exp_factors` [module]
 
 See Also
 --------
-`core.coordinates.exp_features`: Tested module.
+`core.coordinates.exp_factors`: Tested module.
 
 Notes
 -----

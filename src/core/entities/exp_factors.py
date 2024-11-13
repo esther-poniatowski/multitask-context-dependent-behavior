@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.entities.exp_features` [module]
+`core.entities.exp_factors` [module]
 
-Classes representing the experimental features describing the behavioral paradigm.
+Classes representing the experimental factors describing the behavioral paradigm.
 
 Classes
 -------
@@ -41,8 +41,8 @@ class ExpFactor(str, Entity[str]):
         return super().__new__(cls, value)
 
     @classmethod
-    def get_features(cls) -> List[Self]:
-        """Return the list of all features instances corresponding to the options."""
+    def get_factors(cls) -> List[Self]:
+        """Return the list of all factors instances corresponding to the options."""
         return [cls(option) for option in cls.OPTIONS]
 
 

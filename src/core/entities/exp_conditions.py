@@ -29,7 +29,7 @@ if TYPE_CHECKING:  # prevent circular imports (`exp_condition` is imported coord
 
 class ExpCondition:
     """
-    Experimental condition defined by the combination of several experimental features, among:
+    Experimental condition defined by the combination of several experimental factors, among:
 
     - task
     - attentional state
@@ -54,12 +54,12 @@ class ExpCondition:
 
     Notes
     -----
-    Partial conditions can be defined by specifying only the features of interest. The remaining
-    features are set to `None` by default.
+    Partial conditions can be defined by specifying only the factors of interest. The remaining
+    factors are set to `None` by default.
 
     Warning
     -------
-    Instantiate with keyword arguments to avoid confusion between the features, especially when
+    Instantiate with keyword arguments to avoid confusion between the factors, especially when
     partial conditions are defined.
 
     Examples
@@ -174,7 +174,7 @@ class ExpCondition:
             raise ValueError("No coordinate provided to match the condition.")
         # Retrieve the number of samples from one specified coordinate
         mask = np.ones(len(coords[0]), dtype=bool)
-        # Apply conditions only for specified instance feature and corresponding coordinate
+        # Apply conditions only for specified instance factor and corresponding coordinate
         if self.task and task is not None:
             mask &= task == self.task
         if self.attention and attn is not None:
@@ -199,25 +199,25 @@ class ExpCondition:
         return ExpConditionUnion(conditions)
 
     @staticmethod
-    def get_combinations(*features) -> List:
+    def get_combinations(*factors) -> List:
         """
-        Get all possible combinations of the values of experimental features of interest.
+        Get all possible combinations of the values of experimental factors of interest.
 
         Arguments
         ---------
-        features : Tuple[ExpFactor]
-            Classes of the experimental features to consider, among: `Task`, `Attention`,
+        factors : Tuple[ExpFactor]
+            Classes of the experimental factors to consider, among: `Task`, `Attention`,
             `Stimulus`, `Behavior`.
 
         Returns
         -------
         combinations : List[Tuple[ExpFactor, ...]]
-            Cartesian product of feature instances in the selected experimental features.
+            Cartesian product of factor instances in the selected experimental factors.
 
         Notes
         -----
-        The values of each experimental feature are retrieved by the `get_features` method of the
-        features classes.
+        The values of each experimental factor are retrieved by the `get_factors` method of the
+        factors classes.
 
         Examples
         --------
@@ -233,8 +233,8 @@ class ExpCondition:
         --------
         `itertools.product`: Cartesian product of input iterables.
         """
-        feature_values = [feature_class.get_features() for feature_class in features]
-        combinations = list(product(*feature_values))
+        factor_values = [factor_class.get_factors() for factor_class in factors]
+        combinations = list(product(*factor_values))
         return combinations
 
     @staticmethod
@@ -245,7 +245,7 @@ class ExpCondition:
         outcomes: Sequence[Behavior] | Behavior | None = None,
     ) -> List["ExpCondition"]:
         """
-        Generate all possible conditions for a set of experimental features.
+        Generate all possible conditions for a set of experimental factors.
 
         Arguments
         ---------
@@ -256,7 +256,7 @@ class ExpCondition:
         Returns
         -------
         conditions : List[ExpCondition]
-            Conditions generated from the Cartesian product of the selected features.
+            Conditions generated from the Cartesian product of the selected factors.
 
         Examples
         --------
@@ -272,7 +272,7 @@ class ExpCondition:
 
         Notes
         -----
-        For each feature, if a single instance is provided, it considered as fixed and will be used
+        For each factor, if a single instance is provided, it considered as fixed and will be used
         for all conditions.
         If no instance is provided, it is set to `None` in all the experimental conditions.
         """
@@ -281,7 +281,7 @@ class ExpCondition:
         stimuli_seq = ExpCondition.format_to_combine(stimuli)
         contexts_seq = ExpCondition.format_to_combine(contexts)
         outcomes_seq = ExpCondition.format_to_combine(outcomes)
-        # Generate all combinations of the provided features
+        # Generate all combinations of the provided factors
         # Output: List[Tuple[ExpFactor, ...]]
         combinations = product(tasks_seq, contexts_seq, stimuli_seq, outcomes_seq)
         # Create and return a list of ExpCondition instances from the combinations

@@ -176,8 +176,8 @@ class Session(str, Entity[str]):
     --------
     `core.entities.bio_info.Site`
     `core.entities.exp_structure.Recording`
-    `core.entities.exp_features.Task`
-    `core.entities.exp_features.Attention`
+    `core.entities.exp_factors.Task`
+    `core.entities.exp_factors.Attention`
     """
 
     ID_PATTERN = re.compile(
