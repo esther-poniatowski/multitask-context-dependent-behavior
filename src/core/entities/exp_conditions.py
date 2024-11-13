@@ -69,29 +69,29 @@ class ExpCondition:
     >>> task = Task('PTD')
     >>> attention = Attention('a')
     >>> category = Category('R')
-    >>> condition1 = ExpCondition(task=task, attention=attention, category=category)
-    >>> condition1.task
+    >>> exp_cond_1 = ExpCondition(task=task, attention=attention, category=category)
+    >>> exp_cond_1.task
     'PTD'
 
     Initialize directly with strings:
 
-    >>> condition2 = ExpCondition(task='CLK', attention='p', category='T')
+    >>> exp_cond_2 = ExpCondition(task='CLK', attention='p', category='T')
 
     Initialize a partial condition without specifying the attention:
 
-    >>> condition3 = ExpCondition(task='PTD', category='R', behavior='Go')
-    >>> print(condition3)
+    >>> exp_cond_3 = ExpCondition(task='PTD', category='R', behavior='Go')
+    >>> exp_cond_3
     ExpCondition(task=PTD, attention=None, category=R, behavior=Go)
 
     Combine two conditions into a union:
 
-    >>> union = condition1 + condition2
+    >>> union = exp_cond_1 + exp_cond_2
     >>> union.conditions
     [ExpCondition(task='PTD', attention='a', category='R'), ExpCondition(task='CLK', attention='p', category='T')]
 
     Combine an arbitrary number of conditions into a union:
 
-    >>> union = ExpCondition.union(condition1, condition2, condition3)
+    >>> union = ExpCondition.union(exp_cond_1, exp_cond_2, exp_cond_3)
     >>> union.conditions
     [ExpCondition(task='PTD', attention='a', category='R'), ExpCondition(task='CLK', attention='p', category='T'), ExpCondition(task='PTD', attention=None, category='R', behavior='Go')]
 
@@ -191,11 +191,11 @@ class ExpCondition:
         return ExpConditionUnion([self, other])
 
     @classmethod
-    def union(cls, *conditions: Self) -> "ExpConditionUnion":
+    def union(cls, *exp_conds: Self) -> "ExpConditionUnion":
         """
         Combine an arbitrary number of conditions into a union.
         """
-        return ExpConditionUnion(conditions)
+        return ExpConditionUnion(exp_conds)
 
     @staticmethod
     def get_combinations(*factors) -> List:
@@ -250,7 +250,7 @@ class ExpCondition:
 
         Returns
         -------
-        conditions : List[ExpCondition]
+        exp_conds : List[ExpCondition]
             Conditions generated from the Cartesian product of the selected factors.
 
         Examples
@@ -258,7 +258,7 @@ class ExpCondition:
         Generate all possible conditions for two tasks, a fixed attentional state, two stimuli and
         both behaviors:
 
-        >>> conditions = ExpCondition.generate_conditions(
+        >>> exp_conds = ExpCondition.generate_conditions(
         ...     tasks=[Task("PTD"), Task("CLK")],
         ...     attentions=[Attention("a")],
         ...     categories=[Category("R"), Category("T")],
@@ -314,7 +314,7 @@ class ExpConditionUnion:
 
     Attributes
     ----------
-    conditions : List[ExpCondition]
+    exp_conds : List[ExpCondition]
         Union of conditions represented under the form of a list.
 
     Notes
@@ -324,8 +324,8 @@ class ExpConditionUnion:
     operator or the `union` class method of `ExpCondition`.
     """
 
-    def __init__(self, conditions: Iterable[ExpCondition]) -> None:
-        self.conditions = list(conditions)
+    def __init__(self, exp_conds: Iterable[ExpCondition]) -> None:
+        self.exp_conds = list(exp_conds)
 
     def match(
         self,
@@ -348,7 +348,7 @@ class ExpConditionUnion:
             Boolean mask to index samples that match any of the conditions.
         """
         # Get the masks for each condition in the union using the match method of ExpCondition
-        all_masks = [condition.match(task, attn, categ, behav) for condition in self.conditions]
+        all_masks = [cond.match(task, attn, categ, behav) for cond in self.exp_conds]
         # Combine all masks with a logical OR operation
         mask = np.logical_or.reduce(all_masks)
         return mask
