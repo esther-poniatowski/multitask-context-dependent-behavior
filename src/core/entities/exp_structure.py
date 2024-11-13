@@ -161,7 +161,7 @@ class Session(str, Entity[str]):
     site : Site
         Location where the session was recorded. Example : ``'avo052a'``
     rec : Recording
-        Recording number at this site (used for ordering the sessions).
+        Recording number associated to the session at this site (used for ordering sessions).
     task : Task
         Task performed during the session.
     attn : Attention
@@ -245,52 +245,34 @@ class Session(str, Entity[str]):
             return (cls.DEFAULT_VALUE,) * 4
         return match.group("site"), match.group("rec"), match.group("attn"), match.group("task")
 
-    class SessionComponents(TypedDict):
-        """Typed dictionary for the components of a session ID."""
-
-        site: Site
-        rec: Recording
-        attn: Attention
-        task: Task
-
     @cached_property
-    def id_components(self) -> SessionComponents:
-        """
-        Caches the components of the session in a dictionary for easy access, in appropriate types.
-
-        Returns
-        -------
-        SessionComponents
-        """
-        site_str, rec_str, ctx_str, task_str = self.split_id(self)
-        site, attn, task = Site(site_str), Attention(ctx_str), Task(task_str)
-        rec_int = Recording(int(rec_str))  # convert string to int first
-        return {"site": site, "rec": rec_int, "attn": attn, "task": task}
-
-    @property
     def site(self) -> Site:
         """
-        Brain site at which the session was recorded.
+        Brain site at which the session was recorded (cached).
         """
-        return self.id_components["site"]
+        site_str, _, _, _ = self.split_id(self)
+        return Site(site_str)
 
-    @property
+    @cached_property
     def rec(self) -> Recording:
         """
-        Recording number at the site.
+        Recording number of the session at the site (cached).
         """
-        return self.id_components["rec"]
+        _, rec_str, _, _ = self.split_id(self)
+        return Recording(int(rec_str))  # convert string to int first
 
-    @property
+    @cached_property
     def attn(self) -> Attention:
         """
-        Attention of the session.
+        Attentional state of the animal in the session (cached).
         """
-        return self.id_components["attn"]
+        _, _, attn_str, _ = self.split_id(self)
+        return Attention(attn_str)
 
-    @property
+    @cached_property
     def task(self) -> Task:
         """
-        Task performed during the session.
+        Task performed during the session (cached).
         """
-        return self.id_components["task"]
+        _, _, _, task_str = self.split_id(self)
+        return Task(task_str)
