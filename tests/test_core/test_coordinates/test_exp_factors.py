@@ -12,7 +12,8 @@ Notes
 Those tests focus on the functionalities which are *specific* to
 one concrete subclass of coordinates.
 
-The tests are performed on the `CoordTask`subclass, but apply for all subclasses of `CoordExpFactor`.
+The tests are performed on the `CoordTask`subclass, but apply for all subclasses of
+`CoordExpFactor`.
 """
 
 import numpy as np

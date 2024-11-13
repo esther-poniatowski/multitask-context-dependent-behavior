@@ -44,7 +44,7 @@ class CoordError(Coordinate[np.bool_, TypeAlias]):
 
     Notes
     -----
-    No entity is specified for behavioral outcomes.
+    No entity is specified for behavioral choices.
 
     See Also
     --------

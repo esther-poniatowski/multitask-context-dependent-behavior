@@ -137,7 +137,7 @@ class Category(ExpFactor):
 
     Notes
     -----
-    The same stimuli labels are used for consistency in both active and passive contexts, even
+    The same stimuli labels are used for consistency in both active and passive attentional states, even
     though they are meaningful only in the active attentional state. Moreover, the exact nature of the sound
     under a given label differ across tasks.
 
