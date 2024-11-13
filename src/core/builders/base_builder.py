@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.builders.base_builder` [module]
+`core.builders.base_builder` [module]
 
 Base classes for data structure builders.
 
 Classes
 -------
-:class:`DataBuilder`
+`DataBuilder`
 
 Examples
 --------
@@ -60,27 +60,24 @@ class DataBuilderInput:
     """
 
 
-I = TypeVar("I")
-"""Type variable for the input data class associated with a specific builder."""
-
-O = TypeVar("O", bound=DataStructure)
+Product = TypeVar("Product", bound=DataStructure)
 """Type variable for the Data structure class produced by a specific builder."""
 
 
-class DataBuilder(Generic[I, O], ABC):
+class DataBuilder(Generic[Product], ABC):
     """
     Abstract base class for building data structures.
 
     Class Attributes
     ----------------
-    product_class : type
+    PRODUCT_CLASS : type
         Class of the data structure to build.
     TMP_DATA : Tuple[str]
         Names of the internal data attributes used by the builder.
 
     Attributes
     ----------
-    product : O
+    product : Optional[Product]
         Data structure instance being built.
 
     Methods
@@ -95,8 +92,7 @@ class DataBuilder(Generic[I, O], ABC):
 
     See Also
     --------
-    :class:`core.data_structures.base_data_struct.Data`
-        Abstract base class for data structures.
+    `core.data_structures.base_data_struct.Data`: Abstract base class for data structures.
 
     Implementation
     --------------
@@ -121,22 +117,36 @@ class DataBuilder(Generic[I, O], ABC):
     builder can focus on the creation process.
     """
 
-    product_class: Type[O]
+    PRODUCT_CLASS: Type[Product]
     TMP_DATA: Tuple[str, ...]
 
     def __init__(self) -> None:
         """Declare the data structure product to build."""
-        self.product: Optional[O]
+        self.product: Optional[Product] = None
         self.reset()
 
     def reset(self) -> None:
         """Reset the builder's state: clear the product and internal data."""
-        self.product = None
+        self.product = self.initialize_data_structure()
         for attr in self.TMP_DATA:
             setattr(self, attr, None)
 
+    def get_product(self) -> Product:
+        """
+        Return the data structure product built by this builder and reset the builder's state.
+
+        Returns
+        -------
+        product_type
+            Data structure instance built by this builder.
+        """
+        assert self.product is not None
+        product = self.product
+        self.reset()
+        return product
+
     @abstractmethod
-    def build(self, **kwargs) -> O:
+    def build(self, **kwargs) -> Product:
         """
         Orchestrate the creation of a data structure step-by-step.
 
@@ -149,8 +159,26 @@ class DataBuilder(Generic[I, O], ABC):
         -------
         product_type
             Data structure instance built by this builder.
+
+        Notes
+        -----
+        This method has the responsibility of an equivalent Director class in the classical Builder
+        design pattern, which defines a sequence of construction steps to create specific kinds of
+        products.
+        Usually, the product data structure is initialized at the beginning of the method for
+        incremental construction. Each step can immediately update the product as soon as a
+        component becomes available, without requiring temporary storage.
         """
 
+    def get_dimensions(self) -> Tuple[DimName, ...]:
+        """
+        Retrieve the dimensions of the data structure product by delegating to the product class.
+
+        Required to initialize the CoreData.
+        """
+        return self.PRODUCT_CLASS.dims
+
+    @abstractmethod
     def initialize_data_structure(self, **metadata) -> None:
         """
         Initialize an empty data structure product *with its metadata*.
@@ -168,15 +196,7 @@ class DataBuilder(Generic[I, O], ABC):
         - Identifiers which uniquely characterize the data structure product.
         - Descriptive parameters about configuration or content (if any).
         """
-        self.product = self.product_class(**metadata)
-
-    def get_dimensions(self) -> Tuple[DimName, ...]:
-        """
-        Retrieve the dimensions of the data structure product by delegating to the product class.
-
-        Required to initialize the CoreData.
-        """
-        return self.product_class.dims
+        self.product = self.PRODUCT_CLASS(**metadata)
 
     def initialize_core_data(self, shape: Tuple[int, ...]) -> CoreData:
         """
@@ -200,7 +220,7 @@ class DataBuilder(Generic[I, O], ABC):
         override this method. To mark uninitialized elements, use either a sentinel value state or
         masked arrays.
         """
-        data = CoreData(np.full(shape, np.nan), dims=self.product_class.dims)
+        data = CoreData(np.full(shape, np.nan), dims=self.get_dimensions())
         return data
 
     def add_data(self, data: CoreData) -> None:
@@ -214,8 +234,8 @@ class DataBuilder(Generic[I, O], ABC):
 
         See Also
         --------
-        :meth:`core.data_structures.core_data.CoreData`
-        :meth:`core.data_structures.base_data_struct.DataStructure.set_data`
+        `core.data_structures.core_data.CoreData`
+        `core.data_structures.base_data_struct.DataStructure.set_data`
             Setter method provided by the data structure interface.
         """
         assert self.product is not None
@@ -233,23 +253,9 @@ class DataBuilder(Generic[I, O], ABC):
 
         See Also
         --------
-        :meth:`core.coordinates.base_coord.BaseCoord`
-        :meth:`core.data_structures.base_data_struct.DataStructure.set_coords`
+        `core.coordinates.base_coord.Coordinate`
+        `core.data_structures.base_data_struct.DataStructure.set_coords`
             Setter method provided by the data structure interface.
         """
         assert self.product is not None
         self.product.set_coords(**coords)
-
-    def get_product(self) -> O:
-        """
-        Return the data structure product built by this builder and reset the builder's state.
-
-        Returns
-        -------
-        product_type
-            Data structure instance built by this builder.
-        """
-        assert self.product is not None
-        product = self.product
-        self.reset()
-        return product
