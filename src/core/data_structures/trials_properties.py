@@ -4,7 +4,7 @@
 `core.data_structures.trials_properties` [module]
 """
 from types import MappingProxyType
-from typing import Optional, Union, Generator, List
+from typing import Generator, List
 
 import numpy as np
 
@@ -14,10 +14,7 @@ from core.coordinates.time_coord import CoordTimeEvent
 from core.coordinates.trials_coord import CoordError
 from core.data_structures.base_data_struct import DataStructure
 from core.data_structures.core_data import Dimensions, CoreData
-from core.entities.exp_structure import Session
-
-# from utils.io_data.loaders import LoaderNPY
-# from utils.storage_rulers.impl_path_rulers import TrialsPropertiesPath
+from core.entities.exp_structure import Session, Recording
 
 
 class TrialsProperties(DataStructure):
@@ -81,6 +78,7 @@ class TrialsProperties(DataStructure):
     Methods
     -------
     `iter_trials`
+    `get_session_from_recording`
 
     Notes
     -----
@@ -128,9 +126,6 @@ class TrialsProperties(DataStructure):
     )
     coords_to_dims = MappingProxyType({name: Dimensions("trials") for name in coords.keys()})
     identifiers = ("session_ids",)
-
-    # --- IO Handlers ---
-    # TODO
 
     # --- Key Features ---
 
@@ -195,6 +190,12 @@ class TrialsProperties(DataStructure):
         else:
             return 0
 
+    def __repr__(self) -> str:
+        return (
+            f"<{self.__class__.__name__}>: Sessions {self.session_ids}, "
+            f"#trials={self.n_trials}" + super().__repr__()
+        )
+
     def iter_trials(self) -> Generator:
         """
         Iterate over the trials in the session and yield their metadata.
@@ -213,7 +214,32 @@ class TrialsProperties(DataStructure):
         for block, slot, t_on, t_end in zip(self.block, self.slot, self.t_on, self.t_end):
             yield block, slot, t_on, t_end
 
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}>: Sessions {self.session_ids}\n" + super().__repr__()
+    def get_session_from_recording(self, recnum: int | Recording) -> Session:
+        """
+        Get the session identifier corresponding to one recording number.
 
-    # --- IO Handling ----
+        Parameters
+        ----------
+        recnum : int or Recording
+            Recording number.
+
+        Returns
+        -------
+        session_id : Session
+            Identifier of the session from which the trial comes.
+
+        Raises
+        ------
+        ValueError
+            If the recording number is not found in the sessions' IDs.
+
+        return next((s for s, rec in sessions_to_recnums.items() if rec == recnum), None)
+        --------
+        `core.entities.exp_structure.Session.rec`
+        """
+        if isinstance(recnum, int):
+            recnum = Recording(recnum)
+        recnums_to_sessions = {s.rec: s for s in self.session_ids}
+        if recnum not in recnums_to_sessions:
+            raise ValueError(f"Invalid recording number ({recnum}) in sessions: {self.session_ids}")
+        return recnums_to_sessions[recnum]
