@@ -7,7 +7,7 @@ Base classes for data structure builders.
 
 Classes
 -------
-`DataBuilder`
+`DataStructureBuilder`
 
 Examples
 --------
@@ -15,7 +15,7 @@ Implementation of a concrete builder class:
 
 .. code-block:: python
 
-    class ConcreteBuilder(DataBuilder):
+    class ConcreteBuilder(DataStructureBuilder):
         data_class = ConcreteDataStructure
 
         def build(self,
@@ -38,67 +38,46 @@ Usage of the concrete builder:
 
 """
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from typing import TypeVar, Generic, Type, Tuple, Optional
 
 import numpy as np
 
-# from core.coordinates.base_coord import Coordinate
-from core.data_structures.base_data_struct import Coordinate
+from core.coordinates.base_coord import Coordinate
 from core.data_structures.core_data import CoreData, DimName
 from core.data_structures.base_data_struct import DataStructure
 
 
-@dataclass
-class DataBuilderInput:
-    """
-    Base class for builder inputs.
-
-    Notes
-    -----
-    Each subclass of `DataBuilder` should define a dataclass that inherits from this class.
-    """
-
-
-Product = TypeVar("Product", bound=DataStructure)
+Product = TypeVar("Product", bound=DataStructure | CoreData | Coordinate)
 """Type variable for the Data structure class produced by a specific builder."""
 
 
-class DataBuilder(Generic[Product], ABC):
+class Builder(Generic[Product], ABC):
     """
-    Abstract base class for building data structures.
+    Abstract base class for building high-level objects: data structures, core data, coordinates.
 
     Class Attributes
     ----------------
     PRODUCT_CLASS : type
-        Class of the data structure to build.
+        Class of the product to build.
     TMP_DATA : Tuple[str]
-        Names of the internal data attributes used by the builder.
+        Names of the internal data attributes used by the builder (if any, for temporary storage).
 
     Attributes
     ----------
     product : Optional[Product]
-        Data structure instance being built.
+        Product instance being built.
 
     Methods
     -------
     `build`
     `reset`
-    `initialize_data_structure`
-    `get_dimensions`
-    `add_data`
-    `add_coords`
     `get_product`
-
-    See Also
-    --------
-    `core.data_structures.base_data_struct.Data`: Abstract base class for data structures.
 
     Implementation
     --------------
-    Separation of concerns between the builder's methods
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    - Constructor: Declare the data structure product to build (base class' constructor) and store
+    Separation of concerns between the builder's methods:
+
+    - Constructor: Declare the type of product to build (base class' constructor) and store
       static configuration parameters (subclasses' constructors) which determine the behavior of the
       builder across multiple builds.
     - Main `build()` method: Receive dynamic inputs required to build a specific product instance.
@@ -109,36 +88,29 @@ class DataBuilder(Generic[Product], ABC):
       instance.
     - Specific methods to process internal data: Only deal with the data they receive from
       `build()`.
-
-    Lazy Instantiation
-    ^^^^^^^^^^^^^^^^^^
-    The builder should fill data and coordinates using the `set_data` and `set_coords` methods
-    provided by the data structure itself. Those methods perform automatic validations so that the
-    builder can focus on the creation process.
     """
 
     PRODUCT_CLASS: Type[Product]
     TMP_DATA: Tuple[str, ...]
 
     def __init__(self) -> None:
-        """Declare the data structure product to build."""
-        self.product: Optional[Product] = None
+        self.product: Optional[Product] = None  # declare the type of product to build
         self.reset()
 
     def reset(self) -> None:
         """Reset the builder's state: clear the product and internal data."""
-        self.product = self.initialize_data_structure()
+        self.product = None
         for attr in self.TMP_DATA:
             setattr(self, attr, None)
 
     def get_product(self) -> Product:
         """
-        Return the data structure product built by this builder and reset the builder's state.
+        Return the product after complete building and reset the builder's state.
 
         Returns
         -------
-        product_type
-            Data structure instance built by this builder.
+        product
+            Product instance built by this builder.
         """
         assert self.product is not None
         product = self.product
@@ -148,7 +120,7 @@ class DataBuilder(Generic[Product], ABC):
     @abstractmethod
     def build(self, **kwargs) -> Product:
         """
-        Orchestrate the creation of a data structure step-by-step.
+        Orchestrate the creation of a product step-by-step.
 
         Arguments
         ---------
@@ -157,8 +129,8 @@ class DataBuilder(Generic[Product], ABC):
 
         Returns
         -------
-        product_type
-            Data structure instance built by this builder.
+        product
+            Product instance built by this builder.
 
         Notes
         -----
@@ -169,6 +141,96 @@ class DataBuilder(Generic[Product], ABC):
         incremental construction. Each step can immediately update the product as soon as a
         component becomes available, without requiring temporary storage.
         """
+
+
+ProductCoordinate = TypeVar("ProductCoordinate", bound=Coordinate)
+"""Type variable for the Coordinate class produced by a specific builder."""
+
+
+class CoordinateBuilder(Builder[ProductCoordinate]):
+    """
+    Abstract base class for building coordinates.
+
+    Class Attributes
+    ----------------
+    Same as the `Builder` class.
+
+    Attributes
+    ----------
+    Same as the `Builder` class.
+
+    Methods
+    -------
+
+    See Also
+    --------
+    `core.coordinates.base_coord.Coordinate`: Abstract base class for coordinates.
+    """
+
+    # Not specific method yet
+
+
+ProductCoreData = TypeVar("ProductCoreData", bound=CoreData)
+"""Type variable for the Core Data class produced by a specific builder."""
+
+
+class CoreDataStructureBuilder(Builder[ProductCoreData]):
+    """
+    Abstract base class for building core data arrays.
+
+    Class Attributes
+    ----------------
+    Same as the `Builder` class.
+
+    Attributes
+    ----------
+    Same as the `Builder` class.
+
+    Methods
+    -------
+
+    See Also
+    --------
+    `core.data_structures.core_data.CoreData`: Class for core data arrays.
+    """
+
+    # Not specific method yet
+
+
+ProductDataStructure = TypeVar("ProductDataStructure", bound=DataStructure)
+"""Type variable for the Data structure class produced by a specific builder."""
+
+
+class DataStructureBuilder(Builder[ProductDataStructure]):
+    """
+    Abstract base class for building data structures.
+
+    Class Attributes
+    ----------------
+    Same as the `Builder` class.
+
+    Attributes
+    ----------
+    Same as the `Builder` class.
+
+    Methods
+    -------
+    `get_dimensions`
+    `initialize_data_structure`
+    `initialize_core_data`
+    `add_data`
+    `add_coords`
+
+    See Also
+    --------
+    `core.data_structures.base_data_struct.Data`: Abstract base class for data structures.
+
+    Implementation
+    --------------
+    The builder fills data and coordinates using the methods of the data structure interface:
+    `set_data` and `set_coords`. Those methods perform automatic validations so that the builder can
+    focus on the creation process.
+    """
 
     def get_dimensions(self) -> Tuple[DimName, ...]:
         """
@@ -185,16 +247,12 @@ class DataBuilder(Generic[Product], ABC):
 
         Arguments
         ---------
-        metadata: dict
+        metadata : dict
             Metadata corresponding to the arguments *required* by the constructor of the data
-            structure class.
+            structure class. It includes:
 
-        Notes
-        -----
-        Metadata includes:
-
-        - Identifiers which uniquely characterize the data structure product.
-        - Descriptive parameters about configuration or content (if any).
+            - Identifiers which uniquely characterize the data structure product.
+            - Descriptive parameters about configuration or content (if any).
         """
         self.product = self.PRODUCT_CLASS(**metadata)
 
@@ -236,7 +294,6 @@ class DataBuilder(Generic[Product], ABC):
         --------
         `core.data_structures.core_data.CoreData`
         `core.data_structures.base_data_struct.DataStructure.set_data`
-            Setter method provided by the data structure interface.
         """
         assert self.product is not None
         self.product.set_data(data=data)
@@ -255,7 +312,6 @@ class DataBuilder(Generic[Product], ABC):
         --------
         `core.coordinates.base_coord.Coordinate`
         `core.data_structures.base_data_struct.DataStructure.set_coords`
-            Setter method provided by the data structure interface.
         """
         assert self.product is not None
         self.product.set_coords(**coords)
