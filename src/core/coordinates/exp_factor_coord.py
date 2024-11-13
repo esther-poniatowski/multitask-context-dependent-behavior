@@ -64,7 +64,7 @@ class CoordExpFactor(Coordinate[np.str_, ExpFactorType]):
     See Also
     --------
     `core.coordinates.base_coord.Coordinate`
-    `core.entities.exp_features`
+    `core.entities.exp_factors`
     """
 
     ENTITY: Type[ExpFactorType]
