@@ -38,7 +38,7 @@ Get the valid labels for Attention objects :
     print(list(Attention.get_options()))
     # Output: ('a', 'p', 'p-pre', 'p-post')
 
-Get the contexts for naive animals :
+Get the attentional states for naive animals :
 
 .. code-block:: python
 

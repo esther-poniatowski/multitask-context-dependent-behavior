@@ -241,16 +241,16 @@ class ExpCondition:
     def generate_conditions(
         tasks: Sequence[Task] | Task | None = None,
         stimuli: Sequence[Stimulus] | Stimulus | None = None,
-        contexts: Sequence[Attention] | Attention | None = None,
-        outcomes: Sequence[Behavior] | Behavior | None = None,
+        attentions: Sequence[Attention] | Attention | None = None,
+        behaviors: Sequence[Behavior] | Behavior | None = None,
     ) -> List["ExpCondition"]:
         """
         Generate all possible conditions for a set of experimental factors.
 
         Arguments
         ---------
-        tasks, stimuli, contexts, outcomes : List[ExpFactor] | ExpFactor, optional
-            Instances of tasks, contexts, stimuli, and behavior outcomes to consider to generate the
+        tasks, stimuli, attentions, behaviors : List[ExpFactor] | ExpFactor, optional
+            Instances of tasks, attentions, stimuli, and behavior choices to consider to generate the
             experimental conditions of interest.
 
         Returns
@@ -265,9 +265,9 @@ class ExpCondition:
 
         >>> conditions = ExpCondition.generate_conditions(
         ...     tasks=[Task("PTD"), Task("CLK")],
-        ...     contexts=[Attention("a")],
+        ...     attentions=[Attention("a")],
         ...     stimuli=[Stimulus("R"), Stimulus("T")],
-        ...     outcomes=[Behavior("Go"), Behavior("NoGo")]
+        ...     behaviors=[Behavior("Go"), Behavior("NoGo")]
         ... )
 
         Notes
@@ -279,11 +279,11 @@ class ExpCondition:
         # Ensure each argument is a list or None
         tasks_seq = ExpCondition.format_to_combine(tasks)
         stimuli_seq = ExpCondition.format_to_combine(stimuli)
-        contexts_seq = ExpCondition.format_to_combine(contexts)
-        outcomes_seq = ExpCondition.format_to_combine(outcomes)
+        attentions_seq = ExpCondition.format_to_combine(attentions)
+        behaviors_seq = ExpCondition.format_to_combine(behaviors)
         # Generate all combinations of the provided factors
         # Output: List[Tuple[ExpFactor, ...]]
-        combinations = product(tasks_seq, contexts_seq, stimuli_seq, outcomes_seq)
+        combinations = product(tasks_seq, attentions_seq, stimuli_seq, behaviors_seq)
         # Create and return a list of ExpCondition instances from the combinations
         return [ExpCondition(t, c, s, o) for t, c, s, o in combinations]
 
