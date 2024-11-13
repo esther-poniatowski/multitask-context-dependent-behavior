@@ -52,29 +52,16 @@ Separation of concerns between the base and subclasses constructors
 from abc import ABC
 import copy
 from pathlib import Path
-from typing import Tuple, Mapping, Type, TypeVar, Generic, Optional, Self, Union
+from typing import Tuple, Mapping, Type, TypeVar, Generic, Self, Union
 
 import numpy as np
 
 from core.data_structures.core_data import CoreData, Dimensions
 
-# from core.coordinates.base_coord import Coordinate
-from utils.storage_rulers.base_path_ruler import PathRuler
-from utils.io_data.base_loader import Loader
-from utils.io_data.loaders import LoaderDILL
-from utils.io_data.base_saver import Saver
-from utils.io_data.savers import SaverDILL
+from core.coordinates.base_coord import Coordinate
 
 
-class Coordinate(np.ndarray):
-    """TODO: Refactor the Coordinate class in ``core.coordinates.base_coord`` to inherit from
-    np.ndarray"""
-
-
-T = TypeVar("T")
-"""Type variable representing the type of data in the generic Data class."""
-
-C = TypeVar("C", bound=Union[CoreData, Coordinate])
+C = TypeVar("C", bound=CoreData | Coordinate)
 """Type variable representing the type of content attributes (CoreData, Coordinate)."""
 
 
@@ -84,22 +71,34 @@ class LazyAttribute(Generic[C]):
 
     Attributes
     ----------
-    name: str
+    name : str
         Name of the lazy attribute to handle.
 
     Parameters
     ----------
-    name: str
-        See the descriptor attribute `LazyAttribute.name`.
-    instance: DataStructure
+    name : str
+        Descriptor attribute `LazyAttribute.name`.
+    instance : DataStructure
         Instance of the data structure which stores the attribute.
-    owner: Type[DataStructure]
+    owner : Type[DataStructure]
         Class of the data structure.
 
     Raises
     ------
     AttributeError
         If the lazy attribute is accessed before being populated with actual values.
+
+    Notes
+    -----
+    Usage of this descriptor:
+
+    - Declare the lazy attributes as class attributes in the data structure base class.
+    - Initialize the lazy attributes as private attributes in the data structure constructor.
+    - When the attribute is accessed via its public name, the descriptor raises an error if the
+      value is not set yet.
+    - When a value is assigned to the attribute via the public name, the descriptor raises an error
+      to require the use of the dedicated setter method of the data structure class.
+    - To bypass the descriptor and set the actual value, use the private attribute name.
     """
 
     def __init__(self, name):
@@ -111,6 +110,16 @@ class LazyAttribute(Generic[C]):
             raise AttributeError(f"Unset attribute: '{self.name}'.")
         return value
 
+    def __set__(self, instance: "DataStructure", value: C) -> None:
+        raise AttributeError(
+            f"Use the setter method of the class {instance.__class__.__name__} "
+            f"to set the attribute '{self.name}'."
+        )
+
+
+T = TypeVar("T")
+"""Type variable representing the type of data in the generic DataStructure class, i.e., the data structure subclass."""
+
 
 class DataStructure(Generic[T], ABC):
     """
@@ -118,7 +127,7 @@ class DataStructure(Generic[T], ABC):
 
     Class Attributes
     ----------------
-    _REQUIRED_ATTRIBUTES : Tuple[str]
+    REQUIRED_ATTRIBUTES : Tuple[str]
         Names of the class-level attributes which have to be defined in each data structure
         subclass.
     dims : Dimensions
@@ -132,22 +141,13 @@ class DataStructure(Generic[T], ABC):
     identifiers : Tuple[str, ...]
         Names of the metadata attributes which jointly and uniquely identify each data structure
         instance within its class. Handled by each subclass' constructor.
-    path_ruler : Type[PathRuler]
-        Subclass of `PathRuler` used to build the path to file where the content of the data
-        structure instance can be saved to and/or loaded from.
-    saver : Type[Saver], default=SaverDILL
-        Subclass of `Saver` used to save data to a file in a specific format.
-    loader : Type[Loader], default=LoaderDILL
-        Subclass of `Loader` used to load data from a file in a specific format.
 
     Attributes
     ----------
-    data: CoreData
+    data : CoreData
         Actual data values to analyze.
-    shape: Tuple[int]
-        (Property) Shape of the data array (delegated to the numpy array).
-    path: Path
-        (Property) Path to the file where the data can be stored.
+    shape : Tuple[int]
+        (Property) Shape of the data array (delegated to the CoreData object).
 
     Methods
     -------
@@ -155,8 +155,6 @@ class DataStructure(Generic[T], ABC):
     `__getattr__`
     `set_data`
     `set_coords`
-    `load`
-    `save`
     `copy`
     `sel`
 
@@ -196,25 +194,16 @@ class DataStructure(Generic[T], ABC):
     See Also
     --------
     `Coordinate`: Base class for coordinates.
-    `PathRuler`: Base class for path managers.
-    `Loader`: Base class for loaders.
-    `Saver`: Base class for savers.
     """
 
     # --- Class-Level Configurations ---------------------------------------------------------------
 
     # --- Schema of the Data Structure ---
-    _REQUIRED_ATTRIBUTES = ("dims", "coords", "coords_to_dims", "identifiers")
+    REQUIRED_ATTRIBUTES = ("dims", "coords", "coords_to_dims", "identifiers")
     dims: Dimensions
     coords: Mapping[str, type]
     coords_to_dims: Mapping[str, Dimensions]
     identifiers: Tuple[str, ...]
-
-    # --- IO Handlers ---
-    # Optional - Overridden in subclasses if necessary (here default values)
-    path_ruler: Type[PathRuler]
-    saver: Type[Saver] = SaverDILL
-    loader: Type[Loader] = LoaderDILL
 
     def __init_subclass__(cls) -> None:
         """
@@ -238,7 +227,7 @@ class DataStructure(Generic[T], ABC):
         # Call parent hook (default behavior)
         super().__init_subclass__()
         # Check class-level attributes
-        for class_attr in cls._REQUIRED_ATTRIBUTES:
+        for class_attr in cls.REQUIRED_ATTRIBUTES:
             if not hasattr(cls, class_attr):
                 raise TypeError(f"<{cls.__name__}> Missing class-level attribute: '{class_attr}'.")
         # Declare lazily-initialized attributes
@@ -250,18 +239,18 @@ class DataStructure(Generic[T], ABC):
 
     def __init__(
         self,
-        data: Optional[Union[CoreData, np.ndarray]] = None,
-        **coords_args: Optional[Union[Coordinate, np.ndarray]],
+        data: CoreData | np.ndarray | None = None,
+        **coords_args: Coordinate | np.ndarray | None,
     ) -> None:
         """
         Instantiate a data structure and check the consistency of the input values (automatic).
 
         Parameters
         ----------
-        data : Optional[CoreData, np.ndarray]
+        data : CoreData | np.ndarray | None
             Core data values to fill the attribute `data`.
             Shape: Consistent with the dimensions expected for the data structure.
-        coords_args : Dict[str, Optional[Coordinate, np.ndarray]]
+        coords_args : Dict[str, Coordinate | np.ndarray | None]
             Coordinate values specific to the data structure subclass.
             Keys: Coordinate names as specified in `coords_to_dims`.
             Values: Coordinate values, corresponding to the expected type of coordinate.
@@ -286,7 +275,7 @@ class DataStructure(Generic[T], ABC):
 
         """
         # Lazy initialization: declare private and empty content-related attributes
-        self._data: Optional[CoreData] = None
+        self._data: CoreData | None = None
         for coord_name in self.coords:
             setattr(self, f"_{coord_name}", None)
         # Fill with actual values if provided
@@ -302,9 +291,17 @@ class DataStructure(Generic[T], ABC):
         active_coords = ", ".join(
             [name for name in self.coords if getattr(self, f"_{name}") is not None]
         )
-        return f"<{self.__class__.__name__}> Dims: {self.dims}, Data: {data_status}, Active coords: {active_coords}"
+        return (
+            f"<{self.__class__.__name__}> Dims: {self.dims}, "
+            f"Data: {data_status}, "
+            f"Active coords: {active_coords}"
+        )
 
     # --- Access to Attributes ---------------------------------------------------------------------
+
+    def get_data(self) -> CoreData:
+        """Get the actual data values."""
+        return self.data
 
     def get_coord(self, coord_name: str) -> Coordinate:
         """
@@ -324,40 +321,42 @@ class DataStructure(Generic[T], ABC):
             raise AttributeError(f"Invalid coordinate: '{coord_name}' not in {self.coords.keys()}.")
         return getattr(self, coord_name)
 
-    def __getattr__(self, name):
+    @property
+    def shape(self) -> Tuple[int, ...]:
+        """Get the shape of the core data (delegate to the core data object)."""
+        return self.data.shape
+
+    def __getattr__(self, name: str):
         """
-        Delegate the access to nested attributes of the coordinate objects.
+        Delegate the access to nested attributes and methods of the content objects.
 
         Parameters
         ----------
         name : str
             Name of the attribute to get.
         """
+        # Delegate method calls
         if name == "get_dim":
             return self.dims.get_dim
         elif name == "get_axis":
             return self.dims.get_axis
         elif name == "get_size":
             return self.data.get_size
-        elif name == "shape":
-            return self.data.shape
-        else:
+        else:  # Delegate attribute access to content objects
             for obj in self.__dict__.values():
                 if hasattr(obj, name):
                     return getattr(obj, name)
-            raise AttributeError(
-                f"Invalid attribute '{name}' for object '{self.__class__.__name__}'."
-            )
+            raise AttributeError(f"Invalid attribute '{name}' for '{self.__class__.__name__}'.")
 
     # --- Set Data and Coordinates -----------------------------------------------------------------
 
-    def set_data(self, data: Union[CoreData, np.ndarray]) -> None:
+    def set_data(self, data: CoreData | np.ndarray) -> None:
         """
         Set the attribute `data` with actual values and check its consistency.
 
         Parameters
         ----------
-        data : Union[CoreData, np.ndarray]
+        data : CoreData | np.ndarray
             See the attribute `data`.
 
         Raises
@@ -372,13 +371,13 @@ class DataStructure(Generic[T], ABC):
             data = CoreData(data, self.dims)
         self._data = data  # store in private attribute (bypass descriptor)
 
-    def set_coords(self, **coords_args: Union[Coordinate, np.ndarray]) -> None:
+    def set_coords(self, **coords_args: Coordinate | np.ndarray) -> None:
         """
         Set coordinate attributes (all or a subset) and check their consistency.
 
         Parameters
         ----------
-        coords_args : Dict[str, Union[Coordinate, np.ndarray]]
+        coords_args : Dict[str, Coordinate | np.ndarray]
             See the argument :ref:`coords_args` in the constructor.
 
         Raises
@@ -391,7 +390,7 @@ class DataStructure(Generic[T], ABC):
 
         See Also
         --------
-        :meth:`CoreData.get_size`: Get the length of a dimension.
+        `CoreData.get_size`: Get the length of a dimension.
         """
         for name, value in coords_args.items():
             if name not in self.coords:
@@ -449,26 +448,3 @@ class DataStructure(Generic[T], ABC):
         """
         # raise NotImplementedError("Not implemented yet.")
         return self
-
-    # --- I/O Handling -----------------------------------------------------------------------------
-
-    @property
-    def path(self) -> Path:
-        """
-        PLACEHOLDER METHOD - Path to the file containing the data.
-
-        Warning
-        -------
-        This property is abstract as soon as the class-level attribute `path_loader` is set.
-        Implement it by passing the required arguments to the path ruler.
-        """
-        return self.path_ruler().get_path()
-
-    def load(self) -> None:
-        """Load an instance from the file at :attr:`path`."""
-        loaded_obj = self.loader(path=self.path).load()
-        self.__dict__.update(loaded_obj.__dict__)
-
-    def save(self) -> None:
-        """Save an instance to a file at :attr:`path` in the format specific to the saver."""
-        self.saver(self.path).save(self)
