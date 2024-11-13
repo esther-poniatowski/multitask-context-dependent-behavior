@@ -9,30 +9,21 @@ Classes
 """
 # pylint: disable=missing-function-docstring
 
-from types import MappingProxyType
-from typing import List, Tuple, Dict, Optional, Mapping
+from typing import List
 
 import numpy as np
 
-from core.builders.base_builder import DataBuilder
-from core.coordinates.base_coord import Coordinate
+from core.builders.base_builder import CoordinateBuilder
 from core.coordinates.bio_info_coord import CoordUnit
-from core.coordinates.exp_factor_coord import CoordTask, CoordAttention, CoordCategory
-from core.coordinates.time_coord import CoordTime
-from core.data_structures.core_data import CoreData
-from core.data_structures.firing_rates import FiringRatesPop, FiringRatesUnit
 from core.processors.preprocess.assign_ensembles import EnsembleAssigner, Ensembles
-from core.processors.preprocess.assign_folds import FoldAssigner, FoldLabels
-from core.processors.preprocess.bootstrap import Bootstrapper
-from core.processors.preprocess.map_indices import IndexMapper, Indices
-from core.processors.preprocess.stratify import Stratifier, Strata
+from core.entities.bio_info import Unit
 
 
-class EnsemblesBuilder(DataBuilder[Ensembles]):
+class EnsemblesBuilder(CoordinateBuilder[CoordUnit]):
     """
     Build ensembles of units to form pseudo-populations for cross-validation.
 
-    Product:`Ensembles` data structure.
+    Product: `CoordUnits`
 
     Class Attributes
     ----------------
@@ -53,21 +44,30 @@ class EnsemblesBuilder(DataBuilder[Ensembles]):
     Processing Attributes
     ---------------------
     units : List[Unit]
-        Units in the population.
+        Units in the population. Each element behaves like a string, representing the unit's
+        identifier.
     seed : int
         Seed for the random number generator, used in the ensemble assignment.
-    ensembles : Ensembles
-        Indices of the units in each ensemble. Shape: ``(n_ensembles, ensemble_size)``.
-    n_ensembles : int
-        (Property) Number of ensembles to form.
-    n_units : int
-        (Property) Number of units in the population (length of the inputs `units`).
 
     Methods
     -------
+    `build` (required)
+    `generate_ensembles`
+    `construct_coord`
+
+    Examples
+    --------
+    Set the number of units in each ensemble (size) and the maximum number of ensembles:
+
+    >>> builder = EnsemblesBuilder(ensemble_size=20, n_ensembles_max=10)
+
+    Generate ensembles for a population of units:
+
+    >>> builder.build(units=units, seed=0)
+
     """
 
-    PRODUCT_CLASS = Ensembles
+    PRODUCT_CLASS = CoordUnit
     TMP_DATA = ("data_per_unit", "seed", "ensembles")
 
     def __init__(self, ensemble_size: int, n_ensembles_max: int) -> None:
@@ -76,12 +76,8 @@ class EnsemblesBuilder(DataBuilder[Ensembles]):
         # Store configuration parameters
         self.ensemble_size = ensemble_size
         self.n_ensembles_max = n_ensembles_max
-        # Declare attributes to store inputs and intermediate results
-        self.units: List[Unit]
-        self.seed: int
-        self.ensembles: Ensembles
 
-    def build(self, units: Optional[List[Unit]] = None, seed: int = 0, **kwargs) -> Ensembles:
+    def build(self, units: List[Unit] | None = None, seed: int = 0, **kwargs) -> CoordUnit:
         """
         Implement the base class method.
 
@@ -95,12 +91,16 @@ class EnsemblesBuilder(DataBuilder[Ensembles]):
         Returns
         -------
         ensembles : Ensembles
-            Data structure product instance.
+            Indices of the units in each ensemble. Shape: ``(n_ensembles, ensemble_size)``.
         """
-
+        if units is None:
+            units = []
+        n_units = len(units)
+        ensembles = self.generate_ensembles(n_units, seed)
+        self.product = self.construct_coord(units, ensembles)
         return self.get_product()
 
-    def generate_ensembles(self) -> Ensembles:
+    def generate_ensembles(self, n_units: int, seed: int = 0) -> Ensembles:
         """
         Generate the ensembles of units to form the pseudo-population.
 
@@ -114,12 +114,10 @@ class EnsemblesBuilder(DataBuilder[Ensembles]):
         `EnsembleAssigner`
         """
         assigner = EnsembleAssigner(self.ensemble_size, self.n_ensembles_max)
-        ensembles = assigner.process(n_units=self.n_units, seed=self.seed)
+        ensembles = assigner.process(n_units=n_units, seed=seed)
         return ensembles
 
-    # --- Construct Coordinates --------------------------------------------------------------------
-
-    def construct_units_coord(self) -> CoordUnit:
+    def construct_coord(self, units: List[Unit], ensembles: Ensembles) -> CoordUnit:
         """
         Construct the units coordinate for the pseudo-population (unit labels in each ensemble).
 
@@ -132,11 +130,20 @@ class EnsemblesBuilder(DataBuilder[Ensembles]):
         -------
         Two indices are used to identify the units in the population:
 
-        - ``unit``: index of the unit in the population (from 0 to ``n_units``).
-        - ``u``: index of the unit in the ensemble (from 0 to ``ensemble_size``).
+        - ``u_pop``: index of the unit in the population list (from 0 to ``n_units``).
+        - ``u_ens``: index of the unit in the ensemble (from 0 to ``ensemble_size``).
+
+        Implementation
+        --------------
+        Advanced indexing and broadcasting:
+
+        ``coord[:, :] = np.array(units)[ensembles]``
+
+        - Select elements from the units array using the indices specified in ensembles.
+        - Broadcast the units array to the shape of ensembles.
+
         """
-        units = CoordUnit(np.full((self.n_ensembles, self.ensemble_size), "", dtype=np.str_))
-        for ens, units_in_ensemble in enumerate(self.ensembles):
-            for u, unit in units_in_ensemble:
-                units[ens, u] = self.data_per_unit[unit].name
-        return units
+        n_ensembles, _ = ensembles.shape
+        coord = CoordUnit(np.full((n_ensembles, self.ensemble_size), "", dtype=np.str_))
+        coord[:, :] = np.array(units)[ensembles]
+        return coord
