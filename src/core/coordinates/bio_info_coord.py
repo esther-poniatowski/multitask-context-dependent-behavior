@@ -36,18 +36,45 @@ class CoordUnit(Coordinate[np.str_, Unit]):
     Attributes
     ----------
     values : np.ndarray[Tuple[Any, ...], np.str_]
-        Labels for the units in one population. One or several dimensions, for single and multiple
-        ensemble respectively.
+        Labels for the units in one population.
+
+        Dimensions:
+
+        - Single ensemble: ``(n_units,)``.
+        - Multiple ensembles: ``(n_ens, n_units)``.
+
+    Examples
+    --------
+    Create a coordinate for 3 units forming a single ensemble:
+
+    >>> units = ['avo052a-d1', 'avo052a-d2', 'lemon024b-d3']
+    >>> coord = CoordUnit(units)
+    >>> coord
+    <CoordUnit>: 3 units.
+
+    Create a coordinate for 2 ensembles, each with 3 units:
+
+    >>> units = [['avo052a-d1', 'avo052a-d2', 'lemon024b-d3'],
+    ...          ['avo052a-d1', 'avo052a-d2', 'lemon024b-d3']]
+    >>> coord = CoordUnit(units)
+    >>> coord
+    <CoordUnit>: 2 ensembles, 3 units each.
 
     See Also
     --------
-    :class:`core.entities.composites.Unit`
-    :class:`core.coordinates.base_coord.Coordinate`
+    `core.entities.bio_info.Unit`
+    `core.coordinates.base_coord.Coordinate`
     """
 
     ENTITY = Unit
     DTYPE = np.str_
     SENTINEL = ""
+
+    def __repr__(self) -> str:
+        if self.ndim == 1:
+            return f"<{self.__class__.__name__}>: {len(self)} units."
+        n_ens, n_units = self.shape
+        return f"<{self.__class__.__name__}>: {n_ens} ensembles, {n_units} units each."
 
 
 class CoordDepth(Coordinate[np.str_, CorticalDepth]):
@@ -66,8 +93,8 @@ class CoordDepth(Coordinate[np.str_, CorticalDepth]):
 
     See Also
     --------
-    :class:`core.entities.bio_data.CorticalDepth`
-    :class:`core.coordinates.coord_base.Coordinate`
+    `core.entities.bio_data.CorticalDepth`
+    `core.coordinates.coord_base.Coordinate`
     """
 
     ENTITY = CorticalDepth

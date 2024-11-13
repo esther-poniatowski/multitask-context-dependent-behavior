@@ -31,7 +31,7 @@ class BrainInfo(str, Entity[str]):
 
     See Also
     --------
-    :meth:`Entity.is_valid`
+    `Entity.is_valid`
     """
 
     def __new__(cls, value: str) -> Self:
@@ -56,7 +56,7 @@ class Animal(BrainInfo):
     alias : str
         (Core value) Alias of the animal (3 letters).
     is_naive : bool
-        (Property) Check if the animal is naive.
+        (Property) Indicate if the animal is naive, i.e. not trained to perform any task.
 
     Methods
     -------
@@ -117,7 +117,7 @@ class Animal(BrainInfo):
 
     @property
     def is_naive(self) -> bool:
-        """Check if the animal is naive."""
+        """Indicate if the animal is naive."""
         return self in self.get_naive()
 
 
@@ -260,9 +260,9 @@ class Site(BrainInfo):
 
         See Also
         --------
-        :meth:`split_id`
-        :meth:`Animal.is_valid`
-        :meth:`CorticalDepth.is_valid`
+        `split_id`
+        `Animal.is_valid`
+        `CorticalDepth.is_valid`
         """
         animal, rec, depth = cls.split_id(value)
         if not all([animal, rec, depth]):  # checks for any empty string
@@ -318,41 +318,21 @@ class Site(BrainInfo):
             tag, depth = match.group("tag"), match.group("depth")
         return animal, tag, depth
 
-    class SiteComponents(TypedDict):
-        """Typed dictionary for the components of a site's ID."""
-
-        animal: Animal
-        tag: int
-        depth: CorticalDepth
-
     @cached_property
-    def id_components(self) -> SiteComponents:
-        """
-        Caches the components of the site in a dictionary for easy access, in appropriate types.
-
-        Returns
-        -------
-        SiteComponents
-        """
-        animal_str, tag_str, depth_str = self.split_id(self)
-        animal = Animal(animal_str)
-        tag = int(tag_str)
-        depth = CorticalDepth(depth_str)
-        return {"animal": animal, "tag": tag, "depth": depth}
-
-    @property
     def animal(self) -> Animal:
         """
-        Get the animal where the site was recorded.
+        Get the animal where the site was recorded (cached).
         """
-        return self.id_components["animal"]
+        animal_str, _, _ = self.split_id(self)
+        return Animal(animal_str)
 
-    @property
+    @cached_property
     def depth(self) -> CorticalDepth:
         """
-        Get the depth of the site in the cortex.
+        Get the depth of the site in the cortex (cached).
         """
-        return self.id_components["depth"]
+        _, _, depth_str = self.split_id(self)
+        return CorticalDepth(depth_str)
 
 
 class Unit(BrainInfo):
@@ -383,6 +363,14 @@ class Unit(BrainInfo):
     -------
     `is_valid` (override the method from the base class `Entity`)
     `split_id`
+
+    Examples
+    --------
+    >>> unit = Unit("avo052a-d1")
+    >>> unit.site
+    'avo052a'
+    >>> unit.animal
+    'avo' # class Animal
     """
 
     ID_PATTERN = re.compile(f"^(?P<site>{Site.SITE_PATTERN})-(?P<el>[a-z])(?P<u>[0-9])$")
@@ -400,10 +388,10 @@ class Unit(BrainInfo):
 
         See Also
         --------
-        :meth:`Site.is_valid`
+        `Site.is_valid`
         """
         site_id, electrode, unit_num = cls.split_id(value)
-        if not all([site_id, electrode, unit_num]):  # checks for any empty string
+        if not all([site_id, electrode, unit_num]):  # check for any empty string
             return False
         return Site.is_valid(site_id)
 
@@ -438,51 +426,32 @@ class Unit(BrainInfo):
             site_id, electrode, unit_num = match.group("site"), match.group("el"), match.group("u")
         return site_id, electrode, unit_num
 
-    class UnitComponents(TypedDict):
-        """Typed dictionary for the components of a unit's ID."""
-
-        site: Site
-        electrode: str
-        unit_num: int
-
     @cached_property
-    def id_components(self) -> UnitComponents:
-        """
-        Caches the components of the unit in a dictionary for easy access, in appropriate types.
-
-        Returns
-        -------
-        UnitComponents
-        """
-        site_str, el_str, unit_str = self.split_id(self)
-        site = Site(site_str)
-        unit = int(unit_str)
-        return {"site": site, "electrode": el_str, "unit_num": unit}
-
-    @property
     def site(self) -> Site:
         """
-        Get the site where the unit was recorded.
+        Get the site where the unit was recorded (cached).
         """
-        return self.id_components["site"]
+        site_str, _, _ = self.split_id(self)
+        return Site(site_str)
 
-    @property
+    @cached_property
     def animal(self) -> Animal:
         """
         Get the animal where the unit was recorded (delegate to `site`).
         """
         return self.site.animal
 
-    @property
+    @cached_property
     def depth(self) -> CorticalDepth:
         """
         Get the depth of the unit along the electrode (delegate to `site`).
         """
         return self.site.depth
 
-    @property
+    @cached_property
     def electrode(self) -> str:
         """
         Get the electrode channel where the unit was recorded.
         """
-        return self.id_components["electrode"]
+        _, el_str, _ = self.split_id(self)
+        return el_str
