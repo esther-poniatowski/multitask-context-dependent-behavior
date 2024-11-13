@@ -15,7 +15,7 @@ from itertools import product
 
 import numpy as np
 
-from core.entities.exp_factors import Task, Attention, Stimulus, Behavior, ExpFactor
+from core.entities.exp_factors import Task, Attention, Category, Behavior, ExpFactor
 
 if TYPE_CHECKING:  # prevent circular imports (`exp_condition` is imported coordinate modules)
     from coordinates.exp_factor_coord import (
@@ -33,7 +33,7 @@ class ExpCondition:
 
     - task
     - attentional state
-    - stimulus
+    - stimulus category
     - behavioral choice
 
     Attributes
@@ -42,10 +42,10 @@ class ExpCondition:
         Task performed by the animal.
     attention : Attention
         Attentional state in which the animal is engaged.
-    stimulus : Stimulus
-        Stimulus category presented to the animal.
+    category : Category
+        Category of the stimulus presented to the animal.
     behavior : Behavior
-        Outcome of the animal's behavior.
+        Behavioral choice of the animal.
 
     Methods
     -------
@@ -68,39 +68,39 @@ class ExpCondition:
 
     >>> task = Task('PTD')
     >>> attention = Attention('a')
-    >>> stimulus = Stimulus('R')
-    >>> condition1 = ExpCondition(task=task, attention=attention, stimulus=stimulus)
+    >>> category = Category('R')
+    >>> condition1 = ExpCondition(task=task, attention=attention, category=category)
     >>> condition1.task
     'PTD'
 
     Initialize directly with strings:
 
-    >>> condition2 = ExpCondition(task='CLK', attention='p', stimulus='T')
+    >>> condition2 = ExpCondition(task='CLK', attention='p', category='T')
 
     Initialize a partial condition without specifying the attention:
 
-    >>> condition3 = ExpCondition(task='PTD', stimulus='R', behavior='Go')
+    >>> condition3 = ExpCondition(task='PTD', category='R', behavior='Go')
     >>> print(condition3)
-    ExpCondition(task=PTD, attention=None, stimulus=R, behavior=Go)
+    ExpCondition(task=PTD, attention=None, category=R, behavior=Go)
 
     Combine two conditions into a union:
 
     >>> union = condition1 + condition2
     >>> union.conditions
-    [ExpCondition(task='PTD', attention='a', stimulus='R'), ExpCondition(task='CLK', attention='p', stimulus='T')]
+    [ExpCondition(task='PTD', attention='a', category='R'), ExpCondition(task='CLK', attention='p', category='T')]
 
     Combine an arbitrary number of conditions into a union:
 
     >>> union = ExpCondition.union(condition1, condition2, condition3)
     >>> union.conditions
-    [ExpCondition(task='PTD', attention='a', stimulus='R'), ExpCondition(task='CLK', attention='p', stimulus='T'), ExpCondition(task='PTD', attention=None, stimulus='R', behavior='Go')]
+    [ExpCondition(task='PTD', attention='a', category='R'), ExpCondition(task='CLK', attention='p', category='T'), ExpCondition(task='PTD', attention=None, category='R', behavior='Go')]
 
     Filter samples based on a condition:
 
     >>> task_coord = np.array(['PTD', 'CLK', 'PTD'])
-    >>> ctx_coord = np.array(['a', 'p', 'a'])
-    >>> stim_coord = np.array(['R', 'T', 'R'])
-    >>> mask = condition1.match(task=task_coord, attn=ctx_coord, categ=stim_coord)
+    >>> attn_coord = np.array(['a', 'p', 'a'])
+    >>> categ_coord = np.array(['R', 'T', 'R'])
+    >>> mask = condition1.match(task=task_coord, attn=attn_coord, categ=categ_coord)
     >>> mask
     array([ True, False,  True])
 
@@ -117,20 +117,20 @@ class ExpCondition:
         self,
         task: Task | str | None = None,
         attention: Attention | str | None = None,
-        stimulus: Stimulus | str | None = None,
+        category: Category | str | None = None,
         behavior: Behavior | str | None = None,
     ):
         if isinstance(task, str):
             task = Task(task)
         if isinstance(attention, str):
             attention = Attention(attention)
-        if isinstance(stimulus, str):
-            stimulus = Stimulus(stimulus)
+        if isinstance(category, str):
+            category = Category(category)
         if isinstance(behavior, str):
             behavior = Behavior(behavior)
         self.task = task
         self.attention = attention
-        self.stimulus = stimulus
+        self.category = category
         self.behavior = behavior
 
     def __repr__(self) -> str:
@@ -138,7 +138,7 @@ class ExpCondition:
             f"ExpCondition("
             f"task={self.task}, "
             f"attention={self.attention}, "
-            f"stimulus={self.stimulus}, "
+            f"category={self.category}, "
             f"behavior={self.behavior})"
         )
 
@@ -146,8 +146,8 @@ class ExpCondition:
         self,
         task: "CoordTask" | None = None,
         attn: "CoordAttention" | None = None,
-        categ: "CoordStimulus" | None = None,
-        behavior: "CoordBehavior" | None = None,
+        categ: "CoordCategory" | None = None,
+        behav: "CoordBehavior" | None = None,
     ) -> np.ndarray:
         """
         Generate a boolean mask to index a set of samples based on a condition.
@@ -155,12 +155,11 @@ class ExpCondition:
         Arguments
         ---------
         task, attn, categ, behavior : Coordinate
-            Coordinates of task, attentional state, stimulus and behavior behavior labels for each
-            sample.
-            .. _task_coord:
-            .. _ctx_coord:
+            Coordinates of task, attentional state, stimulus and behavior labels for each sample.
+            .._task_coord:
+            .. _attn_coord:
             .. _stim_coord:
-            .. _outcome_coord:
+            .. _behav_coord:
 
         Returns
         -------
@@ -169,7 +168,7 @@ class ExpCondition:
             .. _mask:
         """
         # Identify the specified coordinates to filter (not None)
-        coords = [c for c in (task, attn, categ, behavior) if c is not None]
+        coords = [c for c in (task, attn, categ, behav) if c is not None]
         if not coords:
             raise ValueError("No coordinate provided to match the condition.")
         # Retrieve the number of samples from one specified coordinate
@@ -179,10 +178,10 @@ class ExpCondition:
             mask &= task == self.task
         if self.attention and attn is not None:
             mask &= attn == self.attention
-        if self.stimulus and categ is not None:
-            mask &= categ == self.stimulus
-        if self.behavior and behavior is not None:
-            mask &= behavior == self.behavior
+        if self.category and categ is not None:
+            mask &= categ == self.category
+        if self.behavior and behav is not None:
+            mask &= behav == self.behavior
         return mask
 
     def __add__(self, other: Self) -> "ExpConditionUnion":
@@ -206,8 +205,8 @@ class ExpCondition:
         Arguments
         ---------
         factors : Tuple[ExpFactor]
-            Classes of the experimental factors to consider, among: `Task`, `Attention`,
-            `Stimulus`, `Behavior`.
+            Classes of the experimental factors to consider, among: `Task`, `Attention`, `Category`,
+            `Behavior`.
 
         Returns
         -------
@@ -221,13 +220,9 @@ class ExpCondition:
 
         Examples
         --------
-        Get all possible combinations of task, attentional state, and stimulus:
+        Get all possible combinations of task, attentional state, and category:
 
-        >>> combinations = ExpCondition.get_combinations(Task, Stimulus, Behavior)
-
-        Get all possible combinations of task, stimulus and behavioral choice:
-
-        >>> combinations = ExpCondition.get_combinations(Task, Stimulus, Behavior)
+        >>> combinations = ExpCondition.get_combinations(Task, Attention, Category)
 
         See Also
         --------
@@ -240,8 +235,8 @@ class ExpCondition:
     @staticmethod
     def generate_conditions(
         tasks: Sequence[Task] | Task | None = None,
-        stimuli: Sequence[Stimulus] | Stimulus | None = None,
         attentions: Sequence[Attention] | Attention | None = None,
+        categories: Sequence[Category] | Category | None = None,
         behaviors: Sequence[Behavior] | Behavior | None = None,
     ) -> List["ExpCondition"]:
         """
@@ -249,8 +244,8 @@ class ExpCondition:
 
         Arguments
         ---------
-        tasks, stimuli, attentions, behaviors : List[ExpFactor] | ExpFactor, optional
-            Instances of tasks, attentions, stimuli, and behavior choices to consider to generate the
+        tasks, attentions, categories behaviors : List[ExpFactor] | ExpFactor, optional
+            Instances of tasks, attentions, categories and behaviors to consider to generate the
             experimental conditions of interest.
 
         Returns
@@ -266,7 +261,7 @@ class ExpCondition:
         >>> conditions = ExpCondition.generate_conditions(
         ...     tasks=[Task("PTD"), Task("CLK")],
         ...     attentions=[Attention("a")],
-        ...     stimuli=[Stimulus("R"), Stimulus("T")],
+        ...     categories=[Category("R"), Category("T")],
         ...     behaviors=[Behavior("Go"), Behavior("NoGo")]
         ... )
 
@@ -278,14 +273,14 @@ class ExpCondition:
         """
         # Ensure each argument is a list or None
         tasks_seq = ExpCondition.format_to_combine(tasks)
-        stimuli_seq = ExpCondition.format_to_combine(stimuli)
-        attentions_seq = ExpCondition.format_to_combine(attentions)
-        behaviors_seq = ExpCondition.format_to_combine(behaviors)
+        categ_seq = ExpCondition.format_to_combine(categories)
+        attn_seq = ExpCondition.format_to_combine(attentions)
+        behav_seq = ExpCondition.format_to_combine(behaviors)
         # Generate all combinations of the provided factors
         # Output: List[Tuple[ExpFactor, ...]]
-        combinations = product(tasks_seq, attentions_seq, stimuli_seq, behaviors_seq)
+        combinations = product(tasks_seq, attn_seq, categ_seq, behav_seq)
         # Create and return a list of ExpCondition instances from the combinations
-        return [ExpCondition(t, c, s, o) for t, c, s, o in combinations]
+        return [ExpCondition(t, a, c, b) for t, a, c, b in combinations]
 
     @staticmethod
     def format_to_combine(
@@ -336,16 +331,16 @@ class ExpConditionUnion:
         self,
         task: "CoordTask" | None = None,
         attn: "CoordAttention" | None = None,
-        categ: "CoordStimulus" | None = None,
-        behavior: "CoordBehavior" | None = None,
+        categ: "CoordCategory" | None = None,
+        behav: "CoordBehavior" | None = None,
     ) -> np.ndarray:
         """
         Generate a boolean mask to index samples that match any of the conditions.
 
         Arguments
         ---------
-        task, attn, categ, behavior : np.ndarray
-            See :ref:`task`, :ref:`attn`, and :ref:`categ`.
+        task, attn, categ, behav : np.ndarray
+            See :ref:`task`, :ref:`attn`, :ref:`categ`, :ref:`behav`.
 
         Returns
         -------
@@ -353,7 +348,7 @@ class ExpConditionUnion:
             Boolean mask to index samples that match any of the conditions.
         """
         # Get the masks for each condition in the union using the match method of ExpCondition
-        all_masks = [condition.match(task, attn, categ, behavior) for condition in self.conditions]
+        all_masks = [condition.match(task, attn, categ, behav) for condition in self.conditions]
         # Combine all masks with a logical OR operation
         mask = np.logical_or.reduce(all_masks)
         return mask
