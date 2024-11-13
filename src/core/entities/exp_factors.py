@@ -206,6 +206,34 @@ class Behavior(ExpFactor):
     LABELS = MappingProxyType({"Go": "Lick", "NoGo": "No Lick"})
 
 
+class ResponseOutcome(ExpFactor):
+    """
+    Outcome of the behavioral choice, i.e. the consequences of the animal's response.
+
+    Class Attributes
+    ----------------
+    OPTIONS : FrozenSet[str]
+        Response outcomes represented by their short names (2 to 4 letters):
+
+        - 'Hit': Correct response.
+        - 'Miss': Incorrect response.
+        - 'CR': Correct rejection.
+        - 'FA': False alarm.
+        - 'N/A': Not applicable (e.g. for neutral stimuli or in the passive state).
+    """
+
+    OPTIONS = frozenset(["Hit", "Miss", "CR", "FA", "N/A"])
+    LABELS = MappingProxyType(
+        {
+            "Hit": "Correct Response",
+            "Miss": "Incorrect Response",
+            "CR": "Correct Rejection",
+            "FA": "False Alarm",
+            "N/A": "Not Applicable",
+        }
+    )
+
+
 class EventDescription(ExpFactor):
     """
     Valid descriptions of events in the raw data.
