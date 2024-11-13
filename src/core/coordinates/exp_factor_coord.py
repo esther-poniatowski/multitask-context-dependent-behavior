@@ -13,6 +13,7 @@ Classes
 `CoordCategory`
 `CoordStimulus`
 `CoordBehavior`
+`CoordOutcome`
 `CoordEventDescription`
 """
 
@@ -27,6 +28,7 @@ from core.entities.exp_factors import (
     Stimulus,
     Category,
     Behavior,
+    ResponseOutcome,
     EventDescription,
     ExpFactor,
 )
@@ -185,6 +187,14 @@ class CoordBehavior(CoordExpFactor[Behavior]):
     """
 
     ENTITY = Behavior
+
+
+class CoordOutcome(CoordExpFactor[ResponseOutcome]):
+    """
+    Coordinate labels for the outcomes of the behavioral responses.
+    """
+
+    ENTITY = ResponseOutcome
 
 
 class CoordEventDescription(Coordinate[np.str_, EventDescription]):
