@@ -5,134 +5,45 @@
 
 Classes
 -------
-`LazyAttribute`
-`DataStructure` (abstract base class, generic)
+`DataStructure` (abstract base class)
 
-Notes
------
-Lazy Initialization of Content-Related Attributes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Content-related attributes (data and coordinates) are initialized as empty and can be set after the
-initialization of the data structure.
-
-Interactions with those attributes are handled by a dedicated descriptor. Roles of the descriptor:
-
-- For the client code, it raises an explicit error message and prevents using the data and
-  coordinates attributes *before* they are populated with actual values.
-- For type checkers, it eliminates warning messages raised when the attributes are manipulated
-  within the data structure methods (since they are declared as `Optional`).
-
-Separation of concerns for interacting with content-related attributes:
-
-- The `__subclass_init__` method of the data structure base class declares the content-related
-  attributes as instances of the lazy descriptor.
-- The constructor of the data structure class initializes *private* attributes with empty values
-  (`None`).
-- The `LazyAttribute` descriptor handles the interactions with to the content-related attributes
-  when their *public* name is used. The descriptor is involved in most of the data structure's
-  methods, which only *access* to the attributes through a unified interface.
-- Two dedicated setter methods in the data structure class (`set_data` and `set_coords`) allow
-  setting actual content in the attributes after consistency validation. Those methods use *private*
-  names (e.g., `_data`, `_coord_name`...) to bypass the descriptor.
-- The `__repr__` method uses the *private* names of the attributes to check their state (empty or
-  filled).
-
-Note: Moving the validation logic to the descriptor would make it complex and tightly coupled to
-specific data validation rules.
+Implementation
+--------------
+Constraints for Subclasses
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+The `__subclass_init__` method of the data structure base class declares the required class-level
+attributes that should be defined in each subclass's body. This is a lightweight alternative to the
+metaclass approach.
 
 Separation of concerns between the base and subclasses constructors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- Base class constructor: Declare the content-related attributes (data and coordinates) with their
-  respective types, and initialize them with values if provided.
+- Base class constructor: Declare and (optionally) set the content-related attributes (data and
+  coordinates).
 - Subclass constructors: Assign the metadata attributes (identifiers for the data structure and
   optional descriptive information) AND call the base class constructor with the content-related
   arguments.
-
 """
 from abc import ABC
 import copy
-from pathlib import Path
-from typing import Tuple, Mapping, Type, TypeVar, Generic, Self, Union
-
-import numpy as np
+from typing import Tuple, Mapping, Type, Self
 
 from core.data_structures.core_data import CoreData, Dimensions
 
 from core.coordinates.base_coord import Coordinate
 
 
-C = TypeVar("C", bound=CoreData | Coordinate)
-"""Type variable representing the type of content attributes (CoreData, Coordinate)."""
-
-
-class LazyAttribute(Generic[C]):
-    """
-    Descriptor for lazy initialization of data and coordinates in the data structure.
-
-    Attributes
-    ----------
-    name : str
-        Name of the lazy attribute to handle.
-
-    Parameters
-    ----------
-    name : str
-        Descriptor attribute `LazyAttribute.name`.
-    instance : DataStructure
-        Instance of the data structure which stores the attribute.
-    owner : Type[DataStructure]
-        Class of the data structure.
-
-    Raises
-    ------
-    AttributeError
-        If the lazy attribute is accessed before being populated with actual values.
-
-    Notes
-    -----
-    Usage of this descriptor:
-
-    - Declare the lazy attributes as class attributes in the data structure base class.
-    - Initialize the lazy attributes as private attributes in the data structure constructor.
-    - When the attribute is accessed via its public name, the descriptor raises an error if the
-      value is not set yet.
-    - When a value is assigned to the attribute via the public name, the descriptor raises an error
-      to require the use of the dedicated setter method of the data structure class.
-    - To bypass the descriptor and set the actual value, use the private attribute name.
-    """
-
-    def __init__(self, name):
-        self.name = f"_{name}"  # private attribute name
-
-    def __get__(self, instance: "DataStructure", owner: Type["DataStructure"]) -> C:
-        value = getattr(instance, self.name)
-        if value is None:
-            raise AttributeError(f"Unset attribute: '{self.name}'.")
-        return value
-
-    def __set__(self, instance: "DataStructure", value: C) -> None:
-        raise AttributeError(
-            f"Use the setter method of the class {instance.__class__.__name__} "
-            f"to set the attribute '{self.name}'."
-        )
-
-
-T = TypeVar("T")
-"""Type variable representing the type of data in the generic DataStructure class, i.e., the data structure subclass."""
-
-
-class DataStructure(Generic[T], ABC):
+class DataStructure(ABC):
     """
     Abstract base class for data structures, defining the interface to interact with data.
 
     Class Attributes
     ----------------
-    REQUIRED_ATTRIBUTES : Tuple[str]
+    REQUIRED_IN_SUBCLASSES : Tuple[str]
         Names of the class-level attributes which have to be defined in each data structure
         subclass.
     dims : Dimensions
         Names of the dimensions, ordered to label the axes of the underlying data.
-    coords : Mapping[str, type]
+    coords : Mapping[str, Type[Coordinate]]
         Names of the coordinates (as attributes) and their expected types.
     coords_to_dims : Mapping[str, Tuple[str, ...]]
         Mapping from coordinates to their associated dimension(s) in the data structure.
@@ -154,7 +65,7 @@ class DataStructure(Generic[T], ABC):
     `get_coord`
     `__getattr__`
     `set_data`
-    `set_coords`
+    `set_coord`
     `copy`
     `sel`
 
@@ -191,135 +102,140 @@ class DataStructure(Generic[T], ABC):
     numpy array through `numpy` functions such as transpositions (dimension permutation),
     reshaping (dimension fusion)...
 
+    Notes
+    -----
+    Setting content-related attributes (core data and coordinates):
+
+    - Lazy initialization: Content-related attributes can be set at the initialization of the data
+      structure, or later via the dedicated setter methods (`set_data` and `set_coord`). If no
+      values are provided at initialization, the attributes are *not* set to `None` to avoid type
+      checking errors in methods which expect the attributes to be filled.
+    - Expected types are specified by the constructor for the `data` attribute (declaration, without
+      actually initialization if no values are provided) and by the class-level attribute `coords`
+      for the coordinates.
+    - Validation of the input values is performed by the setter methods, which are themselves called
+      by the constructor if the arguments are provided.
+
+    Accessing content-related attributes:
+
+        - Getter methods are provided to access the content-related attributes: `get_data` and
+      `get_coord`. The `get_coord` method allows to retrieve a coordinate using its attribute name,
+      which is useful to iterate over coordinates (whose names are registered in the `coords`
+      class-level attribute).
+    - Delegation to nested attributes is implemented by two approaches:
+       - Specific methods: `shape` property (delegated to the core data object).
+       - Overriding the `__getattr__` method: shortcuts to the dimensions and coordinates (e.g.,
+         `get_dim`, `get_axis`, `get_size`).
+    - If a content-related attribute is not provided, then:
+        - Trying to access it via the dot notation (`self.attr`) or the `getattr` function
+          (`getattr(self, 'attr')`) will raise an error (`AttributeError` or `KeyError`) since the
+          attribute does not exist in the dictionary of the instance.
+        - Trying to access it via the dedicated getter method (`self.get_data()` or
+          `self.get_coord()`) will raise an `AttributeError` (custom behavior).
+
     See Also
     --------
     `Coordinate`: Base class for coordinates.
     """
 
-    # --- Class-Level Configurations ---------------------------------------------------------------
-
     # --- Schema of the Data Structure ---
-    REQUIRED_ATTRIBUTES = ("dims", "coords", "coords_to_dims", "identifiers")
+    REQUIRED_IN_SUBCLASSES = ("dims", "coords", "coords_to_dims", "identifiers")
     dims: Dimensions
-    coords: Mapping[str, type]
+    coords: Mapping[str, Type[Coordinate]]
     coords_to_dims: Mapping[str, Dimensions]
     identifiers: Tuple[str, ...]
 
     def __init_subclass__(cls) -> None:
         """
         Hook method called when any subclass of `DataStructure` is created.
+        Ensure that the required class-level attributes are defined in each subclass.
 
         Parameters
         ----------
         cls : Type[DataStructure]
             Class of the concrete data structure being created.
-
-        Notes
-        -----
-        Responsibilities of this method:
-
-        - Ensure that the required class-level attributes are defined in each data structure
-          subclass.
-        - Declare lazily-initialized attributes (data and coordinates) by assigning the descriptor
-          `LazyAttribute` (*after* having checked the presence of the class-level attribute `coords`
-          among the required attributes).
         """
         # Call parent hook (default behavior)
         super().__init_subclass__()
         # Check class-level attributes
-        for class_attr in cls.REQUIRED_ATTRIBUTES:
+        for class_attr in cls.REQUIRED_IN_SUBCLASSES:
             if not hasattr(cls, class_attr):
                 raise TypeError(f"<{cls.__name__}> Missing class-level attribute: '{class_attr}'.")
-        # Declare lazily-initialized attributes
-        setattr(cls, "data", LazyAttribute("data"))
-        for coord_name in cls.coords:
-            setattr(cls, coord_name, LazyAttribute(coord_name))
 
-    # --- Instance-Level Manipulations -------------------------------------------------------------
-
-    def __init__(
-        self,
-        data: CoreData | np.ndarray | None = None,
-        **coords_args: Coordinate | np.ndarray | None,
-    ) -> None:
+    def __init__(self, data: CoreData | None = None, **coords: Coordinate) -> None:
         """
         Instantiate a data structure and check the consistency of the input values (automatic).
 
         Parameters
         ----------
-        data : CoreData | np.ndarray | None
-            Core data values to fill the attribute `data`.
+        data : CoreData | None
+            Core data values for the attribute `data`.
             Shape: Consistent with the dimensions expected for the data structure.
-        coords_args : Dict[str, Coordinate | np.ndarray | None]
+        coords : Dict[str, Coordinate]
             Coordinate values specific to the data structure subclass.
             Keys: Coordinate names as specified in `coords_to_dims`.
             Values: Coordinate values, corresponding to the expected type of coordinate.
             .. _coord_args:
-
-        Implementation
-        --------------
-        Valid syntax to pass coordinates to the setter method `set_coords`:
-
-        ``self.set_coords(**{coord_name: coord_value})``
-
-        Invalid syntax:
-
-        ``self.set_coords(coord_name=coords_args[coord_name])``
-
-        Explanation: ``coord_name`` would always be treated as the *literal string* ``"coord_name"``
-        instead of the actual *value* of the variable ``coord_name``.
-
-        The check for `None` values in the `coords_args` dictionary is necessary to allow subclasses
-        to define default values for some coordinates. This way, only non-empty coordinates are set
-        in the data structure as attributes.
-
         """
-        # Lazy initialization: declare private and empty content-related attributes
-        self._data: CoreData | None = None
-        for coord_name in self.coords:
-            setattr(self, f"_{coord_name}", None)
+        # Lazy initialization: declare `data` as CoreData
+        self.data: CoreData
         # Fill with actual values if provided
         if data is not None:
             self.set_data(data)
-        for coord_name, coord_value in coords_args.items():
-            if coord_value is not None:  # pass individual coordinates to the setter method
-                self.set_coords(**{coord_name: coord_value})
+        for name, coord in coords.items():
+            self.set_coord(name, coord)
 
     def __repr__(self) -> str:
-        # NOTE: Use private attributes to examine the state of the data structure
-        data_status = "empty" if self._data is None else "filled"
-        active_coords = ", ".join(
-            [name for name in self.coords if getattr(self, f"_{name}") is not None]
-        )
+        data_status = "empty" if not hasattr(self, "data") else "filled"
+        active_coords = ", ".join([name for name in self.coords if hasattr(self, name)])
         return (
             f"<{self.__class__.__name__}> Dims: {self.dims}, "
             f"Data: {data_status}, "
-            f"Active coords: {active_coords}"
+            f"Active coordinates: {active_coords}"
         )
 
     # --- Access to Attributes ---------------------------------------------------------------------
 
     def get_data(self) -> CoreData:
-        """Get the actual data values."""
+        """
+        Get the actual data values.
+
+        Returns
+        -------
+        data : CoreData
+            Core data values stored in the data structure.
+
+        Raises
+        ------
+        AttributeError
+            If the data attribute is not set.
+        """
+        if not hasattr(self, "data"):
+            raise AttributeError("Data not set.")
         return self.data
 
-    def get_coord(self, coord_name: str) -> Coordinate:
+    def get_coord(self, name: str) -> Coordinate:
         """
         Retrieve a coordinate using its attribute name. Useful to iterate over coordinates.
 
         Parameters
         ----------
-        coord_name : str
+        name : str
             Name of the coordinate to retrieve.
 
         Returns
         -------
-        coord_values : Coordinate
+        coord : Coordinate
             Coordinate object stored in the data structure.
+
+        Raises
+        ------
+        AttributeError
+            If the coordinate name is not valid.
         """
-        if coord_name not in self.coords:
-            raise AttributeError(f"Invalid coordinate: '{coord_name}' not in {self.coords.keys()}.")
-        return getattr(self, coord_name)
+        if name not in self.coords:
+            raise AttributeError(f"Invalid coordinate: '{name}' not in {self.coords.keys()}.")
+        return getattr(self, name)
 
     @property
     def shape(self) -> Tuple[int, ...]:
@@ -350,58 +266,63 @@ class DataStructure(Generic[T], ABC):
 
     # --- Set Data and Coordinates -----------------------------------------------------------------
 
-    def set_data(self, data: CoreData | np.ndarray) -> None:
+    def set_data(self, data: CoreData) -> None:
         """
-        Set the attribute `data` with actual values and check its consistency.
+        Set the attribute `data` with actual values after validation.
 
         Parameters
         ----------
-        data : CoreData | np.ndarray
+        data : CoreData
             See the attribute `data`.
 
         Raises
         ------
+        TypeError
+            If the argument is not a `CoreData` object.
         ValueError
-            If the number of dimensions of the input data is not consistent with the dimensions
-            expected for the data structure.
+            If the dimensions of the input data are not consistent with the dimensions expected by
+            the data structure.
         """
-        if data.ndim != len(self.dims):
+        if not isinstance(data, CoreData):
+            raise TypeError(f"Invalid type for in DataStructure: {type(data)} != CoreData")
+        if data.dims != len(self.dims):
             raise ValueError(f"Invalid number of dimensions: data {data.ndim} != {len(self.dims)}")
-        if not isinstance(data, CoreData):  # convert to CoreData with the expected dims
-            data = CoreData(data, self.dims)
-        self._data = data  # store in private attribute (bypass descriptor)
+        self.data = data
 
-    def set_coords(self, **coords_args: Coordinate | np.ndarray) -> None:
+    def set_coord(self, name: str, coord: Coordinate) -> None:
         """
-        Set coordinate attributes (all or a subset) and check their consistency.
+        Set one coordinate attribute after validation.
 
         Parameters
         ----------
-        coords_args : Dict[str, Coordinate | np.ndarray]
-            See the argument :ref:`coords_args` in the constructor.
+        name : str
+            Name of the attribute for the coordinate to set.
+        coord : Coordinate
+            Coordinate object to set.
 
         Raises
         ------
+        AttributeError
+            If the coordinate name is not valid.
+        TypeError
+            If the argument is not a `Coordinate` object of the subtype expected for this attribute.
         ValueError
-            If any argument has an unexpected coordinate name.
-        ValueError
-            If the shape of the value passed for one coordinate does not match the sub-shape of the
-            axis to which it is associated in tha data structure.
+            If the shape of the coordinate object does not match the sub-shape of the axis to which
+            it is associated in tha data structure.
 
         See Also
         --------
         `CoreData.get_size`: Get the length of a dimension.
         """
-        for name, value in coords_args.items():
-            if name not in self.coords:
-                raise ValueError(f"Invalid coordinate name: '{name}'.")
-            if not isinstance(value, self.coords[name]):  # convert to the expected coordinate type
-                value = self.coords[name](value)
-            if self._data is not None:  # check consistency with the data structure dimensions
-                valid_shape = tuple(self.get_size(dim) for dim in self.coords_to_dims[name])
-                if value.shape != valid_shape:
-                    raise ValueError(f"Invalid shape for '{name}': {value.shape} != {valid_shape}")
-            setattr(self, f"_{name}", value)  # store in private attribute (bypass descriptor)
+        if name not in self.coords:
+            raise AttributeError(f"Invalid coordinate name: '{name}' not in {self.coords.keys()}.")
+        if not isinstance(coord, self.coords[name]):
+            raise TypeError(f"Invalid type for '{name}': {type(coord)} != {self.coords[name]}")
+        if hasattr(self, "data"):  # check consistency with the data structure dimensions
+            valid_shape = tuple(self.data.get_size(dim) for dim in self.coords_to_dims[name])
+            if coord.shape != valid_shape:
+                raise ValueError(f"Invalid shape for '{name}': {coord.shape} != {valid_shape}")
+        setattr(self, name, coord)  # store in private attribute (bypass descriptor)
 
     # --- Data Manipulations -----------------------------------------------------------------------
 
@@ -409,6 +330,7 @@ class DataStructure(Generic[T], ABC):
         """Return a *deep copy* of the data structure."""
         return copy.deepcopy(self)
 
+    # TODO: Implement the selection method
     def sel(self, **kwargs) -> Self:
         """
         Select data along specific coordinates.
