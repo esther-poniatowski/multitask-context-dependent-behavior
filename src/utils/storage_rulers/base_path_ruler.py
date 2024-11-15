@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`utils.storage_rulers.base_path_ruler` [module]
+`utils.storage_rulers.base_path_ruler` [module]
 
 Manage the file system paths centrally.
 
@@ -10,7 +10,7 @@ Any object which needs to access data on the file system can interact with one P
 
 Classes
 -------
-:class:`PathRuler` (ABC)
+`PathRuler` (ABC)
 
 Implementation
 --------------
@@ -20,10 +20,6 @@ Implementation
   Paths include only the directories and the file name, without appending any file extension. This
   is handled by the saver and loader methods specific to each file format. Thereby, paths and
   formats are decoupled and can be flexibly combined.
-
-See Also
---------
-:class:`abc.ABC`: Abstract base class.
 """
 
 from abc import ABC, abstractmethod
@@ -38,15 +34,15 @@ class PathRuler(ABC):
 
     Attributes
     ----------
-    root_data: str or Path
+    root_data : str or Path
         Root directory for the data files.
         If not provided, the default is the value of the environment variable `DATA_DIR` defined in
         the system.
 
     Methods
     -------
-    :meth:`get_path` (abstract)
-    :meth:`get_root` (static)
+    `get_path` (abstract)
+    `get_root` (static)
     """
 
     def __init__(self, root_data: Optional[Union[str, Path]] = None) -> None:
@@ -64,7 +60,7 @@ class PathRuler(ABC):
 
         Returns
         -------
-        path: str
+        path : Path
             Path to a specific file.
         """
 
@@ -75,7 +71,7 @@ class PathRuler(ABC):
 
         Returns
         -------
-        root_data: str
+        root_data : str
             Root directory for the data files.
 
         Raises
@@ -89,4 +85,4 @@ class PathRuler(ABC):
         return Path(root_data)
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}> - ROOT: {self.root_data}"
+        return f"<{self.__class__.__name__}> ROOT: {self.root_data}"
