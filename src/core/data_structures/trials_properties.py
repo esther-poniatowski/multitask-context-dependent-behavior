@@ -9,24 +9,30 @@ from typing import Generator, List
 import numpy as np
 
 from core.coordinates.exp_structure_coord import CoordRecNum, CoordBlock, CoordSlot
-from core.coordinates.exp_factor_coord import CoordTask, CoordAttention, CoordCategory
+from core.coordinates.exp_factor_coord import (
+    Coordinate,
+    CoordTask,
+    CoordAttention,
+    CoordCategory,
+    CoordBehavior,
+    CoordOutcome,
+)
 from core.coordinates.time_coord import CoordTimeEvent
-from core.coordinates.trials_coord import CoordError
 from core.data_structures.base_data_struct import DataStructure
 from core.data_structures.core_data import Dimensions, CoreData
 from core.entities.exp_structure import Session, Recording
+from core.entities.exp_conditions import ExpCondition
 
 
 class TrialsProperties(DataStructure):
     """
-    Metadata about a set of trials the experiment.
-
-    Base class which contains the common attributes and methods for both single session and
-    multi-session trials properties.
+    Metadata about a set of trials the experiment (from a single or multiple sessions).
 
     Key Features
     ------------
-    Dimensions : ``trials``
+    Dimensions :
+
+    - ``trials``
 
     Coordinates:
 
@@ -34,17 +40,22 @@ class TrialsProperties(DataStructure):
     - ``block``
     - ``slot``
     - ``task`` (optional)
-    - ``attn`` (optional)
-    - ``categ``
+    - ``attention`` (optional)
+    - ``category``
+    - ``behavior``
+    - ``outcome```
     - ``t_on``
     - ``t_off``
     - ``t_warn``
     - ``t_end``
-    - ``error``
+
+    Metadata:
+
+    - ``sessions``
 
     Attributes
     ----------
-    session_ids : List[Session]
+    sessions : List[Session]
         Identifier(s) of the session(s) from which the trials come.
     data : CoreData
         Indices of the trials relative to the considered set (e.g. session or experiment).
@@ -56,10 +67,14 @@ class TrialsProperties(DataStructure):
         Coordinate for the slot of each trial within its block.
     task : CoordTask, optional
         Coordinate for the task of each trial.
-    attn : CoordContext, optional
+    attention : CoordAttention, optional
         Coordinate for the attentional state of each trial.
-    categ : CoordCategory
+    category : CoordCategory
         Coordinate for the nature of the stimulus presented in each trial.
+    behavior : CoordBehavior
+        Coordinate for the behavioral choice of each trial.
+    outcome : CoordOutcome
+        Coordinate for the outcome of each trial.
     t_warn : CoordTimeEvent
         Coordinate for the onset of the warning sound (only in task CLK).
     t_on, t_off : CoordTimeEvent
@@ -71,9 +86,9 @@ class TrialsProperties(DataStructure):
     n_trials : int
         (Property) Number of trials in the subset.
     n_sessions : int
-        (Property)
+        (Property) Number of sessions from which the trials come.
     n_blocks : int
-        (Property)
+        (Property) Maximal number of blocks across session(s).
 
     Methods
     -------
@@ -87,24 +102,26 @@ class TrialsProperties(DataStructure):
 
     For a single session:
 
-    - The attribute `session_ids` contains a single session identifier.
-    - The coordinates `recnum`, `task`, and `attn` are optional, since they would contain a unique
-      label for all the trials.
+    - The attribute `sessions` contains a single session identifier.
+    - The coordinates `recnum`, `task`, and `attention` are optional, since they would contain a
+      unique label for all the trials.
     - The property `n_blocks` indicates the number of blocks in the unique session.
 
     For an experiment:
 
-    - The attribute `session_ids` contains several session identifiers.
+    - The attribute `sessions` contains several session identifiers.
     - The coordinate `recnum` indicates the origin of each trial (i.e. the session from which it
       comes from).
     - The property `n_blocks` indicates the maximal number of blocks across the different sessions.
 
+
+    TODO: Add a method to check the consistency of the coordinates with the sessions' IDs.
     Raises
     ------
     ValueError
-        If the content of the coordinate `recnum` is not consistent with the sessions' IDs. This is
-        the case if the unique labels contained in the coordinate do not match the attribute `rec`
-        of the sessions' IDs.
+        If the content of coordinates (`recnum`, `task`, `attention` is not consistent with the
+        sessions' IDs. This is the case if the unique labels contained in the coordinate do not
+        match the respective values in the sessions' IDs.
     """
 
     # --- Schema Attributes ---
@@ -115,84 +132,54 @@ class TrialsProperties(DataStructure):
             "block": CoordBlock,
             "slot": CoordSlot,
             "task": CoordTask,
-            "attn": CoordAttention,
-            "categ": CoordCategory,
+            "attention": CoordAttention,
+            "category": CoordCategory,
+            "behavior": CoordBehavior,
+            "outcome": CoordOutcome,
             "t_on": CoordTimeEvent,
             "t_off": CoordTimeEvent,
             "t_warn": CoordTimeEvent,
             "t_end": CoordTimeEvent,
-            "error": CoordError,
         }
     )
     coords_to_dims = MappingProxyType({name: Dimensions("trials") for name in coords.keys()})
-    identifiers = ("session_ids",)
+    identifiers = ("sessions",)
 
     # --- Key Features ---
 
     def __init__(
         self,
-        session_ids: List[Session],
-        data: CoreData | np.ndarray | None = None,
-        recnum: CoordRecNum | np.ndarray | None = None,
-        block: CoordBlock | np.ndarray | None = None,
-        slot: CoordSlot | np.ndarray | None = None,
-        task: CoordTask | np.ndarray | None = None,
-        attn: CoordAttention | np.ndarray | None = None,
-        categ: CoordCategory | np.ndarray | None = None,
-        t_on: CoordTimeEvent | np.ndarray | None = None,
-        t_off: CoordTimeEvent | np.ndarray | None = None,
-        t_warn: CoordTimeEvent | np.ndarray | None = None,
-        t_end: CoordTimeEvent | np.ndarray | None = None,
-        error: CoordError | np.ndarray | None = None,
+        sessions: List[Session],
+        data: CoreData | None = None,
+        **coords: Coordinate,
     ) -> None:
         # Set sub-class specific metadata
-        self.session_ids = session_ids
-        # Check recording numbers
-        if recnum is not None:
-            unique_labels = np.unique(recnum)
-            sessions_recnums = [s.red for s in session_ids]
-            if not all(label in sessions_recnums for label in unique_labels):
-                raise ValueError(
-                    "Invalid recording numbers in coordinate: "
-                    f"{unique_labels} vs {sessions_recnums} in sessions' IDs."
-                )
+        self.sessions = sessions
         # Set data and coordinate attributes via the base class constructor
-        super().__init__(
-            data=data,
-            recnum=recnum,
-            block=block,
-            slot=slot,
-            task=task,
-            attn=attn,
-            categ=categ,
-            t_on=t_on,
-            t_off=t_off,
-            t_warn=t_warn,
-            t_end=t_end,
-            error=error,
-        )
+        super().__init__(data=data, **coords)
 
     @property
     def n_trials(self) -> int:
-        """Number of trials in the subset."""
+        """Number of trials in the subset (length of the 1D core data)."""
         return self.data.size
 
     @property
     def n_sessions(self) -> int:
         """Number of sessions from which the trials come from."""
-        return len(self.session_ids)
+        return len(self.sessions)
 
     @property
     def n_blocks(self) -> int:
         """Maximal number of blocks across session(s)."""
-        if len(self.block) != 0:  # avoid ValueError in max() if empty array
-            return self.block.max()
+        coord_blocks = self.get_coord("block")
+        if len(coord_blocks) != 0:  # avoid ValueError in max() if empty array
+            return coord_blocks.max()
         else:
             return 0
 
     def __repr__(self) -> str:
         return (
-            f"<{self.__class__.__name__}>: Sessions {self.session_ids}, "
+            f"<{self.__class__.__name__}>: Sessions {self.sessions}, "
             f"#trials={self.n_trials}" + super().__repr__()
         )
 
@@ -211,7 +198,12 @@ class TrialsProperties(DataStructure):
         t_end : float
             End time of the trial.
         """
-        for block, slot, t_on, t_end in zip(self.block, self.slot, self.t_on, self.t_end):
+        for block, slot, t_on, t_end in zip(
+            self.get_coord("block"),
+            self.get_coord("slot"),
+            self.get_coord("t_on"),
+            self.get_coord("t_end"),
+        ):
             yield block, slot, t_on, t_end
 
     def get_session_from_recording(self, recnum: int | Recording) -> Session:
@@ -239,7 +231,7 @@ class TrialsProperties(DataStructure):
         """
         if isinstance(recnum, int):
             recnum = Recording(recnum)
-        recnums_to_sessions = {s.rec: s for s in self.session_ids}
+        recnums_to_sessions = {s.rec: s for s in self.sessions}
         if recnum not in recnums_to_sessions:
-            raise ValueError(f"Invalid recording number ({recnum}) in sessions: {self.session_ids}")
+            raise ValueError(f"Invalid recording number ({recnum}) in sessions: {self.sessions}")
         return recnums_to_sessions[recnum]
