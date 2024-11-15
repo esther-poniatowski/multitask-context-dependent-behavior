@@ -7,7 +7,7 @@ Classes
 -------
 `CoreData`
 """
-from typing import Tuple, Optional, Self, Union, Iterable
+from typing import Tuple, Self, Iterable
 
 import numpy as np
 
@@ -101,17 +101,17 @@ class CoreData(np.ndarray):
 
     def __new__(
         cls,
-        values: Union[Iterable, np.ndarray],
-        dims: Optional[Union[Dimensions, Tuple[Union[str, DimName], ...]]] = None,
+        values: Iterable | np.ndarray,
+        dims: Dimensions | Tuple[str | DimName, ...] | None = None,
     ) -> Self:
         """
         Create a new instance of a `CoreData` object.
 
         Parameters
         ----------
-        values : Union[Iterable, np.ndarray]
+        values : Iterable | np.ndarray
             Values to store in the object.
-        dims : Union[Dimensions, Tuple[Union[str, DimName], ...]], optional
+        dims : Dimensions | Tuple[str | DimName, ...], optional
             Names of the dimensions of the data.
 
         Returns
@@ -127,7 +127,7 @@ class CoreData(np.ndarray):
         obj.dims = Dimensions(dims)  # automatic validation by `Dimensions`
         return obj
 
-    def __array_finalize__(self, obj: Optional[np.ndarray]) -> None:
+    def __array_finalize__(self, obj: np.ndarray | None) -> None:
         """
         Finalize the creation of a `CoreData` object to handle the custom attribute `dims`.
 
@@ -170,20 +170,21 @@ class CoreData(np.ndarray):
 
     # --- Utility Methods --------------------------------------------------------------------------
 
-    def __getattr__(self, name):
-        """Delegate the `get_dim` and `get_axis` methods to the `dims` attribute."""
-        if name == "get_dim":
-            return self.dims.get_dim
-        if name == "get_axis":
-            return self.dims.get_axis
+    def get_dim(self, axis: int) -> DimName:
+        """Delegate to the `dims` attribute."""
+        return self.dims.get_dim(axis)
 
-    def get_size(self, dim: Union[str, DimName]) -> int:
+    def get_axis(self, dim: str | DimName) -> int:
+        """Delegate to the `dims` attribute."""
+        return self.dims.get_axis(dim)
+
+    def get_size(self, dim: str | DimName) -> int:
         """
         Retrieve the length of a dimension.
 
         Parameters
         ----------
-        dim : Union[str, DimName]s
+        dim : str | DimName
             Name of the dimension.
 
         Returns
