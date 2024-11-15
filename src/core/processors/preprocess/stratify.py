@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.processors.preprocess.stratify` [module]
+`core.processors.preprocess.stratify` [module]
 
 Classes
 -------
@@ -30,7 +30,7 @@ FeatComb: TypeAlias = List[Tuple[Union[np.int64, np.float64, np.str_], ...]]
 
 class Stratifier(Processor):
     """
-    Divide a set of samples in strata (groups) based on combinations of experimental features.
+    Divide a set of samples in strata (groups) based on combinations of features.
 
     Class Attributes
     ----------------
@@ -85,7 +85,7 @@ class Stratifier(Processor):
 
     See Also
     --------
-    :class:`core.processors.preprocess.base_processor.Processor`
+    `core.processors.preprocess.base_processor.Processor`
         Base class for all processors: see class-level attributes and template methods.
     """
 
