@@ -29,14 +29,14 @@ class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
 
     Class Attributes
     ----------------
-    entity : Type[Entity]
+    ENTITY : Type[Entity]
         Entity represented by the coordinate. It determines the data type and the valid values for
         the underlying numpy array.
-    dtype: Type[CoordDtype]
+    DTYPE: Type[CoordDtype]
         Data type for the coordinate labels.
-    metadata : Tuple[str, ...]
+    METADATA : Tuple[str, ...]
         Names of the additional attributes storing metadata alongside with the coordinate values.
-    sentinel : Any
+    SENTINEL : Any
         Sentinel value marking missing or unset coordinate values.
         For float dtype: `np.nan`.
         For integer dtype: usually ``-1`` (depending on the purpose of the coordinate).
@@ -72,6 +72,9 @@ class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
         cls.validate(values)
         obj = np.asarray(values, dtype=cls.DTYPE).view(cls)
         return obj
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}> #shape: {self.shape}"
 
     def set_metadata(self, **metadata) -> None:
         """
@@ -144,5 +147,13 @@ class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
         values = np.full(shape, cls.SENTINEL, dtype=cls.DTYPE)
         return cls(values=values, **metadata)
 
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}> : {len(self)} samples."
+    def get_entity(self) -> Type[EntityType]:
+        """
+        Get the entity type associated with the coordinate.
+
+        Returns
+        -------
+        Type[EntityType]
+            Entity type associated with the coordinate.
+        """
+        return self.ENTITY
