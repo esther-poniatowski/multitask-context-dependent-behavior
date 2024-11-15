@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_core.test_objects.test_bases` [module]
+`test_core.test_entities.test_base` [module]
 
 See Also
 --------
-:mod:`core.entities.base_entity`: Tested module.
+`core.entities.base_entity`: Tested module.
 """
 
 from types import MappingProxyType
@@ -29,8 +29,8 @@ FULL_LABELS: Mapping[int, str] = MappingProxyType({1: "One", 2: "Two", 3: "Three
 class TestObject(Entity):
     """Concrete class for testing the base object."""
 
-    _OPTIONS = OPTIONS
-    _LABELS = FULL_LABELS
+    OPTIONS = OPTIONS
+    LABELS = FULL_LABELS
 
 
 # Test Functions
@@ -39,7 +39,7 @@ class TestObject(Entity):
 
 def test_init():
     """
-    Test for :meth:`__init__`.
+    Test for the `__init__` method.
 
     Expected Outputs
     ----------------
@@ -55,7 +55,7 @@ def test_init():
 
 def test_get_options():
     """
-    Test for :meth:`get_options`.
+    Test for the `get_options` method.
 
     Expected Outputs
     ----------------
@@ -66,7 +66,7 @@ def test_get_options():
 
 def test_full_label():
     """
-    Test for property :attr:`full_label`.
+    Test for property `full_label`.
 
     Expected Outputs
     ----------------
@@ -78,7 +78,7 @@ def test_full_label():
 
 def test_eq():
     """
-    Test for :meth:`__eq__`.
+    Test for `__eq__` method.
 
     Expected Outputs
     ----------------
@@ -93,7 +93,7 @@ def test_eq():
 
 def test_hash():
     """
-    Test for :meth:`__hash__`.
+    Test for `__hash__` method.
 
     Expected Outputs
     ----------------
