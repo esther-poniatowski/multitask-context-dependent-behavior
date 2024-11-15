@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.coordinates.exp_condition` [module]
+`core.coordinates.exp_factor_coord` [module]
 
-Coordinates for labelling experimental conditions.
+Coordinates for labelling experimental factors.
 
 Classes
 -------
@@ -35,27 +35,27 @@ from core.entities.exp_factors import (
 
 
 ExpFactorType = TypeVar("ExpFactorType", bound=ExpFactor)
-"""Generic type variable for experimental conditions. Used to keep a generic type for the
+"""Generic type variable for experimental factors. Used to keep a generic type for the
 experimental factor while specifying the data type of the coordinate labels."""
 
 
 class CoordExpFactor(Coordinate[np.str_, ExpFactorType]):
     """
-    Coordinate labels representing one experimental condition among Task, Attention, Stimulus.
+    Coordinate labels representing one experimental factor.
 
     Class Attributes
     ----------------
     ENTITY : Type[ExpFactor]
-        Subclass of `Entity` corresponding to the type of experimental condition which is
+        Subclass of `Entity` corresponding to the type of experimental factor which is
         represented by the coordinate.
     DTYPE : Type[np.str_]
-        Data type of the condition labels, always string. The `np.str_` dtype is equivalent to the
+        Data type of the labels, always string. The `np.str_` dtype is equivalent to the
         `np.unicode_` dtype. It encompasses strings in fixed-width.
 
     Attributes
     ----------
     values : np.ndarray[Tuple[Any], np.str_]
-        Labels for the condition associated with each measurement.
+        Labels for the factor associated with each measurement.
 
     Methods
     -------
@@ -75,32 +75,32 @@ class CoordExpFactor(Coordinate[np.str_, ExpFactorType]):
 
     def __repr__(self):
         counts = self.count_by_lab()
-        format_counts = ", ".join([f"{cnd!r}: {n}" for cnd, n in counts.items()])
+        format_counts = ", ".join([f"{lab!r}: {n}" for lab, n in counts.items()])
         return f"<{self.__class__.__name__}>: {len(self)} samples, {format_counts}."
 
     @classmethod
-    def build_labels(cls, n_smpl: int, cnd: ExpFactor) -> Self:
+    def build_labels(cls, n_smpl: int, lab: ExpFactor) -> Self:
         """
-        Build basic labels filled with a *single* condition.
+        Build basic labels filled with a *single* factor.
 
         Parameters
         ----------
         n_smpl : int
             Number of samples, i.e. of labels.
-        cnd : ExpFactor
+        lab : ExpFactor
             Condition which corresponds to the single label.
 
         Returns
         -------
         values : Self
-            Labels coordinate filled a single condition.
+            Labels coordinate filled a single factor.
         """
-        values = np.full(n_smpl, cnd)
+        values = np.full(n_smpl, lab)
         return cls(values)
 
     def replace_label(self, old: ExpFactor, new: ExpFactor) -> Self:
         """
-        Replace one label by another one in the condition coordinate.
+        Replace one label by another one in the factor coordinate.
 
         Parameters
         ----------
@@ -110,43 +110,43 @@ class CoordExpFactor(Coordinate[np.str_, ExpFactorType]):
         Returns
         -------
         value : Self
-            Coordinate with updated condition labels.
+            Coordinate with updated factor labels.
         """
         new_coord = self.copy()
         new_coord[new_coord == old] = new
         return new_coord
 
     @overload
-    def count_by_lab(self, cnd: ExpFactor) -> int: ...
+    def count_by_lab(self, lab: ExpFactor) -> int: ...
 
     @overload
-    def count_by_lab(self) -> Dict[ExpFactor, int]: ...
+    def count_by_lab(self) -> Dict[ExpFactorType, int]: ...
 
-    def count_by_lab(self, cnd: Optional[ExpFactor] = None) -> Union[int, Dict[ExpFactor, int]]:
+    def count_by_lab(self, lab: Optional[ExpFactor] = None) -> Union[int, Dict[ExpFactorType, int]]:
         """
-        Count the number of samples in one condition or all conditions.
+        Count the number of samples in one label or all labels.
 
         Parameters
         ----------
-        cnd : str, optional
+        lab : str, optional
             Condition to count in the coordinate.
-            If None, give the number of samples in each condition.
+            If None, give the number of samples in each label.
 
         Returns
         -------
         n_smpl : Union[int, Dict[C, int]]
-            If ``cnd`` is specified, number of samples matching this condition.
-            Otherwise, number of samples in each condition.
+            If ``lab`` is specified, number of samples matching this label.
+            Otherwise, number of samples in each label.
 
         Implementation
         --------------
-        The set of valid values for the condition is accessed by ``self.condition.get_options()``.
+        The set of valid values for the label is accessed by ``self.ENTITY.get_options()``.
         """
-        if cnd is not None:
-            return np.sum(self == cnd)
+        if lab is not None:
+            return np.sum(self == lab)
         else:
             options = self.ENTITY.get_options()
-            return {self.ENTITY(cnd): np.sum(self == cnd) for cnd in options}
+            return {self.ENTITY(lab): np.sum(self == lab) for lab in options}
 
 
 class CoordTask(CoordExpFactor[Task]):
