@@ -1,25 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.data_structures.firing_rates_pop` [module]
+`core.data_structures.firing_rates_pop` [module]
 """
-from pathlib import Path
 from types import MappingProxyType
-from typing import Optional, Union
-
-import numpy as np
 
 from core.data_structures.core_data import CoreData, Dimensions
 from core.coordinates.bio_info_coord import CoordUnit
 from core.coordinates.exp_factor_coord import CoordTask, CoordAttention, CoordCategory
 from core.coordinates.time_coord import CoordTime
 
-# from core.coordinates.trials import CoordError
 from core.data_structures.base_data_struct import DataStructure
 from core.entities.bio_info import Area, Training
-from utils.storage_rulers.impl_path_rulers import FiringRatesPopPath
-from utils.io_data.loaders import LoaderDILL
-from utils.io_data.savers import SaverDILL
 
 
 class FiringRatesPop(DataStructure):
@@ -34,16 +26,22 @@ class FiringRatesPop(DataStructure):
 
     - ``units`` (dimensions ``ensembles``, ``units``)
     - ``task``  (dimension ``trials``)
-    - ``attn``   (dimension ``trials``),
-    - ``categ``  (dimension ``trials``),
+    - ``attention``   (dimension ``trials``)
+    - ``category``  (dimension ``trials``)
     - ``time``  (dimension ``time``)
 
     Identity Metadata: ``area``, ``training`
 
-    Descriptive Metadata: ``error``
+    Descriptive Metadata: ``with_error``
 
     Attributes
     ----------
+    area : Area
+        Brain area from which the units were recorded.
+    training : Training
+        Training condition of the animals from which the units were recorded.
+    with_error : bool
+        Flag indicating whether the data set comprises error trials.
     data : CoreData
         Firing rates time courses of all the units in all the trials.
         Shape: ``(n_ens, n_units, n_folds, n_trials, n_t)``, with:
@@ -65,12 +63,8 @@ class FiringRatesPop(DataStructure):
         Coordinate labels for the stimulus presented in each trial.
     time : CoordTime
         Time points of the firing rate time courses (in seconds).
-    area : Area
-        Brain area from which the units were recorded.
-    training : Training
-        Training condition of the animals from which the units were recorded.
-    error : bool
-        Whether the data set comprises error or valid trials.
+    n_trials : int
+        (Property) Number of trials in the subset.
     """
 
     # --- Schema Attributes ---
@@ -79,8 +73,8 @@ class FiringRatesPop(DataStructure):
         {
             "units": CoordUnit,
             "task": CoordTask,
-            "attn": CoordAttention,
-            "categ": CoordCategory,
+            "attention": CoordAttention,
+            "category": CoordCategory,
             "time": CoordTime,
         }
     )
@@ -88,45 +82,37 @@ class FiringRatesPop(DataStructure):
         {
             "units": Dimensions("ensembles", "units"),
             "task": Dimensions("trials"),
-            "attn": Dimensions("trials"),
-            "categ": Dimensions("trials"),
+            "attention": Dimensions("trials"),
+            "category": Dimensions("trials"),
             "time": Dimensions("time"),
         }
     )
     identifiers = ("area", "training")
 
-    # --- IO Handlers ---
-    path_ruler = FiringRatesPopPath
-    loader = LoaderDILL
-    saver = SaverDILL
-
     def __init__(
         self,
-        area: Union[Area, str],
-        training: Union[Training, bool],
-        error: bool = False,
-        data: Optional[Union[CoreData, np.ndarray]] = None,
-        units: Optional[Union[CoordUnit, np.ndarray]] = None,
-        task: Optional[Union[CoordTask, np.ndarray]] = None,
-        attn: Optional[Union[CoordAttention, np.ndarray]] = None,
-        categ: Optional[Union[CoordCategory, np.ndarray]] = None,
-        time: Optional[Union[CoordTime, np.ndarray]] = None,
+        area: Area,
+        training: Training,
+        with_error: bool = False,
+        data: CoreData | None = None,
+        **coords,
     ):
         # Set sub-class specific metadata
         self.area = Area(area)
         if isinstance(training, bool):
             training = Training(training)
         self.training = training
-        self.error = error
+        self.with_error = with_error
         # Set data and coordinate attributes via the base class constructor
-        super().__init__(data=data, units=units, task=task, attn=attn, categ=categ, time=time)
+        super().__init__(data=data, **coords)
 
     def __repr__(self) -> str:
         return (
-            f"<{self.__class__.__name__}>: Area {self.area}, Training {self.training}\n"
-            + super().__repr__()
+            f"<{self.__class__.__name__}>: Area {self.area}, Training {self.training}, "
+            f"#trials={self.n_trials}" + super().__repr__()
         )
 
     @property
-    def path(self) -> Path:
-        return self.path_ruler().get_path(self.area, self.training == 1)
+    def n_trials(self) -> int:
+        """Number of pseudo-trials (length of the dimensions `trials`)."""
+        return self.get_data().get_size("trials")
