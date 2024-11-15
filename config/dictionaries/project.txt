@@ -1,6 +1,8 @@
 # Words used in the experiment
+behav
 Bootstrapper
 categ
+conds
 D_CLK
 D_POST
 D_PRE
@@ -23,6 +25,7 @@ myenv
 nspikes
 ntpts
 ntrials
+outc
 Perigenual
 POSTSTIM
 Prelimbic
