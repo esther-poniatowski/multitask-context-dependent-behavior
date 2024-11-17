@@ -9,14 +9,14 @@ Classes
 
 Implementation
 --------------
-Constraints for Subclasses
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Constraints for Subclasses:
+
 The `__subclass_init__` method of the data structure base class declares the required class-level
 attributes that should be defined in each subclass's body. This is a lightweight alternative to the
 metaclass approach.
 
-Separation of concerns between the base and subclasses constructors
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Separation of concerns between the base and subclasses constructors:
+
 - Base class constructor: Declare and (optionally) set the content-related attributes (data and
   coordinates).
 - Subclass constructors: Assign the metadata attributes (identifiers for the data structure and
@@ -190,8 +190,7 @@ class DataStructure(ABC):
         active_coords = ", ".join([name for name in self.coords if hasattr(self, name)])
         return (
             f"<{self.__class__.__name__}> Dims: {self.dims}, "
-            f"Data: {data_status}, "
-            f"Active coordinates: {active_coords}"
+            f"Data: {data_status}, Coords: {active_coords}"
         )
 
     # --- Access to Attributes ---------------------------------------------------------------------
@@ -237,10 +236,35 @@ class DataStructure(ABC):
             raise AttributeError(f"Invalid coordinate: '{name}' not in {self.coords.keys()}.")
         return getattr(self, name)
 
+    def get_coords_from_dim(self, dim: str) -> Mapping[str, Coordinate]:
+        """
+        Get all coordinates associated with one dimension of the data structure.
+
+        Returns
+        -------
+        coords : Dict[str, Coordinate]
+            Coordinates associated with the specified dimension of the data structure.
+        """
+        return {
+            name: getattr(self, name) for name in self.coords if dim in self.coords_to_dims[name]
+        }
+
     @property
     def shape(self) -> Tuple[int, ...]:
         """Get the shape of the core data (delegate to the core data object)."""
         return self.data.shape
+
+    def get_dim(self, dim: int) -> str:
+        """Delegate to the dimension object."""
+        return self.dims[dim]
+
+    def get_axis(self, name: str) -> int:
+        """Delegate to the core data object."""
+        return self.data.get_axis(name)
+
+    def get_size(self, name: str) -> int:
+        """Delegate to the core data object."""
+        return self.data.get_size(name)
 
     def __getattr__(self, name: str):
         """
@@ -251,18 +275,10 @@ class DataStructure(ABC):
         name : str
             Name of the attribute to get.
         """
-        # Delegate method calls
-        if name == "get_dim":
-            return self.dims.get_dim
-        elif name == "get_axis":
-            return self.dims.get_axis
-        elif name == "get_size":
-            return self.data.get_size
-        else:  # Delegate attribute access to content objects
-            for obj in self.__dict__.values():
-                if hasattr(obj, name):
-                    return getattr(obj, name)
-            raise AttributeError(f"Invalid attribute '{name}' for '{self.__class__.__name__}'.")
+        for obj in self.__dict__.values():
+            if hasattr(obj, name):
+                return getattr(obj, name)
+        raise AttributeError(f"Invalid attribute '{name}' for '{self.__class__.__name__}'.")
 
     # --- Set Data and Coordinates -----------------------------------------------------------------
 
