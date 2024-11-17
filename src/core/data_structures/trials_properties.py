@@ -6,8 +6,6 @@
 from types import MappingProxyType
 from typing import Generator, List
 
-import numpy as np
-
 from core.coordinates.exp_structure_coord import CoordRecNum, CoordBlock, CoordSlot
 from core.coordinates.exp_factor_coord import (
     Coordinate,
@@ -21,7 +19,6 @@ from core.coordinates.time_coord import CoordTimeEvent
 from core.data_structures.base_data_struct import DataStructure
 from core.data_structures.core_data import Dimensions, CoreData
 from core.entities.exp_structure import Session, Recording
-from core.entities.exp_conditions import ExpCondition
 
 
 class TrialsProperties(DataStructure):
@@ -30,9 +27,7 @@ class TrialsProperties(DataStructure):
 
     Key Features
     ------------
-    Dimensions :
-
-    - ``trials``
+    Dimensions : ``trials``
 
     Coordinates:
 
@@ -49,9 +44,7 @@ class TrialsProperties(DataStructure):
     - ``t_warn``
     - ``t_end``
 
-    Metadata:
-
-    - ``sessions``
+    Metadata: ``sessions``
 
     Attributes
     ----------
@@ -158,6 +151,12 @@ class TrialsProperties(DataStructure):
         # Set data and coordinate attributes via the base class constructor
         super().__init__(data=data, **coords)
 
+    def __repr__(self) -> str:
+        return (
+            f"<{self.__class__.__name__}>: Sessions {self.sessions}, "
+            f"#trials={self.n_trials}" + super().__repr__()
+        )
+
     @property
     def n_trials(self) -> int:
         """Number of trials in the subset (length of the 1D core data)."""
@@ -176,12 +175,6 @@ class TrialsProperties(DataStructure):
             return coord_blocks.max()
         else:
             return 0
-
-    def __repr__(self) -> str:
-        return (
-            f"<{self.__class__.__name__}>: Sessions {self.sessions}, "
-            f"#trials={self.n_trials}" + super().__repr__()
-        )
 
     def iter_trials(self) -> Generator:
         """
