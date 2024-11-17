@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.processors.preprocess.bootstrap` [module]
+`core.processors.preprocess.bootstrap` [module]
 
 Classes
 -------
@@ -15,18 +15,16 @@ current approach inspires from the "hierarchical bootstrap" method, which levera
 combinations of trials. Thereby, the size of the final data set is less limited by the minimum
 number of trials across neurons.
 
-Dealing with imbalanced trial counts across units:
+Addressing imbalanced trial counts across units:
 
-- Determination of the final number of pseudo-trials: The algorithm aims to balance the
-  representation of trials across units with extreme trial counts while still maintaining a minimal
-  threshold number of pseudo-trials for statistical robustness. Specifically, the goal is to avoid
-  discarding too many trials from the units with numerous trials and overly duplicating those from
-  the units with fewer trials.
-- Trial selection for each unit: The algorithm maximizes the diversity of the trials occurrences at
-  the single unit level by ensuring that each trial is selected the maximum number of times
-  possible.
-- Mitigating redundancies in trials' pairings: Trials are shuffled to obtain diverse combinations at
-  the level of the pseudo-population.
+- Setting the number of pseudo-trials to generate: To achieve statistical robustness, the number of
+  pseudo-trials is determined based on the distribution of trials counts across the population. The
+  algorithm aims to balance two objectives: minimizing trial discards for units with high trial
+  counts and limiting trial duplication for units with low trial counts.
+- Maximizing diversity at single unit level: Each trial is included as many times as possible within
+  the constraints of the balancing procedure.
+- Maximizing diversity at the pseudo-population level: Trials are shuffled during the pairing
+  process create diverse combinations, thereby mitigating redundancy.
 
 Implementation
 --------------
@@ -46,7 +44,7 @@ from typing import TypeAlias, Any, Tuple
 
 import numpy as np
 
-from core.constants import N_PSEUDO_MIN
+from core.constants import N_TRIALS_MIN
 from core.processors.base_processor import Processor
 
 
@@ -207,19 +205,26 @@ class Bootstrapper(Processor):
     # --- Utility Methods --------------------------------------------------------------------------
 
     @staticmethod
-    def eval_n_pseudo(counts: Counts, n_min: int = N_PSEUDO_MIN, alpha: float = 0.5) -> int:
+    def eval_n_pseudo(counts: Counts, n_min: int = N_TRIALS_MIN, thres_perc: float = 0.5) -> int:
         """
         Determine a number of pseudo-trials to generate from the statistics of the counts.
+
+        The number of trials is adjusted to an arbitrary percentile of the distribution of counts,
+        once the units with fewer trials than the minimum required are excluded. It aims to balance
+        the representation of trials across units with extreme trial counts while still maintaining
+        a minimal number of pseudo-trials for statistical robustness.
 
         Arguments
         ---------
         counts : Counts
             See the argument :ref:`counts`.
         n_min : int, default=N_PSEUDO_MIN
-            Minimum number of pseudo-trials required in a strata.
-        alpha : float, default=0.5
-            Variability factor to adjust the number of pseudo-trials to achieve sufficient diversity
-            in the combinations of trials.
+            Minimum number of pseudo-trials required for a unit to be included in the
+            pseudo-population.
+            .. _n_min:
+        thres_perc : float, default=0.3
+            Threshold percentile of the distribution of counts at which the number of pseudo-trials
+            is set.
 
         Returns
         -------
@@ -228,30 +233,64 @@ class Bootstrapper(Processor):
 
         Examples
         --------
-        - Setting ``alpha = 0.5`` will generate a number of pseudo-trials equal to the average of
-          the minimum and maximum number of trials across units, which promotes a moderate
-            level of variability.
-        - Setting ``alpha = 0.0`` will generate a number of pseudo-trials equal to the minimum
-          number of trials across units, which promotes a low level of variability.
-        - Setting ``alpha = 1.0`` will generate a number of pseudo-trials equal to the sum of the
-          minimum and maximum number of trials across units, which promotes a high level of
-          variability. However, this is not recommended as it may lead to overfitting.
+        Effect of the parameter `thres_perc` on the number of pseudo-trials to generate:
+
+        - ``0.0`` -> As many pseudo-trials as the unit with the fewest trials. For all the units
+          with more trials, several trials are discarded.
+        - ``1.0`` -> As many pseudo-trials as the unit with the most trials. For all the other
+          units, several trials are selected multiple times.
+        - ``0.5`` -> As many pseudo-trials as the median number of trials across units. For about
+          half of the units, several trials are discarded, and for the other half, several are
+          selected multiple times.
+
+        Raises
+        ------
+        ValueError
+            If no unit has enough trials for the minimum required.
 
         Implementation
         --------------
-        1. Compute a preliminary number of pseudo-trials:
-           ``n_pseudo = alpha * (min_count + max_count)``
-
-            - min_count, max_count: Minimum and maximum numbers of trials across all units
-            - alpha: Variability factor to control the balance between units with few and many
-              trials.
-
-        2. Ensure the number of pseudo-trials is at least the minimum required:
-           ``n_pseudo = max(n_pseudo, n_min)``
+        1. Exclude the counts which are below the minimum required.
+        2. Determine the desired percentile of the distribution of counts.
 
         Notes
         -----
-        This method is not involved during processing. It can be used in preliminary exploration of
-        the data set to determine the number of pseudo-trials to generate in subsequent processing.
+        This method is not involved during the actual bootstrap processing. It can be used in
+        preliminary exploration of the data set to determine the number of pseudo-trials to generate
+        in subsequent processing.
         """
-        return max(int(alpha * (np.min(counts) + np.max(counts))), n_min)
+        # Consider only the units with more than the minimum number of trials
+        counts = counts[counts >= n_min]  # shape: (n_units_retained,)
+        if counts.size == 0:
+            raise ValueError(f"No unit has enough trials for `n_min`={n_min}.")
+        # Determine the percentile of the distribution of counts
+        n_pseudo = int(np.percentile(counts, 100 * thres_perc))
+        return n_pseudo
+
+    @staticmethod
+    def exclude_units(counts: Counts, n_min: int = N_TRIALS_MIN) -> np.ndarray:
+        """
+        Identify the units with fewer trials than the minimum required.
+
+        Used to exclude these units from the pseudo-population.
+
+        Arguments
+        ---------
+        counts : Counts
+            See the argument :ref:`counts`.
+        n_min : int, default=N_PSEUDO_MIN
+            See the argument :ref:`n_min`.
+
+        Returns
+        -------
+        idx : np.ndarray
+            Indices of the units to exclude from the pseudo-population.
+
+        Implementation
+        --------------
+        The function `np.where` returns a tuple of indices where the condition is met, where each
+        element corresponds to a dimension in the input array. Here, the input array is 1D, so
+        a single element is returned. To extract the indices, the first element of the tuple is
+        used.
+        """
+        return np.where(counts < n_min)[0]
