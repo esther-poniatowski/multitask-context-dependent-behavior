@@ -8,7 +8,7 @@ Classes
 `CoordManager`
 """
 
-from typing import Iterable, Tuple, Type, Self
+from typing import List, Iterable, Tuple, Type, Self
 import warnings
 
 import numpy as np
@@ -32,23 +32,33 @@ class CoordManager:
     ----------
     coordinates : List[CoordExpFactor]
         List of coordinates to manage.
+    register : List[str]
+        Names of the coordinates, if provided.
     n_samples : int
         Number of samples common across the coordinates.
 
     Methods
     -------
-    `validate`
-    `from_shape`
-    validate_length
-    validate_entity
-    filter_by_entity
-    match(condition: Union[ExpCondition, ExpConditionUnion]) -> np.ndarray:
-        Generates a boolean mask for samples matching the given condition.
+    `validate_length`
+    `__len__`
+    `__repr__`
+    `__iter__`
+    `check_entity`
+    `filter_by_entity`
+    `match`
+    `match_single`
+    `match_union`
+    `filter`
+    `count`
     """
 
-    def __init__(self, *coords: Coordinate) -> None:
-        self.validate_length(*coords)
-        self.coords = list(coords)
+    def __init__(self, *coords: Coordinate, **coords_dict: Coordinate) -> None:
+        # Register the names of the coordinates if provided
+        self.register: List[str] = ["" for _ in range(len(coords))] + list(coords_dict.keys())
+        # Add the coordinates from the dictionary to the list of coordinates
+        self.coords: List[Coordinate] = list(coords) + list(coords_dict.values())
+        # Validate that all coordinates have the same length
+        self.validate_length(*self.coords)
 
     @staticmethod
     def validate_length(*coords: Coordinate) -> None:
