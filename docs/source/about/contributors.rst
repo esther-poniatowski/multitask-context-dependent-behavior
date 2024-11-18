@@ -15,7 +15,7 @@ Contributors
 - Diego Elguelda (delgueda@gmail.com)
 - Sophie Bagur (sophie.bagur@pasteur.fr)
 - Shihab Shamma (shihab.shamma@ens.psl.eu)
-
+- Hugo Tissot (hugo.tissot@ens.psl.eu)
 
 **Acknowledgments**
 

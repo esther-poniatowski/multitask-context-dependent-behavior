@@ -5,5 +5,4 @@ Data Transfer Documentation
    :maxdepth: 2
 
    transfer
-   raw_data
    extract_spikes
