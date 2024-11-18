@@ -60,7 +60,7 @@ DIrectory Trees
 
 The different servers involved in this step should contain the following directory trees :
 
-.. code-block:: plaintext
+.. code-block:: text
 
     LSPAUD1
     ├── data4
@@ -112,6 +112,7 @@ NOTE : This step has to be done from the BiggerGuy, because it requires modules 
     b) Copy the files
 
     `scp /mnt/working2/esther/Data_Meta/{SITES_Elguelda.csv,SITES_Bagur.csv}  $(USER_LSP)@129.199.80.205:~/Documents/esther-transfer-MDdata`
+
 NOTE : Those files are not necessary on the local computer, because all the information about sites and sessions will be available in the dataframes UNITSinfo, SESSIONSinfo etc, built on the BiggerGuy.
 
 
@@ -164,7 +165,9 @@ WARNING : Contrary to Elguelda, this procedure involves gathering data which is 
 
 0) a) Log on LSP computer (see README > DISTANT WORK in the parent directory)
    b) Navigate to the directory containing the codes for transfer :
+
     `cd ~/Documents/esther-transfer-MDdata`
+
     NOTE : This step has to be performed from this computer because data1 is mounted in auto/.
     The path specified in UTILS_GLobalVariables.py are relative to this computer.
 
