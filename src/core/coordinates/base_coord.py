@@ -147,7 +147,8 @@ class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
         values = np.full(shape, cls.SENTINEL, dtype=cls.DTYPE)
         return cls(values=values, **metadata)
 
-    def get_entity(self) -> Type[EntityType]:
+    @classmethod
+    def get_entity(cls) -> Type[EntityType]:
         """
         Get the entity type associated with the coordinate.
 
@@ -156,4 +157,4 @@ class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
         Type[EntityType]
             Entity type associated with the coordinate.
         """
-        return self.ENTITY
+        return cls.ENTITY

@@ -40,13 +40,13 @@ class ExpCondition:
 
     Methods
     -------
+    `get_factor`
+    `get_entity`
     `combine_factors`
     `__iter__`
     `__eq__`
     `__hash__`
     `__add__`
-    `match`
-    `count`
 
     Notes
     -----
@@ -111,9 +111,9 @@ class ExpCondition:
     def __repr__(self) -> str:
         return f"ExpCondition({', '.join(f'{name}={fact}' for name, fact in self)})"  # use __iter__
 
-    def get_factor(self, factor_type: Type[ExpFactor]) -> str | None:
+    def get_factor(self, factor_type: Type[ExpFactor]) -> ExpFactor | None:
         """
-        Get the stored factor value corresponding to an experimental factor class.
+        Get the stored value corresponding to one experimental factor class.
 
         Arguments
         ---------
@@ -136,6 +136,48 @@ class ExpCondition:
         if name is not None:
             return getattr(self, name, None)
         return None
+
+    def get_entity(self, name: str) -> Type[ExpFactor] | None:
+        """
+        Get the factor class corresponding to one experimental factor attribute.
+
+        Arguments
+        ---------
+        name : str
+            Name of the experimental factor attribute to retrieve.
+
+        Returns
+        -------
+        factor_type : Type[ExpFactor]
+            Class of the experimental factor corresponding to the attribute name.
+            None if the attribute name is not present in the experimental condition instance.
+
+        Examples
+        --------
+        >>> exp_cond = ExpCondition(task=Task('PTD'), attention=Attention('a'))
+        >>> exp_cond.get_entity('task')
+        Task
+        """
+        factor = getattr(self, name, None)
+        factor_type = factor.__class__ if factor is not None else None
+        return factor_type
+
+    def get_entities(self) -> List[Type[ExpFactor]]:
+        """
+        Get all the factor classes present in the experimental condition instance.
+
+        Returns
+        -------
+        factor_types : List[Type[ExpFactor]]
+            List of the classes of the experimental factors present in the experimental condition.
+
+        Examples
+        --------
+        >>> exp_cond = ExpCondition(task=Task('PTD'), attention=Attention('a'))
+        >>> exp_cond.get_all_entities()
+        [Task, Attention]
+        """
+        return [factor.__class__ for name, factor in self]
 
     @staticmethod
     def combine_factors(*selected_factors: Iterable[ExpFactor] | ExpFactor) -> List["ExpCondition"]:
