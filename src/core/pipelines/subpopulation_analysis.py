@@ -9,123 +9,62 @@ Classes
 
 Notes
 -----
+Preprocessing steps:
+
+- Reconstruct pseudo-trials for each experimental condition.
+- Define the regressor matrix X and normalize the regressors.
+- Z-score the activity of each neuron across all the pseudo-trials.
+- Denoise with Principal Component Analysis (PCA): Fit the PCA on the means intra-condition, keep
+  the first components which explain 90% of the variance, invert the transformation to obtain the
+  regressand matrix Y (to predict).
+
+Analysis Steps:
+
+- Fit the linear regression model and retrieve the coefficients.
+- Assess the model with cross-validation ?
+- Compute the ePAIRS distribution across the population of neurons.
+- Fit a GMM on the distribution of the selectivity coefficients.
+- Estimate the number of subpopulations by the log-likelihood increase for each additional cluster
+
+Data Structures Milestones:
+
+- TrialsProperties
+- PseudoTrialsSelection
+- Regressors (matrix X)
+- FiringRatesPopulation (matrix Y, both before and after z-scoring and denoising)
+- SelectivityCoefficients (matrix B)
+- EPAIRSModel
+- GMMModel
 
 
 """
+from types import MappingProxyType
+from typing import List, Type
 
-
-from core.pipelines.base_pipeline import Pipeline, PipelineFactory
-from core.steps.concrete_steps import SelectUnits
-from core.entities.bio_info import Area
-from core.entities.exp_conditions import ExpCondition
-from core.entities.exp_factors import Task, Attention, Stimulus, Behavior
+from core.pipelines.base_pipeline import Pipeline
+from core.processors.preprocess.exclude import Excluder
+from core.entities.bio_info import Area, Training
+from core.entities.exp_conditions import PipelineCondition
+from core.entities.exp_factors import Task, Attention, Category, Behavior
+from core.coordinates.coord_manager import CoordManager
 from core.builders.build_ensembles import EnsemblesBuilder
+from core.data_structures.firing_rates_pop import FiringRatesPop
+from core.data_structures.trials_properties import TrialsProperties
+from utils.io_data.loaders import Loader
+from utils.storage_rulers.base_path_ruler import PathRuler
+
 
 from utils.io_data.loaders import LoaderCSVtoList
 
 
-class SubpopulationAnalysis(Pipeline):
+class SubpopulationAnalysisCondition(PipelineCondition):
     """
-    Pipeline for subpopulation analysis.
+      Experimental condition tailored for the `SubpopulationAnalysis` pipeline:
 
-    Contributor: Hugo Tissot.
-
-    Attributes
-    ----------
-	path_units : Path | str
-		Path to the file containing the units in the population.
-	path_excluded : Path | str
-		Path to the file containing the units to exclude from the analysis.
-
-    Notes
-    -----
-	General Attention
-	^^^^^^^^^^^^^^^
-    This analysis is one facet of a study which investigates the modularity of neuronal populations
-    in the PFC during dual tasks.
-
-    Hypothesis under investigation: The emergence of functional subpopulations in the PFC depends on
-    the need for *sensory-motor remapping across tasks*.
-
-    Three types of dual tasks are considered:
-
-    - Dual Task 1 [current analysis]:
-        - Two distinct stimuli sets (click rates in CLK / pure tones and noise in PTD)
-        - Single motor output (Go/NoGo)
-        -> No sensory-motor remapping for any stimulus
-    - Dual Task 2:
-        - Single stimulus set (Gabor Patches) with two classification boundaries (dimensions for
-          classification: orientation or frequency)
-        - Single motor output (Go/NoGo)
-        -> Sensory-motor remapping for half of the stimuli (e.g. orientation Go and frequency NoGo
-        or the reverse)
-    - Dual Task 3:
-        - Single stimulus set (Gabor Patches) with a single classification boundary (orientation ?)
-        - Distinct motor outputs for the classification in two contexts (Go/NoGo, Left/Right)
-        -> Sensory-motor remapping for all the stimuli
-
-    Current Analysis
-    ^^^^^^^^^^^^^^^^
-    The current analysis focuses on the case of a dual task which does *not* involve sensory-motor
-    remapping, since it involves two distinct stimuli sets (Dual Task 1).
-
-    Goal: Probing the existence of functional subpopulations in the PFC area during the engagement
-    in a dual task with two distinct sensory stimuli sets.
-
-    Key Analyses
-    ^^^^^^^^^^^^
-    The presence of subpopulations is assessed in the space of neuronal "selectivity" to several
-    task variables:
-
-    - Stimulus category (Go/No-Go)
-    - Choice (Lick/No-lick) (i.e. behavioral response)
-    - Task (PTD/CLK)
-
-    To identify subpopulations, two complementary methods are carried out:
-
-    - Elliptical Projection Angle Index of Response Similarity (ePAIRS): Similarity-focused
-      analysis, used to probe deviations from random mixed selectivity by measuring the angle
-      between the selectivity vectors of pairs of neurons.
-    - Gaussian Mixture Model (GMM): Model-based clustering analysis, used to estimate the number of
-      latent subpopulations (each defined by a gaussian distribution of selectivity coefficients).
-
-    Neuronal selectivity is evaluated by the coefficient of a linear regression model, which
-    predicts the neuronal activity from the task variables. The full model includes 6 regressors:
-
-    .. math::
-
-        y = \\beta_{category-PTD} x_{category-PTD} + \\
-            \\beta_{category-CLK} x_{category-CLK} + \\
-            \\beta_{choice-PTD} x_{choice-PTD} + \\
-            \\beta_{choice-CLK} x_{choice-CLK} + \\
-            \\beta_{task} x_{task} + \\
-            \\beta_{intercept}
-
-	Limitation: In this model, the category and the sensory stimulus are confounded. Indeed, since
-	only two stimuli are presented in each task, then the category is defined by the sensory
-	stimulus.
-
-    Improvements (ideas):
-
-    - Discard the effect of the sensory stimulus: Replace the raw activity by the *difference*
-      relative to the passive attentional state (where not category should be computed for the behavior).
-    - Disambiguate the category from the sensory variable: Include in the model the neutral stimulus
-      in CLK, which is perceptually identical to the reference in PTD.
-
-    Implementation
-    --------------
-    Data Selection
-    ^^^^^^^^^^^^^^
-    Time window: For each trial, the neuronal response is averaged in the post-stimulus period (1
-    second duration at the end of the trial, after the stimulus offset). This window encompasses the
-    motor response and the shock delivery, and limits the effect of the sensory stimulus.
-
-    Exclusions:
-
-    - Passive attentional states (only include the trials in task engagement).
-    - Neutral stimuli in the CLK task (not associated to any relevant category).
-
-    Experimental conditions of interest:
+      - Task: PTD or CLK
+      - Attention: Always active (a)
+      - Category: R or T
+      - Behavior: Go or NoGo
 
     - Task: PTD, Category: Target (Tone), Behavior: Go
     - Task: PTD, Category: Target (Tone), Behavior: NoGo
@@ -134,56 +73,99 @@ class SubpopulationAnalysis(Pipeline):
     - Task: CLK, Category: Target (Click Rate 1), Behavior: NoGo
     - Task: CLK, Category: Target (Click Rate 2), Behavior: Go (NoGo does not exist)
 
-    Preprocessing steps
-    ^^^^^^^^^^^^^^^^^^^
-    - Reconstruct pseudo-trials for each experimental condition.
-    - Define the regressor matrix X and normalize the regressors.
-    - Z-score the activity of each neuron across all the pseudo-trials.
-    - Denoise with Principal Component Analysis (PCA): Fit the PCA on the means intra-condition,
-      keep the first components which explain 90% of the variance, invert the transformation to
-      obtain the regressand matrix Y (to predict).
-
-    Analysis Steps
-	^^^^^^^^^^^^^^
-    - Fit the linear regression model and retrieve the coefficients.
-    - Assess the model with cross-validation ?
-    - Compute the ePAIRS distribution across the population of neurons.
-    - Fit a GMM on the distribution of the selectivity coefficients.
-    - Estimate the number of subpopulations by the log-likelihood increase for each additional
-      cluster
-
-    Data Structures Milestones
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^
-    - TrialsProperties
-    - PseudoTrialsSelection
-    - Regressors (matrix X)
-    - FiringRatesPopulation (matrix Y, both before and after z-scoring and denoising)
-    - SelectivityCoefficients (matrix B)
-    - EPAIRSModel
-    - GMMModel
-
     """
 
-    REQUIRED_PATHS = frozenset({"path_units", "path_excluded"})
+    REQUIRED_FACTORS = MappingProxyType(
+        {
+            "task": frozenset([Task("PTD"), Task("CLK")]),
+            "attention": frozenset([Attention("a")]),  # Fixed value
+            "category": frozenset([Category("R"), Category("T")]),
+            "behavior": frozenset([Behavior("Go"), Behavior("NoGo")]),
+        }
+    )
+
+
+class SubpopulationAnalysis(Pipeline):
+    """
+    Pipeline to format population data.
+
+    Attributes
+    ----------
+        path_units : Path | str
+                Path to the file containing the units in the population.
+        path_excluded : Path | str
+                Path to the file containing the units to exclude from the analysis.
+    """
+
+    PATH_INPUTS = frozenset(["path_units", "path_excluded", "path_trial_prop"])
+    PATH_OUTPUTS = frozenset()
+    LOADERS = frozenset(["loader_units", "loader_excluded", "loader_trial_prop"])
+    SAVERS = frozenset()
+
+    def __init__(
+        self,
+        area: Area,
+        training: Training,
+        path_units: PathRuler,
+        path_excluded: PathRuler,
+        path_trial_prop: PathRuler,
+        exp_cond_type: PipelineCondition,
+        ensemble_size: int | None = None,  # all units in the population
+        n_ensembles_max: int = 1,  # only one pseudo-population
+        loader_units: Type[Loader] = LoaderCSVtoList,
+        loader_excluded: Type[Loader] = LoaderCSVtoList,
+        loader_trial_prop: Type[Loader] = LoaderCSVtoList,
+        **kwargs
+    ) -> None:
+        super().__init__(**kwargs)
+        self.area = area
+        self.training = training
+        self.exp_cond_type = exp_cond_type
+        self.ensemble_size = ensemble_size
+        self.n_ensembles_max = n_ensembles_max
+        self.loader_units = loader_units
+        self.loader_excluded = loader_excluded
+        self.loader_trial_prop = loader_trial_prop
+        self.path_units = path_units
+        self.path_excluded = path_excluded
+        self.path_trial_prop = path_trial_prop
 
     def execute(self, **kwargs) -> None:
         """
         Implement the abstract method from the base class `Pipeline`.
         """
-        # Identify PFC neurons
-        all_units = LoaderCSVtoList(self.path_units).load()  # type: ignore[attr-defined] # pylint: disable=no-member
-        excluded = LoaderCSVtoList(self.path_excluded).load()  # type: ignore[attr-defined] # pylint: disable=no-member
-        selector = SelectUnits(all_units, excluded)
-        units = selector.execute()
+        # Initialize the data structure
+        data_structure = FiringRatesPop(area=self.area, training=self.training)
 
-        # Build ensembles and pseudo-populations
-        ensemble_size = len(units)  # all units in the population
-        n_ensembles_max = 1  # only one pseudo-population
-        builder = EnsemblesBuilder(ensemble_size=ensemble_size, n_ensembles_max=n_ensembles_max)
-        coord_units = builder.build(units=units, seed=0)
+        # Identify neurons in the area of interest
+        all_units = self.loader_units(self.path_units.get_path()).load()
+        excluded = self.loader_excluded(self.path_excluded.get_path()).load()
+        units = Excluder().process(candidates=all_units, excluded=excluded)
+        # Retrieve each unit's file containing its trials properties
+        trials_props: List[TrialsProperties] = [self.loader_trial_prop(self.path_trial_prop(unit).get_path()).load() for unit in units]  # type: ignore
+        assert all([isinstance(tp, TrialsProperties) for tp in trials_props])
 
         # Build pseudo-trials
-        # Select the trials in the 4 conditions of interest
-        attn = Attention("a")  # always active (task engagement)
-        conditions = ExpCondition.generate_conditions()
-        # Set the number of pseudo-trials to form in each condition
+        # Define the conditions of interest
+        exp_conds = self.exp_cond_type.generate()  # ExpConditionUnion = list of ExpCondition
+        # Count the number of trials available for each unit in the population
+        counts = {cond: {unit: 0 for unit in units} for cond in exp_conds}
+        for unit, tp in zip(units, trials_props):
+            coords = CoordManager(**tp.get_coords_from_dim("trials"))
+            for cond in exp_conds:
+                counts[cond][unit] = coords.count(cond)
+
+        # Build ensembles (pseudo-populations)
+        ens_size = len(units) if self.ensemble_size is None else self.ensemble_size
+        builder = EnsemblesBuilder(ensemble_size=ens_size, n_ensembles_max=self.n_ensembles_max)
+        coord_units = builder.build(units=units, seed=0)
+        data_structure.set_coord("units", coord_units)
+
+
+# The relevant file has the format of a data structure and contains the experimental factors for
+# each trial (slot). It is the result of parsing the .m files for each session, but is now unit
+# specific to allow specification of excluded trials. It is located in each unit's directory. To
+# retrieve it, use the dill loader with a path ruler which takes the unit name as an argument.
+
+
+# Set the number of pseudo-trials to form in each condition
