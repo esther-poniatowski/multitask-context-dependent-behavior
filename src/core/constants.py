@@ -75,3 +75,6 @@ condition of interest and fold."""
 
 BOOTSTRAP_THRES_PERC = 0.3
 """Threshold percentage of the number of trials to consider the bootstrap method."""
+
+N_FOLDS = 3
+"""Number of folds for cross-validation."""
