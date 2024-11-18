@@ -26,6 +26,7 @@ nspikes
 ntpts
 ntrials
 outc
+perc
 Perigenual
 POSTSTIM
 Prelimbic
@@ -50,6 +51,7 @@ stratifier
 t_bin
 T_SHOCK
 Telesto
+thres
 tpts
 TRIALSTART
 TRIALSTOP

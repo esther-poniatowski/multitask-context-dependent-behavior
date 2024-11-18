@@ -5,6 +5,7 @@ docformat
 docstrings
 genindex
 intersphinx
+literalinclude
 maxdepth
 modindex
 numpydoc
