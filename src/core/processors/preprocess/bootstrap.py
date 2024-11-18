@@ -44,7 +44,7 @@ from typing import TypeAlias, Any, Tuple
 
 import numpy as np
 
-from core.constants import N_TRIALS_MIN
+from core.constants import N_TRIALS_MIN, BOOTSTRAP_THRES_PERC
 from core.processors.base_processor import Processor
 
 
@@ -119,9 +119,9 @@ class Bootstrapper(Processor):
     def __init__(self, n_pseudo: int) -> None:
         super().__init__(n_pseudo=n_pseudo)
 
-    def _process(self, **input_data: Any) -> PseudoTrials:
+    def _process(self, counts: Counts | None = None, **input_data: Any) -> PseudoTrials:
         """Implement the template method called in the base class `process` method."""
-        counts = input_data["counts"]
+        assert counts is not None
         pseudo_trials = self.combine_trials(counts, self.n_pseudo)
         return pseudo_trials
 
@@ -205,7 +205,9 @@ class Bootstrapper(Processor):
     # --- Utility Methods --------------------------------------------------------------------------
 
     @staticmethod
-    def eval_n_pseudo(counts: Counts, n_min: int = N_TRIALS_MIN, thres_perc: float = 0.5) -> int:
+    def eval_n_pseudo(
+        counts: Counts, n_min: int = N_TRIALS_MIN, thres_perc: float = BOOTSTRAP_THRES_PERC
+    ) -> int:
         """
         Determine a number of pseudo-trials to generate from the statistics of the counts.
 
