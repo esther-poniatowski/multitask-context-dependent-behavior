@@ -87,16 +87,13 @@ class SubpopulationAnalysisCondition(PipelineCondition):
     )
 
 
-class SubpopulationAnalysis(Pipeline):
+class FormatPopulationData(Pipeline):
     """
     Pipeline to format population data.
 
     Attributes
     ----------
-        path_units : Path | str
-                Path to the file containing the units in the population.
-        path_excluded : Path | str
-                Path to the file containing the units to exclude from the analysis.
+
     """
 
     PATH_INPUTS = frozenset(["path_units", "path_excluded", "path_trial_prop"])
@@ -106,61 +103,74 @@ class SubpopulationAnalysis(Pipeline):
 
     def __init__(
         self,
-        area: Area,
-        training: Training,
-        path_units: PathRuler,
-        path_excluded: PathRuler,
-        path_trial_prop: PathRuler,
         exp_cond_type: PipelineCondition,
         ensemble_size: int | None = None,  # all units in the population
         n_ensembles_max: int = 1,  # only one pseudo-population
-        coords_trials: Dict[str, Type[CoordExpFactor]] = {},
-        loader_units: Type[Loader] = LoaderCSVtoList,
-        loader_excluded: Type[Loader] = LoaderCSVtoList,
-        loader_trial_prop: Type[Loader] = LoaderCSVtoList,
+        coords_trials: Dict[str, Type[CoordExpFactor]] | None = None,
         **kwargs
     ) -> None:
         super().__init__(**kwargs)
-        self.area = area
-        self.training = training
+        # Define the experimental conditions of interest
         self.exp_cond_type = exp_cond_type
+        self.exp_conds = self.exp_cond_type.generate()  # ExpConditionUnion = list of ExpCondition
+        #
         self.ensemble_size = ensemble_size
         self.n_ensembles_max = n_ensembles_max
-        self.coords_trials = coords_trials
-        self.loader_units = loader_units
-        self.loader_excluded = loader_excluded
-        self.loader_trial_prop = loader_trial_prop
-        self.path_units = path_units
-        self.path_excluded = path_excluded
-        self.path_trial_prop = path_trial_prop
+        self.coords_trials = coords_trials if coords_trials is not None else {}
 
-    def execute(self, **kwargs) -> None:
+    def execute(
+        self,
+        area: Area = Area("PFC"),
+        training: Training = Training(False),
+        loader_units: Loader | None = None,
+        loader_excluded: Loader | None = None,
+        loaders_trial_prop: List[Loader] | None = None,
+        **kwargs
+    ) -> None:
         """
         Implement the abstract method from the base class `Pipeline`.
+
+        Arguments
+        ---------
+        area : Area
+            Brain area of interest.
+        training : Training
+            Training status of the animals.
+        loader_units : Loader
+            Loader for the file containing the units in the population.
+        loader_excluded : Loader
+            Loader for the file containing the units to exclude from the analysis.
+        loaders_trial_prop : List[Loader]
+            Loaders for the files containing the trial properties of each unit in the population.
         """
+        assert loader_units is not None
+        assert loader_excluded is not None
+        assert loaders_trial_prop is not None
+
         # Initialize the data structure
-        data_structure = FiringRatesPop(area=self.area, training=self.training)
+        data_structure = FiringRatesPop(area=area, training=training)
 
         # Identify neurons in the area of interest
-        all_units = self.loader_units(self.path_units.get_path()).load()
-        excluded = self.loader_excluded(self.path_excluded.get_path()).load()
-        units = Excluder().process(candidates=all_units, excluded=excluded)
+        all_units = loader_units.load()
+        excluded = loader_excluded.load()
+        units = Excluder().exclude_by_difference(candidates=all_units, intruders=excluded)
         # Retrieve each unit's file containing its trials properties
-        trials_props: List[TrialsProperties] = [self.loader_trial_prop(self.path_trial_prop(unit).get_path()).load() for unit in units]  # type: ignore
+        trials_props: List[TrialsProperties] = [loader.load() for loader in loaders_trial_prop]
         assert all([isinstance(tp, TrialsProperties) for tp in trials_props])
 
-        # Build pseudo-trials
-        # Define the conditions of interest
-        exp_conds = self.exp_cond_type.generate()  # ExpConditionUnion = list of ExpCondition
+        # Determine the number of trials to form in each condition
+
         # Count the number of trials available for each unit in the population
-        counts = {cond: {unit: 0 for unit in units} for cond in exp_conds}
+        counts = {cond: {unit: 0 for unit in units} for cond in self.exp_conds}
+        coords_by_unit = [CoordManager(**tp.get_coords_from_dim("trials")) for tp in trials_props]
         for unit, tp in zip(units, trials_props):
-            coords = CoordManager(**tp.get_coords_from_dim("trials"))
-            for cond in exp_conds:
+            for cond in self.exp_conds:
                 counts[cond][unit] = coords.count(cond)
+        n_by_cond = {cond: 0 for cond in self.exp_conds}  # TODO
+
+        # Build pseudo-trials
 
         # Build the trial-related coordinates
-        n_by_cond = {cond: 0 for cond in exp_conds}  # TODO
         builder_trials_coords = TrialCoordsBuilder(n_by_cond=n_by_cond)
         for name, coord_type in self.coords_trials.items():
             coord = builder_trials_coords.build(coord_type=coord_type)

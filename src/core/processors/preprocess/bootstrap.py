@@ -268,31 +268,3 @@ class Bootstrapper(Processor):
         # Determine the percentile of the distribution of counts
         n_pseudo = int(np.percentile(counts, 100 * thres_perc))
         return n_pseudo
-
-    @staticmethod
-    def exclude_units(counts: Counts, n_min: int = N_TRIALS_MIN) -> np.ndarray:
-        """
-        Identify the units with fewer trials than the minimum required.
-
-        Used to exclude these units from the pseudo-population.
-
-        Arguments
-        ---------
-        counts : Counts
-            See the argument :ref:`counts`.
-        n_min : int, default=N_PSEUDO_MIN
-            See the argument :ref:`n_min`.
-
-        Returns
-        -------
-        idx : np.ndarray
-            Indices of the units to exclude from the pseudo-population.
-
-        Implementation
-        --------------
-        The function `np.where` returns a tuple of indices where the condition is met, where each
-        element corresponds to a dimension in the input array. Here, the input array is 1D, so
-        a single element is returned. To extract the indices, the first element of the tuple is
-        used.
-        """
-        return np.where(counts < n_min)[0]
