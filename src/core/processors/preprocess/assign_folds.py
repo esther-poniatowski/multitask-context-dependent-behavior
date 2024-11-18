@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.processors.preprocess.assign_folds` [module]
+`core.processors.preprocess.assign_folds` [module]
 
 Classes
 -------
@@ -54,12 +54,18 @@ class FoldAssigner(Processor):
 
     Returns
     -------
+    fold_members: FoldMembers
+        Indices of the samples contained in each fold.
+        .. _fold_members:
+
+        Number of sub-arrays: ``k``. Shapes:
+
+        - ``n % k`` sub-arrays of size ``n // k + 1`` (to distribute the remainder's elements)
+        - ``k - (n % k)`` sub-arrays of size ``n // k``.
+
     fold_labels : FoldLabels
         Fold labels assigned to each sample. Shape: ``(n_samples,)``.
         .. _fold_labels:
-    fold_members: FoldMembers
-        Samples contained in each fold. Shape: ``(k, n_samples // k)``.
-        .. _fold_members:
 
     Methods
     -------
@@ -71,14 +77,20 @@ class FoldAssigner(Processor):
     --------
     Assign 10 samples to 3 folds:
 
+    - ``n % k = 1`` array of size ``n // k + 1 = 4``.
+    - ``k - (n % k) = 2`` arrays of size ``n // k = 3``.
+
     >>> assigner = FoldAssigner(k=3)
+    >>> fold_members = assigner.process(n_samples=10)
+    >>> fold_members
+    [array([0, 1, 2, 3]), array([4, 5, 6]), array([7, 8, 9])]
     >>> fold_labels = assigner.process(n_samples=10, mode="labels")
-    >>> print(fold_labels)
-    [0 0 1 1 2 2 0 1 2 0]
+    >>> fold_labels
+    array([0, 0, 0, 0, 1, 1, 1, 2, 2, 2])
 
     See Also
     --------
-    :class:`core.processors.preprocess.base_processor.Processor`
+    `core.processors.preprocess.base_processor.Processor`
         Base class for all processors: see class-level attributes and template methods.
     """
 
@@ -131,10 +143,9 @@ class FoldAssigner(Processor):
         See Also
         --------
         :func:`np.random.shuffle`
-        :func:`np.array_split(arr, n)`
-            Split an array of length ``l`` into ``n`` sub-arrays of maximally equal size.
-            Output (list): ``l % n`` sub-arrays of size ``l // n + 1`` and ``n - l % n`` sub-arrays
-            of size ``l // n``.
+        :func:`np.array_split(arr, k)`
+            Split an array of length ``n`` into ``k`` sub-arrays of maximally equal size, so that
+            the size difference between any two sub-arrays is at most 1.
         """
         idx = np.arange(n_samples)  # indices of the samples
         np.random.shuffle(idx)  # shuffle samples before splitting
@@ -182,3 +193,25 @@ class FoldAssigner(Processor):
         for i_fold, idx_samples in enumerate(fold_members):
             fold_labels[idx_samples] = i_fold
         return fold_labels
+
+    @staticmethod
+    def eval_min_count(k: int, n_samples: int) -> int:
+        """
+        Evaluate the minimum count of samples assigned to each fold based on the total number of
+        samples. Useful to determine the number of pseudo-trials fo form.
+
+        Rule: `count_min = n_samples // k` (see the `assign` method).
+
+        Arguments
+        ---------
+        k : int
+            Number of folds.
+        n_samples : int
+            Number of samples to assign to folds.
+
+        Returns
+        -------
+        count : int
+            Number of samples in each fold after assignment.
+        """
+        return n_samples // k
