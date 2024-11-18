@@ -69,8 +69,9 @@ T_SHOCK = 1.75
 
 # --- Trials ---
 
-N_PSEUDO_MIN = 5
-"""Minimum number of pseudo-trials in a condition and fold."""
+N_TRIALS_MIN = 5
+"""Minimum number of required trials for a unit to be included in the analysis, in each experimental
+condition of interest and fold."""
 
 ALPHA_BOOTSTRAP = 0.5
 """Variability factor to adjust the number of pseudo-trials to generate."""
