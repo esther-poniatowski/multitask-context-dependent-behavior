@@ -73,5 +73,5 @@ N_TRIALS_MIN = 5
 """Minimum number of required trials for a unit to be included in the analysis, in each experimental
 condition of interest and fold."""
 
-ALPHA_BOOTSTRAP = 0.5
-"""Variability factor to adjust the number of pseudo-trials to generate."""
+BOOTSTRAP_THRES_PERC = 0.3
+"""Threshold percentage of the number of trials to consider the bootstrap method."""
