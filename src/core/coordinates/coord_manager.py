@@ -43,7 +43,7 @@ class CoordManager:
     `__len__`
     `__repr__`
     `__iter__`
-    `check_entity`
+    `has_entity`
     `filter_by_entity`
     `match`
     `match_single`
@@ -100,7 +100,7 @@ class CoordManager:
         return zip(*self.coords)
 
     @staticmethod
-    def check_entity(entity_type: Type[Entity], coord: Coordinate) -> bool:
+    def has_entity(entity_type: Type[Entity], coord: Coordinate | Type[Coordinate]) -> bool:
         """
         Check if one coordinate is associated with one specific entity type.
 
@@ -108,7 +108,7 @@ class CoordManager:
         ---------
         entity_type : Type[Entity]
             Class bound to `Entity`, to check for.
-        coord : Coordinate
+        coord : Coordinate | Type[Coordinate]
             Coordinate to check, which should hold a class argument `ENTITY` of the same type or a
             subclass of `entity_type`.
 
@@ -154,7 +154,7 @@ class CoordManager:
             Coordinates matching the specified entity type or its subtypes, in a new `CoordManager`
             instance.
         """
-        retained = [coord for coord in self.coords if self.check_entity(entity_type, coord)]
+        retained = [coord for coord in self.coords if self.has_entity(entity_type, coord)]
         return self.__class__(*retained)
 
     def match(self, exp_cond: ExpCondition | ExpConditionUnion) -> np.ndarray:

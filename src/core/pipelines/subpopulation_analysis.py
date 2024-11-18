@@ -39,7 +39,7 @@ Data Structures Milestones:
 
 """
 from types import MappingProxyType
-from typing import List, Type
+from typing import List, Type, Dict
 
 from core.pipelines.base_pipeline import Pipeline
 from core.processors.preprocess.exclude import Excluder
@@ -47,7 +47,9 @@ from core.entities.bio_info import Area, Training
 from core.entities.exp_conditions import PipelineCondition
 from core.entities.exp_factors import Task, Attention, Category, Behavior
 from core.coordinates.coord_manager import CoordManager
+from core.coordinates.exp_factor_coord import CoordExpFactor
 from core.builders.build_ensembles import EnsemblesBuilder
+from core.builders.build_trial_coords import TrialCoordsBuilder
 from core.data_structures.firing_rates_pop import FiringRatesPop
 from core.data_structures.trials_properties import TrialsProperties
 from utils.io_data.loaders import Loader
@@ -112,6 +114,7 @@ class SubpopulationAnalysis(Pipeline):
         exp_cond_type: PipelineCondition,
         ensemble_size: int | None = None,  # all units in the population
         n_ensembles_max: int = 1,  # only one pseudo-population
+        coords_trials: Dict[str, Type[CoordExpFactor]] = {},
         loader_units: Type[Loader] = LoaderCSVtoList,
         loader_excluded: Type[Loader] = LoaderCSVtoList,
         loader_trial_prop: Type[Loader] = LoaderCSVtoList,
@@ -123,6 +126,7 @@ class SubpopulationAnalysis(Pipeline):
         self.exp_cond_type = exp_cond_type
         self.ensemble_size = ensemble_size
         self.n_ensembles_max = n_ensembles_max
+        self.coords_trials = coords_trials
         self.loader_units = loader_units
         self.loader_excluded = loader_excluded
         self.loader_trial_prop = loader_trial_prop
@@ -155,10 +159,17 @@ class SubpopulationAnalysis(Pipeline):
             for cond in exp_conds:
                 counts[cond][unit] = coords.count(cond)
 
+        # Build the trial-related coordinates
+        n_by_cond = {cond: 0 for cond in exp_conds}  # TODO
+        builder_trials_coords = TrialCoordsBuilder(n_by_cond=n_by_cond)
+        for name, coord_type in self.coords_trials.items():
+            coord = builder_trials_coords.build(coord_type=coord_type)
+            data_structure.set_coord(name, coord)
+
         # Build ensembles (pseudo-populations)
         ens_size = len(units) if self.ensemble_size is None else self.ensemble_size
-        builder = EnsemblesBuilder(ensemble_size=ens_size, n_ensembles_max=self.n_ensembles_max)
-        coord_units = builder.build(units=units, seed=0)
+        builder_ens = EnsemblesBuilder(ensemble_size=ens_size, n_ensembles_max=self.n_ensembles_max)
+        coord_units = builder_ens.build(units=units, seed=0)
         data_structure.set_coord("units", coord_units)
 
 
