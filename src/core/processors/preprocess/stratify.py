@@ -89,7 +89,7 @@ class Stratifier(Processor):
         Base class for all processors: see class-level attributes and template methods.
     """
 
-    is_random: bool = False
+    IS_RANDOM: bool = False
     UNASSIGNED_STRATUM: int = -1
 
     def __init__(self, strata_def: FeatComb | None = None):

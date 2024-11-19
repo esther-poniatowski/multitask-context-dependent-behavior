@@ -94,7 +94,7 @@ class FoldAssigner(Processor):
         Base class for all processors: see class-level attributes and template methods.
     """
 
-    is_random = True
+    IS_RANDOM = True
 
     def __init__(self, k: int):
         super().__init__(k=k)

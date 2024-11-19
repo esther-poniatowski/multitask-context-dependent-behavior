@@ -83,7 +83,7 @@ class IndexMapper(Processor):
         Base class for all processors: see class-level attributes and template methods.
     """
 
-    is_random: bool = False
+    IS_RANDOM: bool = False
 
     def __init__(self):
         super().__init__()

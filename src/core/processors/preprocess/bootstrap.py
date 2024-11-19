@@ -114,7 +114,7 @@ class Bootstrapper(Processor):
         Base class for all processors: see class-level attributes and template methods.
     """
 
-    is_random = True
+    IS_RANDOM = True
 
     def __init__(self, n_pseudo: int) -> None:
         super().__init__(n_pseudo=n_pseudo)
