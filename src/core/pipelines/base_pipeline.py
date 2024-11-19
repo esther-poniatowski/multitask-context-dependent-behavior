@@ -12,10 +12,11 @@ Notes
 Each subclass of `Pipeline` should  inherits from this class.
 """
 from abc import ABC, abstractmethod
-from pathlib import Path
-from typing import Optional, Type, FrozenSet
+from typing import FrozenSet
 
-from core.steps.base_step import Step
+from utils.io_data.base_loader import Loader
+from utils.io_data.base_saver import Saver
+from utils.storage_rulers.base_path_ruler import PathRuler
 
 
 class Pipeline(ABC):
@@ -27,8 +28,14 @@ class Pipeline(ABC):
 
     Class Attributes
     ----------------
-    REQUIRED_PATHS : FrozenSet[str]
-        Set of required paths for the pipeline execution.
+    PATH_INPUTS : FrozenSet[PathRuler]
+        Attribute names for the path rulers required to specify the paths to the input data.
+    PATH_OUTPUTS : FrozenSet[PathRuler]
+        Attribute names for the path rulers required to specify the paths to the output data.
+    LOADERS : FrozenSet[Loader]
+        Attribute names for the loaders required to load the input data.
+    SAVERS : FrozenSet[Saver]
+        Attribute names for the savers required to save the output data.
 
     Attributes
     ----------
@@ -66,29 +73,58 @@ class Pipeline(ABC):
     this steps in the next run.
     """
 
-    REQUIRED_PATHS: FrozenSet[str] = frozenset()
+    PATH_INPUTS: FrozenSet[str] = frozenset()
+    PATH_OUTPUTS: FrozenSet[str] = frozenset()
+    LOADERS: FrozenSet[str] = frozenset()
+    SAVERS: FrozenSet[str] = frozenset()
+
+    def get_required_io_handlers(self) -> FrozenSet[str]:
+        """
+        Get the names of all the required IO handlers.
+
+        Returns
+        -------
+        FrozenSet[str]
+            Names of the required IO handlers.
+        """
+        return self.PATH_INPUTS | self.PATH_OUTPUTS | self.LOADERS | self.SAVERS
 
     def __init__(self) -> None:
-        """Initialize the pipeline state and the required paths to None."""
+        """Initialize the pipeline state and the required attributes to None."""
         self.ready = False
-        for path in self.REQUIRED_PATHS:
-            setattr(self, path, None)
+        for attr in self.get_required_io_handlers():
+            setattr(self, attr, None)
 
-    def set_path(self, attr, path) -> None:
+    def set_io(self, attr, handler) -> None:
         """
-        Set the path to one input or output file required for the pipeline execution.
+        Set the handler to perform a required functionality, designated by the attribute.
 
         Arguments
         ---------
         attr : str
-                Name of the path attribute to set.
-        path : Path | str
-                Actual path to the file for input or output.
+            Name of the attribute to set among the IO_HANDLERS.
+        handler : type
+            Class of the io handler selected to perform the required functionality.
+
+        Raises
+        ------
+        AttributeError
+            If the attribute is not valid for an IO handler.
+        TypeError
+            If the handler type is not valid.
         """
-        assert attr in self.REQUIRED_PATHS, f"Invalid path attribute: {attr}"
-        if isinstance(path, str):
-            path = Path(path)
-        setattr(self, attr, path)
+        if not attr in self.get_required_io_handlers():
+            raise AttributeError(f"Invalid attribute: {attr}")
+        if attr in self.PATH_INPUTS | self.PATH_OUTPUTS:
+            if not issubclass(handler, PathRuler):
+                raise TypeError(f"Invalid handler type: {handler} not a PathRuler")
+        elif attr in self.LOADERS:
+            if not issubclass(handler, Loader):
+                raise TypeError(f"Invalid handler type: {handler} not a Loader")
+        elif attr in self.SAVERS:
+            if not issubclass(handler, Saver):
+                raise TypeError(f"Invalid handler type: {handler} not a Saver")
+        setattr(self, attr, handler)
 
     @abstractmethod
     def execute(self, **kwargs) -> None:
