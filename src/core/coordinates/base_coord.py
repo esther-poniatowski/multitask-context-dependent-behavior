@@ -50,8 +50,11 @@ class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
 
     Methods
     -------
+    `set_metadata`
     `validate`
     `from_shape`
+    `get_entity`
+    `has_entity`
     """
 
     ENTITY: Type[EntityType]
@@ -122,7 +125,11 @@ class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
 
         Notes
         -----
-        Override this method in subclasses for more efficient tests if necessary.
+        If necessary, override this method in subclasses for more efficient or custom tests.
+
+        See Also
+        --------
+        `Entity.is_valid`
         """
         values = np.asarray(values)  # convert to numpy array for processing
         is_valid = np.vectorize(cls.ENTITY.is_valid)(values)  # apply element-wise
@@ -158,3 +165,34 @@ class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
             Entity type associated with the coordinate.
         """
         return cls.ENTITY
+
+    @classmethod
+    def has_entity(cls, entity_type: Type[Entity]) -> bool:
+        """
+        Check if the coordinate is associated with one specific entity type.
+
+        Arguments
+        ---------
+        entity_type : Type[Entity]
+            Class bound to `Entity`, to check for.
+
+        Returns
+        -------
+        bool
+            True if the coordinate holds a class argument `ENTITY` of the same type or a subclass of
+            `entity_type`.
+
+        Examples
+        --------
+        Check for the entity `ExpFactor` for `CoordTask` (superclass of `Task` entity):
+
+        >>> coord_task = CoordTask(["PTD", "PTD", "CLK"])
+        >>> coord_task.has_entity(ExpFactor)
+        True
+
+        Check for the entity `Attention`:
+
+        >>> coord_task.has_entity(Attention)
+        False
+        """
+        return issubclass(cls.get_entity(), entity_type)
