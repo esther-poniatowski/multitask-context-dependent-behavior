@@ -35,17 +35,12 @@ Implementation
 3. Combine trials across units to form actual pseudo-trials by shuffling the trials retained for
    each unit.
 """
-# Disable error codes for attributes which are not detected by the type checker:
-# (configuration and data attributes are initialized by the base class constructor)
-# mypy: disable-error-code="attr-defined"
-# pylint: disable=no-member
-
 from typing import TypeAlias, Any, Tuple
 
 import numpy as np
 
 from core.constants import N_TRIALS_MIN, BOOTSTRAP_THRES_PERC
-from core.processors.base_processor import Processor
+from core.processors.base_processor import Processor, set_random_state
 
 
 Counts: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
@@ -62,24 +57,10 @@ class Bootstrapper(Processor):
     """
     Generate pseudo-trials through an algorithm inspired by the hierarchical bootstrap method.
 
-    Configuration Attributes
-    ------------------------
+    Attributes
+    ----------
     n_pseudo : int
         Total number of pseudo-trials to generate for the current run of the processor.
-
-    Processing Arguments
-    --------------------
-    counts : Counts
-        Numbers of trials available for each unit in the pseudo-population.
-        Shape: ``(n_units,)``.
-        .. _counts:
-
-    Returns
-    -------
-    pseudo_trials : PseudoTrials
-        Indices of the trials to pick from each unit to form each pseudo-trial.
-        Shape: ``(n_units, n_pseudo)``.
-        .. _pseudo_trials:
 
     Methods
     -------
@@ -110,24 +91,38 @@ class Bootstrapper(Processor):
 
     See Also
     --------
-    :class:`core.processors.preprocess.base_processor.Processor`
-        Base class for all processors: see class-level attributes and template methods.
+    `core.processors.preprocess.base_processor.Processor`
     """
 
-    IS_RANDOM = True
-
     def __init__(self, n_pseudo: int) -> None:
-        super().__init__(n_pseudo=n_pseudo)
+        self.n_pseudo = n_pseudo
 
-    def _process(self, counts: Counts | None = None, **input_data: Any) -> PseudoTrials:
-        """Implement the template method called in the base class `process` method."""
+    @set_random_state
+    def process(self, counts: Counts | None = None, seed: int = 0, **kwargs) -> PseudoTrials:
+        """
+        Implement the template method called in the base class `process` method.
+
+        Arguments
+        ----------
+        counts : Counts
+            Numbers of trials available for each unit in the pseudo-population.
+            Shape: ``(n_units,)``.
+
+        Returns
+        -------
+        pseudo_trials : PseudoTrials
+            Indices of the trials to pick from each unit to form each pseudo-trial.
+            Shape: ``(n_units, n_pseudo)``.
+        """
         assert counts is not None
         pseudo_trials = self.combine_trials(counts, self.n_pseudo)
         return pseudo_trials
 
     # --- Processing Methods -----------------------------------------------------------------------
 
-    def pick_trials(self, n: int, n_pseudo: int) -> TrialsIndUnit:
+    @staticmethod
+    @set_random_state
+    def pick_trials(n: int, n_pseudo: int, seed: int = 0) -> TrialsIndUnit:
         """
         Pick trials's indices from a single unit for future inclusion among the pseudo-trials.
 
@@ -137,6 +132,8 @@ class Bootstrapper(Processor):
             Number of trials available for the considered unit.
         n_pseudo : int
             Number of pseudo-trials to generate.
+        seed : int, default=0
+            Seed for reproducibility.
 
         Returns
         -------
@@ -178,7 +175,9 @@ class Bootstrapper(Processor):
             idx = np.concatenate((idx, np.random.choice(n, size=r, replace=False)))
         return idx
 
-    def combine_trials(self, counts: Counts, n_pseudo: int) -> PseudoTrials:
+    @staticmethod
+    @set_random_state
+    def combine_trials(counts: Counts, n_pseudo: int, seed: int = 0) -> PseudoTrials:
         """
         Combine trials across units to form pseudo-trials.
 
@@ -197,7 +196,7 @@ class Bootstrapper(Processor):
             available trials.
             Shape: ``(n_units, n_pseudo)``.
         """
-        idx = np.array([self.pick_trials(n, n_pseudo) for n in counts])
+        idx = np.array([Bootstrapper.pick_trials(n, n_pseudo) for n in counts])
         for trials_unit in idx:
             np.random.shuffle(trials_unit)  # shuffle within each unit to diversify pairings
         return idx
@@ -219,11 +218,10 @@ class Bootstrapper(Processor):
         Arguments
         ---------
         counts : Counts
-            See the argument :ref:`counts`.
+            See the argument `counts` in the `process` method.
         n_min : int, default=N_PSEUDO_MIN
             Minimum number of pseudo-trials required for a unit to be included in the
             pseudo-population.
-            .. _n_min:
         thres_perc : float, default=0.3
             Threshold percentile of the distribution of counts at which the number of pseudo-trials
             is set.
