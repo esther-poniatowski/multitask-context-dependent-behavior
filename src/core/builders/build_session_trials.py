@@ -15,7 +15,7 @@ Notes
 
 from typing import Optional
 
-from core.builders.base_builder import DataBuilder
+from core.builders.base_builder import DataStructureBuilder
 from core.coordinates.base_coord import Coordinate
 from core.coordinates.exp_factor_coord import CoordCategory
 from core.coordinates.exp_structure_coord import CoordBlock, CoordSlot
@@ -26,7 +26,7 @@ from core.data_structures.events_properties import EventsProperties
 from core.data_structures.trials_properties import TrialsProperties
 
 
-class TrialsPropertiesBuilder(DataBuilder[EventsProperties, TrialsProperties]):
+class TrialsPropertiesBuilder(DataStructureBuilder[EventsProperties, TrialsProperties]):
     """
     Build a `TrialsProperties` data structure from a `EventsProperties` data structure.
 
@@ -139,7 +139,7 @@ class TrialsPropertiesBuilder(DataBuilder[EventsProperties, TrialsProperties]):
 
         See Also
         --------
-        `DataBuilder.initialize_core_data`
+        `DataStructureBuilder.initialize_core_data`
             Initialize the core data array with empty values (parent method).
 
         """

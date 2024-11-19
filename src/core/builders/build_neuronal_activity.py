@@ -23,7 +23,7 @@ from typing import List, Tuple, Dict, Optional, Mapping
 
 import numpy as np
 
-from core.builders.base_builder import DataBuilder
+from core.builders.base_builder import DataStructureBuilder
 from core.coordinates.base_coord import Coordinate
 from core.coordinates.bio_info_coord import CoordUnit
 from core.coordinates.exp_factor_coord import CoordTask, CoordAttention, CoordCategory
@@ -37,7 +37,7 @@ from core.processors.preprocess.map_indices import IndexMapper, Indices
 from core.processors.preprocess.stratify import Stratifier, Strata
 
 
-class FiringRatesPopBuilder(DataBuilder[FiringRatesPop]):
+class FiringRatesPopBuilder(DataStructureBuilder[FiringRatesPop]):
     """
     Build the firing rate activity of a pseudo-population of units in selected pseudo-trials.
 

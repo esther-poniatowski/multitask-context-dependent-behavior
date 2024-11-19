@@ -167,7 +167,7 @@ class CoordinateBuilder(Builder[ProductCoordinate]):
     `core.coordinates.base_coord.Coordinate`: Abstract base class for coordinates.
     """
 
-    # Not specific method yet
+    # No specific method yet
 
 
 ProductCoreData = TypeVar("ProductCoreData", bound=CoreData)
@@ -194,7 +194,7 @@ class CoreDataStructureBuilder(Builder[ProductCoreData]):
     `core.data_structures.core_data.CoreData`: Class for core data arrays.
     """
 
-    # Not specific method yet
+    # No specific method yet
 
 
 ProductDataStructure = TypeVar("ProductDataStructure", bound=DataStructure)
