@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.processors.preprocess.map_indices` [module]
+`core.processors.preprocess.map_indices` [module]
 
 Classes
 -------
 `IndexMapper`
 """
-# Disable error codes for attributes which are not detected by the type checker:
-# (configuration and data attributes are initialized by the base class constructor)
-# pylint: disable=useless-parent-delegation
-# pylint: disable=no-member
-# mypy: disable-error-code="attr-defined"
 
 from typing import TypeAlias, Any, Tuple, List
 
@@ -27,29 +22,6 @@ Indices: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
 class IndexMapper(Processor):
     """
     Map relative indices to absolute indices in a global data set.
-
-    Processing Arguments
-    --------------------
-    idx_absolute : Indices
-        Indices of a subset of trials within a global data set ("absolute" indices).
-        Shape: ``(n_samples,)``, with ``n_samples`` the number of samples in the *subset*.
-        Values: Comprised between ``0`` and ``n_tot - 1``, with ``n_tot`` the total number of
-        samples in the global data set.
-        .. _idx_absolute:
-    idx_relative : Indices
-        Indices of samples within the subset ("relative" indices).
-        Shape: ``(n,)``, with ``n`` an arbitrary number of selected samples.
-        Values: Comprised between ``0`` and ``n_samples - 1``.
-        .. _idx_relative:
-
-    Returns
-    -------
-    idx_mapped : Indices
-        Indices of the samples indexed in `idx_relative` within the global data set. Each index in
-        `idx_relative` has been replaced by the corresponding index in `idx_absolute`.
-        Shape: ``(n,)``, matching the shape of `idx_relative`.
-        Values: Indices from `idx_absolute`.
-        .. _idx_mapped:
 
     Methods
     -------
@@ -79,22 +51,45 @@ class IndexMapper(Processor):
 
     See Also
     --------
-    :class:`core.processors.preprocess.base_processor.Processor`
-        Base class for all processors: see class-level attributes and template methods.
+    `core.processors.preprocess.base_processor.Processor`
     """
 
-    IS_RANDOM: bool = False
+    def process(
+        self,
+        idx_absolute: np.ndarray | None = None,
+        idx_relative: np.ndarray | None = None,
+        **kwargs
+    ) -> Indices:
+        """
+        Implement the template method called in the base class `process` method.
 
-    def __init__(self):
-        super().__init__()
+        Arguments
+        ---------
+        idx_absolute : Indices
+            Indices of a subset of trials within a global data set ("absolute" indices).
+            Shape: ``(n_samples,)``, with ``n_samples`` the number of samples in the *subset*.
+            Values: Comprised between ``0`` and ``n_tot - 1``, with ``n_tot`` the total number of
+            samples in the global data set.
+        idx_relative : Indices
+            Indices of samples within the subset ("relative" indices).
+            Shape: ``(n,)``, with ``n`` an arbitrary number of selected samples.
+            Values: Comprised between ``0`` and ``n_samples - 1``.
 
-    def _process(self, **input_data: Any) -> Indices:
-        """Implement the template method called in the base class `process` method."""
-        idx_absolute = input_data["idx_absolute"]
-        idx_relative = input_data["idx_relative"]
+        Returns
+        -------
+        idx_mapped : Indices
+            Indices of the samples indexed in `idx_relative` within the global data set. Each index
+            in `idx_relative` has been replaced by the corresponding index in `idx_absolute`.
+            Shape: ``(n,)``, matching the shape of `idx_relative`.
+            Values: Indices from `idx_absolute`.
+        """
+        assert idx_absolute is not None and idx_relative is not None
         return self.relative_to_absolute(idx_absolute, idx_relative)
 
-    def relative_to_absolute(self, idx_absolute: Indices, idx_relative: Indices) -> Indices:
+    # --- Processing Methods -----------------------------------------------------------------------
+
+    @staticmethod
+    def relative_to_absolute(idx_absolute: Indices, idx_relative: Indices) -> Indices:
         """
         Transpose relative indices to absolute indices in the global dataset.
 
@@ -124,7 +119,8 @@ class IndexMapper(Processor):
 
     # --- Companion Methods ------------------------------------------------------------------------
 
-    def get_stratum_indices(self, stratum_label: int) -> Indices:
+    @staticmethod
+    def get_stratum_indices(strata: np.ndarray, stratum_label: int) -> np.ndarray:
         """
         Get the absolute indices of the samples in a specific stratum.
 
@@ -144,9 +140,10 @@ class IndexMapper(Processor):
         ``idx_in_stratum = np.where(strata == label)[0]``
         Extract the first (unique) element of the tuple since strata is one-dimensional.
         """
-        return np.where(self.strata == stratum_label)[0]
+        return np.where(strata == stratum_label)[0]
 
-    def gather_across_strata(self, data_relative: List[np.ndarray]) -> np.ndarray:
+    @staticmethod
+    def gather_across_strata(strata: np.ndarray, data_relative: List[np.ndarray]) -> np.ndarray:
         """
         Gather data obtained for distinct subset of samples (strata) in a global structure
         corresponding to the entire data set.
@@ -166,12 +163,12 @@ class IndexMapper(Processor):
             Data gathered for all the samples across distinct strata.
             Shape: ``(n_samples, ...)``. The other dimensions depend on the nature of the results.
         """
-        n_samples = self.strata.size
+        n_samples = strata.size
         other_dims = data_relative[0].shape[1:]
         shape = (n_samples,) + other_dims
         dtype = data_relative[0].dtype
         data_absolute = np.empty(shape, dtype=dtype)
         for stratum_label, results_stratum in enumerate(data_relative):
-            idx_absolute = self.get_stratum_indices(stratum_label)
+            idx_absolute = IndexMapper.get_stratum_indices(strata, stratum_label)
             data_absolute[idx_absolute] = results_stratum
         return data_absolute
