@@ -17,10 +17,6 @@ fold assignments (methods `CoordFold.get_train` and `CoordFold.get_test`). This 
 to the samples in each set through the coordinate, without resorting to external cross-validation
 tools.
 """
-# Disable error codes for attributes which are not detected by the type checker:
-# (configuration and data attributes are initialized by the base class constructor)
-# mypy: disable-error-code="attr-defined"
-# pylint: disable=no-member
 
 from typing import Literal, overload, TypeAlias, Any, Tuple, Union, List
 
@@ -39,33 +35,10 @@ class FoldAssigner(Processor):
     """
     Assign samples (trials) to folds for cross-validation.
 
-    Configuration Attributes
-    ------------------------
+    Attributes
+    ----------
     k : int
         Number of folds in which the samples will be divided.
-
-    Processing Arguments
-    --------------------
-    n_samples : int
-        Number of samples to assign to folds.
-        .. _n_samples:
-    mode : Literal["labels", "members"], default="labels"
-        Return either the fold labels or the fold members.
-
-    Returns
-    -------
-    fold_members: FoldMembers
-        Indices of the samples contained in each fold.
-        .. _fold_members:
-
-        Number of sub-arrays: ``k``. Shapes:
-
-        - ``n % k`` sub-arrays of size ``n // k + 1`` (to distribute the remainder's elements)
-        - ``k - (n % k)`` sub-arrays of size ``n // k``.
-
-    fold_labels : FoldLabels
-        Fold labels assigned to each sample. Shape: ``(n_samples,)``.
-        .. _fold_labels:
 
     Methods
     -------
@@ -97,7 +70,7 @@ class FoldAssigner(Processor):
     IS_RANDOM = True
 
     def __init__(self, k: int):
-        super().__init__(k=k)
+        self.k = k
 
     # --- Processing Methods -----------------------------------------------------------------------
 
@@ -107,10 +80,30 @@ class FoldAssigner(Processor):
     @overload
     def _process(self, mode: Literal["members"] = "members", **input_data: Any) -> FoldMembers: ...
 
-    def _process(self, mode: str = "labels", **input_data: Any) -> Union[FoldLabels, FoldMembers]:
-        """Implement the template method called in the base class `process` method."""
+    def process(self, mode: str = "labels", **input_data: Any) -> Union[FoldLabels, FoldMembers]:
+        """
+        Implement the template method called in the base class `process` method.
+
+        Arguments
+        ---------
+        n_samples : int
+            Number of samples to assign to folds.
+        mode : Literal["labels", "members"], default="labels"
+            Return either the fold labels or the fold members.
+
+        Returns
+        -------
+        fold_members: FoldMembers
+            Indices of the samples contained in each fold. Number of sub-arrays: ``k``. Shapes:
+
+            - ``n % k`` sub-arrays of size ``n // k + 1`` (to distribute the remainder's elements)
+            - ``k - (n % k)`` sub-arrays of size ``n // k``.
+
+        fold_labels : FoldLabels
+            Fold labels assigned to each sample. Shape: ``(n_samples,)``.
+        """
         n_samples = input_data["n_samples"]
-        fold_members = self.assign(n_samples)
+        fold_members = self.assign(n_samples, self.k)
         if mode == "members":
             return fold_members
         elif mode == "labels":
@@ -118,19 +111,21 @@ class FoldAssigner(Processor):
         else:
             raise ValueError(f"Invalid mode: {mode}")
 
-    def assign(self, n_samples: int) -> FoldMembers:
+    def assign(self, n_samples: int, k: int) -> FoldMembers:
         """
         Assign each sample to one fold.
 
         Arguments
         ---------
         n_samples : int
-            See the argument :ref:`n_samples`.
+            See the argument `n_samples` in the `process` method.
+        k : int
+            See the attribute `k`.
 
         Returns
         -------
         fold_members: FoldMembers
-            See the return value :ref:`fold_members`.
+            See the return value `fold_members` in the `process` method.
 
         Implementation
         --------------
@@ -149,7 +144,7 @@ class FoldAssigner(Processor):
         """
         idx = np.arange(n_samples)  # indices of the samples
         np.random.shuffle(idx)  # shuffle samples before splitting
-        fold_members = np.array_split(idx, self.k)  # split samples into k groups
+        fold_members = np.array_split(idx, k)  # split samples into k groups
         return fold_members
 
     # --- Conversion Methods -----------------------------------------------------------------------
@@ -162,12 +157,12 @@ class FoldAssigner(Processor):
         Arguments
         ---------
         fold_labels : np.ndarray
-            See the return value :ref:`fold_labels`.
+            See the return value `fold_labels` in the `process` method.
 
         Returns
         -------
         fold_members : np.ndarray
-            See the return value :ref:`fold_members`.
+            See the return value `fold_members` in the `process` method.
         """
         n_folds = np.max(fold_labels) + 1
         fold_members = [np.where(fold_labels == i)[0] for i in range(n_folds)]
@@ -181,12 +176,12 @@ class FoldAssigner(Processor):
         Arguments
         ---------
         fold_members : np.ndarray
-            See the return value :ref:`fold_members`.
+            See the return value `fold_members` in the `process` method.
 
         Returns
         -------
         fold_labels : np.ndarray
-            See the return value :ref:`fold_labels`.
+            See the return value `fold_labels` in the `process` method.
         """
         n_samples = np.max(fold_members) + 1
         fold_labels = np.full(n_samples, -1, dtype=np.int64)
@@ -195,7 +190,7 @@ class FoldAssigner(Processor):
         return fold_labels
 
     @staticmethod
-    def eval_min_count(k: int, n_samples: int) -> int:
+    def eval_min_count(n_samples: int, k: int) -> int:
         """
         Evaluate the minimum count of samples assigned to each fold based on the total number of
         samples. Useful to determine the number of pseudo-trials fo form.
@@ -204,10 +199,10 @@ class FoldAssigner(Processor):
 
         Arguments
         ---------
-        k : int
-            Number of folds.
         n_samples : int
-            Number of samples to assign to folds.
+            See the argument `n_samples` in the `process` method.
+        k : int
+            See the attribute `k`.
 
         Returns
         -------
