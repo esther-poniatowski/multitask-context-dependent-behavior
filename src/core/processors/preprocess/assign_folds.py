@@ -90,6 +90,7 @@ class FoldAssigner(Processor):
         **kwargs,
     ) -> FoldMembers: ...
 
+    @set_random_state
     def process(
         self, n_samples: int | None = None, mode: str = "labels", seed: int = 0, **kwargs
     ) -> Union[FoldLabels, FoldMembers]:
