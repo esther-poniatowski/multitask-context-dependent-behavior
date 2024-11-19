@@ -43,12 +43,11 @@ class CoordManager:
     `__len__`
     `__repr__`
     `__iter__`
-    `has_entity`
-    `filter_by_entity`
+    `filter_by_type`
     `match`
     `match_single`
     `match_union`
-    `filter`
+    `filter_idx`
     `count`
     """
 
@@ -99,62 +98,26 @@ class CoordManager:
         """
         return zip(*self.coords)
 
-    @staticmethod
-    def has_entity(entity_type: Type[Entity], coord: Coordinate | Type[Coordinate]) -> bool:
+    def filter_by_type(self, *entity_types: Type[Entity]) -> Self:
         """
-        Check if one coordinate is associated with one specific entity type.
+        Filter coordinates associated with the specified entity type(s).
 
         Arguments
         ---------
-        entity_type : Type[Entity]
-            Class bound to `Entity`, to check for.
-        coord : Coordinate | Type[Coordinate]
-            Coordinate to check, which should hold a class argument `ENTITY` of the same type or a
-            subclass of `entity_type`.
-
-        Returns
-        -------
-        bool
-            True if the coordinate is associated with the given entity type, False otherwise.
-
-        Examples
-        --------
-        Check for the entity `ExpFactor` for `CoordTask`:
-
-        >>> coord_task = CoordTask(["PTD", "PTD", "CLK"])
-        >>> validate_entity_type(ExpFactor, coord_task)
-        True
-
-        Check for the entity `ExpFactor` for `CoordTime`:
-
-        >>> coord_time = CoordTime([0, 1, 2])
-        >>> validate_entity_type(ExpFactor, coord_time)
-        False
-
-        See Also
-        --------
-        `Coordinate.get_entity`
-            Get the type of entity associated with the coordinate, which is expected to be an
-            `ExpFactor` entity for `CoordExpFactor` instances.
-        """
-        return issubclass(coord.get_entity(), entity_type)
-
-    def filter_by_entity(self, entity_type: Type[Entity]) -> Self:
-        """
-        Filter coordinates by the specified entity type.
-
-        Arguments
-        ---------
-        entity_type : Type[Entity]
-            Entity type to filter coordinates by.
+        entity_types : Type[Entity]
+            Entity type(s) to filter coordinates by.
 
         Returns
         -------
         filtered_coords : CoordManager
-            Coordinates matching the specified entity type or its subtypes, in a new `CoordManager`
-            instance.
+            Coordinates matching the specified entities type or their subtypes, in a new
+            `CoordManager` instance.
+
+        See Also
+        --------
+        `Coordinate.has_entity`
         """
-        retained = [coord for coord in self.coords if self.has_entity(entity_type, coord)]
+        retained = [c for c in self.coords if any(c.has_entity(tpe) for tpe in entity_types)]
         return self.__class__(*retained)
 
     def match(self, exp_cond: ExpCondition | ExpConditionUnion) -> np.ndarray:
@@ -253,23 +216,22 @@ class CoordManager:
         mask = np.logical_or.reduce(all_masks)
         return mask
 
-    def filter(self, condition: ExpCondition | ExpConditionUnion) -> Self:
+    def filter_idx(self, exp_cond: ExpCondition | ExpConditionUnion) -> np.ndarray:
         """
-        Filter the coordinates to retain only the samples that match the condition(s).
+        Filter the indices to retain only the indices of the samples that match the condition(s).
 
         Arguments
         ---------
-        condition : ExpCondition, ExpConditionUnion
+        exp_cond : ExpCondition, ExpConditionUnion
             Experimental condition or union of conditions to filter the coordinates by.
 
         Returns
         -------
-        filtered_coords : CoordManager
-            Coordinates that match the condition.
+        idx : np.ndarray[int]
+            Indices of the samples that match the condition(s).
         """
-        mask = self.match(condition)
-        filtered_coords = [coord[mask] for coord in self.coords]
-        return self.__class__(*filtered_coords)
+        mask = self.match(exp_cond)
+        return np.where(mask)[0]
 
     def count(self, exp_cond: ExpCondition | ExpConditionUnion) -> int:
         """
