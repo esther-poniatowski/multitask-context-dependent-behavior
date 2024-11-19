@@ -18,157 +18,120 @@ Notes
   for each unit when its folds are generated, which is the case if the unit does not have the same
   index in the population in both ensembles (which is likely to be the case since the units are
   shuffled when forming ensembles).
-- Folds assignments and bootstrapping are *stratified* by condition (task, attentional state,
-  stimulus, +fold for bootstrap) to balance trial types across groups. Shuffling is performed in
-  those operations by the dedicated processors, to balance across folds the task variables which
-  have not been considered in stratification (i.e. positional information: recording number, block
-  number, slot number). This prevents models to capture misleading temporal drift in neuronal
-  activity.
-- Error trials can be excluded from the pseudo-trials by providing the appropriate configuration.
+- Folds assignments and bootstrapping are *stratified* by experimental condition to balance trial
+  types across groups. Shuffling is performed by the dedicated processors, to balance across folds
+  the task variables which have not been considered in stratification (i.e. positional information:
+  recording number, block number, slot number). This prevents models from capturing misleading
+  temporal drift in neuronal activity.
 """
-# pylint: disable=missing-function-docstring
+
 
 from types import MappingProxyType
-from typing import List, Tuple, Dict, Optional, Mapping
+from typing import List, Tuple, Dict, Optional, Mapping, TypeVar, Type
 
 import numpy as np
 
-from core.builders.base_builder import DataBuilder
+from core.builders.base_builder import Builder
 from core.coordinates.base_coord import Coordinate
-from core.coordinates.bio_info_coord import CoordUnit
-from core.coordinates.exp_factor_coord import CoordTask, CoordAttention, CoordCategory
-from core.coordinates.time_coord import CoordTime
+from core.coordinates.coord_manager import CoordManager
 from core.data_structures.core_data import CoreData
-from core.data_structures.firing_rates import FiringRatesPop, FiringRatesUnit
-from core.processors.preprocess.assign_ensembles import EnsembleAssigner, Ensembles
+from core.entities.exp_conditions import ExpCondition
 from core.processors.preprocess.assign_folds import FoldAssigner, FoldLabels
 from core.processors.preprocess.bootstrap import Bootstrapper
 from core.processors.preprocess.map_indices import IndexMapper, Indices
 from core.processors.preprocess.stratify import Stratifier, Strata
 
+PseudoTrials = TypeVar("PseudoTrials", bound=CoreData)
+"""Type variable for the pseudo-trials data structure produced by the builder."""
 
-class PseudoTrialsBuilder(DataBuilder[FiringRatesPop]):
+
+class PseudoTrialsBuilder(Builder[CoreData]):
     """
-    Build the reconstructed pseudo-trials for a pseudo-population of units.
+    Build the reconstructed pseudo-trials for a pseudo-population of units for one experimental
+    condition.
 
     Product:`PseudoTrials` data structure.
 
     The core data in the output contains the trial indices of the trials to select from the data,
-    for each unit in an ensemble and for each fold.
-    Along with this core data, the product contains the coordinates for the trials dimensions, i.e.
-    the experimental factors which where considered to define the conditions of interest.
+    for each unit in one ensemble and for each fold.
+
     The inputs required to perform this operation include, for each unit in the population, the set
     of coordinates which jointly specify the experimental condition to which each trial belongs.
-
-    Class Attributes
-    ----------------
-    PRODUCT_CLASS : type
-        See the base class attribute.
-    TMP_DATA : Tuple[str]
-        See the base class attribute.
 
     Configuration Parameters
     ------------------------
     k : int
         Number of folds for cross-validation.
-    n_by_cond : Dict[Tuple[str, ...], int]
-        Number of pseudo-trials to generate *by condition*, common to all ensembles (determined
-        beforehand).
-        Keys: Experimental condition defined by a combination of features' values.
-        Values: Number of pseudo-trials to generate for the condition.
-    conditions : List[str]
-        (Derived) Names of the conditions to consider for stratification (task, attentional state,
-        stimulus).
-    conditions_boundaries : Dict[str, Tuple[int, int]]
-        (Derived) Start and end indices of the trials for each condition in the final data
-        structure.
-    features_coords : Dict[str, Coordinate]
-        Nature of the features to consider for stratification.
-        Keys: Names of coordinates along the trial dimension in the data structures of individual
-        units. Each corresponds to a field in the `n_by_cond` dictionary.
-        Values: Class of the coordinate to use for stratification.
-
-    Processing Attributes
-    ---------------------
-    data_per_unit : List[FiringRatesUnit]
-        Firing rates of each unit in the population.
-    seed : int
-        Seed for the random number generator, used in the ensemble assignment.
-    n_units : int
-        (Property) Number of units in the population (length of the inputs `data_per_unit`).
-    n_trials : int
-        (Property) Number of pseudo-trials to form (sum of the number of pseudo-trials to generate
-        across conditions).
+    n_pseudo : int
+        Number of pseudo-trials to generate for the experimental condition (common to all
+        ensembles).
+    exp_cond : ExpCondition
+        Experimental condition to consider for the pseudo-trials.
 
     Methods
     -------
     """
 
-    PRODUCT_CLASS = FiringRatesPop
-    TMP_DATA = ("data_per_unit", "seed", "ensembles")
+    PRODUCT_CLASS = CoreData
 
     def __init__(
         self,
-        n_folds: int,
-        n_by_cond: Dict[str, int],
-        features_coords: Mapping[str, type],
+        k: int,
+        n_pseudo: int,
+        exp_cond: ExpCondition,
     ) -> None:
         # Call the base class constructor: declare empty product and internal data
         super().__init__()
         # Store configuration parameters
-        self.n_folds = n_folds
-        self.n_by_cond = n_by_cond
-        self.conditions = list(n_by_cond.keys())
-        self.conditions_boundaries = self.allocate_conditions_indices()
-        self.features_coords = features_coords
-        # Declare attributes to store inputs and intermediate results
-        self.data_per_unit: List[FiringRatesUnit]
-        self.seed: int
-        self.ensembles: Ensembles
+        self.k = k
+        self.n_pseudo = n_pseudo
+        self.exp_cond = exp_cond
 
     def build(
-        self, data_per_unit: Optional[List[FiringRatesUnit]] = None, seed: int = 0, **kwargs
-    ) -> FiringRatesPop:
+        self, coords_by_unit: List[CoordManager] | None = None, seed: int = 0, **kwargs
+    ) -> CoreData:
         """
         Implement the base class method.
 
-        Parameters
-        ----------
-        data_per_unit : List[FiringRatesUnit]
-            See the attribute `data_per_unit`.
+        Arguments
+        ---------
+        coords_by_unit : List[CoordManager]
+            Coordinates of the trials for each unit in the population.
         seed : int
-            See the attribute `seed`.
+            Seed for the random number generator, used by the bootstraper.
 
         Returns
         -------
-
+        pseudo_trials : PseudoTrials
             Data structure product instance.
-        """
 
+        Notes
+        -----
+        - Use the unit's index within the ensemble as the seed to ensure that the folds are
+          different for the same unit in different ensembles.
+        """
+        assert coords_by_unit is not None
+        # Find the indices of the trials in the condition
+        idx_in_cond = [coords.filter_idx(self.exp_cond) for coords in coords_by_unit]
+        counts_in_cond = [len(idx) for idx in idx_in_cond]
+        # Assign trials to folds for each unit
+        assigner = FoldAssigner(k=self.k)
+        folds_labels = [
+            assigner.process(n_samples=n, seed=u, mode="labels")
+            for u, n in enumerate(counts_in_cond)
+        ]
+        # Bootstrap trial indices for the population
+        counts_by_fold = [np.sum(idx == f) for idx in folds_labels for f in range(self.k)]
+        bootstrapper = Bootstrapper(n_pseudo=self.n_pseudo)
+        idx_relative = [bootstrapper.process(counts=counts, seed=seed) for counts in counts_by_fold]
+        # Recover absolute indices in the global data set for each unit
+        mapper = IndexMapper()
+        idx_pseudo = np.ma.masked_array(np.empty_like(idx_relative), mask=True)
+        # shape: (ensemble_size, n_pseudo), values: masked as long as unset
+        for u_ens, idx in enumerate(idx_pop):
+            idx_pseudo[u_ens] = mapper.process(idx_relative=idx_relative[u_ens], idx_absolute=idx)
+        return idx_pseudo
         return self.get_product()
-
-    # --- Preliminary Operations -------------------------------------------------------------------
-
-    def allocate_conditions_indices(self) -> Dict[str, Tuple[int, int]]:
-        """
-        Set the start and end indices of the trials of each condition in the final data structure.
-
-        Those indices are used to ensure the consistency of the data between the core data and the
-        coordinates for the trials dimension.
-
-        Returns
-        -------
-        condition_boundaries : Dict[str, Tuple[int, int]]
-            Start and end indices of the trials for each condition along the trials dimension in the
-            final data structure.
-        """
-        conditions_boundaries: Dict[str, Tuple[int, int]] = {}
-        start = 0
-        for c in self.conditions:
-            end = start + self.n_by_cond[c]
-            self.conditions_boundaries[c] = (start, end)
-            start = end
-        return conditions_boundaries
 
     def stratify_by_condition(self, u_pop: int) -> Strata:
         """
@@ -255,46 +218,9 @@ class PseudoTrialsBuilder(DataBuilder[FiringRatesPop]):
         idx_fold = mapper.process(idx_absolute=idx, idx_relative=idx_relative)
         return idx_fold
 
-    def generate_folds(self, n_samples: int, u_ens: int) -> FoldLabels:
+    def generate_pseudo_trials(self, n_pseudo, idx_pop) -> np.ndarray:
         """
-        Assign trials to folds for one unit in one ensemble, for a specific condition.
-
-        Arguments
-        ---------
-        n_samples : int
-            Number of trials in the subset for a condition. Used for the argument `n_samples` of the
-            fold assigner.
-        u_ens : int
-            Index of the unit in the *ensemble*. Used for the argument `seed` of the fold assigner.
-
-        Notes
-        -----
-        - Folds are contained in a list of arrays rather than in a single array to handle the
-          variable number of trials per unit.
-        - Use the unit's index within the ensemble as the seed to ensure that the folds are
-          different for the same unit in different ensembles.
-        - Use the mode "labels" to get the fold labels directly, rather than the members. Fold
-          labels are then used for condition-based indexing to extract the indices of the trials in
-          the fold from the subset of trials in the condition.
-
-        Returns
-        -------
-        folds : FoldLabels
-            Fold labels assigned to the trials of the considered unit.
-            Shape: ``(n_samples,)``.
-            Values: Comprised between 0 and ``n_folds - 1``.
-
-        See Also
-        --------
-        `FoldAssigner`
-        """
-        assigner = FoldAssigner(k=self.n_folds)
-        folds = assigner.process(n_samples=n_samples, seed=u_ens, mode="labels")
-        return folds
-
-    def generate_pseudo_trials(self, cond, idx_pop) -> np.ndarray:
-        """
-        Generate the indices of the trials to select for each unit in one ensemble, for one
+        Generate the indices of the trials to select for each unit in a population, for one
         condition and one fold.
 
         Arguments
@@ -322,37 +248,3 @@ class PseudoTrialsBuilder(DataBuilder[FiringRatesPop]):
             Used to set the seed of the bootstrapper, since all the ensembles are different (no risk
             of duplicates).
         """
-        # Bootstrap trial indices
-        n_pseudo = self.n_by_cond[cond]
-        counts = [len(idx) for idx in idx_pop]
-        bootstrapper = Bootstrapper(n_pseudo=n_pseudo)
-        idx_relative = bootstrapper.process(counts=counts, seed=self.seed)
-        # Recover absolute indices in the global data set for each unit
-        mapper = IndexMapper()
-        idx_pseudo = np.ma.masked_array(np.empty_like(idx_relative), mask=True)
-        # shape: (ensemble_size, n_pseudo), values: masked as long as unset
-        for u_ens, idx in enumerate(idx_pop):
-            idx_pseudo[u_ens] = mapper.process(idx_relative=idx_relative[u_ens], idx_absolute=idx)
-        return idx_pseudo
-
-    # --- Construct Coordinates --------------------------------------------------------------------
-
-    def construct_trial_coords(self) -> Dict[str, Coordinate]:
-        """
-        Construct the trial coordinates for the pseudo-trials: task, attentional state, stimulus.
-
-        Returns
-        -------
-        coords : Dict[str, Coordinate]
-            Coordinates for the trial dimension in the data structure product.
-        """
-        # Initialize empty coordinates with as many trials as the total number of pseudo-trials
-        coords = {
-            name: coord_tpe(np.full((self.n_trials,), "", dtype=np.str_))
-            for name, coord_tpe in self.features_coords.items()
-        }
-        # Fill the coordinates by condition
-        for cond, (start, end) in self.conditions_boundaries.items():
-            for value, name in zip(cond, self.features_coords.keys()):
-                coords[name][start:end] = value
-        return coords

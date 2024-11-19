@@ -27,7 +27,7 @@ Creating Data structures with builders
 
 .. code-block:: python
 
-      builder = DataBuilder()
+      builder = DataStructureBuilder()
       builder.add_data(data)
       builder.add_metadata(metadata)
       data_structure = builder.build()
