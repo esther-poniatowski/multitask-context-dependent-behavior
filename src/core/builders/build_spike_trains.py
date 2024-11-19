@@ -17,7 +17,7 @@ from typing import List, Tuple, Optional, Any, TypeAlias
 
 import numpy as np
 
-from core.builders.base_builder import DataBuilder
+from core.builders.base_builder import DataStructureBuilder
 from core.coordinates.base_coord import Coordinate
 from core.coordinates.exp_factor_coord import CoordTask, CoordAttention
 from core.coordinates.exp_structure_coord import CoordRecNum
@@ -29,7 +29,7 @@ from core.processors.preprocess.align_spikes import SpikesAligner
 MetaDataSession: TypeAlias = Any
 
 
-class SpikeTrainsBuilder(DataBuilder[List[SpikeTimesRaw], SpikeTrains]):
+class SpikeTrainsBuilder(DataStructureBuilder[List[SpikeTimesRaw], SpikeTrains]):
     """
     Build a `SpikeTrains` data structure from the raw spike times for a single unit in multiple
     sessions.
@@ -247,7 +247,7 @@ class SpikeTrainsBuilder(DataBuilder[List[SpikeTimesRaw], SpikeTrains]):
 
         See Also
         --------
-        `DataBuilder.initialize_core_data`
+        `DataStructureBuilder.initialize_core_data`
             Initialize the core data array with empty values (parent method).
         `SpikesAligner.slice_epoch`
             Extract spiking times within one epoch and reset them relative to the epoch start.

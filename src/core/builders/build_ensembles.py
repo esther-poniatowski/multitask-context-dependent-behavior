@@ -7,8 +7,6 @@ Classes
 -------
 `EnsemblesBuilder`
 """
-# pylint: disable=missing-function-docstring
-
 from typing import List
 
 import numpy as np
@@ -25,29 +23,14 @@ class EnsemblesBuilder(CoordinateBuilder[CoordUnit]):
 
     Product: `CoordUnits`
 
-    Class Attributes
-    ----------------
-    PRODUCT_CLASS : type
-        See the base class attribute.
-    TMP_DATA : Tuple[str]
-        See the base class attribute.
-
-    Configuration Parameters
-    ------------------------
+    Attributes
+    ----------
     ensemble_size : int
         Number of units required to form each ensemble (imposed by the area with the lowest number
         of units).
     n_ensembles_max : int
         Maximum number of ensembles to form from the population (to limit the number of ensembles
         and computational cost for the areas with the largest populations).
-
-    Processing Attributes
-    ---------------------
-    units : List[Unit]
-        Units in the population. Each element behaves like a string, representing the unit's
-        identifier.
-    seed : int
-        Seed for the random number generator, used in the ensemble assignment.
 
     Methods
     -------
@@ -68,7 +51,6 @@ class EnsemblesBuilder(CoordinateBuilder[CoordUnit]):
     """
 
     PRODUCT_CLASS = CoordUnit
-    TMP_DATA = ("data_per_unit", "seed", "ensembles")
 
     def __init__(self, ensemble_size: int, n_ensembles_max: int) -> None:
         # Call the base class constructor: declare empty product and internal data
@@ -81,12 +63,13 @@ class EnsemblesBuilder(CoordinateBuilder[CoordUnit]):
         """
         Implement the base class method.
 
-        Parameters
-        ----------
+        Arguments
+        ---------
         units : List[Unit]
-            See the attribute `units`.
+            Units in the population. Each element behaves like a string, representing the unit's
+            identifier.
         seed : int
-            See the attribute `seed`.
+            Seed for the random number generator, used in the ensemble assignment.
 
         Returns
         -------
