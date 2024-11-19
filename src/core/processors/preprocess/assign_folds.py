@@ -22,7 +22,7 @@ from typing import Literal, overload, TypeAlias, Any, Tuple, Union, List
 
 import numpy as np
 
-from core.processors.base_processor import Processor
+from core.processors.base_processor import Processor, set_random_state
 
 FoldLabels: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
 """Type alias for fold labels assigned to each sample."""
@@ -67,20 +67,32 @@ class FoldAssigner(Processor):
         Base class for all processors: see class-level attributes and template methods.
     """
 
-    IS_RANDOM = True
-
     def __init__(self, k: int):
         self.k = k
 
     # --- Processing Methods -----------------------------------------------------------------------
 
     @overload
-    def process(self, mode: Literal["labels"] = "labels", **input_data: Any) -> FoldLabels: ...
+    def process(
+        self,
+        n_samples: int | None = None,
+        mode: Literal["labels"] = "labels",
+        seed: int = 0,
+        **kwargs,
+    ) -> FoldLabels: ...
 
     @overload
-    def process(self, mode: Literal["members"] = "members", **input_data: Any) -> FoldMembers: ...
+    def process(
+        self,
+        n_samples: int | None = None,
+        mode: Literal["members"] = "members",
+        seed: int = 0,
+        **kwargs,
+    ) -> FoldMembers: ...
 
-    def process(self, mode: str = "labels", **input_data: Any) -> Union[FoldLabels, FoldMembers]:
+    def process(
+        self, n_samples: int | None = None, mode: str = "labels", seed: int = 0, **kwargs
+    ) -> Union[FoldLabels, FoldMembers]:
         """
         Implement the template method called in the base class `process` method.
 
@@ -90,6 +102,8 @@ class FoldAssigner(Processor):
             Number of samples to assign to folds.
         mode : Literal["labels", "members"], default="labels"
             Return either the fold labels or the fold members.
+        seed : int
+            Seed for the random number generator.
 
         Returns
         -------
@@ -102,7 +116,7 @@ class FoldAssigner(Processor):
         fold_labels : FoldLabels
             Fold labels assigned to each sample. Shape: ``(n_samples,)``.
         """
-        n_samples = input_data["n_samples"]
+        assert n_samples is not None
         fold_members = self.assign(n_samples, self.k)
         if mode == "members":
             return fold_members
@@ -111,7 +125,8 @@ class FoldAssigner(Processor):
         else:
             raise ValueError(f"Invalid mode: {mode}")
 
-    def assign(self, n_samples: int, k: int) -> FoldMembers:
+    @set_random_state
+    def assign(self, n_samples: int, k: int, seed: int = 0) -> FoldMembers:
         """
         Assign each sample to one fold.
 
