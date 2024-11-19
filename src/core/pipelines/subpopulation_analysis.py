@@ -36,15 +36,21 @@ Data Structures Milestones:
 - EPAIRSModel
 - GMMModel
 
+# The relevant file has the format of a data structure and contains the experimental factors for
+# each trial (slot). It is the result of parsing the .m files for each session, but is now unit
+# specific to allow specification of excluded trials. It is located in each unit's directory. To
+# retrieve it, use the dill loader with a path ruler which takes the unit name as an argument.
 
 """
 from types import MappingProxyType
 from typing import List, Type, Dict
 
+from core.constants import N_FOLDS, N_TRIALS_MIN, BOOTSTRAP_THRES_PERC
 from core.pipelines.base_pipeline import Pipeline
 from core.processors.preprocess.exclude import Excluder
+from core.processors.preprocess.count_trials import SampleSizer, TrialsCounter
 from core.entities.bio_info import Area, Training
-from core.entities.exp_conditions import PipelineCondition
+from core.entities.exp_conditions import PipelineCondition, ExpCondition
 from core.entities.exp_factors import Task, Attention, Category, Behavior
 from core.coordinates.coord_manager import CoordManager
 from core.coordinates.exp_factor_coord import CoordExpFactor
@@ -53,10 +59,6 @@ from core.builders.build_trial_coords import TrialCoordsBuilder
 from core.data_structures.firing_rates_pop import FiringRatesPop
 from core.data_structures.trials_properties import TrialsProperties
 from utils.io_data.loaders import Loader
-from utils.storage_rulers.base_path_ruler import PathRuler
-
-
-from utils.io_data.loaders import LoaderCSVtoList
 
 
 class SubpopulationAnalysisCondition(PipelineCondition):
@@ -106,6 +108,9 @@ class FormatPopulationData(Pipeline):
         exp_cond_type: PipelineCondition,
         ensemble_size: int | None = None,  # all units in the population
         n_ensembles_max: int = 1,  # only one pseudo-population
+        k: int = N_FOLDS,
+        n_min: int = N_TRIALS_MIN,
+        thres_perc: float = BOOTSTRAP_THRES_PERC,
         coords_trials: Dict[str, Type[CoordExpFactor]] | None = None,
         **kwargs
     ) -> None:
@@ -117,6 +122,9 @@ class FormatPopulationData(Pipeline):
         self.ensemble_size = ensemble_size
         self.n_ensembles_max = n_ensembles_max
         self.coords_trials = coords_trials if coords_trials is not None else {}
+        self.k = k
+        self.n_min = n_min
+        self.thres_perc = thres_perc
 
     def execute(
         self,
@@ -153,20 +161,23 @@ class FormatPopulationData(Pipeline):
         # Identify neurons in the area of interest
         all_units = loader_units.load()
         excluded = loader_excluded.load()
-        units = Excluder().exclude_by_difference(candidates=all_units, intruders=excluded)
+        units = Excluder.exclude_by_difference(candidates=all_units, intruders=excluded)
         # Retrieve each unit's file containing its trials properties
         trials_props: List[TrialsProperties] = [loader.load() for loader in loaders_trial_prop]
         assert all([isinstance(tp, TrialsProperties) for tp in trials_props])
+        # Retrieve the coordinates of interest
+        coords_by_unit = [CoordManager(**tp.get_coords_from_dim("trials")) for tp in trials_props]
 
         # Determine the number of trials to form in each condition
-
         # Count the number of trials available for each unit in the population
-        counts = {cond: {unit: 0 for unit in units} for cond in self.exp_conds}
-        coords_by_unit = [CoordManager(**tp.get_coords_from_dim("trials")) for tp in trials_props]
-        for unit, tp in zip(units, trials_props):
-            for cond in self.exp_conds:
-                counts[cond][unit] = coords.count(cond)
-        n_by_cond = {cond: 0 for cond in self.exp_conds}  # TODO
+        counter = TrialsCounter(coords_by_unit=coords_by_unit)
+        counts_by_cond = {cond: counter.process(exp_cond=cond) for cond in self.exp_conds}
+        n_by_cond: Dict[ExpCondition, int] = {
+            cond: SampleSizer(counts).process(
+                k=self.k, n_min=self.n_min, thres_perc=self.thres_perc
+            )
+            for cond, counts in counts_by_cond.items()
+        }
 
         # Build pseudo-trials
 
@@ -181,12 +192,3 @@ class FormatPopulationData(Pipeline):
         builder_ens = EnsemblesBuilder(ensemble_size=ens_size, n_ensembles_max=self.n_ensembles_max)
         coord_units = builder_ens.build(units=units, seed=0)
         data_structure.set_coord("units", coord_units)
-
-
-# The relevant file has the format of a data structure and contains the experimental factors for
-# each trial (slot). It is the result of parsing the .m files for each session, but is now unit
-# specific to allow specification of excluded trials. It is located in each unit's directory. To
-# retrieve it, use the dill loader with a path ruler which takes the unit name as an argument.
-
-
-# Set the number of pseudo-trials to form in each condition
