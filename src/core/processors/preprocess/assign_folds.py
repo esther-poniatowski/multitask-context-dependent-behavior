@@ -126,8 +126,9 @@ class FoldAssigner(Processor):
         else:
             raise ValueError(f"Invalid mode: {mode}")
 
+    @staticmethod
     @set_random_state
-    def assign(self, n_samples: int, k: int, seed: int = 0) -> FoldMembers:
+    def assign(n_samples: int, k: int, seed: int = 0) -> FoldMembers:
         """
         Assign each sample to one fold.
 
