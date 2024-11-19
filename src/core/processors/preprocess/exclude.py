@@ -33,7 +33,7 @@ class Excluder:
     This class is not a subclass of `Processor`. It only provides static utilities.
     """
 
-    is_random: bool = False
+    IS_RANDOM: bool = False
 
     # --- Processing Methods -----------------------------------------------------------------------
 

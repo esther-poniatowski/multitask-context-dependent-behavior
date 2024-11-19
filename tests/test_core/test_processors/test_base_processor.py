@@ -64,7 +64,7 @@ def subclass():
     -----
     To test the main functionalities of the `Processor` class:
 
-    - Set the flag `is_random` to `True` to test random state initialization.
+    - Set the flag `IS_RANDOM` to `True` to test random state initialization.
     - Initialize with a single parameter `param`, which becomes the unique configuration parameter.
       Call the parent constructor and pass it as a named argument. Give a default value to
       facilitate tests.
@@ -76,7 +76,7 @@ def subclass():
     """
 
     class TestClass(Processor):
-        is_random = True
+        IS_RANDOM = True
 
         def __init__(self, param: int = 1):
             super().__init__(param=param)

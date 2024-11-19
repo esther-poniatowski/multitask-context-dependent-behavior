@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.processors.preprocess.assign_ensembles` [module]
+`core.processors.preprocess.assign_ensembles` [module]
 
 Classes
 -------
@@ -17,49 +17,35 @@ all models is imposed by the minimal number of neurons across all the brain area
 leverage the full dat set for areas (i.e. to encompass all the neurons in each area), multiple
 models have to be fitted for ensembles in areas with larger neuron populations.
 """
-# Disable error codes for attributes which are not detected by the type checker:
-# (configuration and data attributes are initialized by the base class constructor)
-# mypy: disable-error-code="attr-defined"
-# pylint: disable=no-member
 
-from typing import Dict, TypeAlias, Any, Tuple, Optional
+from typing import TypeAlias, Any, Tuple, Optional
 
 import numpy as np
 
-from core.processors.base_processor import Processor
+from core.processors.base_processor import Processor, set_random_state
 
 
 Ensembles: TypeAlias = np.ndarray[Tuple[Any, Any], np.dtype[np.int64]]
 """Type alias for ensemble assignments."""
 
 
-class EnsembleAssigner(Processor[Any, Ensembles]):
+class EnsembleAssigner(Processor):
     """
     Assign units (neurons) to ensembles ('batches' for data analysis).
 
-    Configuration Attributes
-    ------------------------
+    Attributes
+    ----------
     ensemble_size : int
         Number of units included in each ensemble.
     n_ensembles_max : int, optional
         Maximum number of ensembles to generate.
 
-    Processing Arguments
-    --------------------
-    n_units : int
-        Number of units to assign to ensembles.
-        .. _n_units:
-
-    Returns
-    -------
-    ensembles : Ensembles
-        Ensemble assignments, containing the indices of the units forming each ensemble.
-        Shape: ``(n_ensembles, ensemble_size)``.
-
     Methods
     -------
-    `assign`
+    `process` (required)
+    `assign` (static)
     `eval_n_ensembles` (static)
+    `limit_ensembles` (static)
 
     Examples
     --------
@@ -80,17 +66,39 @@ class EnsembleAssigner(Processor[Any, Ensembles]):
 
     See Also
     --------
-    :class:`core.processors.preprocess.base_processor.Processor`
-        Base class for all processors. See definition of class-level attributes and template
-        methods.
+    `core.processors.preprocess.base_processor.Processor`
+    `core.processors.base_processor.set_random_state`
     """
 
-    is_random = True
-
     def __init__(self, ensemble_size: int, n_ensembles_max: Optional[int] = None):
-        super().__init__(ensemble_size=ensemble_size, n_ensembles_max=n_ensembles_max)
+        self.ensemble_size = ensemble_size
+        self.n_ensembles_max = n_ensembles_max
 
-    def _pre_process(self, **input_data: Any) -> Dict[str, Any]:
+    @set_random_state
+    def process(self, n_units: int | None = None, **kwargs) -> Ensembles:
+        """Implement the template method called in the base class `process` method.
+
+        Arguments
+        ---------
+        n_units : int
+            Number of units to assign to ensembles.
+
+        Returns
+        -------
+        ensembles : Ensembles
+            Ensemble assignments, containing the indices of the units forming each ensemble.
+            Shape: ``(n_ensembles, ensemble_size)``.
+        """
+        assert n_units is not None
+        self.validate(n_units)
+        ensembles = self.assign(n_units, self.ensemble_size)
+        if self.n_ensembles_max is not None:
+            ensembles = self.limit_ensembles(ensembles, self.n_ensembles_max)
+        return ensembles
+
+    # --- Pre-processing methods -------------------------------------------------------------------
+
+    def validate(self, n_units: int) -> None:
         """
         Validate the argument `n_units` (number of units) compared to the ensemble size.
 
@@ -99,33 +107,24 @@ class EnsembleAssigner(Processor[Any, Ensembles]):
         ValueError
             If the number of units is lower than the ensemble size.
         """
-        n_units = input_data.get("n_units", 0)
         if n_units < self.ensemble_size:
             raise ValueError(f"n_units: {n_units} < ensemble_size: {self.ensemble_size}")
-        return input_data
 
-    def _process(self, **input_data: Any) -> Ensembles:
-        """Implement the template method called in the base class `process` method."""
-        n_units = input_data["n_units"]
-        ensembles = self.assign(n_units)  # shape: (n_ensembles, ensemble_size)
-        # Adjust the number of ensembles if the maximum number is imposed
-        if self.n_ensembles_max is not None and ensembles.shape[0] > self.n_ensembles_max:
-            ensembles = ensembles[: self.n_ensembles_max]
-        return ensembles
+    # --- Processing methods -----------------------------------------------------------------------
 
     @staticmethod
-    def eval_n_ensembles(ensemble_size: int, n_units: int, n_ensembles_max: int) -> int:
+    def eval_n_ensembles(n_units: int, ensemble_size: int, n_ensembles_max: int) -> int:
         """
         Determine the number of ensembles to generate.
 
         Arguments
         ---------
-        ensemble_size : int
-            See the configuration parameter `ensemble_size`.
         n_units : int
-            See the argument :ref:`n_units`.
+            See the argument :ref:`n_units` in the `process` method.
+        ensemble_size : int
+            See the configuration attribute `ensemble_size`.
         n_ensembles_max : int
-            See the configuration parameter `n_ensembles_max`.
+            See the configuration attribute `n_ensembles_max`.
 
         Returns
         -------
@@ -166,19 +165,23 @@ class EnsembleAssigner(Processor[Any, Ensembles]):
             n_ensembles = n_ensembles_max
         return n_ensembles
 
-    def assign(self, n_units: int) -> Ensembles:
+    @staticmethod
+    @set_random_state
+    def assign(n_units: int, ensemble_size: int) -> Ensembles:
         """
         Assign units to ensembles by sub-sampling the units in distinct groups.
 
         Arguments
         ---------
         n_units : int
-            See the argument :ref:`n_units`.
+            See the argument :ref:`n_units` in the `process` method.
+        ensemble_size : int
+            See the configuration attribute `ensemble_size`.
 
         Returns
         -------
         ensembles : Ensembles
-            See the returned value :ref:`ensembles`.
+            See the returned value :ref:`ensembles` in the `process` method.
 
         Implementation
         --------------
@@ -213,10 +216,10 @@ class EnsembleAssigner(Processor[Any, Ensembles]):
         units = np.arange(n_units)
         np.random.shuffle(units)
         # Split units into `q` full-sized ensembles of size `ensemble_size` and a last partial one
-        split_indices = [i for i in range(self.ensemble_size, n_units, self.ensemble_size)]
+        split_indices = list(range(ensemble_size, n_units, ensemble_size))
         splits = np.split(units, split_indices)
         # Pick units from previous ensembles to complete the last one (if needed)
-        n_missing = self.ensemble_size - splits[-1].size
+        n_missing = ensemble_size - splits[-1].size
         if n_missing > 0:
             candidate_units = np.concatenate(splits[:-1], axis=None)
             picked_units = np.random.choice(candidate_units, size=n_missing, replace=False)
@@ -224,4 +227,26 @@ class EnsembleAssigner(Processor[Any, Ensembles]):
             splits[-1] = last_ensemble
         # Stack ensembles
         ensembles = np.stack(splits, axis=0)
+        return ensembles
+
+    @staticmethod
+    def limit_ensembles(ensembles: Ensembles, n_ensembles_max: int) -> Ensembles:
+        """
+        Keep only the first ensembles if the number of ensembles exceeds the maximum number.
+
+        Arguments
+        ---------
+        ensembles : Ensembles
+            Ensemble assignments. Shape: ``(n_ensembles, ensemble_size)``.
+        n_ensembles_max : int
+            Maximum number of ensembles to keep.
+
+        Returns
+        -------
+        ensembles : Ensembles
+            Ensemble assignments, limited to the maximum number of ensembles.
+            Shape: ``(n_ensembles_max, ensemble_size)``.
+        """
+        if ensembles.shape[0] > n_ensembles_max:
+            ensembles = ensembles[:n_ensembles_max]
         return ensembles
