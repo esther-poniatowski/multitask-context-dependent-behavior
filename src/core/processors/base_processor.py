@@ -12,198 +12,166 @@ Notes
 Each subclass of `Processor` should inherit from this class.
 """
 from abc import ABC, abstractmethod
-from typing import Tuple, Any, Optional, Dict, TypeVar, Generic, Union
+from functools import wraps
+from typing import Set, Any, Callable, Type, Self
 import warnings
 
 import numpy as np
 
-I = TypeVar("I", bound=Any)
-"""Type variable representing input data to the processor."""
 
-O = TypeVar("O", bound=Any)
-"""Type variable representing output data from the processor."""
+# --- Base Processor Class ------------------------------------------------------------------------
 
 
-class Processor(ABC, Generic[I, O]):
+class Processor(ABC):
     """
     Abstract base class for data processors.
 
-    Class Attributes
-    ----------------
-    is_random: bool, default=False
-        Flag indicating whether randomness is involved in the operations of the processor.
-
     Attributes
     ----------
-    seed: Optional[int]
-        Seed for random state initialization.
-    config_params: Tuple[str], default=()
+    config_params : Set[str]
         Names of the configuration parameters (fixed for each processor instance).
 
     Methods
     -------
-    `process`
-    `_pre_process`
-    `_process` (abstract, required in subclasses)
-    `set_random_state`
+    `process` (abstract)
 
     Notes
     -----
-    Processor classes operate on data of two distinct nature:
-
-    - "Configuration parameters" define the fixed behavior of each processor instance throughout its
-      lifecycle. They apply homogeneously for any call to the main processing method (`process`).
-      They are stored as attributes of the instance. Examples: model parameters, tuning settings...
-    - "Input data" is passed at runtime to the main processing method (`process`). It is not stored
-      in the instance, to ensure statelessness and avoid side effects due to potentially mutable
-      objects. Examples: recorded spiking times, time stamps, labels, indices...
-
-    Interaction with a Processor:
-
-    - Configuration parameters are passed to the processor constructor.
-    - Input data is passed to the base `process` method as *named arguments*.
-    - Output data (target results) is directly returned as a *tuple*, as with a pure function.
+    Implementation guidelines for specific processors: See the documentation of the
+    `core.processors` package.
     """
 
-    is_random: bool = False
+    config_params: Set[str]  # declare for type checking
 
-    def __init__(self, **config_params: Any) -> None:
-        # Initialize configuration parameters
-        for attr, value in config_params.items():
-            setattr(self, attr, value)
-        # Register configuration parameters names for logging
-        self.config_params: Tuple[str, ...] = tuple(config_params.keys())
-        # Declare the seed (optionally set if randomness is involved in operations)
-        self.seed: Optional[int] = None
+    @classmethod
+    def __init_subclass__(cls: Type[Self], **kwargs: Any) -> None:
+        """
+        Initialize the subclass with the `config_params` attribute.
+
+        Arguments
+        ---------
+        cls : Type[Processor]
+            Subclass of the `Processor` abstract base class.
+
+        Implementation
+        --------------
+        - Create a class attribute `config_params` (set) to register the configuration parameters.
+        - Store the original `__init__` method of the subclass.
+        - Define a new `__init__` method :
+            - Capture the state of `self.__dict__` before calling the original `__init__`.
+            - Call the original `__init__` method to set the subclass's attributes (if any).
+            - Compare the new state of `self.__dict__` with the original to identify new attributes.
+            - Update the `config_params` set with these new attributes.
+        - Replace the original `__init__` method with the new one.
+        """
+        super().__init_subclass__(**kwargs)
+        cls.config_params = set()
+        original_init = cls.__init__
+
+        def new_init(self, *args, **kwargs):
+            original_dict = self.__dict__.copy()
+            original_init(self, *args, **kwargs)
+            new_attributes = set(self.__dict__.keys()) - set(original_dict.keys())
+            cls.config_params.update(new_attributes)
+
+        setattr(cls, "__init__", new_init)
 
     def __repr__(self):
         config = ", ".join(f"{attr}={getattr(self, attr)}" for attr in self.config_params)
         return f"<{self.__class__.__name__}(config={config})"
 
-    def process(self, seed: Optional[int] = None, **input_data: I) -> O:
+    @abstractmethod
+    def process(self, **kwargs: Any) -> Any:
         """
-        Main processing method: receives input data, execute processing operations, return results.
+        Main processing method. Implementation is required in each concrete processor subclass.
+
+        This method orchestrates the processing steps specific to the subclass, which includes:
+
+        - Pre-processing (optional): validating inputs, formatting, setting default values.
+        - Processing: executing the specific operations performed by the concrete processor, by
+          invoking utility methods or external functions.
+        - Returning output data computed by the processor.
 
         Parameters
         ----------
-        input_data : Any
-            Input data to process, passed as keyword arguments (i.e. by name). Each argument name
-            must be included among the attributes of the data class associated with the processor,
-            and its value must match the expected types.
-            .. _input_data:
-        seed : Optional[int], default=None
-            Seed for random state initialization to ensure reproducibility, if randomness is
-            involved in the operations. If provided, it will set the random seed before the
-            processing begins.
+        kwargs : Any
+            Input data to process, passed as keyword arguments (i.e. by name).
 
         Returns
         -------
         output_data : Any
-            Output data computed by the processor. Single or multiple values (tuple) as defined in
-            the output data class, in the order in which its attributes are defined.
-            .. _output_data:
-
-        Notes
-        -----
-        This main method is the entry point to pass data to process. It orchestrates the processing
-        logic by calling the subclass-specific methods through a "template method" design pattern.
-
-        Key Steps:
-
-        - Setup: Initialize the random state from the seed, if randomness is involved.
-        - Pre-processing (optional): Validate input data, set default values, and perform
-          additional subclass-specific pre-processing if necessary.
-        - Processing: Execute the subclass-specific operations to compute its target results.
+            Output data computed by the processor. Single or multiple values (tuple).
 
         Example
         -------
+        Define a concrete processor subclass:
+
+        >>> class ConcreteProcessor(Processor):
+        ...     @set_random_state
+        ...     def process(self, input1=None, input2=None, seed=0, **kwargs):
+        ...         # implementation
+
         Pass input data to the processor and retrieve the output data:
 
         >>> processor = ConcreteProcessor()
-        >>> output1, output2 = processor.process(input1=..., input2=..., seed=42)
-
-        Implementation
-        --------------
-        The methods `_pre_process`and `_process` should be consistent in the types of their inputs
-        and outputs:
-
-        - `_process` takes a dictionary and returns a tuple, to behave like the `process` method.
-        - `_pre_process` takes and returns a dictionary, to insert in the pipeline while preserving
-          the same format as the input data.
-        """
-        if self.is_random:
-            self.set_random_state(seed)
-        input_data = self._pre_process(**input_data)
-        output_data = self._process(**input_data)  # subclass-specific logic (required)
-        return output_data
-
-    def _pre_process(self, **input_data: I) -> Dict[str, I]:
-        """
-        Pre-processing operations. Optionally overridden in concrete processor subclasses.
-
-        Parameters
-        ----------
-        input_data : Any
-            See the argument :ref:`input_data`.
-
-        Returns
-        -------
-        Dict[str, Any]
-            Preprocessed input data, in the same format as the argument `input_data` (dictionary) to
-            ensure compatibility with the `process` method pipeline.
+        >>> output1, output2 = processor.process(input1=1, input2=2, seed=42)
 
         Notes
         -----
-        Examples of subclass-specific pre-processing:
-
-        - Check the structure or inner datatype for nested objects (e.g., lists, dictionaries).
-        - Enforce the consistency of related inputs.
-        - Set default values for optional inputs if not provided.
-        """
-        return input_data
-
-    @abstractmethod
-    def _process(self, **input_data: I) -> O:
-        """
-        Orchestrate the specific operations performed by the concrete processor.
-
-        Implementation required in each concrete processor subclass.
-
-        Parameters
-        ----------
-        input_data : Any
-            See the argument :ref:`input_data`.
-
-        Returns
-        -------
-        Any
-            Output data computed by the processor, in a format similar to :ref:`output_data`.
+        Implementation guidelines: See the documentation of the `core.processors` package.
         """
 
-    def set_random_state(self, seed) -> None:
-        """
-        Set the random state for reproducibility, store the current seed in an attribute.
 
-        Parameters
-        ----------
-        seed : Optional[int]
-            See the argument :ref:`seed`.
+# --- Utility Decorators ---------------------------------------------------------------------------
 
-        Notes
-        -----
-        This base class method serves as a utility for those concrete processors which involve
-        random number generation.
 
-        If no 'seed' attribute is set in the processor instance, a warning is raised and the random
-        state initialization is skipped.
+def set_random_state(func: Callable) -> Callable:
+    """
+    Decorator to set the random state for reproducibility in processor methods.
 
-        See Also
-        --------
-        :func:`np.random.seed`
-        """
+    Arguments
+    ---------
+    func : Callable
+        Function of method to decorate.
+
+    Returns
+    -------
+    wrapper : Callable
+        Decorated function or method.
+
+    Raises
+    ------
+    UserWarning
+        If no 'seed' is set in the keyword arguments of the method.
+
+    Notes
+    -----
+    This decorator is intended for methods of processor classes that involve randomness. It sets the
+    seed if the latter is provided in the keyword arguments.
+
+    Example
+    -------
+    Decorate a method to set the random state:
+
+    >>> class SubProcessor:
+    ...     @set_random_state
+    ...     def process(self, seed=0):
+    ...         pass
+
+    See Also
+    --------
+    :func:`np.random.seed`
+    """
+
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        seed = kwargs.pop("seed", None)
         if seed is not None:
-            self.seed = seed
-            np.random.seed(self.seed)
+            np.random.seed(seed)
         else:
-            msg = f"No 'seed' set in {self.__class__.__name__}. Skip random state initialization."
+            np.random.seed()
+            msg = f"No 'seed' set in {func.__name__}. Skip random state initialization."
             warnings.warn(msg, UserWarning)
+        return func(self, *args, **kwargs)
+
+    return wrapper
