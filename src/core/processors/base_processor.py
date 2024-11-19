@@ -13,7 +13,7 @@ Each subclass of `Processor` should inherit from this class.
 """
 from abc import ABC, abstractmethod
 from functools import wraps
-from typing import Set, Any, Callable, Type, Self
+from typing import Set, Any, Callable, Type, Self, TypeGuard, Tuple
 import warnings
 
 import numpy as np
@@ -122,7 +122,7 @@ class Processor(ABC):
         """
 
 
-# --- Utility Decorators ---------------------------------------------------------------------------
+# --- Utilities ------------------------------------------------------------------------------------
 
 
 def set_random_state(func: Callable) -> Callable:

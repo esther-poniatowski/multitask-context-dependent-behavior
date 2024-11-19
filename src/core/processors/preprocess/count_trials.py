@@ -7,9 +7,6 @@ Classes
 -------
 `TrialsCounter`
 """
-# Disable error codes for attributes which are not detected by the type checker:
-# (configuration and data attributes are initialized by the base class constructor)
-# pylint: disable=useless-parent-delegation
 
 from typing import List, Any, TypeAlias, Tuple
 
@@ -31,24 +28,13 @@ class TrialsCounter(Processor):
     """
     Count the number of trials available in the population for one experimental condition.
 
-    Configuration Attributes
-    ------------------------
+    Attributes
+    ----------
     coords_by_unit : List[CoordManager]
         Coordinates containing the factors of interest for splitting trials by condition.
         Number of elements: ``n_units``, number of units.
         Elements: ``CoordManager``, behaving like a list of coordinates with identical numbers of
         samples.
-
-    Processing Arguments
-    --------------------
-    exp_cond : ExpCondition
-        Experimental condition of interest.
-
-    Returns
-    -------
-    counts : np.ndarray[Tuple[Any], np.dtype[np.int64]]
-        Number of trials available for each unit in the population for the specified condition.
-        Shape: ``(n_units,)``.
 
     Examples
     --------
@@ -56,27 +42,49 @@ class TrialsCounter(Processor):
     See Also
     --------
     `core.processors.preprocess.base_processor.Processor`
-        Base class for all processors: see class-level attributes and template methods.
     """
 
-    IS_RANDOM = False
-
-    # --- Processing Methods -----------------------------------------------------------------------
-
     def __init__(self, coords_by_unit: List[CoordManager]):
-        super().__init__()
         self.coords_by_unit = coords_by_unit
 
-    def _process(self, exp_cond: ExpCondition | None = None, **input_data) -> Counts:
-        """Implement the template method called in the base class `process` method."""
+    def process(self, exp_cond: ExpCondition | None = None, **kwargs) -> Counts:
+        """Implement the template method called in the base class `process` method.
+
+        Arguments
+        ---------
+        exp_cond : ExpCondition
+            Experimental condition of interest.
+
+        Returns
+        -------
+        counts : np.ndarray[Tuple[Any], np.dtype[np.int64]]
+            Number of trials available for each unit in the population for the specified condition.
+            Shape: ``(n_units,)``.
+        """
         assert exp_cond is not None
         counts = self.count_in_condition(coords_by_unit=self.coords_by_unit, exp_cond=exp_cond)
         return counts
 
+    # --- Processing Methods -----------------------------------------------------------------------
+
     def count_in_condition(
         self, coords_by_unit: List[CoordManager], exp_cond: ExpCondition
     ) -> Counts:
-        """Count the number of trials available for each unit in the population."""
+        """
+        Count the number of trials available for each unit in the population.
+
+        Arguments
+        ---------
+        coords_by_unit : List[CoordManager]
+            See the class attribute `coords_by_unit`.
+        exp_cond : ExpCondition
+            See the method argument `exp_cond`.
+
+        Returns
+        -------
+        counts : np.ndarray[Tuple[Any], np.dtype[np.int64]]
+            See the method return value `counts`.
+        """
         n_units = len(coords_by_unit)
         counts = np.zeros(n_units, dtype=int)
         for i, coords in enumerate(coords_by_unit):
@@ -88,36 +96,44 @@ class SampleSizer(Processor):
     """
     Determine the number of pseudo-trials to form in one condition.
 
-    Configuration Attributes
-    ------------------------
+    Attributes
+    ----------
     counts : np.ndarray[Tuple[Any], np.dtype[np.int64]]
         Number of trials available for each unit in the population for the specified condition.
         Shape: ``(n_units,)``.
-
-    Processing Arguments
-    --------------------
-    k : int
-        Number of folds in the cross-validation.
-    n_min : int
-        Minimum number of trials required for one unit.
-    thres_perc : float
-        Percentage of the smallest count to consider for the sample size.
     """
 
     def __init__(self, counts: Counts):
-        super().__init__()
         self.counts = counts
 
-    def _process(
+    def process(
         self,
         k: int = 1,
         n_min: int = N_TRIALS_MIN,
         thres_perc: float = BOOTSTRAP_THRES_PERC,
         **kwargs
     ):
-        """Implement the template method called in the base class `process` method."""
+        """
+        Implement the template method called in the base class `process` method.
+
+        Arguments
+        ---------
+        k : int
+            Number of folds in the cross-validation.
+        n_min : int
+            Minimum number of trials required for one unit.
+        thres_perc : float
+            Percentage of the smallest count to consider for the sample size.
+
+        Returns
+        -------
+        sample_size : int
+            Number of pseudo-trials to form in the condition.
+        """
         sample_size = self.eval_sample_size(self.counts, k, n_min, thres_perc)
         return sample_size
+
+    # --- Processing Methods -----------------------------------------------------------------------
 
     @staticmethod
     def eval_sample_size(
@@ -131,6 +147,8 @@ class SampleSizer(Processor):
 
         Arguments
         ---------
+        counts : np.ndarray[Tuple[Any], np.dtype[np.int64]]
+            See the configuration attribute `counts`.
 
         Implementation
         --------------
@@ -154,6 +172,10 @@ class SampleSizer(Processor):
 
         Arguments
         ---------
+        counts : np.ndarray[Tuple[Any], np.dtype[np.int64]]
+            See the configuration attribute `counts`.
+        sample_size : int
+            Number of pseudo-trials to form in the condition.
 
         Returns
         -------
