@@ -159,7 +159,7 @@ class SampleSizer(Processor):
         `FoldAssigner.eval_min_count`
         `Bootstrapper.eval_n_pseudo`
         """
-        counts_in_fold = np.array([FoldAssigner.eval_min_count(k, n) for n in counts])
+        counts_in_fold = np.array([FoldAssigner.eval_min_count(n, k) for n in counts])
         sample_size = Bootstrapper.eval_n_pseudo(counts_in_fold, n_min, thres_perc)
         return sample_size
 
