@@ -172,7 +172,7 @@ class FormatPopulationData(Pipeline):
         # Count the number of trials available for each unit in the population
         counter = TrialsCounter(coords_by_unit=coords_by_unit)
         counts_by_cond = {cond: counter.process(exp_cond=cond) for cond in self.exp_conds}
-        n_by_cond: Dict[ExpCondition, int] = {
+        counts_by_condition: Dict[ExpCondition, int] = {
             cond: SampleSizer(counts).process(
                 k=self.k, n_min=self.n_min, thres_perc=self.thres_perc
             )
@@ -182,7 +182,7 @@ class FormatPopulationData(Pipeline):
         # Build pseudo-trials
 
         # Build the trial-related coordinates
-        builder_trials_coords = TrialCoordsBuilder(n_by_cond=n_by_cond)
+        builder_trials_coords = TrialCoordsBuilder(counts_by_condition=counts_by_condition)
         for name, coord_type in self.coords_trials.items():
             coord = builder_trials_coords.build(coord_type=coord_type)
             data_structure.set_coord(name, coord)

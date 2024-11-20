@@ -10,8 +10,6 @@ Classes
 from typing import Type, Dict, Tuple
 from functools import cached_property
 
-import numpy as np
-
 from core.builders.base_builder import CoordinateBuilder
 from core.coordinates.exp_factor_coord import CoordExpFactor
 from core.composites.exp_conditions import ExpCondition
@@ -25,11 +23,13 @@ class TrialCoordsBuilder(CoordinateBuilder[CoordExpFactor]):
 
     Attributes
     ----------
-    n_by_cond : Dict[ExpCondition, int]
+    counts_by_condition : Dict[ExpCondition, int]
         Number of trials for each experimental condition of interest.
+    order_conditions : Tuple[ExpCondition]
+        Order in which the experimental conditions appear in the output coordinates.
     conditions_boundaries : Dict[ExpCondition, Tuple[int, int]]
         Start and end indices of the trials for each condition along the trials dimension in the
-        final data structure product.
+        output coordinates.
 
     Methods
     -------
@@ -43,7 +43,9 @@ class TrialCoordsBuilder(CoordinateBuilder[CoordExpFactor]):
 
     >>> exp_cond_1 = ExpCondition(task='PTD', attention='a')
     >>> exp_cond_2 = ExpCondition(task='CLK', attention='a')
-    >>> builder = TrialCoordsBuilder(n_by_cond={exp_cond_1: 3, exp_cond_2: 2})
+    >>> counts_by_condition = {exp_cond_1: 3, exp_cond_2: 2}
+    >>> order_conditions = (exp_cond_1, exp_cond_2)
+    >>> builder = TrialCoordsBuilder(counts_by_condition, order_conditions)
     >>> builder.conditions_boundaries
     {ExpCondition(task='PTD', attention='a'): (0, 3),
      ExpCondition(task='CLK', attention='a'): (3, 5)}
@@ -57,11 +59,17 @@ class TrialCoordsBuilder(CoordinateBuilder[CoordExpFactor]):
 
     PRODUCT_CLASS = CoordExpFactor
 
-    def __init__(self, n_by_cond: Dict[ExpCondition, int]) -> None:
+    def __init__(
+        self, counts_by_condition: Dict[ExpCondition, int], order_conditions: Tuple[ExpCondition]
+    ) -> None:
         # Call the base class constructor: declare empty product and internal data
         super().__init__()
+        # Check identical conditions in both attributes
+        if set(counts_by_condition.keys()) != set(order_conditions):
+            raise ValueError("Different conditions in `counts_by_condition` and `order_conditions`")
         # Store configuration parameters
-        self.n_by_cond = n_by_cond
+        self.counts_by_condition = counts_by_condition
+        self.order_conditions = order_conditions
 
     def build(self, coord_type: Type[CoordExpFactor] | None = None, **kwargs) -> CoordExpFactor:
         """
@@ -71,7 +79,7 @@ class TrialCoordsBuilder(CoordinateBuilder[CoordExpFactor]):
         ----------
         coord_type : Type[CoordExpFactor]
             Class of the coordinate to build, representing one experimental factor specified in the
-            all the conditions of the `n_by_cond` attribute. .. _coord_type:
+            all the conditions of the `counts_by_condition` attribute. .. _coord_type:
 
         Returns
         -------
@@ -87,9 +95,9 @@ class TrialCoordsBuilder(CoordinateBuilder[CoordExpFactor]):
         current pipeline.
 
         Rule: The coordinate type is valid if the experimental factor associated with the coordinate
-        is present in all the experimental conditions specified in the `n_by_cond` attribute.
-        Otherwise, this coordinate would not find any value for the trials belonging to the
-        experimental condition in which the factor is missing.
+        is present in all the experimental conditions specified in the `counts_by_condition`
+        attribute. Otherwise, this coordinate would not find any value for the trials belonging to
+        the experimental condition in which the factor is missing.
 
         Parameters
         ----------
@@ -101,7 +109,7 @@ class TrialCoordsBuilder(CoordinateBuilder[CoordExpFactor]):
         TypeError
             If the experimental factor is not present in all the conditions.
         """
-        for cond in self.n_by_cond.keys():
+        for cond in self.order_conditions:
             for entity_type in cond.get_entities():
                 if not coord_type.has_entity(entity_type):
                     raise TypeError(
@@ -122,7 +130,8 @@ class TrialCoordsBuilder(CoordinateBuilder[CoordExpFactor]):
         """
         idx_start_end: Dict[ExpCondition, Tuple[int, int]] = {}
         start = 0
-        for cond, n_samples in self.n_by_cond.keys():
+        for cond in self.order_conditions:
+            n_samples = self.counts_by_condition[cond]
             end = start + n_samples
             idx_start_end[cond] = (start, end)
             start = end
@@ -146,7 +155,7 @@ class TrialCoordsBuilder(CoordinateBuilder[CoordExpFactor]):
             Coordinate for the trial dimension in the data structure product.
         """
         # Initialize empty coordinates with as many trials as the total number of pseudo-trials
-        n_samples_tot = sum(self.n_by_cond.values())
+        n_samples_tot = sum(self.counts_by_condition.values())
         coord = coord_type.from_shape(n_samples_tot)
         # Fill the coordinates by condition
         for cond, (start, end) in self.conditions_boundaries.items():

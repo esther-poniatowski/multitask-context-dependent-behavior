@@ -89,7 +89,7 @@ class FiringRatesPopBuilder(DataStructureBuilder[FiringRatesPop]):
         ensemble_size: int,
         n_ensembles_max: int,
         n_folds: int,
-        n_by_cond: Dict[str, int],
+        counts_by_condition: Dict[str, int],
         features_coords: Mapping[str, type] = DEFAULT_FEATURES,
     ) -> None:
         # Call the base class constructor: declare empty product and internal data
@@ -98,8 +98,8 @@ class FiringRatesPopBuilder(DataStructureBuilder[FiringRatesPop]):
         self.ensemble_size = ensemble_size
         self.n_ensembles_max = n_ensembles_max
         self.n_folds = n_folds
-        self.n_by_cond = n_by_cond
-        self.conditions = list(n_by_cond.keys())
+        self.counts_by_condition = counts_by_condition
+        self.conditions = list(counts_by_condition.keys())
         self.conditions_boundaries = self.allocate_conditions_indices()
         self.features_coords = features_coords
         # Declare attributes to store inputs and intermediate results
@@ -167,7 +167,7 @@ class FiringRatesPopBuilder(DataStructureBuilder[FiringRatesPop]):
 
     @property
     def n_trials(self) -> int:
-        return sum(self.n_by_cond.values())
+        return sum(self.counts_by_condition.values())
 
     @property
     def n_t(self) -> int:
