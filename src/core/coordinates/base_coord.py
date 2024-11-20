@@ -44,17 +44,17 @@ class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
 
     Attributes
     ----------
-    values : npt.ndarray[Tuple[Any, ...], np.dtype[CoordDtype]]
+    values : np.ndarray[Tuple[Any, ...], np.dtype[CoordDtype]]
         Labels of the coordinate associated with data dimension(s). Length : ``n_smpl``, total
         number of samples labelled by the coordinates across its dimensions.
 
     Methods
     -------
-    `set_metadata`
     `validate`
     `from_shape`
     `get_entity`
     `has_entity`
+    `are_valid`
     """
 
     ENTITY: Type[EntityType]
@@ -62,7 +62,13 @@ class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
     METADATA: FrozenSet[str] = frozenset()  # default empty set
     SENTINEL: Union[int, float, str]
 
-    def __new__(cls, values: ArrayLike) -> Self:
+    def __repr__(self) -> str:
+        metadata_str = ", ".join(f"{attr}={getattr(self, attr, None)}" for attr in self.METADATA)
+        return f"<{self.__class__.__name__}(shape={self.shape}, {metadata_str})>"
+
+    # --- Creation of Coordinate objects -----------------------------------------------------------
+
+    def __new__(cls, values: ArrayLike, **metadata) -> Self:
         """
         Create a new coordinate object behaving as a numpy array.
 
@@ -74,23 +80,9 @@ class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
         """
         cls.validate(values)
         obj = np.asarray(values, dtype=cls.DTYPE).view(cls)
+        for attr in cls.METADATA:
+            setattr(obj, attr, metadata.get(attr, None))
         return obj
-
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}> #shape: {self.shape}"
-
-    def set_metadata(self, **metadata) -> None:
-        """
-        Set metadata attributes from a dictionary.
-
-        Notes
-        -----
-        Metadata is added if it corresponds to the attribute names specified in the class-level
-        attribute.
-        Otherwise, the corresponding instance attributes are initialized to `None`.
-        """
-        for attr in self.METADATA:
-            setattr(self, attr, metadata.get(attr, None))
 
     def __array_finalize__(self, obj) -> None:
         """
@@ -131,10 +123,11 @@ class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
         --------
         `Entity.is_valid`
         """
-        values = np.asarray(values)  # convert to numpy array for processing
-        is_valid = np.vectorize(cls.ENTITY.is_valid)(values)  # apply element-wise
-        if not np.all(is_valid):
-            raise ValueError(f"Invalid values for {cls.__name__}: {values[~is_valid]}")
+        if not hasattr(cls, "ENTITY"):  # only if ENTITY is defined
+            mask = cls.are_valid(values)
+            if not np.all(mask):
+                invalid_values = np.asarray(values)[~mask]
+                raise ValueError(f"Invalid values for {cls.__name__}: {invalid_values}")
 
     @classmethod
     def from_shape(cls, shape: Tuple[int, ...], **metadata) -> Self:
@@ -153,6 +146,8 @@ class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
         """
         values = np.full(shape, cls.SENTINEL, dtype=cls.DTYPE)
         return cls(values=values, **metadata)
+
+    # --- Interaction with Entities ----------------------------------------------------------------
 
     @classmethod
     def get_entity(cls) -> Type[EntityType]:
@@ -196,3 +191,26 @@ class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
         False
         """
         return issubclass(cls.get_entity(), entity_type)
+
+    @classmethod
+    def are_valid(cls, values) -> np.ndarray:
+        """
+        Marks which values are valid for the entity type.
+
+        Parameters
+        ----------
+        values : ArrayLike
+            Values to check.
+
+        Returns
+        -------
+        np.array
+            Boolean mask indicating if the values are valid for the entity type.
+
+        See Also
+        --------
+        `Entity.is_valid`
+        `np.vectorize`
+        """
+        values = np.asarray(values)  # convert to numpy array for processing
+        return np.vectorize(cls.ENTITY.is_valid)(values)  # apply element-wise
