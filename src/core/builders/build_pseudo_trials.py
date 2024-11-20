@@ -24,71 +24,83 @@ Notes
   recording number, block number, slot number). This prevents models from capturing misleading
   temporal drift in neuronal activity.
 """
-
-
-from types import MappingProxyType
 from typing import List, Tuple, Dict, Optional, Mapping, TypeVar, Type
 
 import numpy as np
 
 from core.builders.base_builder import Builder
-from core.coordinates.base_coord import Coordinate
 from core.composites.features import Features
-from core.data_structures.core_data import CoreData
+from core.coordinates.trials_coord import CoordPseudoTrialsIdx
 from core.composites.exp_conditions import ExpCondition
 from core.processors.preprocess.assign_folds import FoldAssigner, FoldLabels
 from core.processors.preprocess.bootstrap import Bootstrapper
 from core.processors.preprocess.map_indices import IndexMapper, Indices
-from core.processors.preprocess.stratify import Stratifier, Strata
-
-PseudoTrials = TypeVar("PseudoTrials", bound=CoreData)
-"""Type variable for the pseudo-trials data structure produced by the builder."""
 
 
-class PseudoTrialsBuilder(Builder[CoreData]):
+class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
     """
     Build the reconstructed pseudo-trials for a pseudo-population of units for one experimental
     condition.
 
-    Product:`PseudoTrials` data structure.
+    Product:`CoordPseudoTrialsIdx`
 
-    The core data in the output contains the trial indices of the trials to select from the data,
-    for each unit in one ensemble and for each fold.
+    The output coordinate contains the trial indices of the trials to select for each unit in one
+    ensemble, for each fold and condition.
+    Shape: ``(n_units, k, n_pseudo)``, with ``n_pseudo`` the total number of pseudo-trials formed
+    across the experimental conditions of interest.
 
     The inputs required to perform this operation include, for each unit in the population, the set
     of coordinates which jointly specify the experimental condition to which each trial belongs.
 
-    Configuration Parameters
-    ------------------------
+    Warning
+    -------
+    The order in which the trials are stored in the output coordinate of the `PseudoTrialsBuilder`
+    builder should be consistent with the other output coordinates of the `TrialCoordsBuilder`
+    (which label the experimental factors of interest, see `core.builders.build_trial_coords`). To
+    ensure this consistency along the trials dimension, the experimental conditions should be
+    treated in the same order across both builders. This is achieved by passing them the same
+    configuration parameters on which they operate:
+
+    - `order_conds`: Order in which the experimental conditions are concatenated.
+    - `counts_by_condition`: Number of pseudo-trials to form for each experimental condition.
+
+    Class Attributes
+    ----------------
+    TRiALS_AXIS : int
+        Axis along which the trials are stored in the coordinate. Here, ``-1`` for the last axis.
+
+    Attributes
+    ----------
     k : int
         Number of folds for cross-validation.
-    n_pseudo : int
-        Number of pseudo-trials to generate for the experimental condition in one fold.
-    exp_cond : ExpCondition
-        Experimental condition to consider for the pseudo-trials.
+    counts_by_condition : Dict[ExpCondition, int]
+        Number of pseudo-trials to form for each experimental condition of interest.
+    order_conds : Tuple[ExpCondition, ...]
+        Order in which to concatenate the pseudo-trials for each condition in the output coordinate.
 
     Methods
     -------
     """
 
-    PRODUCT_CLASS = CoreData
+    PRODUCT_CLASS = CoordPseudoTrialsIdx
+    TRIALS_AXIS = -1
 
     def __init__(
         self,
         k: int,
-        n_pseudo: int,
-        exp_cond: ExpCondition,
+        counts_by_condition: Dict[ExpCondition, int],
+        order_conditions: Tuple[ExpCondition, ...],
     ) -> None:
         # Call the base class constructor: declare empty product and internal data
         super().__init__()
         # Store configuration parameters
         self.k = k
-        self.n_pseudo = n_pseudo
-        self.exp_cond = exp_cond
+        self.counts_by_condition = counts_by_condition
+        self.order_conds = order_conditions
 
     def build(
         self, coords_by_unit: List[Features] | None = None, seed: int = 0, **kwargs
-    ) -> CoreData:
+    ) -> CoordPseudoTrialsIdx:
         """
         Implement the base class method.
 
@@ -97,7 +109,7 @@ class PseudoTrialsBuilder(Builder[CoreData]):
         coords_by_unit : List[Features]
             Coordinates of the trials for each unit in the population.
         seed : int
-            Seed for the random number generator, used by the bootstrapper.
+            Seed used by the bootstrapper.
 
         Returns
         -------
@@ -110,7 +122,53 @@ class PseudoTrialsBuilder(Builder[CoreData]):
           different for the same unit in different ensembles.
         """
         assert coords_by_unit is not None
-        n_units = len(coords_by_unit)
+        pseudo_trials = {
+            exp_cond: self.build_for_condition(coords_by_unit, exp_cond, n_pseudo, seed)
+            for exp_cond, n_pseudo in self.counts_by_condition.items()
+        }
+        self.product = self.gather_conditions(
+            pseudo_trials, self.counts_by_condition, self.order_conds
+        )
+        return self.get_product()
+
+    @staticmethod
+    def initialize_coord(n_units: int, n_pseudo: int, k: int) -> CoordPseudoTrialsIdx:
+        """
+        Initialize the coordinate for the pseudo-trials for one condition.
+
+        Arguments
+        ---------
+
+        Returns
+        -------
+        pseudo_trials : CoordPseudoTrialsIdx
+            Empty coordinate for the pseudo-trials, filled with the sentinel value (here, -1).
+        """
+        shape = (n_units, k, n_pseudo)
+        pseudo_trials = CoordPseudoTrialsIdx.from_shape(shape)
+        return pseudo_trials
+
+    @staticmethod
+    def build_for_condition(
+        coords_by_unit: List[Features], exp_cond: ExpCondition, n_pseudo: int, seed: int
+    ) -> CoordPseudoTrialsIdx:
+        """
+        Build the pseudo-trials for one experimental condition.
+
+        Arguments
+        ---------
+        exp_cond : ExpCondition
+            Experimental condition for which to build the pseudo-trials.
+        n_pseudo : int
+            Number of pseudo-trials to form for this condition.
+        seed : int
+            Seed used by the bootstrapper.
+
+        Returns
+        -------
+        pseudo_trials : CoordPseudoTrialsIdx
+            Coordinate for the pseudo-trials of the condition.
+        """
         # Find the indices of the trials in the condition for each unit
         # Length: n_units, Elements: Features (set of coordinates), Shape: (n_samples,) (in
         # condition, for each unit)
@@ -123,7 +181,7 @@ class PseudoTrialsBuilder(Builder[CoreData]):
             for u, n in enumerate(counts_in_cond)
         ]
         idx_in_fold = [np.where(folds_labels == fold)[0] for fold in range(self.k)]
-        counts_in_fold =
+        counts_in_fold = 0
         # Bootstrap trial indices for the population
         bootstrapper = Bootstrapper(n_pseudo=self.n_pseudo)
         idx_by_fold = [bootstrapper.process(counts=counts, seed=seed) for counts in counts_by_fold]
@@ -137,7 +195,56 @@ class PseudoTrialsBuilder(Builder[CoreData]):
 
         for u_ens, idx in enumerate(idx_pop):
             idx_pseudo[u_ens] = mapper.process(idx_relative=idx_relative[u_ens], idx_absolute=idx)
-        return self.get_product()
+        return pseudo_trials
+
+    @staticmethod
+    def gather_conditions(
+        pseudo_trials_by_cond: Dict[ExpCondition, CoordPseudoTrialsIdx],
+        counts_by_condition: Dict[ExpCondition, int],
+        order_conditions: Tuple[ExpCondition, ...],
+        axis: int = TRIALS_AXIS,
+    ) -> CoordPseudoTrialsIdx:
+        """
+        Gather the pseudo-trials for all the conditions of interest.
+
+        Arguments
+        ---------
+        pseudo_trials_by_cond : Dict[ExpCondition, CoordPseudoTrialsIdx]
+            Pseudo-trials for each experimental condition.
+        counts_by_condition : Dict[ExpCondition, int]
+            See the attribute `counts_by_condition`.
+        order_conditions : Tuple[ExpCondition, ...]
+            See the attribute `order_conds`.
+
+        Returns
+        -------
+        pseudo_trials : CoordPseudoTrialsIdx
+            See the return value `pseudo_trials` of the `build` method.
+
+        Raises
+        ------
+        ValueError
+            If the number of pseudo-trials for one condition does not match the number of trials in
+            the output coordinate.
+        """
+        # Check that number of pseudo-trials for each condition
+        for exp_cond, pseudo_trials in pseudo_trials_by_cond.items():
+            expected = counts_by_condition[exp_cond]
+            actual = pseudo_trials.shape[axis]
+            if actual != expected:
+                raise ValueError(
+                    f"Mismatch in the number of pseudo-trials for {exp_cond}: "
+                    f"{expected} expected, {actual} in output coordinate."
+                )
+        # Concatenate along the trials dimension in the right order, convert to coordinate
+        pseudo_trials = CoordPseudoTrialsIdx(
+            np.concatenate(
+                [pseudo_trials_by_cond[exp_cond] for exp_cond in order_conditions], axis=axis
+            )
+        )
+        return pseudo_trials
+
+    # Previous implementation ----------------------------------------------------------------------
 
     def get_indices_in_fold(self, fold: int, fold_labels: FoldLabels, idx: Indices) -> Indices:
         """
