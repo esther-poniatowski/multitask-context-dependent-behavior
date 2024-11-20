@@ -14,7 +14,6 @@ import numpy as np
 
 from core.builders.base_builder import CoordinateBuilder
 from core.coordinates.exp_factor_coord import CoordExpFactor
-from core.composites.features import Features
 from core.composites.exp_conditions import ExpCondition
 
 
@@ -84,8 +83,13 @@ class TrialCoordsBuilder(CoordinateBuilder[CoordExpFactor]):
 
     def validate_factor(self, coord_type: Type[CoordExpFactor]) -> None:
         """
-        Validate the experimental factor associated with the coordinate. It is valid if it is
-        present in all the experimental conditions specified in the `n_by_cond` attribute.
+        Check that the type of the coordinate to build is relevant for the trial dimension in the
+        current pipeline.
+
+        Rule: The coordinate type is valid if the experimental factor associated with the coordinate
+        is present in all the experimental conditions specified in the `n_by_cond` attribute.
+        Otherwise, this coordinate would not find any value for the trials belonging to the
+        experimental condition in which the factor is missing.
 
         Parameters
         ----------
@@ -143,7 +147,7 @@ class TrialCoordsBuilder(CoordinateBuilder[CoordExpFactor]):
         """
         # Initialize empty coordinates with as many trials as the total number of pseudo-trials
         n_samples_tot = sum(self.n_by_cond.values())
-        coord = coord_type(np.full(n_samples_tot, coord_type.SENTINEL, dtype=coord_type.DTYPE))
+        coord = coord_type.from_shape(n_samples_tot)
         # Fill the coordinates by condition
         for cond, (start, end) in self.conditions_boundaries.items():
             # Retrieve the value in the exp condition for the coordinate entity
