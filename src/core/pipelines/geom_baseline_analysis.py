@@ -15,7 +15,7 @@ Notes
 from core.pipelines.base_pipeline import Pipeline
 from core.steps.concrete_steps import SelectUnits
 from core.entities.bio_info import Area
-from core.entities.exp_conditions import ExpCondition
+from core.composites.exp_conditions import ExpCondition
 from core.entities.exp_factors import Task, Attention, Category, Behavior
 
 from utils.io_data.loaders import LoaderCSVtoList

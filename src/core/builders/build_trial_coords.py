@@ -14,8 +14,8 @@ import numpy as np
 
 from core.builders.base_builder import CoordinateBuilder
 from core.coordinates.exp_factor_coord import CoordExpFactor
-from core.coordinates.coord_manager import CoordManager
-from core.entities.exp_conditions import ExpCondition
+from core.composites.features import Features
+from core.composites.exp_conditions import ExpCondition
 
 
 class TrialCoordsBuilder(CoordinateBuilder[CoordExpFactor]):
@@ -84,7 +84,7 @@ class TrialCoordsBuilder(CoordinateBuilder[CoordExpFactor]):
 
     def validate_factor(self, coord_type: Type[CoordExpFactor]) -> None:
         """
-        Validate the experimental factor to be used in the coordinate. It is valid if it is
+        Validate the experimental factor associated with the coordinate. It is valid if it is
         present in all the experimental conditions specified in the `n_by_cond` attribute.
 
         Parameters
@@ -99,7 +99,7 @@ class TrialCoordsBuilder(CoordinateBuilder[CoordExpFactor]):
         """
         for cond in self.n_by_cond.keys():
             for entity_type in cond.get_entities():
-                if not CoordManager.has_entity(entity_type, coord_type):
+                if not coord_type.has_entity(entity_type):
                     raise TypeError(
                         f"Experimental factor of {coord_type} not present in condition {cond}."
                     )

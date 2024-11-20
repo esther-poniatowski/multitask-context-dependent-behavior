@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.coordinates.coord_manager` [module]
+`core.composites.features` [module]
 
 Classes
 -------
-`CoordManager`
+`Features`
 """
 
 from typing import List, Iterable, Tuple, Type, Self
@@ -14,11 +14,11 @@ import warnings
 import numpy as np
 
 from core.entities.base_entity import Entity
-from core.entities.exp_conditions import ExpCondition, ExpConditionUnion
+from core.composites.exp_conditions import ExpCondition, ExpConditionUnion
 from core.coordinates.base_coord import Coordinate
 
 
-class CoordManager:
+class Features:
     """
     Implement coordinate-related logic for a collection of coordinates.
 
@@ -47,7 +47,7 @@ class CoordManager:
     `match`
     `match_single`
     `match_union`
-    `filter_idx`
+    `match_idx`
     `count`
     """
 
@@ -109,9 +109,9 @@ class CoordManager:
 
         Returns
         -------
-        filtered_coords : CoordManager
+        filtered_coords : Features
             Coordinates matching the specified entities type or their subtypes, in a new
-            `CoordManager` instance.
+            `Features` instance.
 
         See Also
         --------
@@ -133,7 +133,6 @@ class CoordManager:
         -------
         mask : np.ndarray
             Boolean mask indicating which samples match the condition(s).
-            .. _mask:
         """
         if isinstance(exp_cond, ExpCondition):
             return self.match_single(exp_cond)
@@ -169,7 +168,7 @@ class CoordManager:
         >>> task_coord = CoordTask(np.array(['PTD', 'CLK', 'PTD']))
         >>> attn_coord = CoordAttention(np.array(['a', 'p', 'a']))
         >>> categ_coord = CoordCategory(np.array(['R', 'T', 'R']))
-        >>> coords = CoordManager(task_coord, attn_coord, categ_coord)
+        >>> coords = Features(task_coord, attn_coord, categ_coord)
         >>> mask = coords.match(exp_cond)
         >>> mask
         array([ True, False,  True])
@@ -205,8 +204,8 @@ class CoordManager:
         >>> task_coord = CoordTask(np.array(['PTD', 'CLK', 'PTD']))
         >>> attn_coord = CoordAttention(np.array(['a', 'p', 'a']))
         >>> categ_coord = CoordCategory(np.array(['R', 'T', 'R']))
-        >>> coords = CoordManager(task_coord, attn_coord, categ_coord)
-        >>> mask = CoordManager(task_coord, attn_coord, categ_coord).match(union)
+        >>> coords = Features(task_coord, attn_coord, categ_coord)
+        >>> mask = Features(task_coord, attn_coord, categ_coord).match(union)
         >>> mask
         array([ True, False,  True])
         """
@@ -216,9 +215,9 @@ class CoordManager:
         mask = np.logical_or.reduce(all_masks)
         return mask
 
-    def filter_idx(self, exp_cond: ExpCondition | ExpConditionUnion) -> np.ndarray:
+    def match_idx(self, exp_cond: ExpCondition | ExpConditionUnion) -> np.ndarray:
         """
-        Filter the indices to retain only the indices of the samples that match the condition(s).
+        Find the indices of the samples that match the condition(s).
 
         Arguments
         ---------
