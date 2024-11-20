@@ -62,12 +62,16 @@ class CoordTime(Coordinate[np.float64]):
 
     See Also
     --------
-    :class:`core.coordinates.base_coord.Coordinate`
+    `core.coordinates.base_coord.Coordinate`
     """
 
+    # No ENTITY
     DTYPE = np.float64
     METADATA = frozenset(["t_on", "t_off", "t_shock", "t_bin"])
     SENTINEL: float = np.nan
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__}>: {len(self)} time points, bin = {self.t_bin} sec"
 
     def __new__(
         cls,
@@ -77,13 +81,10 @@ class CoordTime(Coordinate[np.float64]):
         t_shock: Optional[float] = None,
         t_bin: Optional[float] = None,
     ):
-        obj = super().__new__(cls, values)
+        """Override the base method to pass metadata."""
         if t_bin is None:
             t_bin = cls.eval_t_bin(values)
-        obj.t_bin = t_bin
-        obj.t_on = t_on
-        obj.t_off = t_off
-        obj.t_shock = t_shock
+        obj = Coordinate.__new__(cls, values, t_on=t_on, t_off=t_off, t_shock=t_shock, t_bin=t_bin)
         return obj
 
     @classmethod
@@ -199,9 +200,6 @@ class CoordTime(Coordinate[np.float64]):
         values = np.arange(n_smpl) * t_bin + t_min
         return cls(values=values, t_bin=t_bin)
 
-    def __repr__(self):
-        return f"<{self.__class__.__name__}>: {len(self)} time points, bin = {self.t_bin} sec"
-
 
 class CoordTimeEvent(Coordinate[np.float64]):
     """
@@ -220,5 +218,6 @@ class CoordTimeEvent(Coordinate[np.float64]):
     No specific entity is associated with time events.
     """
 
+    # No ENTITY
     DTYPE = np.float64
     SENTINEL: float = np.nan
