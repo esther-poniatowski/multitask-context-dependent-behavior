@@ -92,7 +92,11 @@ class FoldAssigner(Processor):
 
     @set_random_state
     def process(
-        self, n_samples: int | None = None, mode: str = "labels", seed: int = 0, **kwargs
+        self,
+        n_samples: int | None = None,
+        mode: Literal["labels", "members"] = "labels",
+        seed: int = 0,
+        **kwargs,
     ) -> Union[FoldLabels, FoldMembers]:
         """
         Implement the template method called in the base class `process` method.

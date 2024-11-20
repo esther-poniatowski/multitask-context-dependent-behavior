@@ -50,9 +50,9 @@ from core.pipelines.base_pipeline import Pipeline
 from core.processors.preprocess.exclude import Excluder
 from core.processors.preprocess.count_trials import SampleSizer, TrialsCounter
 from core.entities.bio_info import Area, Training
-from core.entities.exp_conditions import PipelineCondition, ExpCondition
+from core.composites.exp_conditions import PipelineCondition, ExpCondition
 from core.entities.exp_factors import Task, Attention, Category, Behavior
-from core.coordinates.coord_manager import CoordManager
+from core.composites.features import Features
 from core.coordinates.exp_factor_coord import CoordExpFactor
 from core.builders.build_ensembles import EnsemblesBuilder
 from core.builders.build_trial_coords import TrialCoordsBuilder
@@ -163,10 +163,10 @@ class FormatPopulationData(Pipeline):
         excluded = loader_excluded.load()
         units = Excluder.exclude_by_difference(candidates=all_units, intruders=excluded)
         # Retrieve each unit's file containing its trials properties
-        trials_props: List[TrialsProperties] = [loader.load() for loader in loaders_trial_prop]
-        assert all([isinstance(tp, TrialsProperties) for tp in trials_props])
+        trials_props = [loader.load() for loader in loaders_trial_prop]
+        assert all(isinstance(tp, TrialsProperties) for tp in trials_props)
         # Retrieve the coordinates of interest
-        coords_by_unit = [CoordManager(**tp.get_coords_from_dim("trials")) for tp in trials_props]
+        coords_by_unit = [Features(**tp.get_coords_from_dim("trials")) for tp in trials_props]
 
         # Determine the number of trials to form in each condition
         # Count the number of trials available for each unit in the population

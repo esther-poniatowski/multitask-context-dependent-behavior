@@ -13,9 +13,9 @@ from typing import List, Any, TypeAlias, Tuple
 import numpy as np
 
 from core.constants import N_TRIALS_MIN, BOOTSTRAP_THRES_PERC
-from core.coordinates.coord_manager import CoordManager
+from core.composites.features import Features
 from core.processors.base_processor import Processor
-from core.entities.exp_conditions import ExpCondition
+from core.composites.exp_conditions import ExpCondition
 from core.processors.preprocess.assign_folds import FoldAssigner
 from core.processors.preprocess.bootstrap import Bootstrapper
 from core.processors.preprocess.exclude import Excluder
@@ -30,10 +30,10 @@ class TrialsCounter(Processor):
 
     Attributes
     ----------
-    coords_by_unit : List[CoordManager]
+    coords_by_unit : List[Features]
         Coordinates containing the factors of interest for splitting trials by condition.
         Number of elements: ``n_units``, number of units.
-        Elements: ``CoordManager``, behaving like a list of coordinates with identical numbers of
+        Elements: ``Features``, behaving like a list of coordinates with identical numbers of
         samples.
 
     Examples
@@ -44,7 +44,7 @@ class TrialsCounter(Processor):
     `core.processors.preprocess.base_processor.Processor`
     """
 
-    def __init__(self, coords_by_unit: List[CoordManager]):
+    def __init__(self, coords_by_unit: List[Features]):
         self.coords_by_unit = coords_by_unit
 
     def process(self, exp_cond: ExpCondition | None = None, **kwargs) -> Counts:
@@ -67,15 +67,13 @@ class TrialsCounter(Processor):
 
     # --- Processing Methods -----------------------------------------------------------------------
 
-    def count_in_condition(
-        self, coords_by_unit: List[CoordManager], exp_cond: ExpCondition
-    ) -> Counts:
+    def count_in_condition(self, coords_by_unit: List[Features], exp_cond: ExpCondition) -> Counts:
         """
         Count the number of trials available for each unit in the population.
 
         Arguments
         ---------
-        coords_by_unit : List[CoordManager]
+        coords_by_unit : List[Features]
             See the class attribute `coords_by_unit`.
         exp_cond : ExpCondition
             See the method argument `exp_cond`.
