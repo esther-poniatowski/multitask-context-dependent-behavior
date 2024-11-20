@@ -130,21 +130,23 @@ class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
                 raise ValueError(f"Invalid values for {cls.__name__}: {invalid_values}")
 
     @classmethod
-    def from_shape(cls, shape: Tuple[int, ...], **metadata) -> Self:
+    def from_shape(cls, shape: int | Tuple[int, ...], **metadata) -> Self:
         """
         Create an empty coordinate object with no labels.
 
         Parameters
         ----------
-        shape : Tuple[int, ...]
-            Shape of the array to create.
+        shape : int, Tuple[int, ...]
+            Shape of the array to create. If an integer is passed, the array will be 1D.
 
         Returns
         -------
         Coordinate
             Instance of the subclass with an empty array as labels.
         """
-        values = np.full(shape, cls.SENTINEL, dtype=cls.DTYPE)
+        if isinstance(shape, int):  # convert to tuple for consistency
+            shape = (shape,)
+        values = np.full(shape=shape, fill_value=cls.SENTINEL, dtype=cls.DTYPE)
         return cls(values=values, **metadata)
 
     # --- Interaction with Entities ----------------------------------------------------------------
