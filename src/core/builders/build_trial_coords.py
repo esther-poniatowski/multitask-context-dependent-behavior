@@ -7,7 +7,7 @@ Classes
 -------
 `TrialCoordsBuilder`
 """
-from typing import Type, Dict, Tuple
+from typing import Type, Dict, Iterable, Tuple
 from functools import cached_property
 
 from core.builders.base_builder import CoordinateBuilder
@@ -25,7 +25,7 @@ class TrialCoordsBuilder(CoordinateBuilder[CoordExpFactor]):
     ----------
     counts_by_condition : Dict[ExpCondition, int]
         Number of trials for each experimental condition of interest.
-    order_conditions : Tuple[ExpCondition]
+    order_conditions : Iterable[ExpCondition]
         Order in which the experimental conditions appear in the output coordinates.
     conditions_boundaries : Dict[ExpCondition, Tuple[int, int]]
         Start and end indices of the trials for each condition along the trials dimension in the
@@ -60,7 +60,7 @@ class TrialCoordsBuilder(CoordinateBuilder[CoordExpFactor]):
     PRODUCT_CLASS = CoordExpFactor
 
     def __init__(
-        self, counts_by_condition: Dict[ExpCondition, int], order_conditions: Tuple[ExpCondition]
+        self, counts_by_condition: Dict[ExpCondition, int], order_conditions: Iterable[ExpCondition]
     ) -> None:
         # Call the base class constructor: declare empty product and internal data
         super().__init__()
