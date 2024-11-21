@@ -169,6 +169,7 @@ class FormatPopulationData(Pipeline):
         coords_by_unit = [Features(**tp.get_coords_from_dim("trials")) for tp in trials_props]
 
         # Determine the number of trials to form in each condition
+        order_conditions = self.exp_conds.get()
         # Count the number of trials available for each unit in the population
         counter = TrialsCounter(coords_by_unit=coords_by_unit)
         counts_by_cond = {cond: counter.process(exp_cond=cond) for cond in self.exp_conds}
@@ -182,7 +183,7 @@ class FormatPopulationData(Pipeline):
         # Build pseudo-trials
 
         # Build the trial-related coordinates
-        builder_trials_coords = TrialCoordsBuilder(counts_by_condition=counts_by_condition)
+        builder_trials_coords = TrialCoordsBuilder(counts_by_condition, order_conditions)
         for name, coord_type in self.coords_trials.items():
             coord = builder_trials_coords.build(coord_type=coord_type)
             data_structure.set_coord(name, coord)

@@ -8,7 +8,7 @@ Classes
 `PseudoTrialsBuilder`
 
 """
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Iterable
 
 import numpy as np
 
@@ -59,7 +59,7 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
         Number of folds for cross-validation.
     counts_by_condition : Dict[ExpCondition, int]
         Number of pseudo-trials to form for one fold in each experimental condition of interest.
-    order_conditions : Tuple[ExpCondition, ...]
+    order_conditions : Iterable[ExpCondition, ...]
         Order in which to concatenate the pseudo-trials for each condition in the output coordinate.
 
     Methods
@@ -85,7 +85,7 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
         self,
         k: int,
         counts_by_condition: Dict[ExpCondition, int],
-        order_conditions: Tuple[ExpCondition, ...],
+        order_conditions: Iterable[ExpCondition],
     ) -> None:
         # Call the base class constructor: declare empty product and internal data
         super().__init__()
@@ -295,7 +295,7 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
     def gather_conditions(
         pseudo_trials_by_cond: Dict[ExpCondition, CoordPseudoTrialsIdx],
         counts_by_condition: Dict[ExpCondition, int],
-        order_conditions: Tuple[ExpCondition, ...],
+        order_conditions: Iterable[ExpCondition],
         axis: int = TRIALS_AXIS,
     ) -> CoordPseudoTrialsIdx:
         """
