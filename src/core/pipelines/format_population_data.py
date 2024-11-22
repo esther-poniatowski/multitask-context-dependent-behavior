@@ -90,7 +90,7 @@ class FormatPopulationData(Pipeline):
             Brain area of interest.
         training : Training
             Training status of the animals.
-        loaders_trial_prop : PopulationContainer[Loader]
+        loaders_trial_prop : UnitsContainer[Loader]
             Loaders for the files containing the trial properties of each unit in the population.
         """
         assert loaders_trial_prop is not None
@@ -98,27 +98,22 @@ class FormatPopulationData(Pipeline):
         # Initialize the data structure
         data_structure = FiringRatesPop(area=area, training=training)
 
-        # Retrieve each unit's file containing its trials properties
+        # Retrieve units
+        units = loaders_trial_prop.units
+        # Load the trials' properties for each unit
         trials_props: UnitsContainer[TrialsProperties] = loaders_trial_prop.load()
-
         # Retrieve the coordinates of interest
-        features = UnitsContainer(
-            {
-                unit: Features(**tp.get_coords_from_dim("trials"))  # TODO: replace
-                for unit, tp in trials_props.items()
-            },
-            value_type=Features,
-        )
+        features = trials_props.apply(lambda tp: Features(**tp.get_coords_from_dim("features")))
 
-        # Count the number of trials available for each unit in the population
+        # Count the number of trials available for each unit in each condition
         counter = TrialsCounter(feat_by_unit=features.fetch())
         counts_actual = ExpCondContainer(
             {cond: counter.process(cond) for cond in self.exp_conds}, value_type=np.ndarray
         )
-        # Determine the number of trials to form in each condition
+        # Determine the number of trials to form in each condition based on the actual counts
         sizer = SampleSizer(k=self.k, n_min=self.n_min, thres_perc=self.thres_perc)
         counts_final = counts_actual.apply(sizer.process)
-        # Exclude units with insufficient trials
+        # Exclude units with insufficient trials # TODO
         for cond, n_min in counts_final.items():
             units = list(Excluder.exclude_from_counts(counts_actual[cond], n_min))
 
