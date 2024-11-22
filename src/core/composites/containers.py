@@ -11,6 +11,7 @@ from collections import UserDict
 from typing import List, Callable, Any, Iterable, Tuple, Dict, Self, TypeVar, Generic, Type
 
 from core.entities.bio_info import Unit
+from core.composites.exp_conditions import ExpCondition
 
 
 K = TypeVar("K")
@@ -131,16 +132,19 @@ class Container(UserDict[K, V], Generic[K, V]):
             )
         super().__setitem__(key, value)
 
-    def fetch(self, keys: Iterable[K]) -> List[V]:
+    def fetch(self, keys: Iterable[K] | None = None) -> List[V]:
         """
-        Fetch values for a subset of keys, in a specific order.
+        Fetch values for all or a subset of keys, in a specific order.
 
         Arguments
         ---------
-        keys : Iterable[K]
+        keys : Iterable[K], optional
             Iterable of keys to retrieve the values for.
+            If `None`, return all values in the container.
         """
-        return [self.data[key] for key in keys if key in self.data]
+        if keys is None:
+            return list(self.data.values())
+        return [self.data[k] for k in keys]
 
     def get_subset(self, keys: Iterable[K]) -> Self:
         """
@@ -213,18 +217,15 @@ class Container(UserDict[K, V], Generic[K, V]):
         """
         return self.get_subset([k for k, v in self.data.items() if predicate(v)])
 
-    def apply(
-        self, func: Callable[[V, Any, Any], R], *args: Any, **kwargs: Any
-    ) -> "Container[K, R]":
+    def apply(self, func: Callable[[V, Any], R], **kwargs: Any) -> "Container[K, R]":
         """
-        Apply a function to all values across keys, optionally with additional arguments.
+        Apply a function to all values across keys, optionally with additional keyword arguments.
 
         Arguments
         ---------
-        func : Callable[[V, Any, Any], R]
-            Function to apply to each value in the container.
-        *args
-            Positional arguments to pass to the function.
+        func : Callable[[V, Any], R]
+            Function to apply to each value in the container. The function should take the value as
+            a first argument and additional keyword arguments.
         **kwargs
             Keyword arguments to pass to the function.
 
@@ -241,7 +242,7 @@ class Container(UserDict[K, V], Generic[K, V]):
         ...     return data + increment
         ...
         >>> container = Container({"a": 1, "b": 2}, key_type=str, value_type=int)
-        >>> new_container = container.apply(add, 10)
+        >>> new_container = container.apply(add, increment=10)
         >>> print(new_container.data)
         {"a": 11, "b": 12}
 
@@ -252,7 +253,7 @@ class Container(UserDict[K, V], Generic[K, V]):
         which are `Type[V]` for the values instead of `Type[R]`.
         """
         # Apply the function to all values
-        result_data = {k: func(v, *args, **kwargs) for k, v in self.data.items()}
+        result_data = {k: func(v, **kwargs) for k, v in self.data.items()}
         # Determine the type of the result values
         _, result_type = self.find_types(result_data)
         # Create a new container with new data
@@ -384,7 +385,7 @@ class UnitsContainer(Container[Unit, V]):
 
     >>> units = [Unit("avo052a-d1"), Unit("lemon052a-b2")]
     >>> values = [1, 2]
-    >>> container = PopulationContainer(units, values, value_type=int)
+    >>> container = UnitsContainer(units, values, value_type=int)
 
     """
 
@@ -397,4 +398,34 @@ class UnitsContainer(Container[Unit, V]):
     @property
     def units(self) -> List[Unit]:
         """Get the units in the container."""
+        return list(self.data.keys())
+
+
+class ExpCondContainer(Container[ExpCondition, V]):
+    """
+    Container for experimental conditions.
+
+    Class Attributes
+    ----------------
+    KEY_TYPE : Type[ExpCondition]
+        Type of the keys in the container.
+
+    Examples
+    --------
+    Initialize an `ExpCondContainer` with a dictionary of integer values:
+
+    >>> exp_conds_to_values = {ExpCondition("a"): 1, ExpCondition("b"): 2}
+    >>> container = ExpCondContainer(exp_conds_to_values, value_type=int)
+
+    """
+
+    KEY_TYPE = ExpCondition
+
+    def __init__(self, *args, value_type: Type[V], **kwargs) -> None:
+        """Fix `key_type` to `ExpCondition` and allow dynamic `value_type`."""
+        super().__init__(*args, key_type=self.KEY_TYPE, value_type=value_type, **kwargs)
+
+    @property
+    def exp_conditions(self) -> List[ExpCondition]:
+        """Get the experimental conditions in the container."""
         return list(self.data.keys())
