@@ -11,7 +11,7 @@ Classes
 `CoordUnit`
 `CoordDepth`
 """
-from typing import Dict, Tuple, Any
+from typing import Dict, Tuple, Any, Iterable
 
 import numpy as np
 
@@ -75,6 +75,44 @@ class CoordUnit(Coordinate[np.str_, Unit]):
             return f"<{self.__class__.__name__}>: {len(self)} units."
         n_ens, n_units = self.shape
         return f"<{self.__class__.__name__}>: {n_ens} ensembles, {n_units} units each."
+
+    def iter_through(self, iterable: Iterable[Any], units: Iterable[Unit]) -> Iterable:
+        """
+        Iterate over an iterable of values associated to units in the initial population, and yield
+        the values of the units selected in the ensemble.
+
+        Arguments
+        ---------
+        iterable : Iterable
+            Iterable of values associated to the units in the population.
+        units : Iterable[Unit]
+            Units in the population (identifiers as in the coordinate).
+        Yields
+        ------
+        value : Any
+            Value associated to the unit in the ensemble.
+
+        Examples
+        --------
+        Iterate over the firing rates of the units in an ensemble specified by a coordinate:
+
+        >>> coord_units = CoordUnit(['avo052a-d1', 'avo052a-d2'])
+        >>> units = ['avo052a-d1', 'lemon023a-b1', 'avo052a-d2', 'lemon024b-d3']
+        >>> firing_rates = [0.1, 0.2, 0.3, 0.4]
+        >>> for fr in coord_units.iter_through(firing_rates, units):
+        ...    print(fr)
+        0.1
+        0.3
+
+        Notes
+        -----
+        For generality, iteration is performed via a dictionary of unit-value pairs rather than via
+        the `index` method and the bracket indexing of the iterable (which are not necessarily
+        supported by all iterable types).
+        """
+        unit_value_dict = dict(zip(units, iterable))
+        for unit in self:
+            yield unit_value_dict[unit]
 
 
 class CoordDepth(Coordinate[np.str_, CorticalDepth]):
