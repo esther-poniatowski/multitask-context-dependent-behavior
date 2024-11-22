@@ -50,7 +50,7 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
 
     Class Attributes
     ----------------
-    TRiALS_AXIS : int
+    TRIALS_AXIS : int
         Axis along which the trials are stored in the coordinate. Here, ``-1`` for the last axis.
 
     Attributes
@@ -64,6 +64,13 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
 
     Methods
     -------
+    `build` (required)
+    `initialize_coord`
+    `build_for_condition`
+    `build_for_fold`
+    `recover_indices`
+    `gather_conditions`
+    `gather_ensembles`
 
     Notes
     -----
@@ -320,6 +327,10 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
         ValueError
             If the number of pseudo-trials for one condition does not match the number of trials in
             the output coordinate.
+
+        See Also
+        --------
+        `np.concatenate`: Concatenate arrays along a pre-existing axis, here the trials axis (-1).
         """
         # Check that number of pseudo-trials for each condition
         for exp_cond, pseudo_trials in pseudo_trials_by_cond.items():
@@ -336,4 +347,41 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
                 [pseudo_trials_by_cond[exp_cond] for exp_cond in order_conditions], axis=axis
             )
         )
+        return pseudo_trials
+
+    @staticmethod
+    def gather_ensembles(
+        pseudo_trials_by_ensemble: List[CoordPseudoTrialsIdx],
+    ) -> CoordPseudoTrialsIdx:
+        """
+        Gather the pseudo-trials for all the ensembles with equal number of units.
+
+        Create a new dimension for ensembles in first position.
+
+        Arguments
+        ---------
+        pseudo_trials_by_ensemble : List[CoordPseudoTrialsIdx]
+            Pseudo-trials for each ensemble.
+
+        Returns
+        -------
+        pseudo_trials : CoordPseudoTrialsIdx
+            Coordinate for the pseudo-trials of all the ensembles.
+            Shape: ``(n_ensembles, n_units, k, n_pseudo)``.
+
+        Raises
+        ------
+        ValueError
+            If the number of units, folds or pseudo-trials do not match across the ensembles.
+
+        See Also
+        --------
+        `np.stack`: Stack arrays along a new axis, here the ensembles axis (0).
+        """
+        # Check that number of units, folds and pseudo-trials match across ensembles
+        shapes = [pseudo_trials.shape for pseudo_trials in pseudo_trials_by_ensemble]
+        if len(set(shapes)) != 1:
+            raise ValueError(f"Mismatch in the shape of pseudo-trials across ensembles: {shapes}")
+        # Stack along the ensemble dimension
+        pseudo_trials = CoordPseudoTrialsIdx(np.stack(pseudo_trials_by_ensemble, axis=0))
         return pseudo_trials
