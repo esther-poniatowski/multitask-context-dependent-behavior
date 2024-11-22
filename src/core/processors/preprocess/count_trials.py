@@ -96,39 +96,38 @@ class SampleSizer(Processor):
 
     Attributes
     ----------
-    counts : np.ndarray[Tuple[Any], np.dtype[np.int64]]
-        Number of trials available for each unit in the population for the specified condition.
-        Shape: ``(n_units,)``.
+    k : int
+        Number of folds in the cross-validation.
+    n_min : int
+        Minimum number of trials required for one unit.
+    thres_perc : float
+        Percentage of the smallest count to consider for the sample size.
     """
 
-    def __init__(self, counts: Counts):
-        self.counts = counts
+    def __init__(
+        self, k: int = 1, n_min: int = N_TRIALS_MIN, thres_perc: float = BOOTSTRAP_THRES_PERC
+    ) -> None:
+        self.k = k
+        self.n_min = n_min
+        self.thres_perc = thres_perc
 
-    def process(
-        self,
-        k: int = 1,
-        n_min: int = N_TRIALS_MIN,
-        thres_perc: float = BOOTSTRAP_THRES_PERC,
-        **kwargs
-    ):
+    def process(self, counts: Counts | None = None, **kwargs) -> int:
         """
         Implement the template method called in the base class `process` method.
 
         Arguments
         ---------
-        k : int
-            Number of folds in the cross-validation.
-        n_min : int
-            Minimum number of trials required for one unit.
-        thres_perc : float
-            Percentage of the smallest count to consider for the sample size.
+        counts : np.ndarray[Tuple[Any], np.dtype[np.int64]]
+            Number of trials available for each unit in the population for the specified condition.
+            Shape: ``(n_units,)``.
 
         Returns
         -------
         sample_size : int
             Number of pseudo-trials to form in the condition.
         """
-        sample_size = self.eval_sample_size(self.counts, k, n_min, thres_perc)
+        assert counts is not None
+        sample_size = self.eval_sample_size(counts, self.k, self.n_min, self.thres_perc)
         return sample_size
 
     # --- Processing Methods -----------------------------------------------------------------------
