@@ -7,15 +7,18 @@ Classes representing the biological system under investigation.
 
 Classes
 -------
+`BrainInfo`
 `Animal`
 `Training`
 `Area`
 `CorticalDepth`
+`Site`
+`Unit`
 """
 from functools import cached_property
 import re
 from types import MappingProxyType
-from typing import FrozenSet, Self, Tuple, TypedDict
+from typing import FrozenSet, Self, Tuple
 
 from core.entities.base_entity import Entity
 
