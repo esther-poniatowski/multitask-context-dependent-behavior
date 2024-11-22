@@ -125,8 +125,11 @@ class EnsemblesBuilder(CoordinateBuilder[CoordUnit]):
         - Select elements from the units array using the indices specified in ensembles.
         - Broadcast the units array to the shape of ensembles.
 
+        See Also
+        --------
+        `Coordinate.from_shape`
         """
         n_ensembles, _ = ensembles.shape
-        coord = CoordUnit(np.full((n_ensembles, self.ensemble_size), "", dtype=np.str_))
+        coord = CoordUnit.from_shape((n_ensembles, self.ensemble_size))
         coord[:, :] = np.array(units)[ensembles]
         return coord
