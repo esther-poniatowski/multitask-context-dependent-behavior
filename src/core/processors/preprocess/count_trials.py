@@ -30,7 +30,7 @@ class TrialsCounter(Processor):
 
     Attributes
     ----------
-    coords_by_unit : List[Features]
+    feat_by_unit : List[Features]
         Coordinates containing the factors of interest for splitting trials by condition.
         Number of elements: ``n_units``, number of units.
         Elements: ``Features``, behaving like a list of coordinates with identical numbers of
@@ -44,8 +44,8 @@ class TrialsCounter(Processor):
     `core.processors.preprocess.base_processor.Processor`
     """
 
-    def __init__(self, coords_by_unit: List[Features]):
-        self.coords_by_unit = coords_by_unit
+    def __init__(self, feat_by_unit: List[Features]):
+        self.feat_by_unit = feat_by_unit
 
     def process(self, exp_cond: ExpCondition | None = None, **kwargs) -> Counts:
         """Implement the template method called in the base class `process` method.
@@ -62,19 +62,19 @@ class TrialsCounter(Processor):
             Shape: ``(n_units,)``.
         """
         assert exp_cond is not None
-        counts = self.count_in_condition(coords_by_unit=self.coords_by_unit, exp_cond=exp_cond)
+        counts = self.count_in_condition(feat_by_unit=self.feat_by_unit, exp_cond=exp_cond)
         return counts
 
     # --- Processing Methods -----------------------------------------------------------------------
 
-    def count_in_condition(self, coords_by_unit: List[Features], exp_cond: ExpCondition) -> Counts:
+    def count_in_condition(self, feat_by_unit: List[Features], exp_cond: ExpCondition) -> Counts:
         """
         Count the number of trials available for each unit in the population.
 
         Arguments
         ---------
-        coords_by_unit : List[Features]
-            See the class attribute `coords_by_unit`.
+        feat_by_unit : List[Features]
+            See the class attribute `feat_by_unit`.
         exp_cond : ExpCondition
             See the method argument `exp_cond`.
 
@@ -83,9 +83,9 @@ class TrialsCounter(Processor):
         counts : np.ndarray[Tuple[Any], np.dtype[np.int64]]
             See the method return value `counts`.
         """
-        n_units = len(coords_by_unit)
+        n_units = len(feat_by_unit)
         counts = np.zeros(n_units, dtype=int)
-        for i, coords in enumerate(coords_by_unit):
+        for i, coords in enumerate(feat_by_unit):
             counts[i] = coords.count(exp_cond)
         return counts
 

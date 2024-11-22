@@ -102,14 +102,14 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
         self.order_conditions = order_conditions
 
     def build(
-        self, coords_by_unit: List[Features] | None = None, seed: int = 0, **kwargs
+        self, feat_by_unit: List[Features] | None = None, seed: int = 0, **kwargs
     ) -> CoordPseudoTrialsIdx:
         """
         Implement the base class method.
 
         Arguments
         ---------
-        coords_by_unit : List[Features]
+        feat_by_unit : List[Features]
             Coordinates of the trials for each unit in the population.
         seed : int
             Seed used by the bootstrapper.
@@ -119,9 +119,9 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
         pseudo_trials : PseudoTrials
             Data structure product instance.
         """
-        assert coords_by_unit is not None
+        assert feat_by_unit is not None
         pseudo_trials = {
-            exp_cond: self.build_for_condition(exp_cond, coords_by_unit, self.k, n_pseudo, seed)
+            exp_cond: self.build_for_condition(exp_cond, feat_by_unit, self.k, n_pseudo, seed)
             for exp_cond, n_pseudo in self.counts_by_condition.items()
         }
         self.product = self.gather_conditions(
@@ -160,7 +160,7 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
 
     @staticmethod
     def build_for_condition(
-        exp_cond: ExpCondition, coords_by_unit: List[Features], k: int, n_pseudo: int, seed: int
+        exp_cond: ExpCondition, feat_by_unit: List[Features], k: int, n_pseudo: int, seed: int
     ) -> CoordPseudoTrialsIdx:
         """
         Build the pseudo-trials for one experimental condition.
@@ -189,10 +189,10 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
         `FoldAssigner`
         """
         # Initialize the coordinate to fill, fold by fold and unit by unit
-        n_units = len(coords_by_unit)
+        n_units = len(feat_by_unit)
         pseudo_trials = PseudoTrialsBuilder.initialize_coord(n_units, k, n_pseudo)
         # Find the indices and counts of the trials in the condition for each unit
-        idx_in_cond = [coords.match_idx(exp_cond) for coords in coords_by_unit]  # n_units arrays
+        idx_in_cond = [coords.match_idx(exp_cond) for coords in feat_by_unit]  # n_units arrays
         counts_in_cond = [len(idx) for idx in idx_in_cond]  # for FoldAssigner
         # Assign trials to folds for each unit
         assigner = FoldAssigner(k=k)
