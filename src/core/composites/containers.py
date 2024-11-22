@@ -217,7 +217,7 @@ class Container(UserDict[K, V], Generic[K, V]):
         """
         return self.get_subset([k for k, v in self.data.items() if predicate(v)])
 
-    def apply(self, func: Callable[[V, Any], R], **kwargs: Any) -> "Container[K, R]":
+    def apply(self, func: Callable[[V], R], **kwargs: Any) -> "Container[K, R]":
         """
         Apply a function to all values across keys, optionally with additional keyword arguments.
 
@@ -251,6 +251,11 @@ class Container(UserDict[K, V], Generic[K, V]):
         To create a new instance, call `Container` instead of `self.__class__` to ensure that the
         new types can be set. Otherwise, the types would be inherited from the current instance,
         which are `Type[V]` for the values instead of `Type[R]`.
+
+        Signature of the function (`Callable[[V], R]`):
+
+        - It imposes a single positional argument: the value of type `V`.
+        - It allows to pass any additional arguments as keyword arguments `**kwargs`.
         """
         # Apply the function to all values
         result_data = {k: func(v, **kwargs) for k, v in self.data.items()}
