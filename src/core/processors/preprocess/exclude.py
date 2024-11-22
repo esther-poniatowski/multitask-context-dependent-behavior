@@ -16,9 +16,6 @@ from typing import List, Any, Iterable
 import numpy as np
 
 
-Counts = Iterable[int]
-
-
 class Excluder:
     """
     Utilities to exclude elements from a set from various criteria.
@@ -67,13 +64,13 @@ class Excluder:
         return [element for element in candidates if element not in intruders]
 
     @staticmethod
-    def exclude_from_counts(counts: Counts, n_min: int) -> np.ndarray:
+    def exclude_from_counts(counts: Iterable[int], n_min: int) -> np.ndarray:
         """
         Exclude elements associated with counts inferior to a required minimum.
 
         Arguments
         ---------
-        counts : Counts
+        counts : Iterable[int]
             Counts provided by each element in the (implicit) set to consider.
         n_min : int
             Minimum count required to retain an element.
