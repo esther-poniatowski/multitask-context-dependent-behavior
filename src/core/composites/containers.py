@@ -122,9 +122,9 @@ class Container(UserDict[K, V], Generic[K, V]):
           class.
         """
         if key_type is None:
-            raise ValueError("Missing argument: `key_type`")
+            raise ValueError(f"Missing argument: `key_type` for {self.__class__.__name__}")
         if value_type is None:
-            raise ValueError("Missing argument: `value_type`")
+            raise ValueError(f"Missing argument: `value_type` for {self.__class__.__name__}")
         self.key_type: Type[K] = key_type
         self.value_type: Type[V] = value_type
         super().__init__(*args, **kwargs)  # pass remaining `args` and `kwargs` to `UserDict`
