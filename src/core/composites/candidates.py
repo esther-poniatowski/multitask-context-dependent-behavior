@@ -9,7 +9,7 @@ Classes
 
 """
 from collections import UserList
-from typing import Iterable, Callable, TypeVar, Generic
+from typing import Iterable, Callable, TypeVar, Generic, List
 
 T = TypeVar("T")
 """Type variable representing the type of elements in the candidate set."""
@@ -43,6 +43,17 @@ class Candidates(UserList, Generic[T]):
 
     def __init__(self, candidates: Iterable[T]) -> None:
         super().__init__(candidates)
+
+    def to_list(self) -> List[T]:
+        """
+        Return the candidate set as a list.
+
+        Returns
+        -------
+        List[T]
+            Candidate set as a list.
+        """
+        return self.data
 
     def exclude(self, intruders: Iterable) -> None:
         """

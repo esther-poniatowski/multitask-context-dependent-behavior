@@ -56,10 +56,12 @@ class Container(UserDict[K, V], Generic[K, V]):
     `__setitem__`
     `list_keys`
     `list_values`
+    `to_dict`
     `get_subset`
     `filter_on_keys`
     `filter_on_values`
     `apply`
+    `fill`
     `__getattr__`
     `find_types`
 
@@ -216,6 +218,17 @@ class Container(UserDict[K, V], Generic[K, V]):
         if keys is None:
             return list(self.data.values())
         return [self.data[k] for k in keys]
+
+    def to_dict(self) -> Dict[K, V]:
+        """
+        Convert the container to a dictionary.
+
+        Returns
+        -------
+        Dict[K, V]
+            Dictionary with the data in the container.
+        """
+        return dict(self.data)
 
     def get_subset(self, keys: Iterable[K]) -> Self:
         """
