@@ -64,7 +64,7 @@ class Excluder:
         return [element for element in candidates if element not in intruders]
 
     @staticmethod
-    def exclude_from_counts(counts: Iterable[int], n_min: int) -> np.ndarray:
+    def exclude_from_counts(counts: Iterable[int], n_min: int) -> List:
         """
         Exclude elements associated with counts inferior to a required minimum.
 
@@ -77,7 +77,7 @@ class Excluder:
 
         Returns
         -------
-        idx : np.ndarray
+        idx : List
             Indices of the element to retain.
 
         Implementation
@@ -87,4 +87,4 @@ class Excluder:
         a single element is returned. To extract the indices, the first element of the tuple is
         used.
         """
-        return np.where(np.array(counts) >= n_min)[0]
+        return list(np.where(np.array(counts) >= n_min)[0])
