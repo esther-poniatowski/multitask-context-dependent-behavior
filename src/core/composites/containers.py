@@ -6,6 +6,8 @@
 Classes
 -------
 `Container`
+`UnitsContainer`
+`ExpCondContainer`
 """
 from collections import UserDict
 from typing import List, Callable, Any, Iterable, Tuple, Dict, Self, TypeVar, Generic, Type
@@ -59,11 +61,14 @@ class Container(UserDict[K, V], Generic[K, V]):
     Methods
     -------
     `__setitem__`
-    `fetch`
+    `list_keys`
+    `list_values`
     `get_subset`
     `filter_on_keys`
     `filter_on_values`
     `apply`
+    `__getattr__`
+    `find_types`
 
     Examples
     --------
@@ -132,14 +137,25 @@ class Container(UserDict[K, V], Generic[K, V]):
             )
         super().__setitem__(key, value)
 
-    def fetch(self, keys: Iterable[K] | None = None) -> List[V]:
+    def list_keys(self) -> List[K]:
         """
-        Fetch values for all or a subset of keys, in a specific order.
+        Get a list of keys in the container.
+
+        Returns
+        -------
+        List[K]
+            List of keys in the container.
+        """
+        return list(self.data.keys())
+
+    def list_values(self, keys: Iterable[K] | None = None) -> List[V]:
+        """
+        Get a list of values for all or a subset of keys in a specific order.
 
         Arguments
         ---------
         keys : Iterable[K], optional
-            Iterable of keys to retrieve the values for.
+            Keys to retrieve the values for.
             If `None`, return all values in the container.
         """
         if keys is None:
@@ -153,7 +169,7 @@ class Container(UserDict[K, V], Generic[K, V]):
         Arguments
         ---------
         keys : Iterable[K]
-            Iterable of keys to filter the data.
+            Keys included in the subset.
 
         Returns
         -------
@@ -179,13 +195,16 @@ class Container(UserDict[K, V], Generic[K, V]):
 
         Examples
         --------
-        Filter the units in a `UnitsContainer` based on the brain area:
+        Filter the units in based on the brain area to which they belong:
 
         >>> def predicate(unit: Unit) -> bool:
         ...     return unit.area == "PFC"
-        >>> container = UnitsContainer({Unit("avo052a-d1"): 1, Unit("lemon052a-b2"): 2})
+        ...
+        >>> data = {Unit("avo052a-d1"): 1, Unit("lemon052a-b2"): 2}
+        >>> container = Container(data, key_type=Unit, value_type=int)
         >>> container.filter_on_keys(predicate)
-        UnitsContainer({Unit("avo052a-d1"): 1})
+        >>> container.data
+        {Unit("avo052a-d1"): 1}
         """
         return self.get_subset([k for k in self.data.keys() if predicate(k)])
 

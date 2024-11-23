@@ -99,14 +99,14 @@ class FormatPopulationData(Pipeline):
         data_structure = FiringRatesPop(area=area, training=training)
 
         # Retrieve units
-        units = loaders_trial_prop.units
+        units = loaders_trial_prop.list_keys()
         # Load the trials' properties for each unit
         trials_props: UnitsContainer[TrialsProperties] = loaders_trial_prop.load()
         # Retrieve the coordinates of interest
         features = trials_props.apply(lambda tp: Features(**tp.get_coords_from_dim("features")))
 
         # Count the number of trials available for each unit in each condition
-        counter = TrialsCounter(feat_by_unit=features.fetch())
+        counter = TrialsCounter(feat_by_unit=features.list_values())
         counts_actual = ExpCondContainer(
             {cond: counter.process(cond) for cond in self.exp_conds}, value_type=np.ndarray
         )
