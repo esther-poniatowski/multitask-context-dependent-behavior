@@ -35,14 +35,7 @@ class Container(UserDict[K, V], Generic[K, V]):
 
     Arguments
     ---------
-    key_type : Type[K]
-        Type of the keys in the container.
-    value_type : Type[V]
-        Type of the values in the container.
-    *args
-        Arguments to initialize the dictionary, inherited from `UserDict`.
-    **kwargs
-        Keyword arguments to initialize the dictionary, inherited from `UserDict`.
+    See the `__init__` method or the `from_keys` class method.
 
     Attributes
     ----------
@@ -101,6 +94,19 @@ class Container(UserDict[K, V], Generic[K, V]):
         """
         Initialize the container with the key and value types.
 
+        Arguments
+        ---------
+        key_type : Type[K]
+            Type of the keys in the container. Required for the base `Container` class, can be fixed
+            by subclasses.
+        value_type : Type[V]
+            Type of the values in the container. Required for the base `Container` class, can be
+            fixed by subclasses.
+        *args
+            Arguments to initialize the data dictionary, inherited from `UserDict`.
+        **kwargs
+            Keyword arguments to initialize the dictionary, inherited from `UserDict`.
+
         Implementation
         --------------
         The parameters `value_type` and `key_type`are keyword-only arguments. Justification for this
@@ -121,7 +127,7 @@ class Container(UserDict[K, V], Generic[K, V]):
             raise ValueError("Missing argument: `value_type`")
         self.key_type: Type[K] = key_type
         self.value_type: Type[V] = value_type
-        super().__init__(*args, **kwargs)  # pass remaining args and kwargs to UserDict
+        super().__init__(*args, **kwargs)  # pass remaining `args` and `kwargs` to `UserDict`
 
     def __setitem__(self, key: K, value: V) -> None:
         """
@@ -136,6 +142,55 @@ class Container(UserDict[K, V], Generic[K, V]):
                 f"Invalid value type: {type(value).__name__} instead of {self.value_type.__name__}"
             )
         super().__setitem__(key, value)
+
+    @classmethod
+    def from_keys(
+        cls,
+        keys: Iterable[K],
+        fill_value: V,
+        *,
+        key_type: Type[K] | None = None,
+        value_type: Type[V] | None = None,
+    ) -> "Container[K, V]":
+        """
+        Initialize a Container with keys and a specified fill value.
+
+        Arguments
+        ---------
+        keys : Iterable[K]
+            Keys to initialize the container with.
+        fill_value : V
+            Default value to assign to all keys. Must match the specified `value_type`.
+        key_type : Type[K] | None, optional
+            See the argument `key_type` in the constructor.
+        value_type : Type[V] | None, optional
+            See the argument `value_type` in the constructor.
+
+        Returns
+        -------
+        Container[K, V]
+            Container instance with the specified keys and fill value.
+
+        Notes
+        -----
+        Type validation is performed automatically when calling the constructor.
+        The parameters `key_type` and `value_type` are keyword-only arguments to allow for flexible
+        subclassing. See the explanation in the constructor.
+
+        Examples
+        --------
+        Initialize a container with a list of keys and a default value:
+
+        >>> keys = ["a", "b"]
+        >>> container = Container.from_keys(keys, 0, key_type=str, value_type=int)
+        >>> print(container.data)
+        {"a": 0, "b": 0}
+        """
+        if key_type is None:
+            raise ValueError("Missing argument: `key_type`")
+        if value_type is None:
+            raise ValueError("Missing argument: `value_type`")
+        return cls({key: fill_value for key in keys}, key_type=key_type, value_type=value_type)
 
     def list_keys(self) -> List[K]:
         """
@@ -235,6 +290,20 @@ class Container(UserDict[K, V], Generic[K, V]):
         Container({Unit("lemon052a-b2"): 2})
         """
         return self.get_subset([k for k, v in self.data.items() if predicate(v)])
+
+    def fill(self, func: Callable[[K], V], **kwargs: Any) -> None:
+        """
+        Generate values from the keys by applying a function on them.
+
+        Arguments
+        ---------
+        func : Callable[[K], V]
+            Function that takes a key and returns a value.
+        **kwargs : Any
+            Additional keyword arguments to pass to the function.
+        """
+        for key in self.data.keys():
+            self.data[key] = func(key, **kwargs)
 
     def apply(self, func: Callable[[V], R], **kwargs: Any) -> "Container[K, R]":
         """
@@ -415,9 +484,16 @@ class UnitsContainer(Container[Unit, V]):
 
     KEY_TYPE = Unit
 
-    def __init__(self, *args, value_type: Type[V], **kwargs) -> None:
-        """Fix `key_type` to `Units` and allow dynamic `value_type`."""
+    def __init__(self, *args, value_type: Type[V] | None = None, **kwargs) -> None:
+        """Override the base constructor to fix `key_type` and allow dynamic `value_type`."""
         super().__init__(*args, key_type=self.KEY_TYPE, value_type=value_type, **kwargs)
+
+    @classmethod
+    def from_keys(
+        cls, keys: Iterable[Unit], fill_value: V, *, value_type: Type[V] | None = None, **kwargs
+    ) -> "UnitsContainer[V]":
+        """Override the base class method to fix `key_type` and allow dynamic `value_type`."""
+        return cls({key: fill_value for key in keys}, value_type=value_type, **kwargs)
 
     @property
     def units(self) -> List[Unit]:
@@ -445,9 +521,21 @@ class ExpCondContainer(Container[ExpCondition, V]):
 
     KEY_TYPE = ExpCondition
 
-    def __init__(self, *args, value_type: Type[V], **kwargs) -> None:
-        """Fix `key_type` to `ExpCondition` and allow dynamic `value_type`."""
+    def __init__(self, *args, value_type: Type[V] | None = None, **kwargs) -> None:
+        """Override the base constructor to fix `key_type` and allow dynamic `value_type`."""
         super().__init__(*args, key_type=self.KEY_TYPE, value_type=value_type, **kwargs)
+
+    @classmethod
+    def from_keys(
+        cls,
+        keys: Iterable[ExpCondition],
+        fill_value: V,
+        *,
+        value_type: Type[V] | None = None,
+        **kwargs,
+    ) -> "ExpCondContainer[V]":
+        """Override the base class method to fix `key_type` and allow dynamic `value_type`."""
+        return cls({key: fill_value for key in keys}, value_type=value_type, **kwargs)
 
     @property
     def exp_conditions(self) -> List[ExpCondition]:
