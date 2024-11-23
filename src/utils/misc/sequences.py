@@ -1,28 +1,37 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`utils.misc.sequences` [module]
+`utils.misc.sequences` [module]
 
 Utilities for sequences or iterables (lists, dictionaries, tuples, array-like...).
 
 Functions
 ---------
-:func:`unique`
+`unique`
+`reverse_dict_container`
+`exclude_by_difference`
+`filter_by_predicate`s
 
 See Also
 --------
-:mod:`tests_core.test_utils.test_sequences`: Unit tests for this module.
+`tests_core.test_utils.test_sequences`: Unit tests for this module.
 """
 from collections import defaultdict
 from collections.abc import Hashable  # pylint: disable=unused-import
-from typing import List, Tuple, Dict, Mapping, Iterable, TypeVar
+from typing import List, Tuple, Dict, Mapping, Iterable, TypeVar, Callable, Any
 
 
 import numpy as np
-import numpy.typing as npt
 
 
-I = TypeVar("I", npt.NDArray, List, Tuple)
+I = TypeVar("I", np.ndarray, List, Tuple)
+"""Type variable for input sequences."""
+
+K = TypeVar("K")
+"""Type variable for keys in dictionaries."""
+
+V = TypeVar("V")
+"""Type variable for values in dictionaries."""
 
 
 def unique(sequence: I) -> I:
@@ -70,13 +79,7 @@ def unique(sequence: I) -> I:
             raise TypeError("Unsupported sequence type")
 
 
-K = TypeVar("K")  # Type variable for keys
-V = TypeVar("V")  # Type variable for values
-
-
-def reverse_dict_container(
-    dct: Mapping[K, Iterable[V]],
-) -> Dict[V, List[K]]:
+def reverse_dict_container(dct: Mapping[K, Iterable[V]]) -> Dict[V, List[K]]:
     """
     Reverse a dictionary with container values.
 
@@ -102,13 +105,64 @@ def reverse_dict_container(
     See Also
     --------
     :func:`collections.defaultdict`: Dictionary with default values for missing keys.
-        Parameter: ``default_factory``, function that automatically creates a default value
-        whenever a key that does not exist in the dictionary is accessed.
-        Here, is used to initialize each new key in the reversed dictionary
-        with an empty container as its value. It avoids the need to check if the key already exists.
+
+        Parameter: ``default_factory``, function that automatically creates a default value whenever
+        a key that does not exist in the dictionary is accessed.
+
+        Here, is used to initialize each new key in the reversed dictionary with an empty container
+        as its value. It avoids the need to check if the key already exists.
     """
     rev_dct: Dict[V, List[K]] = defaultdict(list)  # list to append values
     for key, values in dct.items():
         for value in values:
             rev_dct[value].append(key)
     return rev_dct
+
+
+def exclude_by_difference(candidates: Iterable, intruders: Iterable) -> List[Any]:
+    """
+    Exclude a set of elements from another set.
+
+    Arguments
+    ---------
+    candidates : Iterable
+        Candidate elements from which some members might be excluded.
+    intruders : Iterable
+        Elements to exclude from the candidate set.
+
+    Returns
+    -------
+    retained : List[Any]
+        Elements retained after exclusion.
+
+    Examples
+    --------
+    Exclude a set of elements from another set:
+
+    >>> candidates = [1, 2, 3, 4, 5]
+    >>> intruders = [2, 4]
+    >>> retained = Excluder.exclude_by_difference(candidates, intruders)
+    >>> retained
+    [1, 3, 5]
+    """
+    return [element for element in candidates if element not in intruders]
+
+
+def filter_by_predicate(values: Iterable, predicate: Callable) -> List[int]:
+    """
+    Retain indices of elements that satisfy a given predicate.
+
+    Arguments
+    ---------
+    values : Iterable
+        Values provided to match the predicate.
+    predicate : Callable
+        Function that takes a single argument and returns a boolean, indicating whether an
+        element satisfies the condition.
+
+    Returns
+    -------
+    idx : List[int]
+        Indices of the elements that satisfy the predicate.
+    """
+    return [idx for idx, value in enumerate(values) if predicate(value)]
