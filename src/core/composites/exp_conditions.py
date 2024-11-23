@@ -317,7 +317,7 @@ class ExpConditionUnion:
     >>> exp_cond_2 = ExpCondition(task=Task('CLK'), attention=Attention('p'))
     >>> exp_cond_3 = ExpCondition(category=Category('R'), behavior=Behavior('Go'))
     >>> union = ExpConditionUnion(exp_cond_1, exp_cond_2, exp_cond_3)
-    >>> union.get()
+    >>> union.to_list()
     [ExpCondition(task='PTD', attention='a'),
      ExpCondition(task='CLK', attention='p'),
      ExpCondition(category='R', behavior='Go')]
@@ -328,7 +328,7 @@ class ExpConditionUnion:
             raise TypeError(f"Invalid argument for ExpConditionUnion: {exp_conds} not ExpCondition")
         self.exp_conds = list(exp_conds)
 
-    def get(self) -> List[ExpCondition]:
+    def to_list(self) -> List[ExpCondition]:
         """Get the list of conditions in the union."""
         return self.exp_conds
 
