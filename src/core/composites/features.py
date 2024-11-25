@@ -25,9 +25,6 @@ class Features:
     This class behaves like a container for multiple coordinates, providing methods to operate on
     them consistently.
 
-    Class Attributes
-    ----------------
-
     Attributes
     ----------
     coordinates : List[CoordExpFactor]
@@ -39,16 +36,16 @@ class Features:
 
     Methods
     -------
-    `validate_length`
-    `__len__`
-    `__repr__`
-    `__iter__`
-    `filter_by_type`
-    `match`
-    `match_single`
-    `match_union`
-    `match_idx`
-    `count`
+    validate_length(*coords) -> None
+    __len__()
+    __repr__()
+    __iter__()
+    filter_by_type(*entity_types) -> Self
+    match(exp_cond) -> np.ndarray
+    match_single(exp_cond) -> np.ndarray
+    match_union(exp_cond) -> np.ndarray
+    match_idx(exp_cond) -> np.ndarray
+    count(exp_cond) -> int
     """
 
     def __init__(self, *coords: Coordinate, **coords_dict: Coordinate) -> None:
