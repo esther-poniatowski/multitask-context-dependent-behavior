@@ -98,9 +98,7 @@ class FiringRatesPop(DataStructure):
         **coords,
     ):
         # Set sub-class specific metadata
-        self.area = Area(area)
-        if isinstance(training, bool):
-            training = Training(training)
+        self.area = area
         self.training = training
         self.with_error = with_error
         # Set data and coordinate attributes via the base class constructor
