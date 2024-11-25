@@ -7,12 +7,15 @@ Classes representing the experimental factors describing the behavioral paradigm
 
 Classes
 -------
-`ExpFactor`
-`Task`
-`Attention`
-`Category`
-`Stimulus`
-`Behavior`
+ExpFactor
+Task
+Attention
+Category
+Stimulus
+Behavior
+ResponseOutcome
+EventDescription
+Fold
 """
 
 from types import MappingProxyType
