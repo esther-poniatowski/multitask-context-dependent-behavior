@@ -148,6 +148,27 @@ class CoreData(np.ndarray):
         else:  # reset to default
             self.dims = self.default_dims(self)
 
+    @classmethod
+    def from_shape(
+        cls, shape: Tuple[int, ...], dims: Dimensions | Tuple[str | DimName, ...] | None = None
+    ) -> Self:
+        """
+        Create an empty instance of a `CoreData` object with a given shape.
+
+        Parameters
+        ----------
+        shape : Tuple[int, ...]
+            Shape of the data to create.
+        dims : Dimensions | Tuple[str | DimName, ...], optional
+            Names of the dimensions of the data.
+
+        Returns
+        -------
+        CoreData
+            New instance of a `CoreData` object. Empty values are filled with NaNs.
+        """
+        return cls(np.full(shape, np.nan), dims)
+
     def __repr__(self):
         return f"CoreData(shape={self.shape}, dims={self.dims}, array={super().__repr__()})"
 
