@@ -7,9 +7,9 @@ Classes representing the experimental conditions of the behavioral paradigm.
 
 Classes
 -------
-`ExpCondition`
-`ExpConditionUnion`
-`PipelineCondition`
+ExpCondition
+ExpConditionUnion
+PipelineCondition
 """
 from types import MappingProxyType
 
@@ -40,13 +40,15 @@ class ExpCondition:
 
     Methods
     -------
-    `get_factor`
-    `get_entity`
-    `combine_factors`
-    `__iter__`
-    `__eq__`
-    `__hash__`
-    `__add__`
+    set_factor
+    add_factor
+    combine_factors
+    get_factor
+    get_entity
+    __iter__
+    __eq__
+    __hash__
+    __add__
 
     Notes
     -----
@@ -75,38 +77,116 @@ class ExpCondition:
 
     See Also
     --------
-    `ExpFactor`
-    `Task`
-    `Attention`
-    `Category`
-    `Behavior`
-    `ResponseOutcome`
-    `ExpConditionUnion`
+    ExpFactor
+    ExpConditionUnion
     """
 
-    def __init__(self, **factors: Dict[str, ExpFactor]) -> None:
+    # --- Create ExpCondition instances ------------------------------------------------------------
+
+    def __init__(self, **factors: ExpFactor) -> None:
         self.registry: List[str] = []
         self.factor_types: Dict[Type[ExpFactor], str] = {}
         for name, factor in factors.items():
-            if not isinstance(factor, ExpFactor):
-                raise TypeError(f"Invalid argument for ExpCondition: {name} not ExpFactor")
-            setattr(self, name, factor)
-            self.registry.append(name)
-            self.factor_types[factor.__class__] = name
+            self.set_factor(name, factor)
 
-    def __iter__(self):
+    def set_factor(self, name: str, factor: ExpFactor) -> None:
         """
-        Iterate over the factors specified in the experimental condition.
+        Set a new experimental factor to the condition after validation.
 
-        Yields
-        ------
+        Arguments
+        ---------
         name : str
-            Name of the factor.
-        fact : ExpFactor
-            Factor instance.
+            Name of the attribute to use for the factor.
+        factor : ExpFactor
+            Experimental factor to add to the condition.
         """
-        for name in self.registry:
-            yield name, getattr(self, name)
+        if not isinstance(factor, ExpFactor):
+            raise TypeError(f"Invalid argument for ExpCondition: {name} not ExpFactor")
+        setattr(self, name, factor)
+        self.registry.append(name)
+        self.factor_types[factor.__class__] = name
+
+    def add_factor(self, name: str, factor: ExpFactor) -> "ExpCondition":
+        """
+        Add a new experimental factor to a condition.
+
+        Arguments
+        ---------
+        factor : ExpFactor
+            Experimental factor to add to the condition.
+
+        Returns
+        -------
+        new_exp_cond : ExpCondition
+            New experimental condition instance with the added factor.
+
+        Examples
+        --------
+        >>> exp_cond = ExpCondition(task=Task('PTD'), attention=Attention('a'))
+        >>> new_exp_cond = exp_cond.add_factor(Category('R'))
+        >>> new_exp_cond
+        ExpCondition(task=PTD, attention=a, category=R)
+        """
+        # Copy the current condition
+        new_exp_cond = self.__class__(**{name: getattr(self, name) for name in self.registry})
+        # Add the new factor
+        new_exp_cond.set_factor(name, factor)
+        return new_exp_cond
+
+    @staticmethod
+    def combine_factors(*selected_factors: Iterable[ExpFactor] | ExpFactor) -> List["ExpCondition"]:
+        """
+        Generate experimental conditions by combining a set of experimental factors.
+
+        Arguments
+        ---------
+        selected_factors : Iterable[ExpFactor] | ExpFactor
+            Instances of the experimental factors to consider to generate the experimental
+            conditions of interest. Each factor must match a recognized type in
+            `ExpCondition.FACTOR_TO_ATTR`.
+
+        Returns
+        -------
+        exp_conds : List[ExpCondition]
+            Experimental conditions generated from the Cartesian product of the selected factor
+            instances.
+
+        Examples
+        --------
+        Generate all possible conditions for two tasks, a fixed attentional state, two stimuli and
+        both behaviors:
+
+        >>> exp_conds = ExpCondition.combine_factors(
+        ...     tasks=[Task("PTD"), Task("CLK")],
+        ...     attentions=Attention("a"),
+        ...     categories=[Category("R"), Category("T")],
+        ... )
+        >>> exp_conds
+        [ExpCondition(task=PTD, attention=a, category=R),
+         ExpCondition(task=PTD, attention=a, category=T),
+         ExpCondition(task=CLK, attention=a, category=R),
+         ExpCondition(task=CLK, attention=a, category=T)]
+
+        Notes
+        -----
+        For each factor, if a single instance is provided, it considered as fixed and will be used
+        for all the conditions.
+        If no instance is provided, it is set to `None` in all the experimental conditions.
+        To retrieve all the allowed values for experimental factor, use the `get_factors` method of
+        the factor class.
+
+        See Also
+        --------
+        `itertools.product`: Cartesian product of input iterables.
+        """
+        # Format to list for consistency
+        sequences = [[fact] if isinstance(fact, ExpFactor) else fact for fact in selected_factors]
+        # Generate all combinations of the provided factors
+        combinations = product(*sequences)  # List[Tuple[ExpFactor, ...]]
+        # Create and return a list of ExpCondition instances from the combinations
+        return [ExpCondition(*comb) for comb in combinations]
+
+    # --- Get ExpCondition properties --------------------------------------------------------------
 
     def __repr__(self) -> str:
         return f"ExpCondition({', '.join(f'{name}={fact}' for name, fact in self)})"  # use __iter__
@@ -179,58 +259,21 @@ class ExpCondition:
         """
         return [factor.__class__ for name, factor in self]
 
-    @staticmethod
-    def combine_factors(*selected_factors: Iterable[ExpFactor] | ExpFactor) -> List["ExpCondition"]:
+    # --- Magic methods ----------------------------------------------------------------------------
+
+    def __iter__(self):
         """
-        Generate experimental conditions by combining a set of experimental factors.
+        Iterate over the factors specified in the experimental condition.
 
-        Arguments
-        ---------
-        selected_factors : Iterable[ExpFactor] | ExpFactor
-            Instances of the experimental factors to consider to generate the experimental
-            conditions of interest. Each factor must match a recognized type in
-            `ExpCondition.FACTOR_TO_ATTR`.
-
-        Returns
-        -------
-        exp_conds : List[ExpCondition]
-            Experimental conditions generated from the Cartesian product of the selected factor
-            instances.
-
-        Examples
-        --------
-        Generate all possible conditions for two tasks, a fixed attentional state, two stimuli and
-        both behaviors:
-
-        >>> exp_conds = ExpCondition.combine_factors(
-        ...     tasks=[Task("PTD"), Task("CLK")],
-        ...     attentions=Attention("a"),
-        ...     categories=[Category("R"), Category("T")],
-        ... )
-        >>> exp_conds
-        [ExpCondition(task=PTD, attention=a, category=R),
-         ExpCondition(task=PTD, attention=a, category=T),
-         ExpCondition(task=CLK, attention=a, category=R),
-         ExpCondition(task=CLK, attention=a, category=T)]
-
-        Notes
-        -----
-        For each factor, if a single instance is provided, it considered as fixed and will be used
-        for all the conditions.
-        If no instance is provided, it is set to `None` in all the experimental conditions.
-        To retrieve all the allowed values for experimental factor, use the `get_factors` method of
-        the factor class.
-
-        See Also
-        --------
-        `itertools.product`: Cartesian product of input iterables.
+        Yields
+        ------
+        name : str
+            Name of the factor.
+        fact : ExpFactor
+            Factor instance.
         """
-        # Format to list for consistency
-        sequences = [[fact] if isinstance(fact, ExpFactor) else fact for fact in selected_factors]
-        # Generate all combinations of the provided factors
-        combinations = product(*sequences)  # List[Tuple[ExpFactor, ...]]
-        # Create and return a list of ExpCondition instances from the combinations
-        return [ExpCondition(*comb) for comb in combinations]
+        for name in self.registry:
+            yield name, getattr(self, name)
 
     def __eq__(self, other) -> bool:
         """
@@ -303,8 +346,8 @@ class ExpConditionUnion:
 
     Methods
     -------
-    `get`
-    `__iter__`
+    to_list
+    __iter__
 
     Raises
     ------
@@ -351,7 +394,7 @@ class PipelineCondition(ExpCondition):
 
     Methods
     -------
-    `generate`
+    generate
 
     Raises
     ------
@@ -362,7 +405,7 @@ class PipelineCondition(ExpCondition):
 
     REQUIRED_FACTORS: Mapping[str, FrozenSet[ExpFactor]] = MappingProxyType({})
 
-    def __init__(self, **factors: Dict[str, ExpFactor]) -> None:
+    def __init__(self, **factors: ExpFactor) -> None:
         """Enforce the pipeline constraints."""
         valid_factors = {}
         for name, value in factors.items():
