@@ -3,9 +3,7 @@
 """
 `core.data_structures.raw_spk_times` [module]
 """
-from pathlib import Path
 from types import MappingProxyType
-from typing import Optional, Union
 
 import numpy as np
 
@@ -13,8 +11,6 @@ from core.constants import SMPL_RATE
 from core.coordinates.exp_structure_coord import CoordBlock
 from core.data_structures.base_data_struct import DataStructure
 from core.data_structures.core_data import Dimensions, CoreData
-from utils.io_data.loaders import LoaderNPY
-from utils.storage_rulers.impl_path_rulers import SpikeTimesRawPath
 
 
 class SpikeTimesRaw(DataStructure):
@@ -75,10 +71,6 @@ class SpikeTimesRaw(DataStructure):
     coords_to_dims = MappingProxyType({"block": Dimensions("spikes")})
     identifiers = ("unit_id", "session_id")
 
-    # --- IO Handlers ---
-    path_ruler = SpikeTimesRawPath
-    loader = LoaderNPY
-
     # --- Key Features -----------------------------------------------------------------------------
 
     def __init__(
@@ -86,15 +78,16 @@ class SpikeTimesRaw(DataStructure):
         unit_id: str,
         session_id: str,
         smpl_rate: float = SMPL_RATE,
-        data: Optional[Union[CoreData, np.ndarray]] = None,
-        block: Optional[Union[CoordBlock, np.ndarray]] = None,
+        data: CoreData | None = None,
+        block: CoordBlock | None = None,
     ) -> None:
         # Set sub-class specific metadata
         self.unit_id = unit_id
         self.session_id = session_id
         self.smpl_rate = smpl_rate
         # Set data and coordinate attributes via the base class constructor
-        super().__init__(data=data, block=block)
+        coords = {"block": block} if block is not None else {}
+        super().__init__(data=data, **coords)
 
     def __repr__(self) -> str:
         return (
@@ -131,45 +124,43 @@ class SpikeTimesRaw(DataStructure):
         """
         return self.data[self.block == block]
 
-    # --- IO Handling ------------------------------------------------------------------------------
-
-    @property
-    def path(self) -> Path:
-        return self.path_ruler().get_path(self.unit_id, self.session_id)
-
-    def load(self) -> None:
+    def format(self, raw) -> None:
         """
         Retrieve data from a file and extract separately the spiking times and the blocks of trials.
 
+        Arguments
+        ---------
+        raw : np.ndarray
+            Raw data for one unit in one session, loaded from a file.
+            Data type: ``float``. Shape: ``(2, nspikes)``.
+
+            Structure :
+
+            - ``raw[0]`` : Block of trials in which each spike occurred.
+            - ``raw[1]`` : Spiking times.
+
+
         Notes
         -----
-        The raw data of one unit in one session is stored in a numpy array.
-        Shape: ``(2, nspikes)``.
-        ``raw[0]`` : Block of trials in which each spike occurred.
-        ``raw[1]`` : Spiking times.
-        Data type: ``float``.
-        Thus, both spiking times and trial blocks are stored under type ``float``.
-        Here, blocks of trials are converted to integers to match the format expected by the
-        coordinate `CoordBlock`.
+        Conversions:
 
-        Returns
-        -------
-        Data
+        - The first raw is converted to `CoordBlock`, after being casted to integers. It is
+          necessary since the the raw data recovered from the files is a numpy array of type
+          ``float``.
+        - The second raw is converted to `CoreData` since it contains the spiking times (actual
+          values to analyze).
 
         Raises
         ------
         ValueError
-            If the shape of the loaded data is not ``(2, nspikes)``
+            If the shape of the raw data is not ``(2, nspikes)``
         """
-        # Load numpy array via LoaderNPY
-        raw = self.loader(path=self.path).load()
-        print("RAW", raw.shape)
         # Check shape
         if raw.ndim != 2 or raw.shape[0] != 2:
-            raise ValueError(f"Invalid shape: {raw.shape}. Expected (2, nspikes).")
+            raise ValueError(f"Invalid shape: {raw.shape}. Expected: (2, nspikes).")
         # Extract data
         block = CoordBlock(values=raw[0].astype(np.int64))  # convert to integer
-        t_spk = raw[1]
-        # Create new instance filled with the loaded data
-        obj = self.__class__(self.unit_id, self.session_id, self.smpl_rate, data=t_spk, block=block)
-        self.__dict__.update(obj.__dict__)
+        data = CoreData(raw[1])
+        # Filled with new data (base class methods)
+        self.set_data(data)
+        self.set_coord("block", block)
