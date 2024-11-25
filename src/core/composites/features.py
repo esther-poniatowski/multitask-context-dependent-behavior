@@ -7,7 +7,7 @@ Classes
 -------
 `Features`
 """
-
+from copy import deepcopy
 from typing import List, Iterable, Tuple, Type, Self
 import warnings
 
@@ -49,12 +49,13 @@ class Features:
     """
 
     def __init__(self, *coords: Coordinate, **coords_dict: Coordinate) -> None:
+        # Add the coordinates from the dictionary to the list of coordinates
+        all_coords: List[Coordinate] = list(coords) + list(coords_dict.values())
+        # Validate that all coordinates have the same length
+        self.validate_length(*all_coords)
+        self.coords = all_coords
         # Register the names of the coordinates if provided
         self.register: List[str] = ["" for _ in range(len(coords))] + list(coords_dict.keys())
-        # Add the coordinates from the dictionary to the list of coordinates
-        self.coords: List[Coordinate] = list(coords) + list(coords_dict.values())
-        # Validate that all coordinates have the same length
-        self.validate_length(*self.coords)
 
     @staticmethod
     def validate_length(*coords: Coordinate) -> None:
@@ -69,6 +70,32 @@ class Features:
         lengths = [len(coord) for coord in coords]
         if len(set(lengths)) > 1:
             raise ValueError(f"Inconsistent coordinate lengths: {lengths}")
+
+    def add_coord(self, coord: Coordinate, name: str = "") -> "Features":
+        """
+        Add a coordinate to the set.
+
+        Arguments
+        ---------
+        coord : Coordinate
+            Coordinate to add.
+        name : str
+            Name of the coordinate.
+
+        Returns
+        -------
+        self : Features
+            New instance with the added coordinate.
+        """
+        # Validate the length of the new coordinate
+        if len(coord) != self.n_samples:
+            raise ValueError(f"Invalid coordinate length: {len(coord)} != {self.n_samples}")
+        # Copy the current object
+        new_obj = deepcopy(self)
+        # Add the coordinate and its name to the new object
+        new_obj.coords.append(coord)
+        new_obj.register.append(name)
+        return new_obj
 
     @property
     def n_samples(self) -> int:
@@ -85,7 +112,7 @@ class Features:
 
     def __iter__(self) -> Iterable[Tuple]:
         """
-        Iterate over the coordinates, providing tuples of elements which contain the joined
+        Iterate over the samples across the coordinates, providing tuples which contain the joined
         values within the coordinates, sample by sample.
 
         Returns
