@@ -8,7 +8,6 @@ Classes representing the experimental conditions of the behavioral paradigm.
 Classes
 -------
 ExpCondition
-ExpConditionUnion
 PipelineCondition
 """
 from types import MappingProxyType
@@ -17,9 +16,10 @@ from typing import Self, Iterable, List, Dict, Type, FrozenSet, Mapping
 from itertools import product
 
 from core.entities.exp_factors import ExpFactor
+from core.composites.strata import Stratum, StrataUnion
 
 
-class ExpCondition:
+class ExpCondition(Stratum):
     """
     Experimental condition defined by the combination of several experimental factors.
 
@@ -31,107 +31,27 @@ class ExpCondition:
     - behavioral choice
     - response outcome
 
-    Attributes
-    ----------
-    registry : List[str]
-        Registry of the attributes names for all specified factors.
-    factor_types : Dict[Type[ExpFactor]], str]
-        Mapping from the factor types (classes) and their attribute names.
-
     Methods
     -------
-    set_factor
-    add_factor
     combine_factors
-    get_factor
-    get_entity
-    __iter__
-    __eq__
-    __hash__
-    __add__
 
     Notes
     -----
-    Partial conditions can be defined by specifying only the factors of interest.
-
-    Warning
-    -------
-    Instantiate with keyword arguments to avoid confusion between the factors, especially when
-    partial conditions are defined.
-
-    Examples
-    --------
-    Initialize a partial condition with three factors (without specifying the 'attention' factor):
-
-    >>> task = Task('PTD')
-    >>> category = Category('R')
-    >>> behavior = Behavior('Go')
-    >>> exp_cond_1 = ExpCondition(task=task, category=category, behavior=behavior)
-    >>> exp_cond_1
-    ExpCondition(task=PTD, category=R, behavior=Go)
-
-    Retrieve the task:
-
-    >>> exp_cond_1.task
-    Task('PTD')
+    All the methods from the `Stratum` class are available for the `ExpCondition` class. The new
+    behavior of this class is to restrict the factors to the *experimental* factors only.
 
     See Also
     --------
-    ExpFactor
-    ExpConditionUnion
+    Stratum
     """
 
     # --- Create ExpCondition instances ------------------------------------------------------------
 
     def __init__(self, **factors: ExpFactor) -> None:
-        self.registry: List[str] = []
-        self.factor_types: Dict[Type[ExpFactor], str] = {}
         for name, factor in factors.items():
-            self.set_factor(name, factor)
-
-    def set_factor(self, name: str, factor: ExpFactor) -> None:
-        """
-        Set a new experimental factor to the condition after validation.
-
-        Arguments
-        ---------
-        name : str
-            Name of the attribute to use for the factor.
-        factor : ExpFactor
-            Experimental factor to add to the condition.
-        """
-        if not isinstance(factor, ExpFactor):
-            raise TypeError(f"Invalid argument for ExpCondition: {name} not ExpFactor")
-        setattr(self, name, factor)
-        self.registry.append(name)
-        self.factor_types[factor.__class__] = name
-
-    def add_factor(self, name: str, factor: ExpFactor) -> "ExpCondition":
-        """
-        Add a new experimental factor to a condition.
-
-        Arguments
-        ---------
-        factor : ExpFactor
-            Experimental factor to add to the condition.
-
-        Returns
-        -------
-        new_exp_cond : ExpCondition
-            New experimental condition instance with the added factor.
-
-        Examples
-        --------
-        >>> exp_cond = ExpCondition(task=Task('PTD'), attention=Attention('a'))
-        >>> new_exp_cond = exp_cond.add_factor(Category('R'))
-        >>> new_exp_cond
-        ExpCondition(task=PTD, attention=a, category=R)
-        """
-        # Copy the current condition
-        new_exp_cond = self.__class__(**{name: getattr(self, name) for name in self.registry})
-        # Add the new factor
-        new_exp_cond.set_factor(name, factor)
-        return new_exp_cond
+            if not isinstance(factor, ExpFactor):
+                raise TypeError(f"Invalid argument for ExpCondition: {name} not ExpFactor")
+        super().__init__(**factors)
 
     @staticmethod
     def combine_factors(*selected_factors: Iterable[ExpFactor] | ExpFactor) -> List["ExpCondition"]:
@@ -186,198 +106,14 @@ class ExpCondition:
         # Create and return a list of ExpCondition instances from the combinations
         return [ExpCondition(*comb) for comb in combinations]
 
-    # --- Get ExpCondition properties --------------------------------------------------------------
-
     def __repr__(self) -> str:
         return f"ExpCondition({', '.join(f'{name}={fact}' for name, fact in self)})"  # use __iter__
 
-    def get_factor(self, factor_type: Type[ExpFactor]) -> ExpFactor | None:
-        """
-        Get the stored value corresponding to one experimental factor class.
 
-        Arguments
-        ---------
-        factor_type : Type[ExpFactor]
-            Class of the experimental factor for which to retrieve the value.
-
-        Returns
-        -------
-        factor : ExpFactor
-            Value of the factor if present in the experimental condition instance.
-            None if the factor type is not present in the experimental condition instance.
-
-        Examples
-        --------
-        >>> exp_cond = ExpCondition(task=Task('PTD'), attention=Attention('a'))
-        >>> exp_cond.get_factor(Task)
-        Task('PTD')
-        """
-        name = self.factor_types.get(factor_type, None)
-        if name is not None:
-            return getattr(self, name, None)
-        return None
-
-    def get_entity(self, name: str) -> Type[ExpFactor] | None:
-        """
-        Get the factor class corresponding to one experimental factor attribute.
-
-        Arguments
-        ---------
-        name : str
-            Name of the experimental factor attribute to retrieve.
-
-        Returns
-        -------
-        factor_type : Type[ExpFactor]
-            Class of the experimental factor corresponding to the attribute name.
-            None if the attribute name is not present in the experimental condition instance.
-
-        Examples
-        --------
-        >>> exp_cond = ExpCondition(task=Task('PTD'), attention=Attention('a'))
-        >>> exp_cond.get_entity('task')
-        Task
-        """
-        factor = getattr(self, name, None)
-        factor_type = factor.__class__ if factor is not None else None
-        return factor_type
-
-    def get_entities(self) -> List[Type[ExpFactor]]:
-        """
-        Get all the factor classes present in the experimental condition instance.
-
-        Returns
-        -------
-        factor_types : List[Type[ExpFactor]]
-            List of the classes of the experimental factors present in the experimental condition.
-
-        Examples
-        --------
-        >>> exp_cond = ExpCondition(task=Task('PTD'), attention=Attention('a'))
-        >>> exp_cond.get_all_entities()
-        [Task, Attention]
-        """
-        return [factor.__class__ for name, factor in self]
-
-    # --- Magic methods ----------------------------------------------------------------------------
-
-    def __iter__(self):
-        """
-        Iterate over the factors specified in the experimental condition.
-
-        Yields
-        ------
-        name : str
-            Name of the factor.
-        fact : ExpFactor
-            Factor instance.
-        """
-        for name in self.registry:
-            yield name, getattr(self, name)
-
-    def __eq__(self, other) -> bool:
-        """
-        Checks the equality between two experimental condition instances.
-
-        Returns
-        -------
-        bool
-            True if all the factors contained in both attributes are equal.
-
-        See Also
-        --------
-        `Entity.__eq__`
-
-        Examples
-        --------
-        >>> exp_cond_1 = ExpCondition(task=Task('PTD'), attention=Attention('a'))
-        >>> exp_cond_2 = ExpCondition(task=Task('CLK'), attention=Attention('a'))
-        >>> exp_cond_1 == exp_cond_2
-        False
-        """
-        # Check type ExpCond
-        if not isinstance(other, self.__class__):
-            return False
-        # Check similar names
-        names_1, names_2 = set(self.registry), set(other.registry)
-        if names_1 != names_2:
-            return False
-        # Check factors equality
-        for name in names_1:
-            if getattr(self, name) != getattr(other, name):
-                return False
-        return True
-
-    def __hash__(self) -> int:
-        """
-        Hash the experimental condition instance based on the values of its factors.
-
-        Returns
-        -------
-        int
-            Hash value of the experimental condition instance.
-        """
-        return hash(tuple(getattr(self, name) for name in self.registry))
-
-    def __add__(self, other: Self) -> "ExpConditionUnion":
-        """
-        Combine two conditions into a union of conditions.
-
-        Examples
-        --------
-        >>> exp_cond_1 = ExpCondition(task=Task('PTD'), attention=Attention('a'))
-        >>> exp_cond_2 = ExpCondition(task=Task('CLK'), attention=Attention('p'))
-        >>> union = exp_cond_1 + exp_cond_2
-        >>> union.get()
-        [ExpCondition(task='PTD', attention='a'),
-         ExpCondition(task='CLK', attention='p')]
-        """
-        return ExpConditionUnion(self, other)
-
-
-class ExpConditionUnion:
+class ExpConditionUnion(StrataUnion):
     """
-    Union of experimental conditions, behaving like a list of conditions.
-
-    Attributes
-    ----------
-    exp_conds :
-        Arbitrary number of condition objects.
-
-    Methods
-    -------
-    to_list
-    __iter__
-
-    Raises
-    ------
-    TypeError
-        If any of the arguments is not an `ExpCondition` instance
-
-    Examples
-    --------
-    >>> exp_cond_1 = ExpCondition(task=Task('PTD'), attention=Attention('a'))
-    >>> exp_cond_2 = ExpCondition(task=Task('CLK'), attention=Attention('p'))
-    >>> exp_cond_3 = ExpCondition(category=Category('R'), behavior=Behavior('Go'))
-    >>> union = ExpConditionUnion(exp_cond_1, exp_cond_2, exp_cond_3)
-    >>> union.to_list()
-    [ExpCondition(task='PTD', attention='a'),
-     ExpCondition(task='CLK', attention='p'),
-     ExpCondition(category='R', behavior='Go')]
+    Union of experimental conditions.
     """
-
-    def __init__(self, *exp_conds: ExpCondition) -> None:
-        if any(not isinstance(cond, ExpCondition) for cond in exp_conds):
-            raise TypeError(f"Invalid argument for ExpConditionUnion: {exp_conds} not ExpCondition")
-        self.exp_conds = list(exp_conds)
-
-    def to_list(self) -> List[ExpCondition]:
-        """Get the list of conditions in the union."""
-        return self.exp_conds
-
-    def __iter__(self):
-        """Iterate over the conditions in the union, providing each condition one by one."""
-        return iter(self.exp_conds)
 
 
 class PipelineCondition(ExpCondition):
