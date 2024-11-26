@@ -57,7 +57,7 @@ class CoordinateSet(Container[Type[Attribute], Coordinate]):
     def __repr__(self) -> str:
         attr_classes = sorted(self.keys(), key=lambda cls: cls.__name__)  # order by names
         return (
-            f"CoordinateSet({', '.join(f'{self[cls]}' for cls in attr_classes)}, "
+            f"{self.__class__.__name__}({', '.join(f'{self[cls]}' for cls in attr_classes)}, "
             f"#samples={self.n_samples})"
         )
 

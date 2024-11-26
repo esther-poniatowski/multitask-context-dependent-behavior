@@ -79,7 +79,7 @@ class AttributeSet(Container[Type[Attribute], Attribute]):
 
     def __repr__(self) -> str:
         attr_classes = sorted(self.keys(), key=lambda cls: cls.__name__)  # order by names
-        return f"AttributeSet({', '.join(f'{self[cls]}' for cls in attr_classes)})"
+        return f"{self.__class__.__name__}({', '.join(f'{self[cls]}' for cls in attr_classes)})"
 
     def __init__(self, *args: Attribute) -> None:
         """Override the base constructor to fix `key_type` and `value_type`."""
