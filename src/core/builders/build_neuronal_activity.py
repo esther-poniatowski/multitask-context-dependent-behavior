@@ -18,71 +18,36 @@ Notes
 """
 # pylint: disable=missing-function-docstring
 
-from types import MappingProxyType
-from typing import List, Tuple, Dict, Optional, Mapping
+from typing import List, Dict
 
 import numpy as np
 
-from core.builders.base_builder import DataStructureBuilder
-from core.coordinates.base_coord import Coordinate
-from core.coordinates.bio_info_coord import CoordUnit
-from core.coordinates.exp_factor_coord import CoordTask, CoordAttention, CoordCategory
+from core.builders.base_builder import CoreDataStructureBuilder
 from core.coordinates.time_coord import CoordTime
 from core.data_structures.core_data import CoreData
-from core.data_structures.firing_rates import FiringRatesPop, FiringRatesUnit
-from core.processors.preprocess.assign_ensembles import EnsembleAssigner, Ensembles
-from core.processors.preprocess.assign_folds import FoldAssigner, FoldLabels
-from core.processors.preprocess.bootstrap import Bootstrapper
-from core.processors.preprocess.map_indices import IndexMapper, Indices
-from core.processors.preprocess.stratify import Stratifier, Strata
+from core.data_structures.spike_times_raw import SpikeTimesRaw
 
 
-class FiringRatesPopBuilder(DataStructureBuilder[FiringRatesPop]):
+class FiringRatesBuilder(CoreDataStructureBuilder):
     """
     Build the firing rate activity of a pseudo-population of units in selected pseudo-trials.
 
-    Product: `FiringRatesPop` data structure.
+    Product: `CoreData`
 
-    Class Attributes
-    ----------------
-    PRODUCT_CLASS : type
-        See the base class attribute.
-    TMP_DATA : Tuple[str]
-        See the base class attribute.
-
-    Configuration Parameters
-    ------------------------
+    Attributes
+    ----------
     ensemble_size : int
         Number of units required to form each ensemble (imposed by the area with the lowest number
         of units).
     k : int
         Number of folds for cross-validation.
 
-    Processing Attributes
-    ---------------------
-    data_per_unit : List[FiringRatesUnit]
-        Firing rates of each unit in the population.
-    ensembles : Ensembles
-        Indices of the units in each ensemble. Shape: ``(n_ensembles, ensemble_size)``.
-    n_ensembles : int
-        (Property) Number of ensembles to form.
-    n_units : int
-        (Property) Number of units in the population (length of the inputs `data_per_unit`).
-    n_trials : int
-        (Property) Number of pseudo-trials to form (sum of the number of pseudo-trials to generate
-        across conditions).
-    n_t : int
-        Number of time points (from the common time axis across units).
 
     Methods
     -------
     """
 
-    PRODUCT_CLASS = FiringRatesPop
-    TMP_DATA = ("data_per_unit", "seed", "ensembles")
-    DEFAULT_FEATURES = MappingProxyType(
-        {"task": CoordTask, "attn": CoordAttention, "categ": CoordCategory}
-    )
+    PRODUCT_CLASS = CoreData
 
     def __init__(
         self,
@@ -90,7 +55,6 @@ class FiringRatesPopBuilder(DataStructureBuilder[FiringRatesPop]):
         n_ensembles_max: int,
         n_folds: int,
         counts_by_condition: Dict[str, int],
-        features_coords: Mapping[str, type] = DEFAULT_FEATURES,
     ) -> None:
         # Call the base class constructor: declare empty product and internal data
         super().__init__()
@@ -99,81 +63,80 @@ class FiringRatesPopBuilder(DataStructureBuilder[FiringRatesPop]):
         self.n_ensembles_max = n_ensembles_max
         self.n_folds = n_folds
         self.counts_by_condition = counts_by_condition
-        self.conditions = list(counts_by_condition.keys())
-        self.conditions_boundaries = self.allocate_conditions_indices()
-        self.features_coords = features_coords
-        # Declare attributes to store inputs and intermediate results
-        self.data_per_unit: List[FiringRatesUnit]
-        self.seed: int
-        self.ensembles: Ensembles
 
-    def build(
-        self,
-        area: Optional[str] = None,
-        training: Optional[bool] = None,
-        data_per_unit: Optional[List[FiringRatesUnit]] = None,
-        seed: int = 0,
-        **kwargs
-    ) -> FiringRatesPop:
+    def build(self, spikes_per_unit: List[SpikeTimesRaw] | None = None, **kwargs) -> CoreData:
         """
         Implement the base class method.
 
         Parameters
         ----------
-        area : str
-            Brain area from which the units were recorded.
-        training : bool
-            Whether the units comes from trained or naive animals.
-        data_per_unit : List[FiringRatesUnit]
-            See the attribute `data_per_unit`.
-        seed : int
-            See the attribute `seed`.
+        spikes_per_unit : List[SpikeTimesRaw]
+            Spiking times of the units in the pseudo-population.
 
         Returns
         -------
-        FiringRatesPop
-            Data structure product instance.
+        product : CoreData
+            Firing rates of the pseudo-population in pseudo-trials, i.e. actual values to analyze.
         """
-        assert data_per_unit is not None and area is not None and training is not None
-        # Store inputs
-        self.data_per_unit = data_per_unit
-        self.seed = seed
+        assert spikes_per_unit is not None
         # Preliminary set up
-        # Initialize the data structure with its metadata (base method)
-        self.initialize_data_structure(area=area, training=training)
+        # Initialize the data structure
+        self.initialize_data(n_ensembles, ensemble_size, n_folds, n_trials, n_t)
         # Add core data values to the data structure
         data = self.construct_core_data()
-        self.add_data(data)
-        # Add coordinates in the data structure
-        units = self.construct_units_coord()
-        self.add_coords(units=units)
-        trial_coords = self.construct_trial_coords()
-        self.add_coords(**trial_coords)
-        time = self.construct_time_coord()
-        self.add_coords(time=time)
         return self.get_product()
 
     # --- Shape and Dimensions ---------------------------------------------------------------------
 
     @property
-    def n_units(self) -> int:
-        return len(self.data_per_unit)
-
-    @property
-    def n_ensembles(self) -> int:
-        return EnsembleAssigner.eval_n_ensembles(
-            self.n_units, self.ensemble_size, self.n_ensembles_max
-        )
-
-    @property
     def n_trials(self) -> int:
         return sum(self.counts_by_condition.values())
 
-    @property
-    def n_t(self) -> int:
-        return self.data_per_unit[0].get_size("time")
+    @staticmethod
+    def build_for_condition():
+        pass
 
     # --- Construct Core Data ----------------------------------------------------------------------
+
+    @staticmethod
+    def initialize_data(
+        n_ensembles: int,
+        ensemble_size: int,
+        n_folds: int,
+        n_trials: int,
+        n_t: int,
+    ) -> CoreData:
+        """
+        Initialize the core data to be build: set its shape and dimensions.
+
+        Arguments
+        ---------
+        n_ensembles : int
+            Number of ensembles.
+        ensemble_size : int
+            Number of units in each ensemble.
+        n_folds : int
+            Number of folds for cross-validation.
+        n_trials : int
+            Number of trials in the pseudo-population.
+        n_t : int
+            Number of time points in a trial.
+
+        Returns
+        -------
+        data : CoreData
+            Empty data array to store the firing rates of the pseudo-population.
+            Shape: ``(n_ensembles, ensemble_size, n_folds, n_trials, n_t)``.
+            Values: Empty values (``np.nan``).
+
+        See Also
+        --------
+        `CoreData.from_shape`
+        """
+        shape = (n_ensembles, ensemble_size, n_folds, n_trials, n_t)
+        dims = ("ensemble", "unit", "fold", "trial", "time")
+        data = CoreData.from_shape(shape, dims)
+        return data
 
     def construct_core_data(self) -> CoreData:
         """
