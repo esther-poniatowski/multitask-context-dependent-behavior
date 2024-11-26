@@ -104,7 +104,7 @@ class Coordinate(Generic[Dtype, AnyAttribute], np.ndarray):
     @classmethod
     def validate(cls, values: ArrayLike, **kwargs) -> None:
         """
-        Check
+        Validate the values of the coordinate.
 
         Default implementation: Check the values consistency with the attribute type.
 
