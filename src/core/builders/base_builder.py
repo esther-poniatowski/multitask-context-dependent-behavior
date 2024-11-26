@@ -81,7 +81,7 @@ class Builder(Generic[Product], ABC):
       static configuration parameters (subclasses' constructors) which determine the behavior of the
       builder across multiple builds.
     - Main `build()` method: Receive dynamic inputs required to build a specific product instance.
-      Metadata (which only serve to determine the identity of the data structure product) are
+      Metadata (which only serve to determine the idattribute of the data structure product) are
       transferred to the constructor of the data structure itself. Inputs to process are stored as
       attributes in the builder for direct access during the building process. This method
       orchestrates the creation of a data structure step-by-step and returns the complete product

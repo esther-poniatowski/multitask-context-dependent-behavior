@@ -58,7 +58,7 @@ class CoordTime(Coordinate[np.float64]):
 
     Notes
     -----
-    No specific entity is associated with time.
+    No specific attribute is associated with time.
 
     See Also
     --------
@@ -92,7 +92,7 @@ class CoordTime(Coordinate[np.float64]):
         """
         Validate the time labels to ensure the existence of a time bin.
 
-        Override the base method since no entity is associated with time.
+        Override the base method since no attribute is associated with time.
 
         Raises
         ------
@@ -215,7 +215,7 @@ class CoordTimeEvent(Coordinate[np.float64]):
 
     Notes
     -----
-    No specific entity is associated with time events.
+    No specific attribute is associated with time events.
     """
 
     # No ENTITY

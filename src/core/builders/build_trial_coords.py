@@ -110,8 +110,8 @@ class TrialCoordsBuilder(CoordinateBuilder[CoordExpFactor]):
             If the experimental factor is not present in all the conditions.
         """
         for cond in self.order_conditions:
-            for entity_type in cond.get_entities():
-                if not coord_type.has_entity(entity_type):
+            for attribute_type in cond.get_attributes():
+                if not coord_type.has_attribute(attribute_type):
                     raise TypeError(
                         f"Experimental factor of {coord_type} not present in condition {cond}."
                     )
@@ -159,7 +159,7 @@ class TrialCoordsBuilder(CoordinateBuilder[CoordExpFactor]):
         coord = coord_type.from_shape(n_samples_tot)
         # Fill the coordinates by condition
         for cond, (start, end) in self.conditions_boundaries.items():
-            # Retrieve the value in the exp condition for the coordinate entity
-            value = cond.get_factor(coord_type.get_entity())
+            # Retrieve the value in the exp condition for the coordinate attribute
+            value = cond.get_factor(coord_type.get_attribute())
             coord[start:end] = value
         return coord

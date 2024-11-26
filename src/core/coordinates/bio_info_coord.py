@@ -16,8 +16,8 @@ from typing import Dict, Tuple, Any, Iterable
 import numpy as np
 
 from core.coordinates.base_coord import Coordinate
-from core.entities.bio_info import CorticalDepth
-from core.entities.bio_info import Unit
+from core.attributes.bio_info import CorticalDepth
+from core.attributes.bio_info import Unit
 
 
 class CoordUnit(Coordinate[np.str_, Unit]):
@@ -27,7 +27,7 @@ class CoordUnit(Coordinate[np.str_, Unit]):
     Class Attributes
     ----------------
     ENTITY : Type[Unit]
-        Subclass of `Entity` corresponding to the units identifiers.
+        Subclass of `Attribute` corresponding to the units identifiers.
     DTYPE : Type[np.str_]
         Data type of the unit labels, always string.
     SENTINEL : str
@@ -62,7 +62,7 @@ class CoordUnit(Coordinate[np.str_, Unit]):
 
     See Also
     --------
-    `core.entities.bio_info.Unit`
+    `core.attributes.bio_info.Unit`
     `core.coordinates.base_coord.Coordinate`
     """
 
@@ -131,7 +131,7 @@ class CoordDepth(Coordinate[np.str_, CorticalDepth]):
 
     See Also
     --------
-    `core.entities.bio_data.CorticalDepth`
+    `core.attributes.bio_data.CorticalDepth`
     `core.coordinates.coord_base.Coordinate`
     """
 

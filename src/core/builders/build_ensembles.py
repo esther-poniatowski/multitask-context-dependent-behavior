@@ -14,7 +14,7 @@ import numpy as np
 from core.builders.base_builder import CoordinateBuilder
 from core.coordinates.bio_info_coord import CoordUnit
 from core.processors.preprocess.assign_ensembles import EnsembleAssigner, Ensembles
-from core.entities.bio_info import Unit
+from core.attributes.bio_info import Unit
 
 
 class EnsemblesBuilder(CoordinateBuilder[CoordUnit]):

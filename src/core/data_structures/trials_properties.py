@@ -18,7 +18,7 @@ from core.coordinates.exp_factor_coord import (
 from core.coordinates.time_coord import CoordTimeEvent
 from core.data_structures.base_data_struct import DataStructure
 from core.data_structures.core_data import Dimensions, CoreData
-from core.entities.exp_structure import Session, Recording
+from core.attributes.exp_structure import Session, Recording
 
 
 class TrialsProperties(DataStructure):
@@ -220,7 +220,7 @@ class TrialsProperties(DataStructure):
 
         return next((s for s, rec in sessions_to_recnums.items() if rec == recnum), None)
         --------
-        `core.entities.exp_structure.Session.rec`
+        `core.attributes.exp_structure.Session.rec`
         """
         if isinstance(recnum, int):
             recnum = Recording(recnum)

@@ -23,7 +23,7 @@ class SpikeTimesRaw(DataStructure):
 
     Coordinates: ``block``
 
-    Identity Metadata: ``unit_id``, ``session_id``
+    Idattribute Metadata: ``unit_id``, ``session_id``
 
     Descriptive Metadata: ``smpl_rate``
 

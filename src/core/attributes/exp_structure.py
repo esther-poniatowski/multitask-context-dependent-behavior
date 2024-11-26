@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.entities.exp_structure` [module]
+`core.attributes.exp_structure` [module]
 
 Classes representing the sequential structure of an experiment ('positional' information).
 
@@ -17,19 +17,19 @@ from functools import cached_property
 import re
 from typing import Optional, Self, Tuple, TypedDict
 
-from core.entities.base_entity import Entity
-from core.entities.exp_factors import Task, Attention
-from core.entities.bio_info import Site
+from core.attributes.base_attribute import Attribute
+from core.attributes.exp_factors import Task, Attention
+from core.attributes.bio_info import Site
 
 
-class Position(int, Entity[int]):
+class Position(int, Attribute[int]):
     """
     Any positional information capturing the sequential structure of the experiment.
 
     Define the `__new__` method to inherit from `int`.
 
     Subclasses should define their own class-level attributes `MIN` and `MAX` (if applicable) and
-    their own methods (in addition to the base `Entity` methods).
+    their own methods (in addition to the base `Attribute` methods).
 
     Class Attributes
     ----------------
@@ -39,7 +39,7 @@ class Position(int, Entity[int]):
 
     Methods
     -------
-    `is_valid` (override the method from the base class `Entity`)
+    `is_valid` (override the method from the base class `Attribute`)
 
     Notes
     -----
@@ -63,7 +63,7 @@ class Position(int, Entity[int]):
         """
         Check if the value is a valid position, within the defined boundaries.
 
-        Override the method from the base class `Entity`.
+        Override the method from the base class `Attribute`.
         """
         if cls.MIN is not None and value < cls.MIN:
             return False
@@ -141,7 +141,7 @@ class Slot(Position):
     OPTIONS = frozenset(range(MIN, MAX + 1))
 
 
-class Session(str, Entity[str]):
+class Session(str, Attribute[str]):
     """
     Recording session, composed of a set of trials.
 
@@ -169,15 +169,15 @@ class Session(str, Entity[str]):
 
     Methods
     -------
-    `is_valid` (override the method from the base class `Entity`)
+    `is_valid` (override the method from the base class `Attribute`)
     `split_id`
 
     See Also
     --------
-    `core.entities.bio_info.Site`
-    `core.entities.exp_structure.Recording`
-    `core.entities.exp_factors.Task`
-    `core.entities.exp_factors.Attention`
+    `core.attributes.bio_info.Site`
+    `core.attributes.exp_structure.Recording`
+    `core.attributes.exp_factors.Task`
+    `core.attributes.exp_factors.Attention`
     """
 
     ID_PATTERN = re.compile(
@@ -193,7 +193,7 @@ class Session(str, Entity[str]):
     @classmethod
     def is_valid(cls, value: str) -> bool:
         """
-        Check if the value is a valid session ID. Override the method from the base class `Entity`.
+        Check if the value is a valid session ID. Override the method from the base class `Attribute`.
 
         Examples
         --------
@@ -204,7 +204,7 @@ class Session(str, Entity[str]):
         --------
         :meth:`Site.is_valid`
         :meth:`Recording.is_valid` (method from the class `Position`)
-        :meth:`Attention.is_valid`   (method from the class `ExpFactor` inheriting from `Entity`)
+        :meth:`Attention.is_valid`   (method from the class `ExpFactor` inheriting from `Attribute`)
         :meth:`Task.is_valid`      (idem)
         """
         site, rec, attn, task = cls.split_id(value)

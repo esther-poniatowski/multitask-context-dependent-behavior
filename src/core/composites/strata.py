@@ -12,7 +12,7 @@ StrataUnion
 """
 from typing import Self, List, Dict, Type
 
-from core.entities.base_entity import Entity
+from core.attributes.base_attribute import Attribute
 
 
 class Stratum:
@@ -23,7 +23,7 @@ class Stratum:
     ----------
     registry : List[str]
         Registry of the attributes names for all specified factors.
-    factor_types : Dict[Type[Entity]], str]
+    factor_types : Dict[Type[Attribute]], str]
         Mapping from the factor types (classes) and their attribute names.
 
     Methods
@@ -61,19 +61,19 @@ class Stratum:
 
     See Also
     --------
-    `Entity`
+    `Attribute`
     `StrataUnion`
     """
 
     # --- Create Stratum instances ------------------------------------------------------------
 
-    def __init__(self, **factors: Entity) -> None:
+    def __init__(self, **factors: Attribute) -> None:
         self.registry: List[str] = []
-        self.factor_types: Dict[Type[Entity], str] = {}
+        self.factor_types: Dict[Type[Attribute], str] = {}
         for name, factor in factors.items():
             self.set_factor(name, factor)
 
-    def set_factor(self, name: str, factor: Entity) -> None:
+    def set_factor(self, name: str, factor: Attribute) -> None:
         """
         Set a new factor to the stratum after validation.
 
@@ -81,22 +81,22 @@ class Stratum:
         ---------
         name : str
             Name of the attribute to use for the factor.
-        factor : Entity
+        factor : Attribute
             Factor to add to the stratum.
         """
-        if not isinstance(factor, Entity):
-            raise TypeError(f"Invalid argument for Stratum: {name} not Entity")
+        if not isinstance(factor, Attribute):
+            raise TypeError(f"Invalid argument for Stratum: {name} not Attribute")
         setattr(self, name, factor)
         self.registry.append(name)
         self.factor_types[factor.__class__] = name
 
-    def add_factor(self, name: str, factor: Entity) -> Self:
+    def add_factor(self, name: str, factor: Attribute) -> Self:
         """
         Add a new factor to a stratum.
 
         Arguments
         ---------
-        factor : Entity
+        factor : Attribute
             Factor to add to the stratum.
 
         Returns
@@ -122,18 +122,18 @@ class Stratum:
     def __repr__(self) -> str:
         return f"Stratum({', '.join(f'{name}={fact}' for name, fact in self)})"  # use __iter__
 
-    def get_factor(self, factor_type: Type[Entity]) -> Entity | None:
+    def get_factor(self, factor_type: Type[Attribute]) -> Attribute | None:
         """
         Get the stored value corresponding to one factor class.
 
         Arguments
         ---------
-        factor_type : Type[Entity]
+        factor_type : Type[Attribute]
             Class of the factor for which to retrieve the value.
 
         Returns
         -------
-        factor : Entity
+        factor : Attribute
             Value of the factor if present in the stratum instance.
             None if the factor type is not present in the stratum instance.
 
@@ -148,7 +148,7 @@ class Stratum:
             return getattr(self, name, None)
         return None
 
-    def get_entity(self, name: str) -> Type[Entity] | None:
+    def get_attribute(self, name: str) -> Type[Attribute] | None:
         """
         Get the factor class corresponding to one factor attribute.
 
@@ -159,33 +159,33 @@ class Stratum:
 
         Returns
         -------
-        factor_type : Type[Entity]
+        factor_type : Type[Attribute]
             Class of the  factor corresponding to the attribute name.
             None if the attribute name is not present in the stratum instance.
 
         Examples
         --------
         >>> stratum = Stratum(task=Task('PTD'), attention=Attention('a'))
-        >>> stratum.get_entity('task')
+        >>> stratum.get_attribute('task')
         Task
         """
         factor = getattr(self, name, None)
         factor_type = factor.__class__ if factor is not None else None
         return factor_type
 
-    def get_entities(self) -> List[Type[Entity]]:
+    def get_attributes(self) -> List[Type[Attribute]]:
         """
         Get all the factor classes present in the stratum instance.
 
         Returns
         -------
-        factor_types : List[Type[Entity]]
+        factor_types : List[Type[Attribute]]
             List of the classes of the  factors present in the stratum.
 
         Examples
         --------
         >>> stratum = Stratum(task=Task('PTD'), attention=Attention('a'))
-        >>> stratum.get_entities()
+        >>> stratum.get_attributes()
         [Task, Attention]
         """
         return [factor.__class__ for name, factor in self]
@@ -200,7 +200,7 @@ class Stratum:
         ------
         name : str
             Name of the factor.
-        fact : Entity
+        fact : Attribute
             Factor instance.
         """
         for name in self.registry:
@@ -217,7 +217,7 @@ class Stratum:
 
         See Also
         --------
-        `Entity.__eq__`
+        `Attribute.__eq__`
 
         Examples
         --------

@@ -11,7 +11,7 @@ from core.coordinates.exp_factor_coord import CoordTask, CoordAttention, CoordCa
 from core.coordinates.time_coord import CoordTime
 
 from core.data_structures.base_data_struct import DataStructure
-from core.entities.bio_info import Area, Training
+from core.attributes.bio_info import Area, Training
 
 
 class FiringRatesPop(DataStructure):
@@ -30,7 +30,7 @@ class FiringRatesPop(DataStructure):
     - ``category``  (dimension ``trials``)
     - ``time``  (dimension ``time``)
 
-    Identity Metadata: ``area``, ``training`
+    Idattribute Metadata: ``area``, ``training`
 
     Descriptive Metadata: ``with_error``
 

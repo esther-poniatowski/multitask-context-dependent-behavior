@@ -3,12 +3,12 @@
 """
 :mod:`test_core.test_objects.test_composites` [module]
 
-Tests for the module :mod:`core.entities.composites`.
+Tests for the module :mod:`core.attributes.composites`.
 """
 
 import pytest
 
-from core.entities.composites import Site, Unit, Session
+from core.attributes.composites import Site, Unit, Session
 
 
 def test_split_id_unit():
