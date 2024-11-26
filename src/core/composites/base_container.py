@@ -5,15 +5,10 @@
 
 Classes
 -------
-`Container`
-`UnitsContainer`
-`ExpCondContainer`
+Container
 """
 from collections import UserDict
 from typing import List, Callable, Any, Iterable, Tuple, Dict, Self, TypeVar, Generic, Type
-
-from core.attributes.brain_info import Unit
-from core.composites.exp_conditions import ExpCondition
 
 
 K = TypeVar("K")
@@ -53,17 +48,17 @@ class Container(UserDict[K, V], Generic[K, V]):
 
     Methods
     -------
-    `__setitem__`
-    `list_keys`
-    `list_values`
-    `to_dict`
-    `get_subset`
-    `filter_on_keys`
-    `filter_on_values`
-    `apply`
-    `fill`
-    `__getattr__`
-    `find_types`
+    __setitem__
+    list_keys
+    list_values
+    to_dict
+    get_subset
+    filter_on_keys
+    filter_on_values
+    apply
+    fill
+    __getattr__
+    find_types
 
     Examples
     --------
@@ -74,7 +69,6 @@ class Container(UserDict[K, V], Generic[K, V]):
     Initialize a `Container` with lists of keys and values:
 
     >>> container = Container([1, 2], ["a", "b"], key_type=int, value_type=str)
-    Initialize a `Container` with a dictionary of data and check the types:
 
     Get a value from the container:
 
@@ -469,88 +463,3 @@ class Container(UserDict[K, V], Generic[K, V]):
         else:
             raise TypeError("Cannot determine types for an empty dictionary")
         return key_type, value_type
-
-
-class UnitsContainer(Container[Unit, V]):
-    """
-    Container for population data.
-
-    Class Attributes
-    ----------------
-    KEY_TYPE : Type[Unit]
-        Type of the keys in the container.
-
-    Examples
-    --------
-    Initialize a `UnitsContainer` with a dictionary of integer values:
-
-    >>> units_to_values = {Unit("avo052a-d1"): 1, Unit("lemon052a-b2"): 2}
-    >>> container = UnitsContainer(units_to_values, value_type=int)
-
-    Initialize a `UnitsContainer` with two lists of units and values:
-
-    >>> units = [Unit("avo052a-d1"), Unit("lemon052a-b2")]
-    >>> values = [1, 2]
-    >>> container = UnitsContainer(units, values, value_type=int)
-
-    """
-
-    KEY_TYPE = Unit
-
-    def __init__(self, *args, value_type: Type[V] | None = None, **kwargs) -> None:
-        """Override the base constructor to fix `key_type` and allow dynamic `value_type`."""
-        super().__init__(*args, key_type=self.KEY_TYPE, value_type=value_type, **kwargs)
-
-    @classmethod
-    def from_keys(
-        cls, keys: Iterable[Unit], fill_value: V, *, value_type: Type[V] | None = None, **kwargs
-    ) -> "UnitsContainer[V]":
-        """Override the base class method to fix `key_type` and allow dynamic `value_type`."""
-        return cls({key: fill_value for key in keys}, value_type=value_type, **kwargs)
-
-    @property
-    def units(self) -> List[Unit]:
-        """Get the units in the container."""
-        return list(self.data.keys())
-
-
-class ExpCondContainer(Container[ExpCondition, V]):
-    """
-    Container for experimental conditions.
-
-    Class Attributes
-    ----------------
-    KEY_TYPE : Type[ExpCondition]
-        Type of the keys in the container.
-
-    Examples
-    --------
-    Initialize an `ExpCondContainer` with a dictionary of integer values:
-
-    >>> exp_conds_to_values = {ExpCondition("a"): 1, ExpCondition("b"): 2}
-    >>> container = ExpCondContainer(exp_conds_to_values, value_type=int)
-
-    """
-
-    KEY_TYPE = ExpCondition
-
-    def __init__(self, *args, value_type: Type[V] | None = None, **kwargs) -> None:
-        """Override the base constructor to fix `key_type` and allow dynamic `value_type`."""
-        super().__init__(*args, key_type=self.KEY_TYPE, value_type=value_type, **kwargs)
-
-    @classmethod
-    def from_keys(
-        cls,
-        keys: Iterable[ExpCondition],
-        fill_value: V,
-        *,
-        value_type: Type[V] | None = None,
-        **kwargs,
-    ) -> "ExpCondContainer[V]":
-        """Override the base class method to fix `key_type` and allow dynamic `value_type`."""
-        return cls({key: fill_value for key in keys}, value_type=value_type, **kwargs)
-
-    @property
-    def exp_conditions(self) -> List[ExpCondition]:
-        """Get the experimental conditions in the container."""
-        return list(self.data.keys())

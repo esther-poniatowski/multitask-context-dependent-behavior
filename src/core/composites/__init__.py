@@ -7,12 +7,7 @@ Classes for composite objects and containers which have homogeneous behavior acr
 
 Modules
 -------
-
-
-Notes
------
-
-
-See Also
---------
+`base_container`
+`containers_fixed`
+`candidates`
 """
