@@ -24,7 +24,8 @@ from core.processors.preprocess.count_trials import SampleSizer, TrialsCounter
 from core.attributes.brain_info import Area, Training
 from core.composites.exp_conditions import PipelineCondition
 from core.composites.features import Features
-from core.composites.containers import UnitsContainer, ExpCondContainer, Container
+from core.composites.base_container import Container
+from core.composites.containers_fixed import UnitsContainer, ExpCondContainer
 from core.composites.candidates import Candidates
 from core.coordinates.exp_factor_coord import CoordExpFactor
 from core.coordinates.trial_analysis_label_coord import CoordPseudoTrialsIdx, CoordFolds
