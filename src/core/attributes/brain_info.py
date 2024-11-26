@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.attributes.bio_info` [module]
+`core.attributes.brain_info` [module]
 
 Classes representing the biological system under investigation.
 
 Classes
 -------
-`BrainInfo`
-`Animal`
-`Training`
-`Area`
-`CorticalDepth`
-`Site`
-`Unit`
+BrainInfo
+Animal
+Training
+Area
+CorticalDepth
+Site
+Unit
 """
 from functools import cached_property
 import re
@@ -63,30 +63,9 @@ class Animal(BrainInfo):
 
     Methods
     -------
-    `get_naive`
-    `get_trained`
+    get_naive
+    get_trained
     """
-
-    OPTIONS = frozenset(
-        [
-            "ath",
-            "avo",
-            "daf",
-            "dai",
-            "ele",
-            "lem",
-            "mor",
-            "oni",
-            "plu",
-            "saf",
-            "sir",
-            "tan",
-            "tel",
-            "tul",
-            "was",
-        ]
-    )
-    NAIVE = frozenset(["mor", "tan"])
 
     LABELS = MappingProxyType(
         {
@@ -107,6 +86,8 @@ class Animal(BrainInfo):
             "was": "Wasabi",
         }
     )
+    OPTIONS = frozenset(LABELS.keys())
+    NAIVE = frozenset(["mor", "tan"])
 
     @classmethod
     def get_naive(cls) -> FrozenSet[Self]:
@@ -144,8 +125,8 @@ class Training(int, Attribute[bool]):
     implements the special method `__bool__` to provide appropriate behavior in boolean contexts.
     """
 
-    OPTIONS = frozenset([False, True])
     LABELS = MappingProxyType({True: "Trained", False: "Naive"})
+    OPTIONS = frozenset(LABELS.keys())
 
     def __new__(cls, value: bool) -> Self:
         return super().__new__(cls, bool(value))
@@ -165,11 +146,10 @@ class Area(BrainInfo):
 
     Methods
     -------
-    `get_trained`
-    `get_naive`
+    get_trained
+    get_naive
     """
 
-    OPTIONS = frozenset(["A1", "dPEG", "VPr", "PFC"])
     LABELS = MappingProxyType(
         {
             "A1": "Primary Auditory Cortex",
@@ -178,6 +158,7 @@ class Area(BrainInfo):
             "PFC": "Prefrontal Cortex",
         }
     )
+    OPTIONS = frozenset(LABELS.keys())
 
     @classmethod
     def get_trained(cls) -> FrozenSet[Self]:
@@ -263,7 +244,7 @@ class Site(BrainInfo):
 
         See Also
         --------
-        `split_id`
+        split_id
         `Animal.is_valid`
         `CorticalDepth.is_valid`
         """
@@ -364,8 +345,8 @@ class Unit(BrainInfo):
 
     Methods
     -------
-    `is_valid` (override the method from the base class `Attribute`)
-    `split_id`
+    is_valid (override the method from the base class `Attribute`)
+    split_id
 
     Examples
     --------

@@ -12,7 +12,7 @@ Classes
 from collections import UserDict
 from typing import List, Callable, Any, Iterable, Tuple, Dict, Self, TypeVar, Generic, Type
 
-from core.attributes.bio_info import Unit
+from core.attributes.brain_info import Unit
 from core.composites.exp_conditions import ExpCondition
 
 

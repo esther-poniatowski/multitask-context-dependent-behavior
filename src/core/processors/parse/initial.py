@@ -158,7 +158,7 @@ def Build_EVENTSinfo_TRIALSinfo(UNITSinfo, PATHS, D=D):
             -------
             Session (str)               Session in which this event appeared.
             TrialNum (int)              Index of the trial in which this event appeared.
-            Position (int)              Position of the event within the trial (0, ..., 6).
+            ExpStructure (int)              Position of the event within the trial (0, ..., 6).
             StimTimes (tuple of floats) (t0, t1), start and end times of stimulus (in sec), relative to the beginning of the trial.
             DStim (float)               Duration of the stimulus (in sec).
             DPre (float)                Duration of the pre-stimulus period (in sec).
@@ -225,7 +225,7 @@ def Build_EVENTSinfo_TRIALSinfo(UNITSinfo, PATHS, D=D):
                 session
             ] * NStim  # same session for all the events in the trial
             EVENTSinfo["TrialNum"] += [num] * NStim  # same trial for all the events in the trial
-            EVENTSinfo["Position"] += [pos for pos in range(NStim)]
+            EVENTSinfo["ExpStructure"] += [pos for pos in range(NStim)]
             EVENTSinfo["StimTimes"] += StimTimes
             DStim, DPreStim, DPostStim = Find_Durations(
                 StimTimes, tstop

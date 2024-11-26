@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_core.test_objects.test_concrete` [module]
+`test_core.test_objects.test_concrete` [module]
 
 See Also
 --------
-:mod:`core.attributes.bio_info`
-:mod:`core.attributes.exp_structure`
+`core.attributes.brain_info`
+`core.attributes.exp_structure`
 """
 
 from typing import FrozenSet
 
 import pytest
 
-from attributes.bio_info import Animal
+from core.attributes.brain_info import Animal
 from core.attributes.exp_structure import Recording
 
 

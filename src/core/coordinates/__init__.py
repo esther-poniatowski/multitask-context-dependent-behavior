@@ -44,7 +44,7 @@ Modules
 `exp_factor_coord`
 `exp_structure_coord`
 `trials_coord`
-`bio_info_coord`
+`brain_info_coord`
 
 
 Implementation
