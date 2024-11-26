@@ -13,7 +13,7 @@ import numpy as np
 
 from core.builders.base_builder import Builder
 from core.composites.features import Features
-from core.coordinates.trials_coord import CoordPseudoTrialsIdx, CoordFolds
+from core.coordinates.trial_analysis_label_coord import CoordPseudoTrialsIdx, CoordFolds
 from core.composites.exp_conditions import ExpCondition
 from core.processors.preprocess.bootstrap import Bootstrapper
 from core.processors.preprocess.map_indices import IndexMapper

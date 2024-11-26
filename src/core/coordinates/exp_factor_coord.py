@@ -7,14 +7,14 @@ Coordinates for labelling experimental factors.
 
 Classes
 -------
-`CoordExpFactor` (Generic)
-`CoordTask`
-`CoordAttention`
-`CoordCategory`
-`CoordStimulus`
-`CoordBehavior`
-`CoordOutcome`
-`CoordEventDescription`
+CoordExpFactor (Generic)
+CoordTask
+CoordAttention
+CoordCategory
+CoordStimulus
+CoordBehavior
+CoordOutcome
+CoordEventDescription
 """
 
 from typing import TypeVar, Type, Optional, Union, Dict, Self, overload
@@ -23,6 +23,7 @@ import numpy as np
 
 from core.coordinates.base_coord import Coordinate
 from core.attributes.exp_factors import (
+    ExpFactor,
     Task,
     Attention,
     Stimulus,
@@ -30,38 +31,38 @@ from core.attributes.exp_factors import (
     Behavior,
     ResponseOutcome,
     EventDescription,
-    ExpFactor,
 )
 
 
-ExpFactorType = TypeVar("ExpFactorType", bound=ExpFactor)
-"""Generic type variable for experimental factors. Used to keep a generic type for the
-experimental factor while specifying the data type of the coordinate labels."""
+AnyExpFactor = TypeVar("AnyExpFactor", bound=ExpFactor)
+"""Type variable for experimental factors. Used to keep a generic narrower type for the attribute
+while specifying the data type of the coordinate labels."""
 
 
-class CoordExpFactor(Coordinate[np.str_, ExpFactorType]):
+class CoordExpFactor(Coordinate[np.str_, AnyExpFactor]):
     """
     Coordinate labels representing one experimental factor.
 
     Class Attributes
     ----------------
-    ENTITY : Type[ExpFactor]
+    ATTRIBUTE : Type[ExpFactor]
         Subclass of `Attribute` corresponding to the type of experimental factor which is
         represented by the coordinate.
     DTYPE : Type[np.str_]
         Data type of the labels, always string. The `np.str_` dtype is equivalent to the
         `np.unicode_` dtype. It encompasses strings in fixed-width.
 
-    Attributes
-    ----------
+    Arguments
+    ---------
     values : np.ndarray[Tuple[Any], np.str_]
         Labels for the factor associated with each measurement.
+        Shape: ``(n_smpl,)`` with ``n_smpl`` the number of samples.
 
     Methods
     -------
-    `count_by_lab`
-    `build_labels`
-    `replace_label`
+    count_by_lab
+    build_labels
+    replace_label
 
     See Also
     --------
@@ -69,7 +70,7 @@ class CoordExpFactor(Coordinate[np.str_, ExpFactorType]):
     `core.attributes.exp_factors`
     """
 
-    ENTITY: Type[ExpFactorType]
+    ATTRIBUTE: Type[AnyExpFactor]
     DTYPE = np.str_
     SENTINEL: str = ""
 
@@ -120,9 +121,9 @@ class CoordExpFactor(Coordinate[np.str_, ExpFactorType]):
     def count_by_lab(self, lab: ExpFactor) -> int: ...
 
     @overload
-    def count_by_lab(self) -> Dict[ExpFactorType, int]: ...
+    def count_by_lab(self) -> Dict[AnyExpFactor, int]: ...
 
-    def count_by_lab(self, lab: Optional[ExpFactor] = None) -> Union[int, Dict[ExpFactorType, int]]:
+    def count_by_lab(self, lab: Optional[ExpFactor] = None) -> Union[int, Dict[AnyExpFactor, int]]:
         """
         Count the number of samples in one label or all labels.
 
@@ -140,13 +141,12 @@ class CoordExpFactor(Coordinate[np.str_, ExpFactorType]):
 
         Implementation
         --------------
-        The set of valid values for the label is accessed by ``self.ENTITY.get_options()``.
+        The set of valid values for the label is accessed by ``self.ATTRIBUTE.get_options()``.
         """
         if lab is not None:
             return np.sum(self == lab)
-        else:
-            options = self.ENTITY.get_options()
-            return {self.ENTITY(lab): np.sum(self == lab) for lab in options}
+        options = self.ATTRIBUTE.get_options()
+        return {self.ATTRIBUTE(lab): np.sum(self == lab) for lab in options}
 
 
 class CoordTask(CoordExpFactor[Task]):
@@ -154,7 +154,7 @@ class CoordTask(CoordExpFactor[Task]):
     Coordinate labels for tasks.
     """
 
-    ENTITY = Task
+    ATTRIBUTE = Task
 
 
 class CoordAttention(CoordExpFactor[Attention]):
@@ -162,7 +162,7 @@ class CoordAttention(CoordExpFactor[Attention]):
     Coordinate labels for attentional states.
     """
 
-    ENTITY = Attention
+    ATTRIBUTE = Attention
 
 
 class CoordCategory(CoordExpFactor[Category]):
@@ -170,7 +170,7 @@ class CoordCategory(CoordExpFactor[Category]):
     Coordinate labels for categories.
     """
 
-    ENTITY = Category
+    ATTRIBUTE = Category
 
 
 class CoordStimulus(CoordExpFactor[Stimulus]):
@@ -178,7 +178,7 @@ class CoordStimulus(CoordExpFactor[Stimulus]):
     Coordinate labels for stimuli.
     """
 
-    ENTITY = Stimulus
+    ATTRIBUTE = Stimulus
 
 
 class CoordBehavior(CoordExpFactor[Behavior]):
@@ -186,7 +186,7 @@ class CoordBehavior(CoordExpFactor[Behavior]):
     Coordinate labels for behavioral choices of the animals.
     """
 
-    ENTITY = Behavior
+    ATTRIBUTE = Behavior
 
 
 class CoordOutcome(CoordExpFactor[ResponseOutcome]):
@@ -194,7 +194,7 @@ class CoordOutcome(CoordExpFactor[ResponseOutcome]):
     Coordinate labels for the outcomes of the behavioral responses.
     """
 
-    ENTITY = ResponseOutcome
+    ATTRIBUTE = ResponseOutcome
 
 
 class CoordEventDescription(Coordinate[np.str_, EventDescription]):
@@ -202,4 +202,4 @@ class CoordEventDescription(Coordinate[np.str_, EventDescription]):
     Coordinate labels for event descriptions.
     """
 
-    ENTITY = EventDescription
+    ATTRIBUTE = EventDescription

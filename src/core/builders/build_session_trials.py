@@ -20,7 +20,7 @@ from core.coordinates.base_coord import Coordinate
 from core.coordinates.exp_factor_coord import CoordCategory
 from core.coordinates.exp_structure_coord import CoordBlock, CoordSlot
 from core.coordinates.time_coord import CoordTimeEvent
-from core.coordinates.trials_coord import CoordError
+from core.coordinates.trial_analysis_label_coord import CoordError
 from core.data_structures.core_data import CoreData
 from core.data_structures.events_properties import EventsProperties
 from core.data_structures.trials_properties import TrialsProperties

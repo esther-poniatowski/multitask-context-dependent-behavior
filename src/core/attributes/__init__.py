@@ -13,6 +13,7 @@ Modules
 `exp_condition`
 `exp_structure`
 `brain_info`
+`trial_analysis_labels`
 
 Notes
 -----
@@ -20,12 +21,15 @@ The hierarchy provides a consistent interface for handling diverse data types wh
 custom behavior in each subclass. Each subclass of `Attribute` corresponds to a specific type
 of descriptor, which represents one aspects of the experiment or the analysis. They include:
 
+- Neuronal information (qualitative properties): brain area, cortical depth, animal...
 - Conditions of the experimental paradigm (qualitative factors): task, attentional state,
   stimulus...
 - Structure of the experiment (quantitative factors): recording number, position of the stimulus in
   a sequence...
-- Neuronal information (qualitative properties): brain area, cortical depth, animal...
 - Trial-related labels for analysis: folds, indices of pseudo-trials...
+
+Most of the coordinates aim to describe trial-level properties, except those which describe
+neuronal information.
 
 The base class `Attribute` provides core functionality, shared by many subclasses:
 

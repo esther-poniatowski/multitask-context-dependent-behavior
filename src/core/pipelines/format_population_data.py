@@ -27,7 +27,7 @@ from core.composites.features import Features
 from core.composites.containers import UnitsContainer, ExpCondContainer, Container
 from core.composites.candidates import Candidates
 from core.coordinates.exp_factor_coord import CoordExpFactor
-from core.coordinates.trials_coord import CoordPseudoTrialsIdx, CoordFolds
+from core.coordinates.trial_analysis_label_coord import CoordPseudoTrialsIdx, CoordFolds
 from core.builders.build_ensembles import EnsemblesBuilder
 from core.builders.build_trial_coords import TrialCoordsBuilder
 from core.builders.build_folds import FoldsBuilder

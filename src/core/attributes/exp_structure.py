@@ -169,8 +169,8 @@ class Session(str, Attribute[str]):
 
     Methods
     -------
-    `is_valid` (override the method from the base class `Attribute`)
-    `split_id`
+    is_valid (override the method from the base class `Attribute`)
+    split_id
 
     See Also
     --------
@@ -193,7 +193,8 @@ class Session(str, Attribute[str]):
     @classmethod
     def is_valid(cls, value: str) -> bool:
         """
-        Check if the value is a valid session ID. Override the method from the base class `Attribute`.
+        Check if the value is a valid session ID. Override the method from the base class
+        `Attribute`.
 
         Examples
         --------
@@ -202,10 +203,10 @@ class Session(str, Attribute[str]):
 
         See Also
         --------
-        :meth:`Site.is_valid`
-        :meth:`Recording.is_valid` (method from the class `ExpStructure`)
-        :meth:`Attention.is_valid`   (method from the class `ExpFactor` inheriting from `Attribute`)
-        :meth:`Task.is_valid`      (idem)
+        `Site.is_valid`
+        `Recording.is_valid` (method from the class `ExpStructure`)
+        `Attention.is_valid` (method from the class `ExpFactor` inheriting from `Attribute`)
+        `Task.is_valid`      (idem)
         """
         site, rec, attn, task = cls.split_id(value)
         if not all([site, rec, attn, task]):  # checks for any empty string or zero

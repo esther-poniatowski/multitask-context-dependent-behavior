@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_core.test_coordinates.test_trials` [module]
+`test_core.test_coordinates.test_trials` [module]
 
 See Also
 --------
-:mod:`core.coordinates.trials`: Tested module.
+`core.coordinates.trials`: Tested module.
 
 Notes
 -----
@@ -16,7 +16,7 @@ one concrete subclass of coordinates.
 import numpy as np
 import pytest
 
-from core.coordinates.trials_coord import CoordError, CoordFold
+from core.coordinates.trial_analysis_label_coord import CoordError, CoordFold
 
 
 N_SMPL = 10

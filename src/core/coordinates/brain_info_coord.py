@@ -7,9 +7,9 @@ Coordinate for labelling biological information in neuronal populations.
 
 Classes
 -------
-`CoordPopulation` (Generic)
-`CoordUnit`
-`CoordDepth`
+CoordPopulation (Generic)
+CoordUnit
+CoordDepth
 """
 from typing import Dict, Tuple, Any, Iterable
 
@@ -26,22 +26,22 @@ class CoordUnit(Coordinate[np.str_, Unit]):
 
     Class Attributes
     ----------------
-    ENTITY : Type[Unit]
+    ATTRIBUTE : Type[Unit]
         Subclass of `Attribute` corresponding to the units identifiers.
     DTYPE : Type[np.str_]
         Data type of the unit labels, always string.
     SENTINEL : str
         Sentinel value marking missing or unset unit labels, usually an empty string.
 
-    Attributes
-    ----------
+    Arguments
+    ---------
     values : np.ndarray[Tuple[Any, ...], np.str_]
         Labels for the units in one population.
+        Shape: ``(n_units,)`` for a single ensemble, ``(n_ens, n_units)`` for multiple ensembles.
 
-        Dimensions:
-
-        - Single ensemble: ``(n_units,)``.
-        - Multiple ensembles: ``(n_ens, n_units)``.
+    Methods
+    -------
+    iter_through
 
     Examples
     --------
@@ -66,7 +66,7 @@ class CoordUnit(Coordinate[np.str_, Unit]):
     `core.coordinates.base_coord.Coordinate`
     """
 
-    ENTITY = Unit
+    ATTRIBUTE = Unit
     DTYPE = np.str_
     SENTINEL = ""
 
@@ -87,6 +87,7 @@ class CoordUnit(Coordinate[np.str_, Unit]):
             Iterable of values associated to the units in the population.
         units : Iterable[Unit]
             Units in the population (identifiers as in the coordinate).
+
         Yields
         ------
         value : Any
@@ -119,15 +120,15 @@ class CoordDepth(Coordinate[np.str_, CorticalDepth]):
     """
     Coordinate indicating the cortical depth of each unit in a population.
 
-    Attributes
-    ----------
+    Arguments
+    ---------
     values : np.ndarray[Tuple[Any, ...], np.str_]
         Depth of units in the cortex.
 
     Methods
     -------
-    `get_layer`
-    `count_by_lab`
+    get_layer
+    count_by_lab
 
     See Also
     --------
@@ -135,9 +136,14 @@ class CoordDepth(Coordinate[np.str_, CorticalDepth]):
     `core.coordinates.coord_base.Coordinate`
     """
 
-    ENTITY = CorticalDepth
+    ATTRIBUTE = CorticalDepth
     DTYPE = np.str_
     SENTINEL = ""
+
+    def __repr__(self) -> str:
+        counts = self.count_by_lab()
+        format_counts = ", ".join([f"{depth!r}: {n}" for depth, n in counts.items()])
+        return f"<{self.__class__.__name__}>: {len(self)} units, {format_counts}."
 
     def get_layer(self, depth: CorticalDepth) -> np.ndarray[Tuple[Any, ...], np.dtype[np.bool_]]:
         """
@@ -146,7 +152,7 @@ class CoordDepth(Coordinate[np.str_, CorticalDepth]):
         Parameters
         ----------
         depth : CorticalDepth
-            Layer to select.
+            Layer to select. Behaves like a string.
 
         Returns
         -------
@@ -154,7 +160,7 @@ class CoordDepth(Coordinate[np.str_, CorticalDepth]):
             Boolean mask for the units in the layer.
             Shape : ``(n_smpl,)``, same as the coordinate.
         """
-        return self == depth.value
+        return self == depth
 
     def count_by_lab(self) -> Dict[CorticalDepth, int]:
         """
@@ -165,10 +171,5 @@ class CoordDepth(Coordinate[np.str_, CorticalDepth]):
         counts : Dict[CorticalDepth, int]
             Number of units in each layer.
         """
-        options = self.ENTITY.get_options()
-        return {self.ENTITY(depth): np.sum(self == depth) for depth in options}
-
-    def __repr__(self) -> str:
-        counts = self.count_by_lab()
-        format_counts = ", ".join([f"{depth!r}: {n}" for depth, n in counts.items()])
-        return f"<{self.__class__.__name__}>: {len(self)} units, {format_counts}."
+        options = self.ATTRIBUTE.get_options()
+        return {self.ATTRIBUTE(depth): np.sum(self == depth) for depth in options}
