@@ -13,12 +13,11 @@ from typing import List, Any, TypeAlias, Tuple
 import numpy as np
 
 from core.constants import N_TRIALS_MIN, BOOTSTRAP_THRES_PERC
-from core.composites.features import Features
+from core.composites.coordinate_set import CoordinateSet
 from core.processors.base_processor import Processor
 from core.composites.exp_conditions import ExpCondition
 from core.processors.preprocess.assign_folds import FoldAssigner
 from core.processors.preprocess.bootstrap import Bootstrapper
-from core.processors.preprocess.exclude import Excluder
 
 Counts: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
 """Type alias for the number of trials per unit."""
@@ -30,10 +29,10 @@ class TrialsCounter(Processor):
 
     Attributes
     ----------
-    feat_by_unit : List[Features]
+    feat_by_unit : List[CoordinateSet]
         Coordinates containing the factors of interest for splitting trials by condition.
         Number of elements: ``n_units``, number of units.
-        Elements: ``Features``, behaving like a list of coordinates with identical numbers of
+        Elements: ``CoordinateSet``, behaving like a list of coordinates with identical numbers of
         samples.
 
     Examples
@@ -44,7 +43,7 @@ class TrialsCounter(Processor):
     `core.processors.preprocess.base_processor.Processor`
     """
 
-    def __init__(self, feat_by_unit: List[Features]):
+    def __init__(self, feat_by_unit: List[CoordinateSet]):
         self.feat_by_unit = feat_by_unit
 
     def process(self, exp_cond: ExpCondition | None = None, **kwargs) -> Counts:
@@ -67,13 +66,15 @@ class TrialsCounter(Processor):
 
     # --- Processing Methods -----------------------------------------------------------------------
 
-    def count_in_condition(self, feat_by_unit: List[Features], exp_cond: ExpCondition) -> Counts:
+    def count_in_condition(
+        self, feat_by_unit: List[CoordinateSet], exp_cond: ExpCondition
+    ) -> Counts:
         """
         Count the number of trials available for each unit in the population.
 
         Arguments
         ---------
-        feat_by_unit : List[Features]
+        feat_by_unit : List[CoordinateSet]
             See the class attribute `feat_by_unit`.
         exp_cond : ExpCondition
             See the method argument `exp_cond`.

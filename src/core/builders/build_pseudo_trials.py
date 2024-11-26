@@ -12,7 +12,7 @@ from typing import List, Dict, Iterable
 import numpy as np
 
 from core.builders.base_builder import Builder
-from core.composites.features import Features
+from core.composites.coordinate_set import CoordinateSet
 from core.coordinates.trial_analysis_label_coord import CoordPseudoTrialsIdx, CoordFolds
 from core.composites.exp_conditions import ExpCondition
 from core.processors.preprocess.bootstrap import Bootstrapper
@@ -95,7 +95,7 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
 
     def build(
         self,
-        features_by_unit: List[Features] | None = None,
+        features_by_unit: List[CoordinateSet] | None = None,
         folds_by_unit: List[CoordFolds] | None = None,
         seed: int = 0,
         **kwargs,
@@ -105,7 +105,7 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
 
         Arguments
         ---------
-        features_by_unit : List[Features]
+        features_by_unit : List[CoordinateSet]
             Coordinates of the trials for each unit in the population.
             Length: ``n_units`` feature sets.
         folds_by_unit : List[CoordFolds]
@@ -153,15 +153,15 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
 
     @staticmethod
     def build_for_stratum(
-        strata: List[Features], stratum: ExpCondition, n_pseudo: int, seed: int
+        strata: List[CoordinateSet], stratum: ExpCondition, n_pseudo: int, seed: int
     ) -> CoordPseudoTrialsIdx:
         """
         Build the pseudo-trials for one stratum (fold x condition).
 
         Arguments
         ---------
-        strata : List[Features]
-            Features to consider to group trials in strata for each unit in the population.
+        strata : List[CoordinateSet]
+            CoordinateSet to consider to group trials in strata for each unit in the population.
         stratum : ExpCondition
             Set of feature values defining the stratum for which to build the pseudo-trials.
         n_pseudo : int

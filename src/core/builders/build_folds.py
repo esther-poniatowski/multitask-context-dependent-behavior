@@ -10,7 +10,7 @@ FoldsBuilder
 from typing import Iterable
 
 from core.builders.base_builder import Builder
-from core.composites.features import Features
+from core.composites.coordinate_set import CoordinateSet
 from core.coordinates.trial_analysis_label_coord import CoordFolds
 from core.composites.exp_conditions import ExpCondition
 from core.processors.preprocess.assign_folds import FoldAssigner
@@ -74,7 +74,7 @@ class FoldsBuilder(Builder[CoordFolds]):
 
     def build(
         self,
-        features: Features | None = None,
+        features: CoordinateSet | None = None,
         seed: int = 0,
         **kwargs,
     ) -> CoordFolds:
@@ -83,7 +83,7 @@ class FoldsBuilder(Builder[CoordFolds]):
 
         Arguments
         ---------
-        features : Features
+        features : CoordinateSet
             Coordinates for the all the trials of the considered unit.
         seed : int
             Seed used by the FoldAssigner.

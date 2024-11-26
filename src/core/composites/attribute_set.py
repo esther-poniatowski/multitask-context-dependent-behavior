@@ -18,7 +18,7 @@ from core.composites.base_container import Container
 
 class AttributeSet(Container[Type[Attribute], Attribute]):
     """
-    AttributeSet defined by the combination of several features representing trial properties.
+    Combination of attributes which jointly specifies a category or condition.
 
     Class Attributes
     ----------------
@@ -40,6 +40,7 @@ class AttributeSet(Container[Type[Attribute], Attribute]):
     Methods
     -------
     set
+    add
     get (inherited from `UserDict`, see in "See Also")
     __iter__
     __add__
@@ -80,8 +81,6 @@ class AttributeSet(Container[Type[Attribute], Attribute]):
         attr_classes = sorted(self.keys(), key=lambda cls: cls.__name__)  # order by names
         return f"AttributeSet({', '.join(f'{self[cls]}' for cls in attr_classes)})"
 
-    # --- Create AttributeSet instances ------------------------------------------------------------
-
     def __init__(self, *args: Attribute) -> None:
         """Override the base constructor to fix `key_type` and `value_type`."""
         # Create the dictionary of attributes with the class of the attribute as key
@@ -101,7 +100,22 @@ class AttributeSet(Container[Type[Attribute], Attribute]):
         key = value.__class__
         self[key] = value
 
-    # --- Magic methods ----------------------------------------------------------------------------
+    def add(self, value: Attribute) -> Self:
+        """
+        Create a new instance of the set with an additional attribute.
+
+        Arguments
+        ---------
+        value : Attribute
+
+        Returns
+        -------
+        AttributeSet
+            New instance of the set with the additional attribute.
+        """
+        new_set = self.copy()
+        new_set.set(value)
+        return new_set
 
     def __add__(self, other: Self) -> "AttributeSetUnion":
         """

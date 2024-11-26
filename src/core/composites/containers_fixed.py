@@ -22,7 +22,7 @@ class UnitsContainer(Container[Unit, V]):
     Class Attributes
     ----------------
     KEY_TYPE : Type[Unit]
-        Type of the keys in the container.
+        Type of the keys in the container, here `Unit`.
 
     Examples
     --------
@@ -65,7 +65,7 @@ class ExpCondContainer(Container[ExpCondition, V]):
     Class Attributes
     ----------------
     KEY_TYPE : Type[ExpCondition]
-        Type of the keys in the container.
+        Type of the keys in the container, here `ExpCondition`.
 
     Examples
     --------

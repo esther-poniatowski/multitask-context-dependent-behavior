@@ -23,7 +23,7 @@ from core.pipelines.base_pipeline import Pipeline
 from core.processors.preprocess.count_trials import SampleSizer, TrialsCounter
 from core.attributes.brain_info import Area, Training
 from core.composites.exp_conditions import PipelineCondition
-from core.composites.features import Features
+from core.composites.coordinate_set import CoordinateSet
 from core.composites.base_container import Container
 from core.composites.containers_fixed import UnitsContainer, ExpCondContainer
 from core.composites.candidates import Candidates
@@ -104,7 +104,9 @@ class FormatPopulationData(Pipeline):
         # Load the trials' properties for each unit
         trials_props: UnitsContainer[TrialsProperties] = loaders_trial_prop.load()
         # Retrieve the coordinates of interest
-        features = trials_props.apply(lambda tp: Features(**tp.get_coords_from_dim("features")))
+        features = trials_props.apply(
+            lambda tp: CoordinateSet(**tp.get_coords_from_dim("features"))
+        )
 
         # Count the number of trials available for each unit in each condition
         counter = TrialsCounter(feat_by_unit=features.list_values())

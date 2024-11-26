@@ -16,7 +16,7 @@ from typing import Self, Iterable, List, Dict, Type, FrozenSet, Mapping
 from itertools import product
 
 from core.attributes.exp_factors import ExpFactor
-from core.composites.strata import Stratum, StrataUnion
+from composites.attribute_set import Stratum, StrataUnion
 
 
 class ExpCondition(Stratum):
