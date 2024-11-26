@@ -14,7 +14,7 @@ The ``description`` field is a string which can comprise several details separat
 
 1. Type of the event (always present), among a set of predefined values : "TRIALSTART",
   "PreStimSilence", "Stim", "PostStimSilence", "BEHAVIOR", "SHOCKON", "TRIALSTOP".
-2. Stimulus identity (if the first is PreStimSilence, Stim or PostStimSilence). Example:
+2. Stimulus idattribute (if the first is PreStimSilence, Stim or PostStimSilence). Example:
    'TORC_448_06_v501', '2000', '8000'...
 3. Stimulus category (if applicable) : 'Reference' or 'Target'.
 4. Stimulus sound intensity (if applicable), for instance '0dB', '10dB'...
@@ -79,7 +79,7 @@ import numpy as np
 from core.processors.base_processor import Processor
 
 
-# TODO: Replace by EventType from core.entities.exp_factors
+# TODO: Replace by EventType from core.attributes.exp_factors
 class EventType(str, Enum):
     """
     Enum class for the valid types of events in the raw data.
@@ -101,7 +101,7 @@ class EventType(str, Enum):
     TRIALSTOP = "TRIALSTOP"
 
 
-# TODO: Replace by Category from core.entities.exp_factors
+# TODO: Replace by Category from core.attributes.exp_factors
 class StimulusCategory:
     """Represent stimulus category.
 
@@ -160,7 +160,7 @@ class EventManager:
     "SHOCKON", "TRIALSTOP"}
         Type of event, among the possible values. See the `EventTypes` enum.
     stimulus : Optional[str]
-        Stimulus identity (if applicable). Examples: 'TORC_448_06_v501', '2000', '8000'...
+        Stimulus idattribute (if applicable). Examples: 'TORC_448_06_v501', '2000', '8000'...
     category : Optional[str]
         Stimulus category (if applicable). Examples: 'Reference', 'Target'...
     intensity : Optional[str]
@@ -236,7 +236,7 @@ class SlotManager:
     block_number : int
         Block number in which the slot occurred.
     categ : Optional[str]
-        Stimulus identity.
+        Stimulus idattribute.
     t_on : Optional[float]
         Start time of the slot (onset of the stimulus).
     t_off : Optional[float]

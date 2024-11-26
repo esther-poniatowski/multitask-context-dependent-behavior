@@ -20,7 +20,7 @@ import numpy as np
 import pytest
 
 from core.coordinates.exp_factor_coord import CoordTask
-from core.entities.exp_factors import Task
+from core.attributes.exp_factors import Task
 
 
 N_SMPL = 10

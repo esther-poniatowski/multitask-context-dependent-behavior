@@ -36,7 +36,7 @@ class CoordFolds(Coordinate[np.int64]):
 
     Notes
     -----
-    No specific entity is associated with fold labels.
+    No specific attribute is associated with fold labels.
 
     See Also
     --------
@@ -71,7 +71,7 @@ class CoordPseudoTrialsIdx(Coordinate[np.int64]):
 
     Notes
     -----
-    No specific entity is associated with trial indices.
+    No specific attribute is associated with trial indices.
 
     See Also
     --------

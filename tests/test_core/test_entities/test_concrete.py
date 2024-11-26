@@ -5,16 +5,16 @@
 
 See Also
 --------
-:mod:`core.entities.bio_info`
-:mod:`core.entities.exp_structure`
+:mod:`core.attributes.bio_info`
+:mod:`core.attributes.exp_structure`
 """
 
 from typing import FrozenSet
 
 import pytest
 
-from entities.bio_info import Animal
-from core.entities.exp_structure import Recording
+from attributes.bio_info import Animal
+from core.attributes.exp_structure import Recording
 
 
 NAIVE_ANIMALS: FrozenSet = frozenset([Animal("mor"), Animal("tan")])

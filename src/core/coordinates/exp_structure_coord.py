@@ -18,11 +18,11 @@ from typing import TypeVar, Type, Dict
 import numpy as np
 
 from coordinates.base_coord import Coordinate
-from core.entities.exp_structure import Recording, Block, Slot
+from core.attributes.exp_structure import Recording, Block, Slot
 
 
 ConcretePosition = TypeVar("ConcretePosition", Recording, Block, Slot)
-"""Generic type variable for concrete position entities. Used to keep a generic type for the
+"""Generic type variable for concrete position attributes. Used to keep a generic type for the
 experimental factor while specifying the data type of the coordinate labels."""
 
 
@@ -66,7 +66,7 @@ class CoordPosition(Coordinate[np.int64, ConcretePosition]):
     See Also
     --------
     `core.coordinates.base_coord.Coordinate`
-    `core.entities.exp_structure`
+    `core.attributes.exp_structure`
     """
 
     ENTITY: Type[ConcretePosition]
@@ -122,7 +122,7 @@ class CoordSlot(CoordPosition[Slot]):
 
     See Also
     --------
-    :class:`core.entities.Slot`
+    :class:`core.attributes.Slot`
     :class:`core.coordinates.CoordPosition`
     """
 

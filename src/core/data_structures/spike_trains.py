@@ -42,7 +42,7 @@ class SpikeTrains(DataStructure):
     - ``t_off``  (dimension ``trials``)
     - ``t_end``  (dimension ``trials``)
 
-    Identity Metadata: ``unit_id``
+    Idattribute Metadata: ``unit_id``
 
     Descriptive Metadata: ``smpl_rate``
 

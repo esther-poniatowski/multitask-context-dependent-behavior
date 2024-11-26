@@ -5,7 +5,7 @@
 
 Sub-Packages
 ------------
-:mod:`test_core.test_entities`
+:mod:`test_core.test_attributes`
 :mod:`test_core.test_coordinates`
 :mod:`test_core.test_data_structures`
 

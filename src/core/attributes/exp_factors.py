@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.entities.exp_factors` [module]
+`core.attributes.exp_factors` [module]
 
 Classes representing the experimental factors describing the behavioral paradigm.
 
@@ -21,25 +21,25 @@ Fold
 from types import MappingProxyType
 from typing import FrozenSet, Self, List
 
-from core.entities.base_entity import Entity
+from core.attributes.base_attribute import Attribute
 
 
-class ExpFactor(str, Entity[str]):
+class ExpFactor(str, Attribute[str]):
     """
     Base class for experimental conditions in the behavioral paradigm, behaving like strings.
 
     Define the `__new__` method to inherit from `str`.
 
     Subclasses should define their own class-level attributes `OPTIONS` and `LABELS` (if applicable)
-    and their own methods (in addition to the base `Entity` methods).
+    and their own methods (in addition to the base `Attribute` methods).
 
     See Also
     --------
-    `Entity.is_valid`
+    `Attribute.is_valid`
     """
 
     def __new__(cls, value: str) -> Self:
-        if not cls.is_valid(value):  # method from Entity
+        if not cls.is_valid(value):  # method from Attribute
             raise ValueError(f"Invalid value for {cls.__name__}: {value}.")
         return super().__new__(cls, value)
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.entities.bio_info` [module]
+`core.attributes.bio_info` [module]
 
 Classes representing the biological system under investigation.
 
@@ -20,25 +20,25 @@ import re
 from types import MappingProxyType
 from typing import FrozenSet, Self, Tuple
 
-from core.entities.base_entity import Entity
+from core.attributes.base_attribute import Attribute
 
 
-class BrainInfo(str, Entity[str]):
+class BrainInfo(str, Attribute[str]):
     """
     Brain information in the biological system.
 
     Define the `__new__` method to inherit from `str`.
 
     Subclasses should define their own class-level attributes `OPTIONS` and `LABELS` (if applicable)
-    and their own methods (in addition to the base `Entity` methods).
+    and their own methods (in addition to the base `Attribute` methods).
 
     See Also
     --------
-    `Entity.is_valid`
+    `Attribute.is_valid`
     """
 
     def __new__(cls, value: str) -> Self:
-        if not cls.is_valid(value):  # method from Entity or overridden in subclasses
+        if not cls.is_valid(value):  # method from Attribute or overridden in subclasses
             raise ValueError(f"Invalid value for {cls.__name__}: {value}.")
         return super().__new__(cls, value)
 
@@ -124,7 +124,7 @@ class Animal(BrainInfo):
         return self in self.get_naive()
 
 
-class Training(int, Entity[bool]):
+class Training(int, Attribute[bool]):
     """
     Training status of an animal.
 
@@ -137,7 +137,7 @@ class Training(int, Entity[bool]):
 
     Notes
     -----
-    This entity class does not inherit from `BrainInfo` because it is not a string-based
+    This attribute class does not inherit from `BrainInfo` because it is not a string-based
     representation.
 
     Since it is not possible to inherit from `bool`, the class is defined as a subclass of `int`. It
@@ -233,7 +233,7 @@ class Site(BrainInfo):
 
     Methods
     -------
-    `is_valid` (override the method from the base class `Entity`)
+    `is_valid` (override the method from the base class `Attribute`)
     `split_id`
 
     Notes
@@ -251,7 +251,7 @@ class Site(BrainInfo):
     @classmethod
     def is_valid(cls, value: str) -> bool:
         """
-        Check if the value is a valid site ID. Override the method from the base class `Entity`.
+        Check if the value is a valid site ID. Override the method from the base class `Attribute`.
 
         Example
         -------
@@ -364,7 +364,7 @@ class Unit(BrainInfo):
 
     Methods
     -------
-    `is_valid` (override the method from the base class `Entity`)
+    `is_valid` (override the method from the base class `Attribute`)
     `split_id`
 
     Examples
@@ -382,7 +382,7 @@ class Unit(BrainInfo):
     @classmethod
     def is_valid(cls, value: str) -> bool:
         """
-        Check if the value is a valid unit ID. Override the method from the base class `Entity`.
+        Check if the value is a valid unit ID. Override the method from the base class `Attribute`.
 
         Example
         -------

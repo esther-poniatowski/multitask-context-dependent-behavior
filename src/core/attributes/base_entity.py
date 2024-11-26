@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.entities.base_entity` [module]
+`core.attributes.base_attribute` [module]
 
-Define a common interface for all classes representing entities (core objects) in the package.
+Define a common interface for all classes representing attributes (core objects) in the package.
 
 Derived subclasses represent specific concrete quantities or categories in the experiment.
 
 Classes
 -------
-`Entity` (generic, base class)
+`Attribute` (generic, base class)
 """
 from types import MappingProxyType
 from typing import (
@@ -29,17 +29,17 @@ from typing import (
 
 
 BaseT = TypeVar("BaseT", int, str, float, bool)
-"""Type variable for the parent basic type of the entity."""
+"""Type variable for the parent basic type of the attribute."""
 
 
-class Entity(Generic[BaseT]):
+class Attribute(Generic[BaseT]):
     """
-    Mixin class for distinct entity types, providing common validation and labeling functionality.
+    Mixin class for distinct attribute types, providing common validation and labeling functionality.
 
     Class Attributes
     ----------------
     OPTIONS : FrozenSet[BaseT], default=frozenset()
-        Valid values for the entity, if applicable. To be overridden in derived classes.
+        Valid values for the attribute, if applicable. To be overridden in derived classes.
     LABELS : Mapping[BaseT, str], default=MappingProxyType({})
         Full labels for the valid values, if applicable. To be overridden in derived classes.
         Keys: Valid values.
@@ -57,7 +57,7 @@ class Entity(Generic[BaseT]):
     --------
     Define a subclass behaving like a string, with two valid values:
 
-    >>> class ConcreteObject(str, Entity[str]):
+    >>> class ConcreteObject(str, Attribute[str]):
     ...
     ...    OPTIONS = frozenset(["a", "b"])
     ...    LABELS = MappingProxyType({"a": "Alpha", "b": "Beta"})
@@ -105,11 +105,11 @@ class Entity(Generic[BaseT]):
     @classmethod
     def is_valid(cls, value: Any) -> bool:
         """
-        Check if the given value an allowed option for the entity.
+        Check if the given value an allowed option for the attribute.
 
         Warning
         -------
-        Override in subclasses if the entity has not a fixed set of valid options.
+        Override in subclasses if the attribute has not a fixed set of valid options.
         """
         return value in cls.OPTIONS
 
@@ -135,7 +135,7 @@ class Entity(Generic[BaseT]):
 
         Examples
         --------
-        For an entity `CoreObject` with two valid values, `a` and `b`:
+        For an attribute `CoreObject` with two valid values, `a` and `b`:
 
         >>> a = CoreObject.a
         >>> print(a)
@@ -176,24 +176,24 @@ class Entity(Generic[BaseT]):
         cls, values: Iterable[BaseT], container: Type[Union[List, Tuple, Set]] = list
     ) -> Union[List[BaseT], Tuple[BaseT, ...], Set[BaseT]]:
         """
-        Create multiple entities from an iterable of values and store them in a container.
+        Create multiple attributes from an iterable of values and store them in a container.
 
         Parameters
         ----------
         values : Iterable[BaseT]
-            Iterable of values to create entities from.
+            Iterable of values to create attributes from.
         container : Type[Union[List, Tuple, Set]], default=list
             Type of container to return.
 
         Returns
         -------
         Union[List[T], Tuple[T, ...], Set[T]]
-            Container of entity instances, of the same type as the input container.
+            Container of attribute instances, of the same type as the input container.
 
         Raises
         ------
         ValueError
-            If any of the values are invalid for this entity type.
+            If any of the values are invalid for this attribute type.
         """
         instances = []
         for value in values:

@@ -15,7 +15,7 @@ from types import MappingProxyType
 from typing import Self, Iterable, List, Dict, Type, FrozenSet, Mapping
 from itertools import product
 
-from core.entities.exp_factors import ExpFactor
+from core.attributes.exp_factors import ExpFactor
 from core.composites.strata import Stratum, StrataUnion
 
 

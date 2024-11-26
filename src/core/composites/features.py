@@ -13,7 +13,7 @@ import warnings
 
 import numpy as np
 
-from core.entities.base_entity import Entity
+from core.attributes.base_attribute import Attribute
 from core.composites.exp_conditions import ExpCondition, ExpConditionUnion
 from core.coordinates.base_coord import Coordinate
 
@@ -40,7 +40,7 @@ class Features:
     __len__()
     __repr__()
     __iter__()
-    filter_by_type(*entity_types) -> Self
+    filter_by_type(*attribute_types) -> Self
     match(exp_cond) -> np.ndarray
     match_single(exp_cond) -> np.ndarray
     match_union(exp_cond) -> np.ndarray
@@ -122,26 +122,26 @@ class Features:
         """
         return zip(*self.coords)
 
-    def filter_by_type(self, *entity_types: Type[Entity]) -> Self:
+    def filter_by_type(self, *attribute_types: Type[Attribute]) -> Self:
         """
-        Filter coordinates associated with the specified entity type(s).
+        Filter coordinates associated with the specified attribute type(s).
 
         Arguments
         ---------
-        entity_types : Type[Entity]
-            Entity type(s) to filter coordinates by.
+        attribute_types : Type[Attribute]
+            Attribute type(s) to filter coordinates by.
 
         Returns
         -------
         filtered_coords : Features
-            Coordinates matching the specified entities type or their subtypes, in a new
+            Coordinates matching the specified attributes type or their subtypes, in a new
             `Features` instance.
 
         See Also
         --------
-        `Coordinate.has_entity`
+        `Coordinate.has_attribute`
         """
-        retained = [c for c in self.coords if any(c.has_entity(tpe) for tpe in entity_types)]
+        retained = [c for c in self.coords if any(c.has_attribute(tpe) for tpe in attribute_types)]
         return self.__class__(*retained)
 
     def match(self, exp_cond: ExpCondition | ExpConditionUnion) -> np.ndarray:
@@ -171,7 +171,7 @@ class Features:
 
         Notes
         -----
-        Rules if the entities in the condition does not match the entities in the coordinates:
+        Rules if the attributes in the condition does not match the attributes in the coordinates:
 
         - If the condition is less specific than the coordinates (i.e. less factors than
           coordinates), then the coordinates which are not associated with any factor specified in
@@ -205,10 +205,10 @@ class Features:
         # Initialize the mask with all True values
         mask = np.ones(self.n_samples, dtype=bool)
         for coord in self.coords:
-            # Retrieve the entity associated with the coordinate
-            entity = coord.get_entity()
+            # Retrieve the attribute associated with the coordinate
+            attribute = coord.get_attribute()
             # Get the value of the factor specified in the condition
-            factor = exp_cond.get_factor(entity)
+            factor = exp_cond.get_factor(attribute)
             if factor is not None:
                 # Apply the condition to the coordinate
                 mask &= coord == factor

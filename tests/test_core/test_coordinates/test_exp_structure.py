@@ -20,7 +20,7 @@ import numpy as np
 import pytest
 
 from core.coordinates.exp_structure_coord import CoordRecNum
-from core.entities.exp_structure import Recording
+from core.attributes.exp_structure import Recording
 
 
 N_SMPL = 10

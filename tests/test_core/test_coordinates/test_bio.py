@@ -6,16 +6,16 @@
 See Also
 --------
 :mod:`core.coordinates.bio`: Tested module.
-:class:`core.entities.bio_data.Depth`
-:class:`core.entities.composites.Unit`
+:class:`core.attributes.bio_data.Depth`
+:class:`core.attributes.composites.Unit`
 """
 
 import numpy as np
 import pytest
 
 from core.coordinates.bio_info_coord import CoordUnit, CoordDepth
-from core.entities.bio_info import CorticalDepth
-from core.entities.composites import Unit
+from core.attributes.bio_info import CorticalDepth
+from core.attributes.composites import Unit
 
 
 # Test values for CoordUnit

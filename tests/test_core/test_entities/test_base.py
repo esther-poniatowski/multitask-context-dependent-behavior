@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`test_core.test_entities.test_base` [module]
+`test_core.test_attributes.test_base` [module]
 
 See Also
 --------
-`core.entities.base_entity`: Tested module.
+`core.attributes.base_attribute`: Tested module.
 """
 
 from types import MappingProxyType
@@ -13,7 +13,7 @@ from typing import FrozenSet, Mapping
 
 import pytest
 
-from entities.base_entity import Entity
+from attributes.base_attribute import Attribute
 
 
 # Test Inputs
@@ -26,7 +26,7 @@ FULL_LABELS: Mapping[int, str] = MappingProxyType({1: "One", 2: "Two", 3: "Three
 """Full labels for the valid values."""
 
 
-class TestObject(Entity):
+class TestObject(Attribute):
     """Concrete class for testing the base object."""
 
     OPTIONS = OPTIONS

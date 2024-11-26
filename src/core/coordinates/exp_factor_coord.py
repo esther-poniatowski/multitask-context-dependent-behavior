@@ -22,7 +22,7 @@ from typing import TypeVar, Type, Optional, Union, Dict, Self, overload
 import numpy as np
 
 from core.coordinates.base_coord import Coordinate
-from core.entities.exp_factors import (
+from core.attributes.exp_factors import (
     Task,
     Attention,
     Stimulus,
@@ -46,7 +46,7 @@ class CoordExpFactor(Coordinate[np.str_, ExpFactorType]):
     Class Attributes
     ----------------
     ENTITY : Type[ExpFactor]
-        Subclass of `Entity` corresponding to the type of experimental factor which is
+        Subclass of `Attribute` corresponding to the type of experimental factor which is
         represented by the coordinate.
     DTYPE : Type[np.str_]
         Data type of the labels, always string. The `np.str_` dtype is equivalent to the
@@ -66,7 +66,7 @@ class CoordExpFactor(Coordinate[np.str_, ExpFactorType]):
     See Also
     --------
     `core.coordinates.base_coord.Coordinate`
-    `core.entities.exp_factors`
+    `core.attributes.exp_factors`
     """
 
     ENTITY: Type[ExpFactorType]

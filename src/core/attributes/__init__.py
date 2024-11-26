@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.entities` [subpackage]
+`core.attributes` [subpackage]
 
-Define classes representing the entities manipulated in the package.
+Define classes representing the attributes manipulated in the package.
 
 Each object is associated to a concrete feature describing the experiment.
 It constitutes a type in itself, with its own attributes, methods and properties.
 
 Modules
 -------
-`base_entity`
+`base_attribute`
 `exp_factors`
 `exp_condition`
 `exp_structure`
@@ -34,7 +34,7 @@ Get the valid labels for Attention objects :
 
 .. code-block:: python
 
-    from core.entities import Attention
+    from core.attributes import Attention
     print(list(Attention.get_options()))
     # Output: ('a', 'p', 'p-pre', 'p-post')
 

@@ -26,7 +26,7 @@ hierarchical categories:
 1. **Entities**: Low-level classes representing the basic data types manipulated in the analysis.
    They provide a central reference and documentation for important aspects of the experiment.
 2. **Coordinates**: Intermediate-level classes representing the dimensions of the data. Each
-   coordinate is typically associated with an entity, as it describes one experimental variable.
+   coordinate is typically associated with an attribute, as it describes one experimental variable.
 3. **Data Structures**: High-level classes representing the milestones of the analysis. They
    usually store core data values (to be analyzed), coordinates, and metadata.
 
@@ -60,7 +60,7 @@ Modules
 
 Sub-Packages
 ------------
-:mod:`entities`
+:mod:`attributes`
 :mod:`coordinates`
 :mod:`data_structures`
 :mod:`processors`

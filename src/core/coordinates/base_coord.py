@@ -13,24 +13,24 @@ from typing import Type, TypeVar, Union, Generic, Tuple, Self, FrozenSet
 import numpy as np
 from numpy.typing import ArrayLike
 
-from core.entities.base_entity import Entity
+from core.attributes.base_attribute import Attribute
 
 
 CoordDtype = TypeVar("CoordDtype", bound=np.generic)
 """Type variable for the labels of the coordinate."""
 
-EntityType = TypeVar("EntityType", bound=Entity)
-"""Type variable for the entity type associated with the coordinate."""
+AttributeType = TypeVar("AttributeType", bound=Attribute)
+"""Type variable for the attribute type associated with the coordinate."""
 
 
-class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
+class Coordinate(Generic[CoordDtype, AttributeType], np.ndarray):
     """
     Base class representing coordinates for one dimension of a data set.
 
     Class Attributes
     ----------------
-    ENTITY : Type[Entity]
-        Entity represented by the coordinate. It determines the data type and the valid values for
+    ENTITY : Type[Attribute]
+        Attribute represented by the coordinate. It determines the data type and the valid values for
         the underlying numpy array.
     DTYPE: Type[CoordDtype]
         Data type for the coordinate labels.
@@ -52,12 +52,12 @@ class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
     -------
     `validate`
     `from_shape`
-    `get_entity`
-    `has_entity`
+    `get_attribute`
+    `has_attribute`
     `are_valid`
     """
 
-    ENTITY: Type[EntityType]
+    ENTITY: Type[AttributeType]
     DTYPE: Type[CoordDtype]
     METADATA: FrozenSet[str] = frozenset()  # default empty set
     SENTINEL: Union[int, float, str]
@@ -101,7 +101,7 @@ class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
     @classmethod
     def validate(cls, values: ArrayLike, **kwargs) -> None:
         """
-        Check the values consistency with the entity type.
+        Check the values consistency with the attribute type.
 
         Parameters
         ----------
@@ -113,7 +113,7 @@ class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
         Raises
         ------
         ValueError
-            If any element in the values is not among the valid options for the entity.
+            If any element in the values is not among the valid options for the attribute.
 
         Notes
         -----
@@ -121,7 +121,7 @@ class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
 
         See Also
         --------
-        `Entity.is_valid`
+        `Attribute.is_valid`
         """
         if not hasattr(cls, "ENTITY"):  # only if ENTITY is defined
             mask = cls.are_valid(values)
@@ -152,52 +152,52 @@ class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
     # --- Interaction with Entities ----------------------------------------------------------------
 
     @classmethod
-    def get_entity(cls) -> Type[EntityType]:
+    def get_attribute(cls) -> Type[AttributeType]:
         """
-        Get the entity type associated with the coordinate.
+        Get the attribute type associated with the coordinate.
 
         Returns
         -------
-        Type[EntityType]
-            Entity type associated with the coordinate.
+        Type[AttributeType]
+            Attribute type associated with the coordinate.
         """
         return cls.ENTITY
 
     @classmethod
-    def has_entity(cls, entity_type: Type[Entity]) -> bool:
+    def has_attribute(cls, attribute_type: Type[Attribute]) -> bool:
         """
-        Check if the coordinate is associated with one specific entity type.
+        Check if the coordinate is associated with one specific attribute type.
 
         Arguments
         ---------
-        entity_type : Type[Entity]
-            Class bound to `Entity`, to check for.
+        attribute_type : Type[Attribute]
+            Class bound to `Attribute`, to check for.
 
         Returns
         -------
         bool
             True if the coordinate holds a class argument `ENTITY` of the same type or a subclass of
-            `entity_type`.
+            `attribute_type`.
 
         Examples
         --------
-        Check for the entity `ExpFactor` for `CoordTask` (superclass of `Task` entity):
+        Check for the attribute `ExpFactor` for `CoordTask` (superclass of `Task` attribute):
 
         >>> coord_task = CoordTask(["PTD", "PTD", "CLK"])
-        >>> coord_task.has_entity(ExpFactor)
+        >>> coord_task.has_attribute(ExpFactor)
         True
 
-        Check for the entity `Attention`:
+        Check for the attribute `Attention`:
 
-        >>> coord_task.has_entity(Attention)
+        >>> coord_task.has_attribute(Attention)
         False
         """
-        return issubclass(cls.get_entity(), entity_type)
+        return issubclass(cls.get_attribute(), attribute_type)
 
     @classmethod
     def are_valid(cls, values) -> np.ndarray:
         """
-        Marks which values are valid for the entity type.
+        Marks which values are valid for the attribute type.
 
         Parameters
         ----------
@@ -207,11 +207,11 @@ class Coordinate(Generic[CoordDtype, EntityType], np.ndarray):
         Returns
         -------
         np.array
-            Boolean mask indicating if the values are valid for the entity type.
+            Boolean mask indicating if the values are valid for the attribute type.
 
         See Also
         --------
-        `Entity.is_valid`
+        `Attribute.is_valid`
         `np.vectorize`
         """
         values = np.asarray(values)  # convert to numpy array for processing
