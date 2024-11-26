@@ -7,10 +7,10 @@ Coordinates for labelling the sequential structure of the experiment (positional
 
 Classes
 -------
-`CoordExpStructure` (Generic)
-`CoordRecNum`
-`CoordBlock`
-`CoordSlot`
+CoordExpStructure (Generic)
+CoordRecNum
+CoordBlock
+CoordSlot
 """
 
 from typing import TypeVar, Type, Dict
@@ -21,12 +21,12 @@ from coordinates.base_coord import Coordinate
 from core.attributes.exp_structure import Recording, Block, Slot
 
 
-ConcreteExpStructure = TypeVar("ConcreteExpStructure", Recording, Block, Slot)
+AnyExpStructure = TypeVar("AnyExpStructure", Recording, Block, Slot)
 """Generic type variable for concrete position attributes. Used to keep a generic type for the
 experimental factor while specifying the data type of the coordinate labels."""
 
 
-class CoordExpStructure(Coordinate[np.int64, ConcreteExpStructure]):
+class CoordExpStructure(Coordinate[np.int64, AnyExpStructure]):
     """
     Coordinate labels for referencing measurements within a whole experiment.
 
@@ -38,7 +38,7 @@ class CoordExpStructure(Coordinate[np.int64, ConcreteExpStructure]):
 
     Class Attributes
     ----------------
-    ENTITY : Type[ExpStructure]
+    ATTRIBUTE : Type[ExpStructure]
         Subclass of `ExpStructure` corresponding to the type of positional information which is
         represented by the coordinate.
     DTYPE : Type[np.int64]
@@ -47,15 +47,15 @@ class CoordExpStructure(Coordinate[np.int64, ConcreteExpStructure]):
         Sentinel value marking missing or unset position labels, usually ``-1`` since positional
         information is always positive.
 
-    Attributes
-    ----------
+    Arguments
+    ---------
     values : np.ndarray[Tuple[Any], np.int64]
         ExpStructure labels for the measurements.
         Shape: ``(n_smpl,)`` with ``n_smpl`` the number of samples.
 
     Methods
     -------
-    `count_by_lab`
+    count_by_lab
 
     Notes
     -----
@@ -69,7 +69,7 @@ class CoordExpStructure(Coordinate[np.int64, ConcreteExpStructure]):
     `core.attributes.exp_structure`
     """
 
-    ENTITY: Type[ConcreteExpStructure]
+    ATTRIBUTE: Type[AnyExpStructure]
     DTYPE = np.int64
     SENTINEL: int = -1
 
@@ -78,7 +78,7 @@ class CoordExpStructure(Coordinate[np.int64, ConcreteExpStructure]):
         format_counts = ", ".join([f"{pos}: {n}" for pos, n in counts.items()])
         return f"<{self.__class__.__name__}>: {len(self)} samples, {format_counts}."
 
-    def count_by_lab(self) -> Dict[ConcreteExpStructure, int]:
+    def count_by_lab(self) -> Dict[AnyExpStructure, int]:
         """
         Count the number of samples in each position.
 
@@ -92,7 +92,7 @@ class CoordExpStructure(Coordinate[np.int64, ConcreteExpStructure]):
         Because the options for the positions are not known in advance, the counts are provided for
         all the distinct positions present in the coordinate.
         """
-        return {self.ENTITY(pos): np.sum(self == pos) for pos in np.unique(self)}
+        return {self.ATTRIBUTE(pos): np.sum(self == pos) for pos in np.unique(self)}
 
 
 class CoordRecNum(CoordExpStructure[Recording]):
@@ -100,7 +100,7 @@ class CoordRecNum(CoordExpStructure[Recording]):
     Coordinate labels for recording numbers.
     """
 
-    ENTITY = Recording
+    ATTRIBUTE = Recording
 
 
 class CoordBlock(CoordExpStructure[Block]):
@@ -113,17 +113,12 @@ class CoordBlock(CoordExpStructure[Block]):
     session(s) encountered by the unit.
     """
 
-    ENTITY = Block
+    ATTRIBUTE = Block
 
 
 class CoordSlot(CoordExpStructure[Slot]):
     """
     Coordinate labels for slots within one block.
-
-    See Also
-    --------
-    :class:`core.attributes.Slot`
-    :class:`core.coordinates.CoordExpStructure`
     """
 
-    ENTITY = Slot
+    ATTRIBUTE = Slot

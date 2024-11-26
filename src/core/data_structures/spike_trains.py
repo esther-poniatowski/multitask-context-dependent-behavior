@@ -13,7 +13,7 @@ from core.constants import SMPL_RATE
 from core.coordinates.exp_factor_coord import CoordTask, CoordAttention, CoordCategory
 from core.coordinates.exp_structure_coord import CoordRecNum, CoordBlock, CoordSlot
 from core.coordinates.time_coord import CoordTimeEvent
-from core.coordinates.trials_coord import CoordError
+from core.coordinates.trial_analysis_label_coord import CoordError
 from core.data_structures.base_data_struct import DataStructure
 from core.data_structures.core_data import Dimensions, CoreData
 from utils.storage_rulers.impl_path_rulers import SpikeTrainsPath

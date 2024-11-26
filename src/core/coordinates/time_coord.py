@@ -7,8 +7,8 @@ Coordinate for labelling time stamps at which measurements were performed.
 
 Classes
 -------
-`CoordTime`
-`CoordTimeEvent`
+CoordTime
+CoordTimeEvent
 """
 
 from typing import Optional, Self
@@ -33,8 +33,8 @@ class CoordTime(Coordinate[np.float64]):
     SENTINEL : float
         Sentinel value marking missing or unset time stamps, here `np.nan`.
 
-    Attributes
-    ----------
+    Arguments
+    ---------
     values : npt.ndarray[Tuple[Any], np.float64]
         Time labels (in seconds), one dimensional.
         Homogeneous sequence starting from 0 and incremented by the time bin.
@@ -65,7 +65,7 @@ class CoordTime(Coordinate[np.float64]):
     `core.coordinates.base_coord.Coordinate`
     """
 
-    # No ENTITY
+    # No ATTRIBUTE
     DTYPE = np.float64
     METADATA = frozenset(["t_on", "t_off", "t_shock", "t_bin"])
     SENTINEL: float = np.nan
@@ -124,8 +124,7 @@ class CoordTime(Coordinate[np.float64]):
         values = np.asarray(values)
         if len(values) < 2:
             return np.nan
-        else:
-            return values[1] - values[0]
+        return values[1] - values[0]
 
     def get_index(self, t: float) -> int:
         """
@@ -207,8 +206,8 @@ class CoordTimeEvent(Coordinate[np.float64]):
 
     Examples: stimulus onset, stimulus offset, shock delivery...
 
-    Attributes
-    ----------
+    Arguments
+    ---------
     values : np.ndarray[Tuple[Any], np.float64]
         Time labels (in seconds), one dimensional.
         Shape: ``(n_smpl,)``, number of samples in which events occurred.
@@ -218,6 +217,6 @@ class CoordTimeEvent(Coordinate[np.float64]):
     No specific attribute is associated with time events.
     """
 
-    # No ENTITY
+    # No ATTRIBUTE
     DTYPE = np.float64
     SENTINEL: float = np.nan

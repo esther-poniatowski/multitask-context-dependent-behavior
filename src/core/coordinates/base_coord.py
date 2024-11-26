@@ -5,7 +5,7 @@
 
 Classes
 -------
-`Coordinate`
+Coordinate
 """
 
 from typing import Type, TypeVar, Union, Generic, Tuple, Self, FrozenSet
@@ -16,23 +16,23 @@ from numpy.typing import ArrayLike
 from core.attributes.base_attribute import Attribute
 
 
-CoordDtype = TypeVar("CoordDtype", bound=np.generic)
-"""Type variable for the labels of the coordinate."""
+Dtype = TypeVar("Dtype", bound=np.generic)
+"""Type variable for the data type of the underlying numpy array."""
 
-AttributeType = TypeVar("AttributeType", bound=Attribute)
-"""Type variable for the attribute type associated with the coordinate."""
+AnyAttribute = TypeVar("AnyAttribute", bound=Attribute)
+"""Type variable for the attribute type associated with the coordinate labels."""
 
 
-class Coordinate(Generic[CoordDtype, AttributeType], np.ndarray):
+class Coordinate(Generic[Dtype, AnyAttribute], np.ndarray):
     """
     Base class representing coordinates for one dimension of a data set.
 
     Class Attributes
     ----------------
-    ENTITY : Type[Attribute]
-        Attribute represented by the coordinate. It determines the data type and the valid values for
-        the underlying numpy array.
-    DTYPE: Type[CoordDtype]
+    ATTRIBUTE : Type[Attribute]
+        Attribute represented by the coordinate. It determines the data type and the valid values
+        for the underlying numpy array.
+    DTYPE: Type[Dtype]
         Data type for the coordinate labels.
     METADATA : Tuple[str, ...]
         Names of the additional attributes storing metadata alongside with the coordinate values.
@@ -42,24 +42,27 @@ class Coordinate(Generic[CoordDtype, AttributeType], np.ndarray):
         For integer dtype: usually ``-1`` (depending on the purpose of the coordinate).
         For string dtype: usually empty string ``''``.
 
-    Attributes
-    ----------
-    values : np.ndarray[Tuple[Any, ...], np.dtype[CoordDtype]]
+    Arguments
+    ---------
+    values : np.ndarray[Tuple[Any, ...], np.dtype[Dtype]]
         Labels of the coordinate associated with data dimension(s). Length : ``n_smpl``, total
         number of samples labelled by the coordinates across its dimensions.
+    **metadata : Any
+        Additional attributes to store alongside the coordinate values. The names of the attributes
+        should be specified in the class attribute `METADATA`.
 
     Methods
     -------
-    `validate`
-    `from_shape`
-    `get_attribute`
-    `has_attribute`
-    `are_valid`
+    validate
+    from_shape
+    get_attribute
+    has_attribute
+    are_valid
     """
 
-    ENTITY: Type[AttributeType]
-    DTYPE: Type[CoordDtype]
-    METADATA: FrozenSet[str] = frozenset()  # default empty set
+    ATTRIBUTE: Type[AnyAttribute]
+    DTYPE: Type[Dtype]
+    METADATA: FrozenSet[str] = frozenset()  # default empty set to avoid errors
     SENTINEL: Union[int, float, str]
 
     def __repr__(self) -> str:
@@ -101,7 +104,15 @@ class Coordinate(Generic[CoordDtype, AttributeType], np.ndarray):
     @classmethod
     def validate(cls, values: ArrayLike, **kwargs) -> None:
         """
-        Check the values consistency with the attribute type.
+        Check
+
+        Default implementation: Check the values consistency with the attribute type.
+
+        Warning
+        -------
+        This base implementation is appropriate for the qualitative attributes which define a
+        class-level attribute `ATTRIBUTE`. For quantitative attributes, the method should be
+        overridden in the subclass to implement a custom validation.
 
         Parameters
         ----------
@@ -123,7 +134,7 @@ class Coordinate(Generic[CoordDtype, AttributeType], np.ndarray):
         --------
         `Attribute.is_valid`
         """
-        if not hasattr(cls, "ENTITY"):  # only if ENTITY is defined
+        if not hasattr(cls, "ATTRIBUTE"):  # only if ATTRIBUTE is defined
             mask = cls.are_valid(values)
             if not np.all(mask):
                 invalid_values = np.asarray(values)[~mask]
@@ -149,19 +160,19 @@ class Coordinate(Generic[CoordDtype, AttributeType], np.ndarray):
         values = np.full(shape=shape, fill_value=cls.SENTINEL, dtype=cls.DTYPE)
         return cls(values=values, **metadata)
 
-    # --- Interaction with Entities ----------------------------------------------------------------
+    # --- Interaction with Attributes --------------------------------------------------------------
 
     @classmethod
-    def get_attribute(cls) -> Type[AttributeType]:
+    def get_attribute(cls) -> Type[AnyAttribute]:
         """
         Get the attribute type associated with the coordinate.
 
         Returns
         -------
-        Type[AttributeType]
+        Type[AnyAttribute]
             Attribute type associated with the coordinate.
         """
-        return cls.ENTITY
+        return cls.ATTRIBUTE
 
     @classmethod
     def has_attribute(cls, attribute_type: Type[Attribute]) -> bool:
@@ -176,8 +187,8 @@ class Coordinate(Generic[CoordDtype, AttributeType], np.ndarray):
         Returns
         -------
         bool
-            True if the coordinate holds a class argument `ENTITY` of the same type or a subclass of
-            `attribute_type`.
+            True if the coordinate holds a class argument `ATTRIBUTE` of the same type or a subclass
+            of `attribute_type`.
 
         Examples
         --------
@@ -215,4 +226,4 @@ class Coordinate(Generic[CoordDtype, AttributeType], np.ndarray):
         `np.vectorize`
         """
         values = np.asarray(values)  # convert to numpy array for processing
-        return np.vectorize(cls.ENTITY.is_valid)(values)  # apply element-wise
+        return np.vectorize(cls.ATTRIBUTE.is_valid)(values)  # apply element-wise

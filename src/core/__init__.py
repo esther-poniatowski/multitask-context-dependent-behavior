@@ -12,7 +12,7 @@ Notes
 -----
 This core package contains two types of classes:
 
-- Static classes: Entities, Coordinates, Data Structures.
+- Static classes: Attributes, Coordinates, Data Structures.
 - Dynamic classes: Processors, Builders, Pipelines.
 
 Both types are organized in a hierarchical structure to promote modularity, scalability, and
@@ -23,7 +23,7 @@ Static Classes
 Static classes form the building blocks of the analysis workflow. They are organized into three
 hierarchical categories:
 
-1. **Entities**: Low-level classes representing the basic data types manipulated in the analysis.
+1. **Attributes**: Low-level classes representing the basic data types manipulated in the analysis.
    They provide a central reference and documentation for important aspects of the experiment.
 2. **Coordinates**: Intermediate-level classes representing the dimensions of the data. Each
    coordinate is typically associated with an attribute, as it describes one experimental variable.
@@ -48,7 +48,7 @@ organized into three hierarchical levels: Processors, Builders, and Pipelines.
 
 Design Choices
 ^^^^^^^^^^^^^^
-This package is structured into sub-packages, each corresponding to a type of class: Entities,
+This package is structured into sub-packages, each corresponding to a type of class: Attributes,
 Coordinates, Data Structures, Processors, Builders, and Pipelines.
 
 Each sub-package contains a base class that defines the interface, common attributes, and methods

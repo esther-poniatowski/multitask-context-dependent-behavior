@@ -11,7 +11,7 @@ from typing import Iterable
 
 from core.builders.base_builder import Builder
 from core.composites.features import Features
-from core.coordinates.trials_coord import CoordFolds
+from core.coordinates.trial_analysis_label_coord import CoordFolds
 from core.composites.exp_conditions import ExpCondition
 from core.processors.preprocess.assign_folds import FoldAssigner
 
