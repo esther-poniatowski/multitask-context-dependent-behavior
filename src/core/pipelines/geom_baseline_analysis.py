@@ -54,4 +54,4 @@ class GeomBaselineAnalysis(Pipeline):
         categories = [Category("R"), Category("T")]
         attentions = [Attention("a"), Attention("p")]
         behaviors = [Behavior("Go"), Behavior("NoGo")]
-        exp_conds = ExpCondition.combine_factors(tasks, attentions, categories, behaviors)
+        exp_conds = ExpCondition.combine(tasks, attentions, categories, behaviors)

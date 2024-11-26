@@ -10,16 +10,14 @@ Classes
 ExpCondition
 PipelineCondition
 """
-from types import MappingProxyType
-
-from typing import Self, Iterable, List, Dict, Type, FrozenSet, Mapping
+from typing import FrozenSet, Mapping, Type, List, Iterable
 from itertools import product
 
 from core.attributes.exp_factors import ExpFactor
-from composites.attribute_set import Stratum, StrataUnion
+from core.composites.attribute_set import AttributeSet
 
 
-class ExpCondition(Stratum):
+class ExpCondition(AttributeSet):
     """
     Experimental condition defined by the combination of several experimental factors.
 
@@ -31,39 +29,107 @@ class ExpCondition(Stratum):
     - behavioral choice
     - response outcome
 
+    Class Attributes
+    ----------------
+    REQUIRED_FACTORS : Mapping[Type[ExpFactor], FrozenSet[ExpFactor]]
+        Experimental factors required to define the experimental condition, along with their allowed
+        values.
+        Keys: `ExpFactor` subclasses used to define the condition.
+        Values: Sets of `ExpFactor` instances, among the valid options for the class.
+        In this base class, this attribute is a placeholder and must be defined in subclasses.
+
     Methods
     -------
-    combine_factors
+    combine
+    generate
 
     Notes
     -----
-    All the methods from the `Stratum` class are available for the `ExpCondition` class. The new
-    behavior of this class is to restrict the factors to the *experimental* factors only.
+    All the methods from the `AttributeSet` class are available for the `ExpCondition` class. The
+    new behavior of this class restricts the attributes in th set to the *experimental* factors
+    only.
+
+    Notes
+    -----
+    This base class can be instantiated to flexibly define arbitrary experimental conditions.
+    Alternatively, it can be inherited to define specific experimental conditions for a given
+    pipeline, by enforcing the required factors in the subclass.
+
+    Examples
+    --------
+    Instantiate an experimental condition with four experimental factors:
+
+    >>> exp_cond = ExpCondition(Task("PTD"), Attention("a"), Category("R"), Behavior("Go"))
+    >>> exp_cond
+    ExpCondition(task=PTD, attention=a, category=R, behavior=Go)
+
+    Define a subclass for an experimental condition with four factor and their allowed values:
+
+    >>> class SubExpCondition(ExpCondition):
+    ...     REQUIRED_FACTORS = {Task: {Task("PTD"), Task("CLK")},
+    ...                          Attention: {Attention("a")},
+    ...                          Category: {Category("R"), Category("T")},
+    ...                          Behavior: {Behavior("Go"), Behavior("NoGo")}}
+    ...
+
+    Instantiate a valid experimental condition for the subclass:
+
+    >>> sub_exp_cond = SubExpCondition(Task("PTD"), Attention("a"), Category("R"), Behavior("Go"))
 
     See Also
     --------
-    Stratum
+    AttributeSet
+    ExpFactor
     """
 
-    # --- Create ExpCondition instances ------------------------------------------------------------
+    REQUIRED_FACTORS: Mapping[Type[ExpFactor], FrozenSet[ExpFactor]]  # placeholder
 
-    def __init__(self, **factors: ExpFactor) -> None:
-        for name, factor in factors.items():
-            if not isinstance(factor, ExpFactor):
-                raise TypeError(f"Invalid argument for ExpCondition: {name} not ExpFactor")
-        super().__init__(**factors)
+    def __init__(self, *factors: ExpFactor) -> None:
+        """
+        Initialize an experimental condition with the provided experimental factors.
+
+        Arguments
+        ---------
+        *factors : ExpFactor
+            Experimental factors defining the condition. Each factor must be an instance of an
+            `ExpFactor` subclass and match the required factors for the condition.
+
+        Raises
+        ------
+        ValueError
+            If the factors provided do not match the required factors for the pipeline.
+            If some required factors are missing.
+        """
+        check_required = hasattr(self, "REQUIRED_FACTORS")  # enforce constraints
+        for attribute in factors:
+            if not isinstance(attribute, ExpFactor):  # check type
+                raise TypeError(f"Invalid argument for `ExpCondition`: {attribute} not `ExpFactor`")
+            if check_required:
+                if type(attribute) not in self.REQUIRED_FACTORS:
+                    raise TypeError(
+                        f"Invalid type for {self.__class__.__name__}: {type(attribute)}"
+                    )
+                if attribute not in self.REQUIRED_FACTORS[type(attribute)]:
+                    raise ValueError(
+                        f"Invalid value for {self.__class__.__name__}: "
+                        f"{attribute} not in {self.REQUIRED_FACTORS[type(attribute)]}"
+                    )
+        if check_required:
+            missing = set(self.REQUIRED_FACTORS) - {type(attr) for attr in factors}
+            if missing:
+                raise ValueError(f"Missing factors for {self.__class__.__name__}: {missing}")
+        super().__init__(*factors)  # parent class: `AttributeSet`
 
     @staticmethod
-    def combine_factors(*selected_factors: Iterable[ExpFactor] | ExpFactor) -> List["ExpCondition"]:
+    def combine(*factors: Iterable[ExpFactor] | ExpFactor) -> List["ExpCondition"]:
         """
         Generate experimental conditions by combining a set of experimental factors.
 
         Arguments
         ---------
-        selected_factors : Iterable[ExpFactor] | ExpFactor
+        factors : Iterable[ExpFactor] | ExpFactor
             Instances of the experimental factors to consider to generate the experimental
-            conditions of interest. Each factor must match a recognized type in
-            `ExpCondition.FACTOR_TO_ATTR`.
+            conditions of interest.
 
         Returns
         -------
@@ -100,60 +166,14 @@ class ExpCondition(Stratum):
         `itertools.product`: Cartesian product of input iterables.
         """
         # Format to list for consistency
-        sequences = [[fact] if isinstance(fact, ExpFactor) else fact for fact in selected_factors]
+        sequences = [[fact] if isinstance(fact, ExpFactor) else fact for fact in factors]
         # Generate all combinations of the provided factors
         combinations = product(*sequences)  # List[Tuple[ExpFactor, ...]]
-        # Create and return a list of ExpCondition instances from the combinations
+        # Create a list of ExpCondition instances from the combinations
         return [ExpCondition(*comb) for comb in combinations]
 
-    def __repr__(self) -> str:
-        return f"ExpCondition({', '.join(f'{name}={fact}' for name, fact in self)})"  # use __iter__
-
-
-class ExpConditionUnion(StrataUnion):
-    """
-    Union of experimental conditions.
-    """
-
-
-class PipelineCondition(ExpCondition):
-    """
-    Base class for experimental conditions tailored to specific pipelines.
-
-    Class Attributes
-    ----------------
-    REQUIRED_FACTORS : Mapping[str, FrozenSet[ExpFactor]], default={}
-        Experimental factors required by the pipeline.
-        Keys: Names of the factors to use as attributes for the experimental conditions.
-        Values: Allowed ExpFactor instances for each factor, whose common type corresponds to the
-        type of the attribute in `ExpCondition.factor_types`.
-
-    Methods
-    -------
-    generate
-
-    Raises
-    ------
-    ValueError
-        If the factors provided do not match the required factors for the pipeline.
-        If some required factors are missing.
-    """
-
-    REQUIRED_FACTORS: Mapping[str, FrozenSet[ExpFactor]] = MappingProxyType({})
-
-    def __init__(self, **factors: ExpFactor) -> None:
-        """Enforce the pipeline constraints."""
-        valid_factors = {}
-        for name, value in factors.items():
-            if name in self.REQUIRED_FACTORS and value in self.REQUIRED_FACTORS[name]:
-                valid_factors[name] = value
-        missing = set(self.REQUIRED_FACTORS) - set(valid_factors)
-        if missing:
-            raise ValueError(f"Missing factors for {self.__class__.__name__}: {missing}")
-        super().__init__(**valid_factors)
-
     @classmethod
-    def generate(cls) -> ExpConditionUnion:
+    def generate(cls) -> List["ExpCondition"]:
         """
         Generate all the valid experimental conditions based on the required factors.
 
@@ -162,6 +182,6 @@ class PipelineCondition(ExpCondition):
         exp_conditions : ExpConditionUnion
             All the valid experimental conditions for the pipeline.
         """
-        selected_factors = list(cls.REQUIRED_FACTORS.values())
-        valid_factors = cls.combine_factors(*selected_factors)  # list of ExpCondition
-        return ExpConditionUnion(*valid_factors)
+        factors = list(cls.REQUIRED_FACTORS.values())
+        valid_factors = cls.combine(*factors)  # list of ExpCondition
+        return valid_factors

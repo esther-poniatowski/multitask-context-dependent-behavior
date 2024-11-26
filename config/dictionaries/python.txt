@@ -76,6 +76,7 @@ swapaxes
 sysconfig
 ufunc
 ufuncs
+userdict
 vectorize
 writerows
 xarray
