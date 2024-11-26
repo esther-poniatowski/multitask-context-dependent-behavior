@@ -5,28 +5,25 @@
 
 Classes
 -------
-`PseudoTrialsBuilder`
-
+PseudoTrialsBuilder
 """
-from typing import List, Tuple, Dict, Iterable
+from typing import List, Dict, Iterable
 
 import numpy as np
 
 from core.builders.base_builder import Builder
 from core.composites.features import Features
-from core.coordinates.trials_coord import CoordPseudoTrialsIdx
+from core.coordinates.trials_coord import CoordPseudoTrialsIdx, CoordFolds
 from core.composites.exp_conditions import ExpCondition
-from core.processors.preprocess.assign_folds import FoldAssigner, FoldLabels
 from core.processors.preprocess.bootstrap import Bootstrapper
-from core.processors.preprocess.map_indices import IndexMapper, Indices
+from core.processors.preprocess.map_indices import IndexMapper
 
 
 class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
     """
-    Build the reconstructed pseudo-trials for a pseudo-population of units for one experimental
-    condition.
+    Build the reconstructed pseudo-trials for a pseudo-population of units.
 
-    Product:`CoordPseudoTrialsIdx`
+    Product: `CoordPseudoTrialsIdx`
 
     The output coordinate contains the trial indices of the trials to select for each unit in one
     ensemble, for each fold and condition.
@@ -34,7 +31,8 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
     across the experimental conditions of interest.
 
     The inputs required to perform this operation include, for each unit in the population, the set
-    of coordinates which jointly specify the experimental condition to which each trial belongs.
+    of coordinates which jointly specify the experimental condition and fold to which each trial
+    belongs.
 
     Warning
     -------
@@ -55,8 +53,6 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
 
     Attributes
     ----------
-    k : int
-        Number of folds for cross-validation.
     counts_by_condition : Dict[ExpCondition, int]
         Number of pseudo-trials to form for one fold in each experimental condition of interest.
     order_conditions : Iterable[ExpCondition, ...]
@@ -64,25 +60,21 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
 
     Methods
     -------
-    `build` (required)
-    `initialize_coord`
-    `build_for_condition`
-    `build_for_fold`
-    `recover_indices`
-    `gather_conditions`
-    `gather_ensembles`
+    build (required)
+    initialize_coord
+    build_for_condition
+    build_for_fold
+    recover_indices
+    gather_conditions
+    gather_ensembles
 
     Notes
     -----
     - Trials are assigned to folds *by unit* before constructing pseudo-trials via hierarchical
       bootstrap.
-    - Trials are combined within each fold to prevent data leakage across folds.
+    - Trials are combined *within each fold* to prevent data leakage across folds.
     - Folds assignments and bootstrapping are *stratified* by experimental condition to balance
       trial types across groups.
-    - Shuffling is performed by the dedicated processors, to balance across folds the task variables
-      which have not been considered in stratification (i.e. positional information: recording
-      number, block number, slot number). This prevents models from capturing misleading temporal
-      drift in neuronal activity.
     """
 
     PRODUCT_CLASS = CoordPseudoTrialsIdx
@@ -102,15 +94,23 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
         self.order_conditions = order_conditions
 
     def build(
-        self, feat_by_unit: List[Features] | None = None, seed: int = 0, **kwargs
+        self,
+        features_by_unit: List[Features] | None = None,
+        folds_by_unit: List[CoordFolds] | None = None,
+        seed: int = 0,
+        **kwargs,
     ) -> CoordPseudoTrialsIdx:
         """
         Implement the base class method.
 
         Arguments
         ---------
-        feat_by_unit : List[Features]
+        features_by_unit : List[Features]
             Coordinates of the trials for each unit in the population.
+            Length: ``n_units`` feature sets.
+        folds_by_unit : List[CoordFolds]
+            Folds labels assigned to the trials for each unit in the population.
+            Length: ``n_units`` arrays. Shapes: ``(n_samples_unit,)``.
         seed : int
             Seed used by the bootstrapper.
 
@@ -118,235 +118,150 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
         -------
         pseudo_trials : PseudoTrials
             Data structure product instance.
-        """
-        assert feat_by_unit is not None
-        pseudo_trials = {
-            exp_cond: self.build_for_condition(exp_cond, feat_by_unit, self.k, n_pseudo, seed)
-            for exp_cond, n_pseudo in self.counts_by_condition.items()
-        }
-        self.product = self.gather_conditions(
-            pseudo_trials, self.counts_by_condition, self.order_conditions
-        )
-        return self.get_product()
-
-    @staticmethod
-    def initialize_coord(n_units: int, k: int, n_pseudo: int) -> CoordPseudoTrialsIdx:
-        """
-        Initialize the coordinate for the pseudo-trials for one condition.
-
-        Arguments
-        ---------
-        n_units : int
-            Number of units in the population.
-        k : int
-            Number of folds for cross-validation.
-        n_pseudo : int
-            Number of pseudo-trials to form for one fold in this condition.
-
-        Returns
-        -------
-        pseudo_trials : CoordPseudoTrialsIdx
-            Empty coordinate for the pseudo-trials, filled with the sentinel value defined for the
-            coordinate class.
 
         See Also
         --------
         `CoordPseudoTrialsIdx.from_shape`
         `CoordPseudoTrialsIdx.SENTINEL`
         """
-        shape = (n_units, k, n_pseudo)
-        pseudo_trials = CoordPseudoTrialsIdx.from_shape(shape)
-        return pseudo_trials
+        assert features_by_unit is not None
+        assert folds_by_unit is not None
+        # Initialize the coordinate for the pseudo-trials
+        n_units = len(features_by_unit)
+        n_pseudo_tot = sum(self.counts_by_condition.values())  # across conditions
+        pseudo_trials = CoordPseudoTrialsIdx.from_shape((n_units, self.k, n_pseudo_tot))
+        # Add the fold labels as features for each unit
+        strata = [feat.add_coord(fold) for feat, fold in zip(features_by_unit, folds_by_unit)]
+        # Bootstrap by fold and condition
+        for fold in range(self.k):
+            pseudo_trials_by_cond = []
+            for exp_cond in self.order_conditions:
+                n_pseudo = self.counts_by_condition[exp_cond]
+                stratum = exp_cond.add_factor(name="fold", factor=fold)  # add fold label as feature
+                # Find the indices of the trials in the fold and condition for each unit
+                pseudo_trials_in_stratum = self.build_for_stratum(strata, stratum, n_pseudo, seed)
+                pseudo_trials_by_cond.append(pseudo_trials_in_stratum)  # shape: (n_units, n_pseudo)
+            # Gather pseudo-trials for all the conditions
+            pseudo_trials_in_fold = self.gather_strata(
+                pseudo_trials_by_cond, axis=self.TRIALS_AXIS, n_pseudo_tot=n_pseudo_tot
+            )
+            # Fill by unit
+            for u in range(n_units):
+                pseudo_trials[u, fold, :] = pseudo_trials_in_fold[u, :]
+        self.product = pseudo_trials
+        return self.get_product()
 
     @staticmethod
-    def build_for_condition(
-        exp_cond: ExpCondition, feat_by_unit: List[Features], k: int, n_pseudo: int, seed: int
+    def build_for_stratum(
+        strata: List[Features], stratum: ExpCondition, n_pseudo: int, seed: int
     ) -> CoordPseudoTrialsIdx:
         """
-        Build the pseudo-trials for one experimental condition.
+        Build the pseudo-trials for one stratum (fold x condition).
 
         Arguments
         ---------
-        exp_cond : ExpCondition
-            Experimental condition for which to build the pseudo-trials.
+        strata : List[Features]
+            Features to consider to group trials in strata for each unit in the population.
+        stratum : ExpCondition
+            Set of feature values defining the stratum for which to build the pseudo-trials.
         n_pseudo : int
-            Number of pseudo-trials to form for one fold in this condition.
+            Number of pseudo-trials to form for this stratum.
         seed : int
             Seed used by the bootstrapper.
 
         Returns
         -------
         pseudo_trials : CoordPseudoTrialsIdx
-            Coordinate for the pseudo-trials of the condition. Shape: ``(n_units, k, n_pseudo)``.
-
-        Notes
-        -----
-        Use the unit's index within the ensemble as the seed to ensure that the folds are different
-        for the same unit in different ensembles.
-
-        See Also
-        --------
-        `FoldAssigner`
-        """
-        # Initialize the coordinate to fill, fold by fold and unit by unit
-        n_units = len(feat_by_unit)
-        pseudo_trials = PseudoTrialsBuilder.initialize_coord(n_units, k, n_pseudo)
-        # Find the indices and counts of the trials in the condition for each unit
-        idx_in_cond = [coords.match_idx(exp_cond) for coords in feat_by_unit]  # n_units arrays
-        counts_in_cond = [len(idx) for idx in idx_in_cond]  # for FoldAssigner
-        # Assign trials to folds for each unit
-        assigner = FoldAssigner(k=k)
-        folds_labels = [
-            assigner.process(n_samples=n, seed=u, mode="labels")  # seed: unit index
-            for u, n in enumerate(counts_in_cond)
-        ]  # n_units arrays
-        for fold in range(k):
-            # Bootstrap by fold across the population
-            idx_in_fold, idx_bootstrap = PseudoTrialsBuilder.build_for_fold(
-                fold=fold, folds_labels=folds_labels, n_pseudo=n_pseudo, seed=seed
-            )
-            # Fill the coordinate
-            for u in range(n_units):
-                pseudo_trials[u, fold, :] = PseudoTrialsBuilder.recover_indices(
-                    idx_in_cond=idx_in_cond[u],
-                    idx_in_fold=idx_in_fold[u],
-                    idx_bootstrap=idx_bootstrap[u],
-                )
-        return pseudo_trials
-
-    @staticmethod
-    def build_for_fold(
-        fold: int,
-        folds_labels: List[FoldLabels],
-        n_pseudo: int,
-        seed: int,
-    ) -> Tuple[List[Indices], Indices]:
-        """
-        Build the pseudo-trials for one fold of one experimental condition.
-
-        Arguments
-        ---------
-        fold_labels : List[FoldLabels]
-            Fold labels assigned to the trials of each unit.
-            Length: ``n_units`` arrays. Shapes: ``(n_samples_unit,)``.
-        n_pseudo : int
-            Number of pseudo-trials to form for this condition.
-
-        Returns
-        -------
-        idx_in_fold : List[Indices]
-            Indices of the trials in the fold, for each unit in the population.
-        idx_bootstrap : Indices
-            Indices of the trials to select for the fold, for each unit in the population.
-            Shape: ``(n_units, n_pseudo)``.
-
-        See Also
-        --------
-        `Bootstrapper`
-        """
-        # Find the indices and counts of the trials in the fold for each unit
-        idx_in_fold = [np.where(labels == fold)[0] for labels in folds_labels]  # n_units arrays
-        counts_in_fold = [len(idx) for idx in idx_in_fold]  # for Bootstrapper
-        # Bootstrap trial indices for the population, shape: (n_units, n_pseudo)
-        bootstrapper = Bootstrapper(n_pseudo=n_pseudo)
-        idx_bootstrap = bootstrapper.process(counts=counts_in_fold, seed=seed)
-        return idx_in_fold, idx_bootstrap
-
-    @staticmethod
-    def recover_indices(
-        idx_in_cond: Indices, idx_in_fold: Indices, idx_bootstrap: Indices
-    ) -> Indices:
-        """
-        Recover the indices of the trials to select for the pseudo-trials, for one unit.
-
-        Arguments
-        ---------
-        idx_in_cond : Indices
-            Indices of the trials in the experimental condition for the unit.
-            Shape: ``(n_samples_unit,)``.
-        idx_in_fold : Indices
-            Indices of the trials in the fold for the unit. Shape: ``(n_samples_fold,)``.
-        idx_bootstrap : Indices
-            Indices of the trials to select for the pseudo-trials. Shape: ``(n_pseudo,)``.
-
-        Returns
-        -------
-        idx_pseudo : Indices
-            Indices of the trials to select for the pseudo-trials, for the unit.
-            Shape: ``(n_pseudo,)``.
+            Coordinate for the pseudo-trials of the stratum. Shape: ``(n_units, n_pseudo)``.
 
         Implementation
         --------------
-        To recover the absolute indices of the trials to select for one fold in the experimental
-        condition, several mappings of indices are performed:
+        To recover the absolute indices of the trials to select for one stratum:
 
-        `idx_bootstrap` -> `idx_in_fold` -> `idx_in_cond`
+        1. For each unit, identify the *absolute* indices of the trials in the stratum among all its
+           (real) trials.
+        2. For the population, get the *relative* indices of the trials to select within the stratum
+           to form pseudo-trials for this stratum.
+        3. For each unit, recover the *absolute* indices of the trials to select for the
+           pseudo-trials in this stratum.
 
-        - `idx_in_cond`: Indices of the trials in the experimental condition.
-           Shape: ``(n_samples_unit, )``.
-        - `idx_in_fold`: Indices of the trials in the fold.
-           Shape: ``(n_samples_fold, )``.
-        - `idx_bootstrap`: Indices after bootstrapping.
-           Shape ``(n_pseudo, )``.
+        Mapping of indices (for each unit): `idx_absolute` -> `idx_relative` -> `idx_pseudo`
+
+        - `idx_absolute`: Indices of the trials in the stratum relative to the full set of trials.
+          Shape: ``(n_samples_unit, )``.
+        - `idx_relative`: Indices of the trials to select relative to the subset of trials within
+          the stratum. Shape: ``(n_pseudo, )``.
+        - `idx_pseudo`: Indices of the trials to select relative to the full set of trials. Shape
+          ``(n_pseudo, )``.
+
+        To obtain a matrix of indices for all the units, stack the arrays of indices for each unit.
 
         See Also
         --------
-        `IndexMapper`
+        `core.processors.preprocess.bootstrap.Bootstrapper`
+        `core.processors.preprocess.map_indices.IndexMapper`
+        `np.stack`: Stack arrays along a new axis. Here, the units axis (0).
         """
+        # Find the indices and counts of the trials in the fold and condition for each unit
+        idx_absolute = [coords.match_idx(stratum) for coords in strata]  # n_units arrays
+        counts = [len(idx) for idx in idx_absolute]  # for Bootstrapper
+        # Bootstrap across the population (indices relative to stratum)
+        bootstrapper = Bootstrapper(n_pseudo)
+        idx_relative = bootstrapper.process(counts=counts, seed=seed)  # shape: (n_units, n_pseudo)
+        # Recover the absolute indices of the trials to select for each unit
         mapper = IndexMapper()
-        idx_pseudo_in_fold = mapper.process(idx_absolute=idx_in_fold, idx_relative=idx_bootstrap)
-        idx_pseudo = mapper.process(idx_absolute=idx_in_cond, idx_relative=idx_pseudo_in_fold)
-        return idx_pseudo
+        idx_pseudo = [
+            mapper.process(idx_abs, idx_rel) for idx_abs, idx_rel in zip(idx_absolute, idx_relative)
+        ]  # n_units arrays
+        # Convert to coordinate: list of n_units arrays -> array of shape (n_units, n_pseudo)
+        pseudo_trials = CoordPseudoTrialsIdx(np.stack(idx_pseudo, axis=0))
+        return pseudo_trials
 
     @staticmethod
-    def gather_conditions(
-        pseudo_trials_by_cond: Dict[ExpCondition, CoordPseudoTrialsIdx],
-        counts_by_condition: Dict[ExpCondition, int],
-        order_conditions: Iterable[ExpCondition],
+    def gather_strata(
+        pseudo_trials_by_stratum: List[CoordPseudoTrialsIdx],
         axis: int = TRIALS_AXIS,
+        n_pseudo_tot: int | None = None,
     ) -> CoordPseudoTrialsIdx:
         """
         Gather the pseudo-trials for all the conditions of interest.
 
         Arguments
         ---------
-        pseudo_trials_by_cond : Dict[ExpCondition, CoordPseudoTrialsIdx]
-            Pseudo-trials for each experimental condition.
-        counts_by_condition : Dict[ExpCondition, int]
-            See the attribute `counts_by_condition`.
-        order_conditions : Tuple[ExpCondition, ...]
-            See the attribute `order_conditions`.
+        pseudo_trials_by_stratum : List[CoordPseudoTrialsIdx]
+            Pseudo-trials for each experimental condition (within one fold).
+            Length: ``n_conditions``.
+            Shape of each element: ``(n_units, n_pseudo)``.
+        axis : int
+            Axis along which to concatenate the pseudo-trials. Here, ``-1`` for the last axis.
+        n_pseudo_tot : int
+            Total number of pseudo-trials to form across the experimental conditions of interest.
+            Used to check the consistency of input shapes.
 
         Returns
         -------
         pseudo_trials : CoordPseudoTrialsIdx
-            See the return value `pseudo_trials` of the `build` method.
+            Coordinate for the pseudo-trials of all the conditions.
+            Shape: ``(n_units, n_pseudo_tot)``.
 
         Raises
         ------
         ValueError
-            If the number of pseudo-trials for one condition does not match the number of trials in
-            the output coordinate.
+            If the number of pseudo-trials obtained by gathering strata does not match the total
+            expected number of pseudo-trials.
 
         See Also
         --------
         `np.concatenate`: Concatenate arrays along a pre-existing axis, here the trials axis (-1).
         """
-        # Check that number of pseudo-trials for each condition
-        for exp_cond, pseudo_trials in pseudo_trials_by_cond.items():
-            expected = counts_by_condition[exp_cond]
-            actual = pseudo_trials.shape[axis]
-            if actual != expected:
-                raise ValueError(
-                    f"Mismatch in the number of pseudo-trials for {exp_cond}: "
-                    f"{expected} expected, {actual} in output coordinate."
-                )
-        # Concatenate along the trials dimension in the right order, convert to coordinate
-        pseudo_trials = CoordPseudoTrialsIdx(
-            np.concatenate(
-                [pseudo_trials_by_cond[exp_cond] for exp_cond in order_conditions], axis=axis
+        # Check that number of pseudo-trials matches the total expected number
+        n_pseudo = sum(pseudo_trials.shape[-1] for pseudo_trials in pseudo_trials_by_stratum)
+        if n_pseudo_tot is not None and n_pseudo != n_pseudo_tot:
+            raise ValueError(
+                f"Mismatch in number of pseudo-trials across conditions. Actual: {n_pseudo} != Expected: {n_pseudo_tot}"
             )
-        )
+        # Concatenate along the trials dimension in the right order, convert to coordinate
+        pseudo_trials = CoordPseudoTrialsIdx(np.concatenate(pseudo_trials_by_stratum, axis=axis))
         return pseudo_trials
 
     @staticmethod

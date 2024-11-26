@@ -24,12 +24,13 @@ from core.processors.preprocess.count_trials import SampleSizer, TrialsCounter
 from core.entities.bio_info import Area, Training
 from core.composites.exp_conditions import PipelineCondition
 from core.composites.features import Features
-from core.composites.containers import UnitsContainer, ExpCondContainer
+from core.composites.containers import UnitsContainer, ExpCondContainer, Container
 from core.composites.candidates import Candidates
 from core.coordinates.exp_factor_coord import CoordExpFactor
-from core.coordinates.trials_coord import CoordPseudoTrialsIdx
+from core.coordinates.trials_coord import CoordPseudoTrialsIdx, CoordFolds
 from core.builders.build_ensembles import EnsemblesBuilder
 from core.builders.build_trial_coords import TrialCoordsBuilder
+from core.builders.build_folds import FoldsBuilder
 from core.builders.build_pseudo_trials import PseudoTrialsBuilder
 from core.data_structures.firing_rates_pop import FiringRatesPop
 from core.data_structures.trials_properties import TrialsProperties
@@ -125,16 +126,30 @@ class FormatPopulationData(Pipeline):
         coord_units = builder_ens.build(units=units.to_list(), seed=0)
         # shape: (n_ensembles, ensemble_size)
         data_structure.set_coord("units", coord_units)
+        # Split units into ensembles (make duplicate units independent from each other in distinct
+        # ensembles): extract rows of `coord_units` (ensembles dimension)
+        ensembles = Container(dict(enumerate(coord_units)), key_type=int, value_type=np.ndarray)
 
-        # Shared parameters to sync builders
+        # Initialize trial-related builders
+        # Configure builders with shared parameters
         order_conditions = self.exp_conds.to_list()
         counts_by_condition = counts_final.to_dict()
-
-        # Build pseudo-trials
+        builder_folds = FoldsBuilder(self.k, order_conditions)
         builder_pseudo_trials = PseudoTrialsBuilder(self.k, counts_by_condition, order_conditions)
+        # Build folds and pseudo-trials by ensemble
+        for ens, ensemble in ensembles.items():
+            # Build folds for each unit
+            folds_labels = UnitsContainer(
+                {
+                    unit: builder_folds.build(features=features[unit], seed=u)
+                    for u, unit in enumerate(ensemble)
+                },
+                value_type=CoordFolds,
+            )
+
         # For each ensemble separately
         pseudo_trials_by_ensemble: List[CoordPseudoTrialsIdx] = []
-        for ens, ensemble in enumerate(coord_units):  # rows of `coord_units` = ensembles
+        for ens, ensemble in enumerate(coord_units):
             feat_by_unit = features.list_values(ensemble)  # retrieve features of units in ensemble
             pseudo_trials = builder_pseudo_trials.build(feat_by_unit=feat_by_unit, seed=ens)
             pseudo_trials_by_ensemble.append(pseudo_trials)
