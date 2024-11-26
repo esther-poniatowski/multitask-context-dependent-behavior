@@ -21,7 +21,7 @@ import numpy as np
 from core.constants import N_FOLDS, N_TRIALS_MIN, BOOTSTRAP_THRES_PERC
 from core.pipelines.base_pipeline import Pipeline
 from core.processors.preprocess.count_trials import SampleSizer, TrialsCounter
-from core.attributes.bio_info import Area, Training
+from core.attributes.brain_info import Area, Training
 from core.composites.exp_conditions import PipelineCondition
 from core.composites.features import Features
 from core.composites.containers import UnitsContainer, ExpCondContainer, Container

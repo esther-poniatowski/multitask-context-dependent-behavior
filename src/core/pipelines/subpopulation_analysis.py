@@ -45,7 +45,7 @@ Data Structures Milestones:
 from types import MappingProxyType
 
 from core.pipelines.base_pipeline import Pipeline
-from core.attributes.bio_info import Area, Training
+from core.attributes.brain_info import Area, Training
 from core.composites.exp_conditions import PipelineCondition, ExpCondition
 from core.attributes.exp_factors import Task, Attention, Category, Behavior
 from core.composites.features import Features

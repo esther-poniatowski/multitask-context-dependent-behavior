@@ -7,22 +7,22 @@ Classes representing the sequential structure of an experiment ('positional' inf
 
 Classes
 -------
-`Position`
-`Recording`
-`Block`
-`Slot`
-`Session`
+ExpStructure
+Recording
+Block
+Slot
+Session
 """
 from functools import cached_property
 import re
-from typing import Optional, Self, Tuple, TypedDict
+from typing import Optional, Self, Tuple
 
 from core.attributes.base_attribute import Attribute
 from core.attributes.exp_factors import Task, Attention
-from core.attributes.bio_info import Site
+from core.attributes.brain_info import Site
 
 
-class Position(int, Attribute[int]):
+class ExpStructure(int, Attribute[int]):
     """
     Any positional information capturing the sequential structure of the experiment.
 
@@ -72,7 +72,7 @@ class Position(int, Attribute[int]):
         return True
 
 
-class Recording(Position):
+class Recording(ExpStructure):
     """
     Recording number for one session in the experiment at a given site.
 
@@ -91,9 +91,9 @@ class Recording(Position):
     MIN = 1
 
 
-class Block(Position):
+class Block(ExpStructure):
     """
-    Position of one block of trials within one session.
+    ExpStructure of one block of trials within one session.
 
     Each block of trials corresponds to a sequence of stimuli presentations. It includes :
 
@@ -118,7 +118,7 @@ class Block(Position):
     MIN = 1
 
 
-class Slot(Position):
+class Slot(ExpStructure):
     """
     Slot within one block.
 
@@ -174,7 +174,7 @@ class Session(str, Attribute[str]):
 
     See Also
     --------
-    `core.attributes.bio_info.Site`
+    `core.attributes.brain_info.Site`
     `core.attributes.exp_structure.Recording`
     `core.attributes.exp_factors.Task`
     `core.attributes.exp_factors.Attention`
@@ -203,7 +203,7 @@ class Session(str, Attribute[str]):
         See Also
         --------
         :meth:`Site.is_valid`
-        :meth:`Recording.is_valid` (method from the class `Position`)
+        :meth:`Recording.is_valid` (method from the class `ExpStructure`)
         :meth:`Attention.is_valid`   (method from the class `ExpFactor` inheriting from `Attribute`)
         :meth:`Task.is_valid`      (idem)
         """

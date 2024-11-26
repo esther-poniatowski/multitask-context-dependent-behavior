@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_core.test_coordinates.test_bio` [module]
+`test_core.test_coordinates.test_bio` [module]
 
 See Also
 --------
-:mod:`core.coordinates.bio`: Tested module.
-:class:`core.attributes.bio_data.Depth`
-:class:`core.attributes.composites.Unit`
+`core.coordinates.bio`: Tested module.
+`core.attributes.bio_data.Depth`
+`core.attributes.composites.Unit`
 """
 
 import numpy as np
 import pytest
 
-from core.coordinates.bio_info_coord import CoordUnit, CoordDepth
-from core.attributes.bio_info import CorticalDepth
-from core.attributes.composites import Unit
+from core.coordinates.brain_info_coord import CoordUnit, CoordDepth
+from core.attributes.brain_info import CorticalDepth
+from core.attributes.brain_info import Unit
 
 
 # Test values for CoordUnit

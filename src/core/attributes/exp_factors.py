@@ -64,7 +64,6 @@ class Task(ExpFactor):
           terms of task structure.
     """
 
-    OPTIONS = frozenset(["PTD", "CLK", "CCH"])
     LABELS = MappingProxyType(
         {
             "PTD": "Pure Tone Discrimination",
@@ -72,6 +71,7 @@ class Task(ExpFactor):
             "CCH": "Complex Chord Discrimination",
         }
     )
+    OPTIONS = frozenset(LABELS.keys())
 
 
 class Attention(ExpFactor):
@@ -99,10 +99,10 @@ class Attention(ExpFactor):
     `get_naive`
     """
 
-    OPTIONS = frozenset(["a", "p", "p-pre", "p-post"])
     LABELS = MappingProxyType(
         {"p": "Passive", "a": "Active", "p-pre": "Pre-Passive", "p-post": "Post-Passive"}
     )
+    OPTIONS = frozenset(LABELS.keys())
 
     @classmethod
     def get_trained(cls) -> FrozenSet[Self]:
@@ -140,14 +140,13 @@ class Category(ExpFactor):
 
     Notes
     -----
-    The same stimuli labels are used for consistency in both active and passive attentional states, even
-    though they are meaningful only in the active attentional state. Moreover, the exact nature of the sound
-    under a given label differ across tasks.
-
+    The same stimuli labels are used for consistency in both active and passive attentional states,
+    even though they are meaningful only in the active attentional state. Moreover, the exact nature
+    of the sound under a given label differ across tasks.
     """
 
-    OPTIONS = frozenset(["R", "T", "N"])
     LABELS = MappingProxyType({"R": "Reference", "T": "Target", "N": "Neutral"})
+    OPTIONS = frozenset(LABELS.keys())
 
     @classmethod
     def get_clk(cls) -> FrozenSet[Self]:
@@ -181,7 +180,6 @@ class Stimulus(ExpFactor):
     the exact rates associated to targets and references differ across animals in the CLK task.
     """
 
-    OPTIONS = frozenset(["TORC", "Click", "Tone", "Noise"])
     LABELS = MappingProxyType(
         {
             "TORC": "Time-Orthogonal Ripple Counter",
@@ -190,6 +188,7 @@ class Stimulus(ExpFactor):
             "Noise": "White Noise",
         }
     )
+    OPTIONS = frozenset(LABELS.keys())
 
 
 class Behavior(ExpFactor):
@@ -205,8 +204,8 @@ class Behavior(ExpFactor):
         - 'NoGo': Refrain from licking.
     """
 
-    OPTIONS = frozenset(["Go", "NoGo"])
     LABELS = MappingProxyType({"Go": "Lick", "NoGo": "No Lick"})
+    OPTIONS = frozenset(LABELS.keys())
 
 
 class ResponseOutcome(ExpFactor):
@@ -225,7 +224,6 @@ class ResponseOutcome(ExpFactor):
         - 'N/A': Not applicable (e.g. for neutral stimuli or in the passive state).
     """
 
-    OPTIONS = frozenset(["Hit", "Miss", "CR", "FA", "N/A"])
     LABELS = MappingProxyType(
         {
             "Hit": "Correct Response",
@@ -235,6 +233,7 @@ class ResponseOutcome(ExpFactor):
             "N/A": "Not Applicable",
         }
     )
+    OPTIONS = frozenset(LABELS.keys())
 
 
 class EventDescription(ExpFactor):
@@ -254,9 +253,6 @@ class EventDescription(ExpFactor):
         - 'TRIALSTOP': Marks the end of a block.
     """
 
-    OPTIONS = frozenset(
-        ["TRIALSTART", "PreStimSilence", "Stim", "PostStimSilence", "BEHAVIOR,SHOCKON", "TRIALSTOP"]
-    )
     LABELS = MappingProxyType(
         {
             "TRIALSTART": "Block Start",
@@ -267,3 +263,4 @@ class EventDescription(ExpFactor):
             "TRIALSTOP": "Block Stop",
         }
     )
+    OPTIONS = frozenset(LABELS.keys())

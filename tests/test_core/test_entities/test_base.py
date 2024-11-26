@@ -13,7 +13,7 @@ from typing import FrozenSet, Mapping
 
 import pytest
 
-from attributes.base_attribute import Attribute
+from core.attributes.base_attribute import Attribute
 
 
 # Test Inputs

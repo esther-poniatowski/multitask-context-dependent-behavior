@@ -13,7 +13,7 @@ Those tests focus on the functionalities which are *specific* to
 one concrete subclass of coordinates.
 
 The tests are performed on the :class:`CoordRecNum`subclass,
-but apply for all subclasses of :class:`CoordPosition`.
+but apply for all subclasses of :class:`CoordExpStructure`.
 """
 
 import numpy as np

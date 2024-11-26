@@ -5,13 +5,10 @@
 
 Define a common interface for all classes representing attributes (core objects) in the package.
 
-Derived subclasses represent specific concrete quantities or categories in the experiment.
-
 Classes
 -------
 `Attribute` (generic, base class)
 """
-from types import MappingProxyType
 from typing import (
     Generic,
     TypeVar,
@@ -29,12 +26,12 @@ from typing import (
 
 
 BaseT = TypeVar("BaseT", int, str, float, bool)
-"""Type variable for the parent basic type of the attribute."""
+"""Type variable for the basic type from which the attribute inherits."""
 
 
 class Attribute(Generic[BaseT]):
     """
-    Mixin class for distinct attribute types, providing common validation and labeling functionality.
+    Mixin class for attribute types, providing common validation and labeling functionality.
 
     Class Attributes
     ----------------
@@ -47,17 +44,17 @@ class Attribute(Generic[BaseT]):
 
     Methods
     -------
-    `is_valid`
-    `full_label`
-    `get_options`
-    `get_labels`
-    `__repr__`
+    is_valid
+    full_label
+    get_options
+    get_labels
+    __repr__
 
     Examples
     --------
     Define a subclass behaving like a string, with two valid values:
 
-    >>> class ConcreteObject(str, Attribute[str]):
+    >>> class ConcreteAttribute(str, Attribute[str]):
     ...
     ...    OPTIONS = frozenset(["a", "b"])
     ...    LABELS = MappingProxyType({"a": "Alpha", "b": "Beta"})
@@ -69,15 +66,15 @@ class Attribute(Generic[BaseT]):
 
     Instantiate an object and get its full label:
 
-    >>> obj = ConcreteObject("a")
+    >>> obj = ConcreteAttribute("a")
     >>> print(obj.full_label)
     Alpha
 
     Check if two objects are equal:
 
-    >>> obj1 = ConcreteObject("a")
-    >>> obj2 = ConcreteObject("a")
-    >>> obj3 = ConcreteObject("b")
+    >>> obj1 = ConcreteAttribute("a")
+    >>> obj2 = ConcreteAttribute("a")
+    >>> obj3 = ConcreteAttribute("b")
     >>> print(obj1 == obj2)
     True
     >>> print(obj1 == obj3)
@@ -85,7 +82,7 @@ class Attribute(Generic[BaseT]):
 
     Check if an object belongs to a list:
 
-    >>> items = [ConcreteObject("a"), ConcreteObject("a")]
+    >>> items = [ConcreteAttribute("a"), ConcreteAttribute("a")]
     >>> print(obj1 in items)
     True
     >>> print(obj3 in items)
@@ -99,8 +96,8 @@ class Attribute(Generic[BaseT]):
     to be stored and manipulated like the built-in type.
     """
 
-    OPTIONS: FrozenSet[BaseT] = frozenset()
-    LABELS: Mapping[BaseT, str] = MappingProxyType({})
+    OPTIONS: FrozenSet[BaseT]
+    LABELS: Mapping[BaseT, str]
 
     @classmethod
     def is_valid(cls, value: Any) -> bool:

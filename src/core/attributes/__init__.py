@@ -3,10 +3,8 @@
 """
 `core.attributes` [subpackage]
 
-Define classes representing the attributes manipulated in the package.
-
-Each object is associated to a concrete feature describing the experiment.
-It constitutes a type in itself, with its own attributes, methods and properties.
+Class hierarchy representing key qualitative and quantitative "attributes" (i.e. descriptors,
+properties) of the objects manipulated in the code base.
 
 Modules
 -------
@@ -14,42 +12,50 @@ Modules
 `exp_factors`
 `exp_condition`
 `exp_structure`
-`bio_info`
-
+`brain_info`
 
 Notes
 -----
-Distinct object types are represented by either Enum classes or regular classes.
-Enum classes are customized to provide additional information about the objects.
+The hierarchy provides a consistent interface for handling diverse data types while allowing for
+custom behavior in each subclass. Each subclass of `Attribute` corresponds to a specific type
+of descriptor, which represents one aspects of the experiment or the analysis. They include:
 
-Here, an enum class may define :
+- Conditions of the experimental paradigm (qualitative factors): task, attentional state,
+  stimulus...
+- Structure of the experiment (quantitative factors): recording number, position of the stimulus in
+  a sequence...
+- Neuronal information (qualitative properties): brain area, cortical depth, animal...
+- Trial-related labels for analysis: folds, indices of pseudo-trials...
 
-- Attributes, to specify the authorized values of an instance.
-- Class methods (optionally), to retrieve specific subsets of the instances.
-- Properties (optionally), to retrieve additional information about the instances.
+The base class `Attribute` provides core functionality, shared by many subclasses:
+
+- Interacting with allowed values (`OPTIONS`).
+- Validating input values against the allowed set.
+
+Each subclass of `Attribute` inherits from a basic type (e.g., `int`, `str`) and extends it with is
+own constraints and domain-specific logic.
+
+- Qualitative attributes mimic "Enum" classes, with a fixed set of allowed values.
+- Quantitative attributes are more flexible, some may impose range constraints or a single boundary.
+
 
 Examples
 --------
-Get the valid labels for Attention objects :
+Get the valid options for Attention objects :
 
-.. code-block:: python
-
-    from core.attributes import Attention
-    print(list(Attention.get_options()))
-    # Output: ('a', 'p', 'p-pre', 'p-post')
+>>> from core.attributes import Attention
+>>> print(list(Attention.get_options()))
+('a', 'p', 'p-pre', 'p-post')
 
 Get the attentional states for naive animals :
 
-.. code-block:: python
-
-    print(Attention.naive())
-    # Output: ('p')
+>>> print(Attention.naive())
+('p')
 
 Get the full label for the attentional state 'a' :
 
-.. code-block:: python
+>>> attn = Attention('a')
+>>> print(attn.full_label)
+'Active'
 
-        attn = Attention('a')
-        print(attn.full_label)
-        # Output: 'Active'
 """
