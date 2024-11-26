@@ -84,6 +84,8 @@ class Container(UserDict[K, V], Generic[K, V]):
 
     """
 
+    # --- Create Container instances ---------------------------------------------------------------
+
     def __init__(
         self, *args, key_type: Type[K] | None = None, value_type: Type[V] | None = None, **kwargs
     ) -> None:
@@ -187,6 +189,8 @@ class Container(UserDict[K, V], Generic[K, V]):
         if value_type is None:
             raise ValueError("Missing argument: `value_type`")
         return cls({key: fill_value for key in keys}, key_type=key_type, value_type=value_type)
+
+    # --- Access Container Contents ----------------------------------------------------------------
 
     def list_keys(self) -> List[K]:
         """
@@ -297,6 +301,8 @@ class Container(UserDict[K, V], Generic[K, V]):
         Container({Unit("lemon052a-b2"): 2})
         """
         return self.get_subset([k for k, v in self.data.items() if predicate(v)])
+
+    # --- Transform Container Data -----------------------------------------------------------------
 
     def fill(self, func: Callable[[K], V], **kwargs: Any) -> None:
         """
