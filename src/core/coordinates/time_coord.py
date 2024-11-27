@@ -51,10 +51,10 @@ class CoordTime(Coordinate[np.float64]):
 
     Methods
     -------
-    `validate`
-    `eval_t_bin`
-    `get_index`
-    `build_labels`
+    validate
+    eval_t_bin
+    get_index
+    build_labels
 
     Notes
     -----
@@ -169,16 +169,22 @@ class CoordTime(Coordinate[np.float64]):
 
         Notes
         -----
-        Regardless of the provided parameters, the generated sequence of time points
-        is always uniformly spaced and starts at ``t_min``.
+        Regardless of the provided parameters, the generated sequence of time points is always
+        uniformly spaced and starts at ``t_min``.
         Different combinations of parameters allow to specify various creation constraints :
 
-        - ``n_smpl``, ``t_bin``, (``t_min``) :
-           -> ``n_smpl`` time points incremented by ``t_bin``.
-        - ``n_smpl``, ``t_max``, (``t_min``) :
-           -> ``n_smpl`` time points between ``t_min`` and ``t_max``.
-        - ``t_bin``, ``t_max``, (``t_min``) :
-           -> ``(t_max - t_min)/t_bin`` time points between ``t_min`` and ``t_max``.
+        +-------------+---------------------------------------+
+        | Parameters  | Result                                |
+        +=============+=======================================+
+        | ``n_smpl``, | ``n_smpl`` time points                |
+        | ``t_bin``   | incremented by ``t_bin``              |
+        +-------------+---------------------------------------+
+        | ``n_smpl``, | ``n_smpl`` time points                |
+        | ``t_max``   | between ``t_min`` and ``t_max``       |
+        +-------------+---------------------------------------+
+        | ``t_bin``,  | ``(t_max - t_min)/t_bin`` time points |
+        | ``t_max``   |  between ``t_min`` and ``t_max``      |
+        +-------------+---------------------------------------+
 
         Implementation
         --------------

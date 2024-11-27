@@ -5,18 +5,16 @@
 
 Classes
 -------
-`FormatPopulation`
-
-
-
-
+FormatPopulationConfig
+FormatPopulationInputs
+FormatPopulation
 """
 from typing import Type, Dict, List, Any
 from dataclasses import dataclass, field
 
 import numpy as np
 
-from core.constants import N_FOLDS, N_TRIALS_MIN, BOOTSTRAP_THRES_PERC
+from core.constants import N_FOLDS, N_TRIALS_MIN, BOOTSTRAP_THRES_PERC, T_BIN, T_MAX
 from core.pipelines.base_pipeline import Pipeline, PipelineConfig, PipelineInputs
 from core.processors.preprocess.count_samples import SampleSizer, TrialsCounter
 from core.attributes.brain_info import Area, Training, Unit
@@ -26,6 +24,7 @@ from core.composites.base_container import Container
 from core.composites.candidates import Candidates
 from core.coordinates.exp_factor_coord import CoordExpFactor
 from core.coordinates.trial_analysis_label_coord import CoordPseudoTrialsIdx
+from core.coordinates.time_coord import CoordTime
 from core.builders.build_ensembles import EnsemblesBuilder
 from core.builders.build_exp_factor_coord import ExpFactorCoordBuilder
 from core.builders.build_folds import FoldsBuilder
@@ -56,6 +55,12 @@ class FormatPopulationConfig(PipelineConfig):
         Threshold percentage of the number of trials to consider the bootstrap method. Default: 0.3.
     coords_trials : Dict[str, Type[CoordExpFactor]]
         Coordinates to build for the trial analysis.
+    t_bin : float
+        Time bin size for the time coordinate, in seconds.
+    t_max : float
+        Duration of a trial, in seconds.
+    with_time : bool
+        Whether to include a time coordinate. Default: True.
 
     See Also
     --------
@@ -69,6 +74,9 @@ class FormatPopulationConfig(PipelineConfig):
     n_min: int = N_TRIALS_MIN
     thres_perc: float = BOOTSTRAP_THRES_PERC
     coords_trials: Dict[str, Type[CoordExpFactor]] = field(default_factory=dict)
+    t_bin: float | None = T_BIN
+    t_max: float | None = T_MAX
+    with_time: bool = True
 
 
 @dataclass
@@ -182,3 +190,6 @@ class FormatPopulation(Pipeline[FormatPopulationConfig, FormatPopulationInputs])
         # Create core data values (firing rates)
 
         # Build time coordinate if needed
+        if self.config.with_time:
+            coord_time = CoordTime.build_labels(t_bin=self.config.t_bin, t_max=self.config.t_max)
+            data_structure.set_coord("time", coord_time)
