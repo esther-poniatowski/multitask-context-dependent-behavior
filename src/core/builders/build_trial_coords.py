@@ -27,24 +27,25 @@ class TrialCoordsBuilder(Builder[CoordExpFactor]):
         Number of trials for each experimental condition of interest.
     order_conditions : Iterable[ExpCondition]
         Order in which the experimental conditions appear in the output coordinates.
+    n_trials : int
+        (Property) Total number of trials in the output coordinates.
     conditions_boundaries : Dict[ExpCondition, Tuple[int, int]]
-        Start and end indices of the trials for each condition along the trials dimension in the
-        output coordinates.
+        (Property) Start and end indices of the trials for each condition along the trials dimension
+        in the output coordinates.
 
     Methods
     -------
-    `build` (required)
-    `validate_factor`
-    `construct_coord`
+    build (required)
+    validate_factor
 
     Examples
     --------
     Set the number of trials for each experimental condition:
 
-    >>> exp_cond_1 = ExpCondition(task='PTD', attention='a')
-    >>> exp_cond_2 = ExpCondition(task='CLK', attention='a')
-    >>> counts_by_condition = {exp_cond_1: 3, exp_cond_2: 2}
-    >>> order_conditions = (exp_cond_1, exp_cond_2)
+    >>> exp_condition_1 = ExpCondition(task='PTD', attention='a')
+    >>> exp_condition_2 = ExpCondition(task='CLK', attention='a')
+    >>> counts_by_condition = {exp_condition_1: 3, exp_condition_2: 2}
+    >>> order_conditions = (exp_condition_1, exp_condition_2)
     >>> builder = TrialCoordsBuilder(counts_by_condition, order_conditions)
     >>> builder.conditions_boundaries
     {ExpCondition(task='PTD', attention='a'): (0, 3),
@@ -60,7 +61,9 @@ class TrialCoordsBuilder(Builder[CoordExpFactor]):
     PRODUCT_CLASS = CoordExpFactor
 
     def __init__(
-        self, counts_by_condition: Dict[ExpCondition, int], order_conditions: Iterable[ExpCondition]
+        self,
+        counts_by_condition: Dict[ExpCondition, int],
+        order_conditions: Iterable[ExpCondition],
     ) -> None:
         # Call the base class constructor: declare empty product and internal data
         super().__init__()
@@ -83,11 +86,46 @@ class TrialCoordsBuilder(Builder[CoordExpFactor]):
 
         Returns
         -------
+        coord : CoordExpFactor
+            Coordinates for the experimental factor in the pseudo-trials.
         """
         assert coord_type is not None
         self.validate_factor(coord_type)
-        self.product = self.construct_coord(coord_type)
+        # Initialize empty coordinates with as many trials as the total number of pseudo-trials
+        coord = coord_type.from_shape(self.n_trials)
+        # Fill the coordinates by condition
+        attribute_type = coord_type.get_attribute()  # attribute associated with the coordinate
+        for cond, (start, end) in self.conditions_boundaries.items():
+            value = cond.get(attribute_type)  # value to fill
+            coord[start:end] = value
+        self.product = coord
         return self.get_product()
+
+    @cached_property
+    def n_trials(self) -> int:
+        """Get the total number of trials in the output coordinates."""
+        return sum(self.counts_by_condition.values())
+
+    @cached_property
+    def conditions_boundaries(self) -> Dict[ExpCondition, Tuple[int, int]]:
+        """
+        Set the start and end indices of the trials of each condition in the final coordinates.
+
+        Those indices are used to ensure the consistency of the data between all the coordinates for
+        the trials dimension.
+
+        Returns
+        -------
+        idx_start_end : Dict[ExpCondition, Tuple[int, int]]
+        """
+        idx_start_end: Dict[ExpCondition, Tuple[int, int]] = {}
+        start = 0
+        for cond in self.order_conditions:
+            n_trials = self.counts_by_condition[cond]
+            end = start + n_trials
+            idx_start_end[cond] = (start, end)
+            start = end
+        return idx_start_end
 
     def validate_factor(self, coord_type: Type[CoordExpFactor]) -> None:
         """
@@ -107,59 +145,11 @@ class TrialCoordsBuilder(Builder[CoordExpFactor]):
         Raises
         ------
         TypeError
-            If the experimental factor is not present in all the conditions.
+            If the experimental factor is absent from one experimental condition of interest.
         """
+        attribute_type = coord_type.get_attribute()  # attribute associated with the coordinate
         for cond in self.order_conditions:
-            for attribute_type in cond.get_attributes():
-                if not coord_type.has_attribute(attribute_type):
-                    raise TypeError(
-                        f"Experimental factor of {coord_type} not present in condition {cond}."
-                    )
-
-    @cached_property
-    def conditions_boundaries(self) -> Dict[ExpCondition, Tuple[int, int]]:
-        """
-        Set the start and end indices of the trials of each condition in the final coordinates.
-
-        Those indices are used to ensure the consistency of the data between all the coordinates for
-        the trials dimension.
-
-        Returns
-        -------
-        idx_start_end : Dict[ExpCondition, Tuple[int, int]]
-        """
-        idx_start_end: Dict[ExpCondition, Tuple[int, int]] = {}
-        start = 0
-        for cond in self.order_conditions:
-            n_samples = self.counts_by_condition[cond]
-            end = start + n_samples
-            idx_start_end[cond] = (start, end)
-            start = end
-        return idx_start_end
-
-    def construct_coord(
-        self,
-        coord_type: Type[CoordExpFactor],
-    ) -> CoordExpFactor:
-        """
-        Construct the trial coordinates for the pseudo-trials.
-
-        Arguments
-        ---------
-        coord_type : Type[CoordExpFactor]
-            Class of the coordinate to build.
-
-        Returns
-        -------
-        coord : CoordExpFactor
-            Coordinate for the trial dimension in the data structure product.
-        """
-        # Initialize empty coordinates with as many trials as the total number of pseudo-trials
-        n_samples_tot = sum(self.counts_by_condition.values())
-        coord = coord_type.from_shape(n_samples_tot)
-        # Fill the coordinates by condition
-        for cond, (start, end) in self.conditions_boundaries.items():
-            # Retrieve the value in the exp condition for the coordinate attribute
-            value = cond.get_factor(coord_type.get_attribute())
-            coord[start:end] = value
-        return coord
+            if attribute_type not in cond:  # behavior like a dictionary
+                raise TypeError(
+                    f"Experimental factor of {coord_type} not present in condition {cond}."
+                )
