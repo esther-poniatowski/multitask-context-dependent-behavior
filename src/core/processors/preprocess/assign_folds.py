@@ -24,6 +24,7 @@ import numpy as np
 
 from core.processors.base_processor import Processor, set_random_state
 
+
 FoldLabels: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
 """Type alias for fold labels assigned to each sample."""
 

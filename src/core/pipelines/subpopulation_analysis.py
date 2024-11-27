@@ -46,14 +46,14 @@ from types import MappingProxyType
 
 from core.pipelines.base_pipeline import Pipeline
 from core.attributes.brain_info import Area, Training
-from core.composites.exp_conditions import PipelineCondition, ExpCondition
+from core.composites.exp_conditions import ExpCondition, ExpCondition
 from core.attributes.exp_factors import Task, Attention, Category, Behavior
 from core.composites.coordinate_set import CoordinateSet
 from core.data_structures.trials_properties import TrialsProperties
 from utils.io_data.loaders import Loader
 
 
-class SubpopulationAnalysisCondition(PipelineCondition):
+class SubpopulationAnalysisCondition(ExpCondition):
     """
       Experimental condition tailored for the `SubpopulationAnalysis` pipeline:
 
