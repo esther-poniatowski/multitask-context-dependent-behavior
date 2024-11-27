@@ -162,7 +162,7 @@ class DataStructure(ABC):
             if not hasattr(cls, class_attr):
                 raise TypeError(f"<{cls.__name__}> Missing class-level attribute: '{class_attr}'.")
 
-    def __init__(self, data: CoreData | None = None, **coords: Coordinate) -> None:
+    def __init__(self, data: CoreData | None = None, **coords: Coordinate | None) -> None:
         """
         Instantiate a data structure and check the consistency of the input values (automatic).
 
@@ -183,7 +183,8 @@ class DataStructure(ABC):
         if data is not None:
             self.set_data(data)
         for name, coord in coords.items():
-            self.set_coord(name, coord)
+            if coord is not None:
+                self.set_coord(name, coord)
 
     def __repr__(self) -> str:
         data_status = "empty" if not hasattr(self, "data") else "filled"
