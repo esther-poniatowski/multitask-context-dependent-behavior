@@ -38,7 +38,7 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
     Warning
     -------
     The order in which the trials are stored in the output coordinate of the `PseudoTrialsBuilder`
-    builder should be consistent with the other output coordinates of the `TrialCoordsBuilder`
+    builder should be consistent with the other output coordinates of the `ExpFactorCoordBuilder`
     (which label the experimental factors of interest, see `core.builders.build_trial_coords`). To
     ensure this consistency along the trials dimension, the experimental conditions should be
     treated in the same order across both builders. This is achieved by passing them the same
