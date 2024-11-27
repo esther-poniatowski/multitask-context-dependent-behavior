@@ -12,39 +12,47 @@ Notes
 Each subclass of `Pipeline` should  inherits from this class.
 """
 from abc import ABC, abstractmethod
-from typing import FrozenSet
-
-from utils.io_data.base_loader import Loader
-from utils.io_data.base_saver import Saver
-from utils.storage_rulers.base_path_ruler import PathRuler
+from dataclasses import dataclass
+from typing import TypeVar, Generic, Any
 
 
-class Pipeline(ABC):
+@dataclass
+class PipelineConfig(ABC):
     """
-    Base class for analysis pipelines.
+    Abstract base class for pipeline configurations.
+
+    Define the arguments for the pipeline constructor, which fix its behavior for a number of runs.
+    """
+
+
+@dataclass
+class PipelineInputs(ABC):
+    """
+    Abstract base class for runtime inputs of a pipeline execution.
+
+    Define the arguments of the `execute` method of the pipeline, for a single run.
+    """
+
+
+C = TypeVar("C", bound=PipelineConfig)
+I = TypeVar("I", bound=PipelineInputs)
+
+
+class Pipeline(ABC, Generic[C, I]):
+    """
+    Abstract base class for analysis pipelines.
 
     This class defines the interface for orchestrating a complete analysis workflow, including data
     loading, processing, and saving results.
 
     Class Attributes
     ----------------
-    PATH_INPUTS : FrozenSet[PathRuler]
-        Attribute names for the path rulers required to specify the paths to the input data.
-    PATH_OUTPUTS : FrozenSet[PathRuler]
-        Attribute names for the path rulers required to specify the paths to the output data.
-    LOADERS : FrozenSet[Loader]
-        Attribute names for the loaders required to load the input data.
-    SAVERS : FrozenSet[Saver]
-        Attribute names for the savers required to save the output data.
 
     Attributes
     ----------
-    ready : bool
-        Flag indicating whether the pipeline is ready to execute, i.e. all required paths are set.
 
     Methods
     -------
-    set_path
     execute
 
     See Also
@@ -73,66 +81,28 @@ class Pipeline(ABC):
     this steps in the next run.
     """
 
-    PATH_INPUTS: FrozenSet[str] = frozenset()
-    PATH_OUTPUTS: FrozenSet[str] = frozenset()
-    LOADERS: FrozenSet[str] = frozenset()
-    SAVERS: FrozenSet[str] = frozenset()
-
-    def get_required_io_handlers(self) -> FrozenSet[str]:
+    def __init__(self, config: C, **kwargs: Any) -> None:
         """
-        Get the names of all the required IO handlers.
-
-        Returns
-        -------
-        FrozenSet[str]
-            Names of the required IO handlers.
-        """
-        return self.PATH_INPUTS | self.PATH_OUTPUTS | self.LOADERS | self.SAVERS
-
-    def __init__(self) -> None:
-        """Initialize the pipeline state and the required attributes to None."""
-        self.ready = False
-        for attr in self.get_required_io_handlers():
-            setattr(self, attr, None)
-
-    def set_io(self, attr, handler) -> None:
-        """
-        Set the handler to perform a required functionality, designated by the attribute.
+        Initialize the pipeline state.
 
         Arguments
         ---------
-        attr : str
-            Name of the attribute to set among the IO_HANDLERS.
-        handler : type
-            Class of the io handler selected to perform the required functionality.
-
-        Raises
-        ------
-        AttributeError
-            If the attribute is not valid for an IO handler.
-        TypeError
-            If the handler type is not valid.
+        config : PipelineConfig
+            Configuration for the pipeline.
+        kwargs
+            Additional keyword arguments to pass to the pipeline.
         """
-        if not attr in self.get_required_io_handlers():
-            raise AttributeError(f"Invalid attribute: {attr}")
-        if attr in self.PATH_INPUTS | self.PATH_OUTPUTS:
-            if not issubclass(handler, PathRuler):
-                raise TypeError(f"Invalid handler type: {handler} not a PathRuler")
-        elif attr in self.LOADERS:
-            if not issubclass(handler, Loader):
-                raise TypeError(f"Invalid handler type: {handler} not a Loader")
-        elif attr in self.SAVERS:
-            if not issubclass(handler, Saver):
-                raise TypeError(f"Invalid handler type: {handler} not a Saver")
-        setattr(self, attr, handler)
+        self.config = config
 
     @abstractmethod
-    def execute(self, **kwargs) -> None:
+    def execute(self, inputs: I, **kwargs: Any) -> None:
         """
         Execute all the steps of the analysis.
 
         Arguments
         ---------
+        inputs : PipelineInputs
+            Input data for the pipeline.
         kwargs
-            Additional keyword arguments to pass to the pipeline steps.
+            Additional keyword arguments to pass to the execution steps.
         """
