@@ -8,7 +8,7 @@ Classes representing the experimental conditions of the behavioral paradigm.
 Classes
 -------
 ExpCondition
-PipelineCondition
+ExpCondition
 """
 from typing import FrozenSet, Mapping, Type, List, Iterable
 from itertools import product

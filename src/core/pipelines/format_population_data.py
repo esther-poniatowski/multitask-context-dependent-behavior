@@ -20,9 +20,9 @@ import numpy as np
 
 from core.constants import N_FOLDS, N_TRIALS_MIN, BOOTSTRAP_THRES_PERC
 from core.pipelines.base_pipeline import Pipeline
-from core.processors.preprocess.count_trials import SampleSizer, TrialsCounter
+from processors.preprocess.count_samples import SampleSizer, TrialsCounter
 from core.attributes.brain_info import Area, Training
-from core.composites.exp_conditions import PipelineCondition
+from core.composites.exp_conditions import ExpCondition
 from core.composites.coordinate_set import CoordinateSet
 from core.composites.base_container import Container
 from core.composites.containers_fixed import UnitsContainer, ExpCondContainer
@@ -54,7 +54,7 @@ class FormatPopulationData(Pipeline):
 
     def __init__(
         self,
-        exp_cond_type: PipelineCondition,
+        exp_cond_type: ExpCondition,
         ensemble_size: int | None = None,  # all units in the population
         n_ensembles_max: int = 1,  # only one pseudo-population
         n_folds: int = N_FOLDS,

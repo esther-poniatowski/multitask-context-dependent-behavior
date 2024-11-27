@@ -19,6 +19,7 @@ from core.composites.exp_conditions import ExpCondition
 from core.processors.preprocess.assign_folds import FoldAssigner
 from core.processors.preprocess.bootstrap import Bootstrapper
 
+
 Counts: TypeAlias = np.ndarray[Tuple[Any], np.dtype[np.int64]]
 """Type alias for the number of trials per unit."""
 
@@ -97,7 +98,7 @@ class SampleSizer(Processor):
 
     Attributes
     ----------
-    k : int
+    n_folds : int
         Number of folds in the cross-validation.
     n_min : int
         Minimum number of trials required for one unit.
@@ -106,9 +107,9 @@ class SampleSizer(Processor):
     """
 
     def __init__(
-        self, k: int = 1, n_min: int = N_TRIALS_MIN, thres_perc: float = BOOTSTRAP_THRES_PERC
+        self, n_folds: int = 1, n_min: int = N_TRIALS_MIN, thres_perc: float = BOOTSTRAP_THRES_PERC
     ) -> None:
-        self.k = k
+        self.n_folds = n_folds
         self.n_min = n_min
         self.thres_perc = thres_perc
 
@@ -128,7 +129,7 @@ class SampleSizer(Processor):
             Number of pseudo-trials to form in the condition.
         """
         assert counts is not None
-        sample_size = self.eval_sample_size(counts, self.k, self.n_min, self.thres_perc)
+        sample_size = self.eval_sample_size(counts, self.n_folds, self.n_min, self.thres_perc)
         return sample_size
 
     # --- Processing Methods -----------------------------------------------------------------------
@@ -136,7 +137,7 @@ class SampleSizer(Processor):
     @staticmethod
     def eval_sample_size(
         counts: Counts,
-        k: int,
+        n_folds: int,
         n_min: int = N_TRIALS_MIN,
         thres_perc: float = BOOTSTRAP_THRES_PERC,
     ) -> int:
@@ -159,7 +160,7 @@ class SampleSizer(Processor):
         `FoldAssigner.eval_min_count`
         `Bootstrapper.eval_n_pseudo`
         """
-        counts_in_fold = np.array([FoldAssigner.eval_min_count(n, k) for n in counts])
+        counts_in_fold = np.array([FoldAssigner.eval_min_count(n, n_folds) for n in counts])
         sample_size = Bootstrapper.eval_n_pseudo(counts_in_fold, n_min, thres_perc)
         return sample_size
 
@@ -179,11 +180,7 @@ class SampleSizer(Processor):
         -------
         n_excluded : int
             Number of units excluded from the analysis.
-
-        See Also
-        --------
-        `Excluder.exclude_from_counts`
         """
-        retained = Excluder.exclude_from_counts(counts, sample_size)
-        n_excluded = len(counts) - len(retained)
+        idx_excluded = np.where(counts < sample_size)[0]
+        n_excluded = len(idx_excluded)
         return n_excluded
