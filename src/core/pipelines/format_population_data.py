@@ -5,7 +5,7 @@
 
 Classes
 -------
-`FormatPopulationData`
+`FormatPopulation`
 
 
 
@@ -19,7 +19,7 @@ import numpy as np
 from core.constants import N_FOLDS, N_TRIALS_MIN, BOOTSTRAP_THRES_PERC
 from core.pipelines.base_pipeline import Pipeline, PipelineConfig, PipelineInputs
 from core.processors.preprocess.count_samples import SampleSizer, TrialsCounter
-from core.attributes.brain_info import Area, Training
+from core.attributes.brain_info import Area, Training, Unit
 from core.composites.exp_conditions import ExpCondition
 from core.composites.coordinate_set import CoordinateSet
 from core.composites.base_container import Container
@@ -36,13 +36,13 @@ from core.data_structures.trials_properties import TrialsProperties
 
 
 @dataclass
-class FormatPopulationDataConfig(PipelineConfig):
+class FormatPopulationConfig(PipelineConfig):
     """
     Configuration for the pipeline to format population data.
 
     Attributes
     ----------
-    exp_cond_type : Type[ExpCondition]
+    exp_condition_type : Type[ExpCondition]
         Type of experimental condition to consider.
     ensemble_size : int | None
         Number of units in each ensemble. Default: all units in the population.
@@ -63,7 +63,7 @@ class FormatPopulationDataConfig(PipelineConfig):
     `dataclasses.dataclass`
     """
 
-    exp_cond_type: ExpCondition
+    exp_condition_type: ExpCondition
     ensemble_size: int | None = None  # default: all units in the population
     n_ensembles_max: int = 1  # default: single pseudo-population
     n_folds: int = N_FOLDS
@@ -73,7 +73,7 @@ class FormatPopulationDataConfig(PipelineConfig):
 
 
 @dataclass
-class FormatPopulationDataInputs(PipelineInputs):
+class FormatPopulationInputs(PipelineInputs):
     """
     Inputs for the pipeline to format population data.
 
@@ -83,9 +83,9 @@ class FormatPopulationDataInputs(PipelineInputs):
         Brain area of interest.
     training : Training
         Training status of the animals.
-    units : Candidates
-        Data structure containing the units of the population of interest, before filtering for
-        sufficient number of trials in each condition.
+    units : List[Unit]
+        Units to consider in the population, before filtering for sufficient number of trials in
+        each condition.
     trials_properties: UnitsContainer[TrialsProperties]
         Data structures containing the trial properties of each unit in the population
         (experimental factors for each trial "slot"). It is the result of parsing the ``.m``
@@ -98,55 +98,51 @@ class FormatPopulationDataInputs(PipelineInputs):
 
     area: Area
     training: Training
-    units: Candidates
+    units: List[Unit]
     trials_properties: UnitsContainer[TrialsProperties]
 
 
-class FormatPopulationData(Pipeline[FormatPopulationDataConfig, FormatPopulationDataInputs]):
+class FormatPopulation(Pipeline[FormatPopulationConfig, FormatPopulationInputs]):
     """
     Pipeline to format population data.
     """
 
-    def __init__(self, config: FormatPopulationDataConfig, **kwargs: Any) -> None:
+    def __init__(self, config: FormatPopulationConfig, **kwargs: Any) -> None:
         super().__init__(config, **kwargs)
-        self.exp_conds = self.config.exp_cond_type.generate()  # ExpConditionUnion
+        self.exp_conditions = self.config.exp_condition_type.generate()
 
-    def execute(self, inputs: FormatPopulationDataInputs, **kwargs: Any) -> None:
+    def execute(self, inputs: FormatPopulationInputs, **kwargs: Any) -> None:
         """
         Implement the abstract method from the base class `Pipeline`.
         """
-        area = inputs.area
-        training = inputs.training
-        units = inputs.units
-        trials_properties = inputs.trials_properties
-
         # Initialize the data structure
-        data_structure = FiringRatesPop(area=area, training=training)
+        data_structure = FiringRatesPop(area=inputs.area, training=inputs.training)
 
-        # Retrieve the coordinates of interest
-        features = trials_properties.apply(
+        # Initialize the candidate units
+        units = Candidates(inputs.units)
+        # Retrieve the coordinates of interest along the trials dimension
+        features_by_unit = inputs.trials_properties.apply(
             lambda tp: CoordinateSet(**tp.get_coords_from_dim("trials"))
         )
 
         # Count the number of trials available for each unit in each condition
-        counter = TrialsCounter(features_by_unit=features.list_values())
-        counts_actual = ExpCondContainer[np.ndarray].from_keys(
-            keys=self.exp_conds.to_list(),
+        counter = TrialsCounter(features_by_unit=features_by_unit.list_values())
+        counts_actual = Container[ExpCondition, np.ndarray].from_keys(
+            keys=self.exp_conditions.to_list(),
             fill_value=np.zeros(1),
             value_type=np.ndarray,
         )
         counts_actual.fill(counter.process)
         # Determine the number of trials to form in each condition based on the actual counts
-        sizer = SampleSizer(
-            n_folds=self.config.n_folds, n_min=self.config.n_min, thres_perc=self.config.thres_perc
-        )
+        sizer = SampleSizer(self.config.n_folds, self.config.n_min, self.config.thres_perc)
         counts_final = counts_actual.apply(sizer.process)
+
         # Exclude units with insufficient trials in any condition
         for cond, n_min in counts_final.items():
-            units.filter_by_associated(values=counts_actual[cond], predicate=lambda x: x >= n_min)
+            units.filter_by_associated(counts_actual[cond], lambda x: x >= n_min)
+        ens_size = len(units) if self.config.ensemble_size is None else self.config.ensemble_size
 
         # Build ensembles (pseudo-populations)
-        ens_size = len(units) if self.config.ensemble_size is None else self.config.ensemble_size
         builder_ens = EnsemblesBuilder(ens_size, self.config.n_ensembles_max)
         coord_units = builder_ens.build(units=units.to_list(), seed=0)
         # shape: (n_ensembles, ensemble_size)
@@ -155,41 +151,35 @@ class FormatPopulationData(Pipeline[FormatPopulationDataConfig, FormatPopulation
         # ensembles): extract rows of `coord_units` (ensembles dimension)
         ensembles = Container(dict(enumerate(coord_units)), key_type=int, value_type=np.ndarray)
 
-        # Initialize trial-related builders
-        # Configure builders with shared parameters
-        order_conditions = self.exp_conds.to_list()
+        # Initialize trial-related builders with shared parameters
+        order_conditions = self.exp_conditions.to_list()
         counts_by_condition = counts_final.to_dict()
         builder_folds = FoldsBuilder(self.config.n_folds, order_conditions)
         builder_pseudo_trials = PseudoTrialsBuilder(
             self.config.n_folds, counts_by_condition, order_conditions
         )
         # Build folds and pseudo-trials by ensemble
-        for ens, ensemble in ensembles.items():
-            # Build folds for each unit
-            folds_labels = UnitsContainer(
-                {
-                    unit: builder_folds.build(features=features[unit], seed=u)
-                    for u, unit in enumerate(ensemble)
-                },
-                value_type=CoordFolds,
-            )
-
-        # For each ensemble separately
         pseudo_trials_by_ensemble: List[CoordPseudoTrialsIdx] = []
-        for ens, ensemble in enumerate(coord_units):
-            features_by_unit = features.list_values(
-                ensemble
-            )  # retrieve features of units in ensemble
-            pseudo_trials = builder_pseudo_trials.build(features_by_unit=features_by_unit, seed=ens)
+        for ens, ensemble in ensembles.items():  # ens: seed for PseudoTrialsBuilder
+            # Retrieve features of the units in the ensemble
+            features_in_ens = features_by_unit.list_values(ensemble)
+            # Build folds for each unit in the ensemble (not saved, implicit in pseudo-trials)
+            folds_in_ens = [  # u: seed for FoldAssigner
+                builder_folds.build(features, seed=u) for u, features in enumerate(features_in_ens)
+            ]
+            # Build pseudo-trials for the ensemble
+            pseudo_trials = builder_pseudo_trials.build(features_in_ens, folds_in_ens, seed=ens)
             pseudo_trials_by_ensemble.append(pseudo_trials)
         # Gather all pseudo-trials in a single coordinate
         coord_pseudo_trials = builder_pseudo_trials.gather_ensembles(pseudo_trials_by_ensemble)
         data_structure.set_coord("pseudo_trials_idx", coord_pseudo_trials)
 
-        # Build trial-related coordinates
+        # Build trial coordinates indicating experimental factors
         builder_trials_coords = TrialCoordsBuilder(counts_by_condition, order_conditions)
         for name, coord_type in self.config.coords_trials.items():
             coord = builder_trials_coords.build(coord_type=coord_type)
             data_structure.set_coord(name, coord)
 
         # Create core data values (firing rates)
+
+        # Build time coordinate if needed

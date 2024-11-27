@@ -8,9 +8,8 @@ Classes representing the experimental conditions of the behavioral paradigm.
 Classes
 -------
 ExpCondition
-ExpCondition
 """
-from typing import FrozenSet, Mapping, Type, List, Iterable
+from typing import FrozenSet, Mapping, Type, Iterable
 from itertools import product
 
 from core.attributes.exp_factors import ExpFactor
@@ -49,8 +48,6 @@ class ExpCondition(AttributeSet):
     new behavior of this class restricts the attributes in th set to the *experimental* factors
     only.
 
-    Notes
-    -----
     This base class can be instantiated to flexibly define arbitrary experimental conditions.
     Alternatively, it can be inherited to define specific experimental conditions for a given
     pipeline, by enforcing the required factors in the subclass.
@@ -133,7 +130,7 @@ class ExpCondition(AttributeSet):
 
         Returns
         -------
-        exp_conds : List[ExpCondition]
+        exp_conditions : AttributeSetUnion[ExpCondition]
             Experimental conditions generated from the Cartesian product of the selected factor
             instances.
 
@@ -142,12 +139,12 @@ class ExpCondition(AttributeSet):
         Generate all possible conditions for two tasks, a fixed attentional state, two stimuli and
         both behaviors:
 
-        >>> exp_conds = ExpCondition.combine_factors(
+        >>> exp_conditions = ExpCondition.combine_factors(
         ...     tasks=[Task("PTD"), Task("CLK")],
         ...     attentions=Attention("a"),
         ...     categories=[Category("R"), Category("T")],
         ... )
-        >>> exp_conds
+        >>> exp_conditions
         [ExpCondition(task=PTD, attention=a, category=R),
          ExpCondition(task=PTD, attention=a, category=T),
          ExpCondition(task=CLK, attention=a, category=R),
@@ -180,7 +177,7 @@ class ExpCondition(AttributeSet):
 
         Returns
         -------
-        exp_conditions : ExpConditionUnion
+        exp_conditions : AttributeSetUnion[ExpCondition]
             All the valid experimental conditions for the pipeline.
         """
         factors = list(cls.REQUIRED_FACTORS.values())
