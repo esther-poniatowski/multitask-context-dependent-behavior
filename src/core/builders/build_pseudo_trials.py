@@ -27,8 +27,8 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
 
     The output coordinate contains the trial indices of the trials to select for each unit in one
     ensemble, for each fold and condition.
-    Shape: ``(n_units, k, n_pseudo)``, with ``n_pseudo`` the total number of pseudo-trials formed
-    across the experimental conditions of interest.
+    Shape: ``(n_units, n_folds, n_pseudo)``, with ``n_pseudo`` the total number of pseudo-trials
+    formed across the experimental conditions of interest.
 
     The inputs required to perform this operation include, for each unit in the population, the set
     of coordinates which jointly specify the experimental condition and fold to which each trial
@@ -82,14 +82,14 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
 
     def __init__(
         self,
-        k: int,
+        n_folds: int,
         counts_by_condition: Dict[ExpCondition, int],
         order_conditions: Iterable[ExpCondition],
     ) -> None:
         # Call the base class constructor: declare empty product and internal data
         super().__init__()
         # Store configuration parameters
-        self.k = k
+        self.n_folds = n_folds
         self.counts_by_condition = counts_by_condition
         self.order_conditions = order_conditions
 
@@ -129,11 +129,11 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
         # Initialize the coordinate for the pseudo-trials
         n_units = len(features_by_unit)
         n_pseudo_tot = sum(self.counts_by_condition.values())  # across conditions
-        pseudo_trials = CoordPseudoTrialsIdx.from_shape((n_units, self.k, n_pseudo_tot))
+        pseudo_trials = CoordPseudoTrialsIdx.from_shape((n_units, self.n_folds, n_pseudo_tot))
         # Add the fold labels as features for each unit
         strata = [feat.add_coord(fold) for feat, fold in zip(features_by_unit, folds_by_unit)]
         # Bootstrap by fold and condition
-        for fold in range(self.k):
+        for fold in range(self.n_folds):
             pseudo_trials_by_cond = []
             for exp_cond in self.order_conditions:
                 n_pseudo = self.counts_by_condition[exp_cond]
@@ -282,7 +282,7 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
         -------
         pseudo_trials : CoordPseudoTrialsIdx
             Coordinate for the pseudo-trials of all the ensembles.
-            Shape: ``(n_ensembles, n_units, k, n_pseudo)``.
+            Shape: ``(n_ensembles, n_units, n_folds, n_pseudo)``.
 
         Raises
         ------

@@ -40,7 +40,7 @@ class FoldsBuilder(Builder[CoordFolds]):
 
     Attributes
     ----------
-    k : int
+    n_folds : int
         Number of folds for cross-validation.
     order_conditions : Iterable[ExpCondition, ...]
         Order in which to concatenate the pseudo-trials for each condition in the output coordinate.
@@ -63,13 +63,13 @@ class FoldsBuilder(Builder[CoordFolds]):
 
     def __init__(
         self,
-        k: int,
+        n_folds: int,
         order_conditions: Iterable[ExpCondition],
     ) -> None:
         # Call the base class constructor: declare empty product and internal data
         super().__init__()
         # Store configuration parameters
-        self.k = k
+        self.n_folds = n_folds
         self.order_conditions = order_conditions
 
     def build(
@@ -98,7 +98,7 @@ class FoldsBuilder(Builder[CoordFolds]):
         n_trials = features.n_samples
         folds_labels = CoordFolds.from_shape((n_trials,))
         # Build folds by condition
-        assigner = FoldAssigner(k=self.k)
+        assigner = FoldAssigner(n_folds=self.n_folds)
         for exp_cond in self.order_conditions:  # ensure correct order
             idx = features.match_idx(exp_cond)  # indices of the trials in the condition
             n_samples = len(idx)  # counts for FoldAssigner

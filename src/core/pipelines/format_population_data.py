@@ -57,7 +57,7 @@ class FormatPopulationData(Pipeline):
         exp_cond_type: PipelineCondition,
         ensemble_size: int | None = None,  # all units in the population
         n_ensembles_max: int = 1,  # only one pseudo-population
-        k: int = N_FOLDS,
+        n_folds: int = N_FOLDS,
         n_min: int = N_TRIALS_MIN,
         thres_perc: float = BOOTSTRAP_THRES_PERC,
         coords_trials: Dict[str, Type[CoordExpFactor]] | None = None,
@@ -71,7 +71,7 @@ class FormatPopulationData(Pipeline):
         self.ensemble_size = ensemble_size
         self.n_ensembles_max = n_ensembles_max
         self.coords_trials = coords_trials if coords_trials is not None else {}
-        self.k = k
+        self.n_folds = n_folds
         self.n_min = n_min
         self.thres_perc = thres_perc
 
@@ -117,7 +117,7 @@ class FormatPopulationData(Pipeline):
         )
         counts_actual.fill(counter.process)
         # Determine the number of trials to form in each condition based on the actual counts
-        sizer = SampleSizer(k=self.k, n_min=self.n_min, thres_perc=self.thres_perc)
+        sizer = SampleSizer(n_folds=self.n_folds, n_min=self.n_min, thres_perc=self.thres_perc)
         counts_final = counts_actual.apply(sizer.process)
         # Exclude units with insufficient trials in any condition
         for cond, n_min in counts_final.items():
@@ -137,8 +137,10 @@ class FormatPopulationData(Pipeline):
         # Configure builders with shared parameters
         order_conditions = self.exp_conds.to_list()
         counts_by_condition = counts_final.to_dict()
-        builder_folds = FoldsBuilder(self.k, order_conditions)
-        builder_pseudo_trials = PseudoTrialsBuilder(self.k, counts_by_condition, order_conditions)
+        builder_folds = FoldsBuilder(self.n_folds, order_conditions)
+        builder_pseudo_trials = PseudoTrialsBuilder(
+            self.n_folds, counts_by_condition, order_conditions
+        )
         # Build folds and pseudo-trials by ensemble
         for ens, ensemble in ensembles.items():
             # Build folds for each unit
