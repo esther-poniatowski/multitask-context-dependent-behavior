@@ -52,23 +52,18 @@ class FiringRatesConverter(Processor):
 
     Examples
     --------
-    Consider spiking times recorded during in two periods of 1 second duration, first homogeneously
-    distributed every 0.1 s, and then every 0.2 s:
+    Consider spiking times recorded during in a period of 1 second duration, homogeneously
+    distributed every 0.1 s:
 
-    >>> spikes_1 = np.arange(0, 1, 0.1)
+    >>> spikes = np.arange(0, 1, 0.1)
     [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-    >>> spikes_2 = np.arange(0, 1, 0.2)
-    [0.0, 0.2, 0.4, 0.6, 0.8]
 
-    The firing rate is expected to be 10 Hz in the first period and 5 Hz in the second period.
+    The firing rate is expected to be 10 Hz:
 
     >>> converter = FiringRatesConverter(t_bin=0.1, t_max=1.0, smooth_window=0.5)
-    >>> f_rates = converter.process(spikes=spikes1)
+    >>> f_rates = converter.process(spikes)
     >>> print(f_rates)
     [0. 1. 1. 1. 1. 1. 1. 1. 1. 1.]
-    >>> f_rates_2 = converter.process(spikes=spikes_2)
-    >>> print(f_rates_2)
-    [0. 0. 1. 0. 1. 0. 1. 0. 1. 0.]
 
     See Also
     --------
@@ -82,6 +77,7 @@ class FiringRatesConverter(Processor):
         smooth_window: float = 0.5,
         mode: str = "valid",
     ):
+        assert t_max is not None
         self.t_bin = t_bin
         self.t_max = t_max
         self.smooth_window = smooth_window
@@ -115,37 +111,49 @@ class FiringRatesConverter(Processor):
         Implement the abstract method of the base class `Processor`.
 
         Arguments
-        --------------------
+        ---------
         spikes: SpikingTimes
-            Spiking times. Shape: ``(n_spikes,)``
+            Spiking times in seconds, relative to time ``t=0``.
+            Shape: ``(n_spikes,)``
+            .. _spikes:
 
         Returns
         -------
         f_rates: FiringRates
-            Firing rate time course (in spikes/s), obtained in two steps:
-            1. Binning the spikes.
-            2. Smoothing the binned rates.
+            Firing rate time course in spikes/s.
             Shape: ``(n_t_smth,)`` (see attribute `n_t_smth`).
+
+        Notes
+        -----
+        The conversion to firing rates consists of two steps:
+
+        1. Binning the spikes.
+        2. Smoothing the binned rates.
         """
         spikes = input_data["spikes"]
-        f_binned = self.spikes_to_rates(spikes)
-        f_smooth = self.smooth(f_binned)
+        f_binned = self.spikes_to_rates(spikes, self.t_max, self.t_bin)
+        f_smooth = self.smooth(f_binned, self.t_bin, self.smooth_window, self.mode)
         return f_smooth
 
-    def spikes_to_rates(self, spikes: SpikingTimes) -> FiringRates:
+    @staticmethod
+    def spikes_to_rates(spikes: SpikingTimes, t_max: float, t_bin: float) -> FiringRates:
         """
-        Convert a spike train into a firing rate time course.
+        Convert a spikes train into a firing rate time course.
 
         Arguments
         ---------
-        spikes: SpikingTimes
-            See the argument :ref:`spikes`.
+        spikes : SpikingTimes
+            See the argument :ref:`spikes` in the `process` method.
+        t_max : float
+            Duration of the recording period (in seconds).
+        t_bin : float
+            Time bin of the firing rate time course (in seconds).
 
         Returns
         -------
-        f_binned: FiringRates
-            Firing rate time course (in spikes/s), obtained by binning the spikes.
-            Shape: ``(n_t,)`` (see :attr:`FiringRatesConverter.n_t`).
+        f_binned : FiringRates
+            Firing rate time course in spikes/s, obtained by binning the spikes.
+            Shape: ``(n_t,)``, with ``n_t = t_max / t_bin`` the number of time bins.
             .. _f_binned:
 
         Implementation
@@ -165,43 +173,52 @@ class FiringRatesConverter(Processor):
             of each bin, so the last bin edge should be included in this sequence. Outputs: ``hist``
             (number of spikes in each bin), ``edges`` (useless here).
         """
-        hist, _ = np.histogram(spikes, bins=np.arange(0, self.t_max + self.t_bin, self.t_bin))
-        f_binned = hist / self.t_bin
+        hist, _ = np.histogram(spikes, bins=np.arange(0, t_max + t_bin, t_bin))
+        f_binned = hist / t_bin
         return f_binned
 
-    def smooth(self, f_binned: FiringRates) -> FiringRates:
+    @staticmethod
+    def smooth(f_binned: FiringRates, t_bin: float, smooth_window: float, mode: str) -> FiringRates:
         """
         Smooth the firing rates across time.
 
         Arguments
         ---------
-        f_binned: FiringRates
+        f_binned : FiringRates
             See the return value :ref:`f_binned`.
+        t_bin : float
+            Time bin of the firing rate time course (in seconds).
+        smooth_window : float
+            Size of the smoothing window (in seconds).
+        mode : str
+            Convolution mode for smoothing. Options: ``'valid'`` (default), ``'same'``.
+            See the Notes section.
 
         Returns
         -------
-        f_smoothed: FiringRates
-            Smoothed firing rate time course (in spikes/s).
-            Shape: ``(n_t_smth,)`` (see the attribute `n_t_smth`).
+        f_smoothed : FiringRates
+            Smoothed firing rate time course in spikes/s.
+            Shape: ``(n_t_smth,)``, with ``n_t_smth`` the number of time bins in the smoothed time
+            course. The number of time bins depends on the convolution mode.
             .. _f_smoothed:
 
         Notes
         -----
         Convolution Modes:
 
-        - ``'same'``: Keep the same output shape as the input sequence. The kernel is centered on
-          each input element, with zero-padding applied to the edges of the input signal as needed.
-        - ``'valid'``: Keep only the values which are not influenced by zero-padding, i.e. where the
-          kernel fully overlaps with the input signal. The first valid position is when the kernel's
-          left edge aligns with the input's left edge. The last valid position is when the kernel's
-          right edge aligns with the input's right edge.
-
-        Corresponding output shape:
-
-        - ``'same'``:  ``n_out = n_in``. Here: ``n_t_smth = n_t``.
-        - ``'valid'``:  ``n_out = n_in - k + 1``, where ``k`` is the kernel size. Indeed, `k - 1`
-          positions have to be subtracted since the kernel cannot fit within the signal when it is
-          placed on the last `k + 1` positions. Here: ``n_t_smth = n_t - smooth_window/t_bin + 1``.
+        - ``'same'``:
+            - Keep the same output shape as the input sequence. The kernel is centered on each input
+              element, with zero-padding applied to the edges of the input signal as needed.
+            - Output shape: ``n_out = n_in``. Here: ``n_t_smth = n_t``.
+        - ``'valid'``:
+            - Keep only the values which are not influenced by zero-padding, i.e. where the kernel
+              fully overlaps with the input signal. The first valid position is obtained when the
+              kernel's left edge aligns with the input's left edge. The last valid position is
+              obtained when the kernel's right edge aligns with the input's right edge.
+            - Output shape: ``n_out = n_in - k + 1``, where ``k`` is the kernel size. Indeed, `k -
+              1` positions have to be subtracted since the kernel cannot fit within the signal when
+              it is placed on the last `k + 1` positions.
+              Here: ``n_t_smth = n_t - smooth_window/t_bin + 1``.
 
         Implementation
         --------------
@@ -221,6 +238,6 @@ class FiringRatesConverter(Processor):
         :func:`scipy.signal.fftconvolve(arr, kernel, mode, axes)`
             Convolve the firing rate time course with kernel.
         """
-        kernel = np.ones(int(self.smooth_window / self.t_bin))  # boxcar kernel
-        f_smoothed = fftconvolve(f_binned, kernel, mode=self.mode, axes=0) / len(kernel)
+        kernel = np.ones(int(smooth_window / t_bin))  # boxcar kernel
+        f_smoothed = fftconvolve(f_binned, kernel, mode=mode, axes=0) / len(kernel)
         return f_smoothed
