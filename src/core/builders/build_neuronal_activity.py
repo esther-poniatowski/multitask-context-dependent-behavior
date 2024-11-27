@@ -22,15 +22,16 @@ from typing import List, Dict
 
 import numpy as np
 
-from core.builders.base_builder import CoreDataStructureBuilder
+from core.builders.base_builder import Builder
 from core.coordinates.time_coord import CoordTime
 from core.data_structures.core_data import CoreData
 from core.data_structures.spike_times_raw import SpikeTimesRaw
+from core.coordinates.trial_analysis_label_coord import CoordPseudoTrialsIdx
 
 
-class FiringRatesBuilder(CoreDataStructureBuilder):
+class FiringRatesBuilder(Builder[CoreData]):
     """
-    Build the firing rate activity of a pseudo-population of units in selected pseudo-trials.
+    Build the firing rate activity of units in selected pseudo-trials.
 
     Product: `CoreData`
 
@@ -51,50 +52,45 @@ class FiringRatesBuilder(CoreDataStructureBuilder):
 
     def __init__(
         self,
-        ensemble_size: int,
-        n_ensembles_max: int,
-        n_folds: int,
-        counts_by_condition: Dict[str, int],
     ) -> None:
         # Call the base class constructor: declare empty product and internal data
         super().__init__()
         # Store configuration parameters
-        self.ensemble_size = ensemble_size
-        self.n_ensembles_max = n_ensembles_max
-        self.n_folds = n_folds
-        self.counts_by_condition = counts_by_condition
 
-    def build(self, spikes_per_unit: List[SpikeTimesRaw] | None = None, **kwargs) -> CoreData:
+    def build(
+        self,
+        spikes: SpikeTimesRaw | None = None,
+        pseudo_trials_idx: CoordPseudoTrialsIdx | None = None,
+        **kwargs
+    ) -> CoreData:
         """
         Implement the base class method.
 
         Parameters
         ----------
-        spikes_per_unit : List[SpikeTimesRaw]
-            Spiking times of the units in the pseudo-population.
+        spikes : SpikeTimesRaw
+            Spiking times of one unit in the pseudo-population.
+        pseudo_trials_idx : CoordPseudoTrialsIdx
+            Coordinate of the pseudo-trials indices.
+            Shape: ``(n_folds, n_pseudo)``.
 
         Returns
         -------
         product : CoreData
             Firing rates of the pseudo-population in pseudo-trials, i.e. actual values to analyze.
         """
-        assert spikes_per_unit is not None
-        # Preliminary set up
+        assert spikes is not None
+        assert pseudo_trials_idx is not None
         # Initialize the data structure
-        self.initialize_data(n_ensembles, ensemble_size, n_folds, n_trials, n_t)
+        n_folds, n_pseudo = pseudo_trials_idx.shape
+        shape = (n_folds, n_pseudo)
+        data = CoreData.from_shape(shape, dims=("folds", "trials"))
+        # Fill the data structure
+
         # Add core data values to the data structure
-        data = self.construct_core_data()
+        product = self.construct_core_data()
         return self.get_product()
 
-    # --- Shape and Dimensions ---------------------------------------------------------------------
-
-    @property
-    def n_trials(self) -> int:
-        return sum(self.counts_by_condition.values())
-
-    @staticmethod
-    def build_for_condition():
-        pass
 
     # --- Construct Core Data ----------------------------------------------------------------------
 
@@ -227,8 +223,9 @@ class FiringRatesBuilder(CoreDataStructureBuilder):
             rates = self.data_per_unit[u_pop].data[idx_init[u_ens]]
             np.put_along_axis(data[ens, u_ens, fold], idx_final[:, None], rates, axis=0)
 
-    # --- Construct Coordinates --------------------------------------------------------------------
 
+class TimeCoordBuilder(CoordTime):
+    """
     def construct_time_coord(self) -> CoordTime:
         """
         Construct the time coordinate, if all the units share the same time axis.

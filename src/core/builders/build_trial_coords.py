@@ -10,12 +10,12 @@ Classes
 from typing import Type, Dict, Iterable, Tuple
 from functools import cached_property
 
-from core.builders.base_builder import CoordinateBuilder
+from core.builders.base_builder import Builder
 from core.coordinates.exp_factor_coord import CoordExpFactor
 from core.composites.exp_conditions import ExpCondition
 
 
-class TrialCoordsBuilder(CoordinateBuilder[CoordExpFactor]):
+class TrialCoordsBuilder(Builder[CoordExpFactor]):
     """
     Build coordinates for experimental factors.
 
