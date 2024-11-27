@@ -27,7 +27,7 @@ from core.composites.candidates import Candidates
 from core.coordinates.exp_factor_coord import CoordExpFactor
 from core.coordinates.trial_analysis_label_coord import CoordPseudoTrialsIdx
 from core.builders.build_ensembles import EnsemblesBuilder
-from builders.build_exp_factor_coords import ExpFactorCoordBuilder
+from core.builders.build_exp_factor_coord import ExpFactorCoordBuilder
 from core.builders.build_folds import FoldsBuilder
 from core.builders.build_pseudo_trials import PseudoTrialsBuilder
 from core.data_structures.firing_rates_pop import FiringRatesPop
