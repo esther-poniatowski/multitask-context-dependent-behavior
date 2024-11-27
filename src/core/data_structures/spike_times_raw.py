@@ -8,7 +8,7 @@ from types import MappingProxyType
 import numpy as np
 
 from core.constants import SMPL_RATE
-from core.coordinates.exp_structure_coord import CoordBlock
+from core.coordinates.exp_structure_coord import CoordRecNum, CoordBlock, CoordSlot
 from core.data_structures.base_data_struct import DataStructure
 from core.data_structures.core_data import Dimensions, CoreData
 
@@ -19,7 +19,7 @@ class SpikeTimesRaw(DataStructure):
 
     Key Features
     ------------
-    Dimensions : ``spikes``
+    Dimensions: ``spikes``
 
     Coordinates: ``block``
 
@@ -86,7 +86,7 @@ class SpikeTimesRaw(DataStructure):
         self.session_id = session_id
         self.smpl_rate = smpl_rate
         # Set data and coordinate attributes via the base class constructor
-        coords = {"block": block} if block is not None else {}
+        coords = {"block": block}
         super().__init__(data=data, **coords)
 
     def __repr__(self) -> str:
@@ -164,3 +164,84 @@ class SpikeTimesRaw(DataStructure):
         # Filled with new data (base class methods)
         self.set_data(data)
         self.set_coord("block", block)
+
+
+class SpikeTrains(DataStructure):
+    """
+    Spike trains for one unit across all the recording of the experiment.
+
+    Key Features
+    ------------
+    Dimensions: ``spikes``
+
+    Coordinates: Positional information allowing to locate the spikes in the full experiment.
+
+    - ``recnum``: Recording number.
+    - ``block``: Block of trials in which each spike occurred within the recording.
+    - ``slot``: Slot of trials in which each spike occurred within the block.
+
+    Identity Metadata: ``unit_id``
+
+    Descriptive Metadata: ``smpl_rate``
+
+    Attributes
+    ----------
+    data : CoreData
+        Spiking times for the unit in the experiment (in seconds).
+        Times are reset at 0 in each block.
+    recnum : np.ndarray
+        Recording number in which each spike occurred.
+    block : np.ndarray
+        Block of trials in which each spike occurred within the recording.
+    slot : np.ndarray
+        Slot of trials in which each spike occurred within the block.
+    unit_id : str
+        Unit's identifier.
+    smpl_rate : float, default=`core.constants.SMPL_RATE`
+        Sampling time for the recording (in seconds).
+
+    See Also
+    --------
+    `core.coordinates.exp_structure.CoordRecording`
+    `core.coordinates.exp_structure.CoordBlock`
+    `core.coordinates.exp_structure.CoordSlot`
+    """
+
+    # --- Schema Attributes ---
+    dims = Dimensions("spikes")
+    coords = MappingProxyType(
+        {
+            "recnum": CoordRecNum,
+            "block": CoordBlock,
+            "slot": CoordSlot,
+        }
+    )
+    coords_to_dims = MappingProxyType(
+        {
+            "recnum": Dimensions("spikes"),
+            "block": Dimensions("spikes"),
+            "slot": Dimensions("spikes"),
+        }
+    )
+    identifiers = ("unit_id",)
+
+    # --- Key Features -----------------------------------------------------------------------------
+
+    def __init__(
+        self,
+        unit_id: str,
+        smpl_rate: float = SMPL_RATE,
+        data: CoreData | None = None,
+        recnum: CoordRecNum | None = None,
+        block: CoordBlock | None = None,
+        slot: CoordSlot | None = None,
+    ) -> None:
+        # Set sub-class specific metadata
+        self.unit_id = unit_id
+        self.smpl_rate = smpl_rate
+        # Set data and coordinate attributes via the base class constructor
+        coords = {"recnum": recnum, "block": block, "slot": slot}
+        super().__init__(data=data, **coords)
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}>: Unit {self.unit_id}\n" + super().__repr__()
