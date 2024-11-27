@@ -14,7 +14,7 @@ from typing import FrozenSet, Mapping, Type, List, Iterable
 from itertools import product
 
 from core.attributes.exp_factors import ExpFactor
-from core.composites.attribute_set import AttributeSet
+from core.composites.attribute_set import AttributeSet, AttributeSetUnion
 
 
 class ExpCondition(AttributeSet):
@@ -121,7 +121,7 @@ class ExpCondition(AttributeSet):
         super().__init__(*factors)  # parent class: `AttributeSet`
 
     @staticmethod
-    def combine(*factors: Iterable[ExpFactor] | ExpFactor) -> List["ExpCondition"]:
+    def combine(*factors: Iterable[ExpFactor] | ExpFactor) -> AttributeSetUnion["ExpCondition"]:
         """
         Generate experimental conditions by combining a set of experimental factors.
 
@@ -170,10 +170,11 @@ class ExpCondition(AttributeSet):
         # Generate all combinations of the provided factors
         combinations = product(*sequences)  # List[Tuple[ExpFactor, ...]]
         # Create a list of ExpCondition instances from the combinations
-        return [ExpCondition(*comb) for comb in combinations]
+        instances = [ExpCondition(*comb) for comb in combinations]
+        return AttributeSetUnion(*instances)
 
     @classmethod
-    def generate(cls) -> List["ExpCondition"]:
+    def generate(cls) -> AttributeSetUnion["ExpCondition"]:
         """
         Generate all the valid experimental conditions based on the required factors.
 

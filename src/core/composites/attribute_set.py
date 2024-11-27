@@ -10,10 +10,14 @@ Classes
 AttributeSet
 AttributeSetUnion
 """
-from typing import Self, List, Type
+from typing import Self, List, Type, TypeVar, Generic, Iterator
 
 from core.attributes.base_attribute import Attribute
 from core.composites.base_container import Container
+
+
+AnySet = TypeVar("AnySet", bound="AttributeSet")
+"""Type variable for the type of attribute set stored in the union."""
 
 
 class AttributeSet(Container[Type[Attribute], Attribute]):
@@ -44,6 +48,7 @@ class AttributeSet(Container[Type[Attribute], Attribute]):
     get (inherited from `UserDict`, see in "See Also")
     __iter__
     __add__
+    union
 
     Warning
     -------
@@ -56,13 +61,13 @@ class AttributeSet(Container[Type[Attribute], Attribute]):
     --------
     Initialize a set with three experimental factors:
 
-    >>> set = AttributeSet(Task('PTD'), Category('R'), Behavior('Go'))
-    >>> set
+    >>> attributes = AttributeSet(Task('PTD'), Category('R'), Behavior('Go'))
+    >>> attributes
     AttributeSet(Behavior('Go'), Category('R'), Task('PTD'))
 
     Retrieve the value of the `Task` attribute stored in the set:
 
-    >>> set.get(Task)
+    >>> attributes.get(Task)
     Task('PTD')
 
     See Also
@@ -96,6 +101,13 @@ class AttributeSet(Container[Type[Attribute], Attribute]):
         ---------
         value : Attribute
             Attribute instance to set in the set.
+
+        Examples
+        --------
+        >>> attributes = AttributeSet(Task('PTD'), Category('R'))
+        >>> attributes.set(Behavior('Go'))
+        >>> attributes
+        AttributeSet(Behavior('Go'), Category('R'), Task('PTD'))
         """
         key = value.__class__
         self[key] = value
@@ -112,12 +124,19 @@ class AttributeSet(Container[Type[Attribute], Attribute]):
         -------
         AttributeSet
             New instance of the set with the additional attribute.
+
+        Examples
+        --------
+        >>> attributes = AttributeSet(Task('PTD'), Category('R'))
+        >>> new_set = attributes.add(Behavior('Go'))
+        >>> new_set
+        AttributeSet(Behavior('Go'), Category('R'), Task('PTD'))
         """
         new_set = self.copy()
         new_set.set(value)
         return new_set
 
-    def __add__(self, other: Self) -> "AttributeSetUnion":
+    def __add__(self: AnySet, other: AnySet) -> "AttributeSetUnion[AnySet]":
         """
         Combine two sets of attributes into a union of sets of attributes.
 
@@ -126,18 +145,48 @@ class AttributeSet(Container[Type[Attribute], Attribute]):
 
         Examples
         --------
-        >>> stratum_1 = AttributeSet(Task('PTD'), Attention('a'))
-        >>> stratum_2 = AttributeSet(Task('CLK'), Attention('p'))
-        >>> union = stratum_1 + stratum_2
+        >>> set1 = AttributeSet(Task('PTD'), Attention('a'))
+        >>> set_2 = AttributeSet(Task('CLK'), Attention('p'))
+        >>> union = set_1 + set_2
         >>> union.to_list()
         [AttributeSet(Task('PTD'), Attention('a')), AttributeSet(Task('CLK'), Attention('p'))]
         """
-        return AttributeSetUnion(self, other)
+        return self.union(self, other)
+
+    @classmethod
+    def union(cls: Type[AnySet], *sets: AnySet) -> "AttributeSetUnion[AnySet]":
+        """
+        Combine multiple sets of attributes into a union of sets of attributes.
+
+        Arguments
+        ---------
+        *sets : AttributeSet
+            Arbitrary number of sets of attributes to combine.
+
+        Returns
+        -------
+        AttributeSetUnion
+            Union of the provided sets of attributes.
+
+        Examples
+        --------
+        >>> set_1 = AttributeSet(Task('PTD'), Attention('a'))
+        >>> set_2 = AttributeSet(Task('CLK'), Attention('p'))
+        >>> set_3 = AttributeSet(Category('R'), Behavior('Go'))
+        >>> union = AttributeSet.union(set_1, set_2, set_3)
+        >>> union.to_list()
+        [AttributeSet(Task('PTD'), Attention('a')),
+         AttributeSet(Task('CLK'), Attention('p')),
+         AttributeSet(Category('R'), Behavior('Go'))]
+        """
+        return AttributeSetUnion(*sets)
 
 
-class AttributeSetUnion:
+class AttributeSetUnion(Generic[AnySet]):
     """
     Union of sets of attributes, behaving like a list of sets.
+
+    Generic class which works with any subclass of `AttributeSet`.
 
     Attributes
     ----------
@@ -166,18 +215,25 @@ class AttributeSetUnion:
      AttributeSet(Category('R'), Behavior('Go'))]
     """
 
-    def __init__(self, *attribute_sets: AttributeSet) -> None:
-        for attr_set in attribute_sets:
+    def __init__(self, *sets: AnySet) -> None:
+        for attr_set in sets:
             if not isinstance(attr_set, AttributeSet):
                 raise TypeError(
                     f"Invalid argument for AttributeSetUnion: {attr_set} not AttributeSet"
                 )
-        self.sets = list(attribute_sets)
+        self.sets: List[AnySet] = list(sets)
 
-    def to_list(self) -> List[AttributeSet]:
+    def to_list(self) -> List[AnySet]:
         """Get the list of sets of attributes in the union."""
         return self.sets
 
-    def __iter__(self):
-        """Iterate over the sets of attributes in the union, providing each set one by one."""
+    def __iter__(self) -> Iterator[AnySet]:
+        """
+        Iterate over the sets of attributes in the union, providing each set one by one.
+
+        Returns
+        -------
+        Iterator[AttributeSet]
+            Iterator over the sets of attributes in the union.
+        """
         return iter(self.sets)
