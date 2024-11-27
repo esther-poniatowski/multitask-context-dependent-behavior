@@ -5,7 +5,7 @@
 
 Classes
 -------
-`EnsembleAssigner`
+EnsembleAssigner
 
 Notes
 -----
@@ -76,7 +76,8 @@ class EnsembleAssigner(Processor):
 
     @set_random_state
     def process(self, n_units: int | None = None, **kwargs) -> Ensembles:
-        """Implement the template method called in the base class `process` method.
+        """
+        Implement the abstract method of the base class `Processor`.
 
         Arguments
         ---------

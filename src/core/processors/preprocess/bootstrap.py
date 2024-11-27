@@ -5,7 +5,7 @@
 
 Classes
 -------
-`Bootstrapper`
+Bootstrapper
 
 Notes
 -----
@@ -100,7 +100,7 @@ class Bootstrapper(Processor):
     @set_random_state
     def process(self, counts: Counts | None = None, seed: int = 0, **kwargs) -> PseudoTrials:
         """
-        Implement the template method called in the base class `process` method.
+        Implement the abstract method called in the base class `process` method.
 
         Arguments
         ----------

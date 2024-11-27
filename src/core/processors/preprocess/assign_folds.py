@@ -100,7 +100,7 @@ class FoldAssigner(Processor):
         **kwargs,
     ) -> Union[FoldLabels, FoldMembers]:
         """
-        Implement the template method called in the base class `process` method.
+        Implement the abstract method of the base class `Processor`.
 
         Arguments
         ---------

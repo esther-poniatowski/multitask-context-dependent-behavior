@@ -5,7 +5,7 @@
 
 Classes
 -------
-`IndexMapper`
+IndexMapper
 """
 
 from typing import TypeAlias, Any, Tuple, List
@@ -61,7 +61,7 @@ class IndexMapper(Processor):
         **kwargs
     ) -> Indices:
         """
-        Implement the template method called in the base class `process` method.
+        Implement the abstract method of the base class `Processor`.
 
         Arguments
         ---------

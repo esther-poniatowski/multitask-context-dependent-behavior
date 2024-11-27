@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.processors.preprocess.convert_to_rates` [module]
+`core.processors.preprocess.convert_to_rates` [module]
 
 Classes
 -------
-`FiringRatesConverter`
+FiringRatesConverter
 """
-# Disable error codes for attributes which are not detected by the type checker:
-# (configuration and data attributes are initialized by the base class constructor)
-# mypy: disable-error-code="attr-defined"
-# pylint: disable=no-member
 
 from typing import TypeAlias, Any, Tuple, Optional
 
@@ -32,37 +28,22 @@ class FiringRatesConverter(Processor):
     """
     Convert raw spike times into firing rates.
 
-    Configuration Attributes
-    ------------------------
-    t_bin: float
+    Attributes
+    ----------
+    t_bin : float
         Time bin (in seconds).
-    t_max: float
+    t_max : float
         Duration of the recording period (in seconds).
-    smooth_window: float
+    smooth_window : float
         Size of the smoothing window (in seconds).
-    mode: str
+    mode : str
         Convolution mode for smoothing. Options: ``'valid'`` (default), ``'same'``.
-        See method `smooth` for details.
-    n_t: int
-        Number of time bins in the firing rate time course ``f_binned``: ``n_t = t_max/t_bin``.
-    n_t_smth: int
-        Number of time bins in the smoothed firing rate time course ``f_smoothed``, depending on the
-        convolution mode. See method `smooth` for details.
-
-    Processing Arguments
-    --------------------
-    spikes: SpikingTimes
-        Spiking times. Shape: ``(n_spikes,)``
-        .. _spikes:
-
-    Returns
-    -------
-    f_rates: FiringRates
-        Firing rate time course (in spikes/s), obtained in two steps:
-        1. Binning the spikes.
-        2. Smoothing the binned rates.
-        Shape: ``(n_t_smth,)`` (see attribute `n_t_smth`).
-        .. _f_rates:
+        See the `smooth` method.
+    n_t : int
+        (Property). Number of time bins in the firing rate time course ``f_binned``.
+    n_t_smth : int
+        (Property) Number of time bins in the smoothed firing rate time course ``f_smoothed``,
+        depending on the convolution mode. See the `smooth` method.
 
     Methods
     -------
@@ -72,13 +53,15 @@ class FiringRatesConverter(Processor):
     Examples
     --------
     Consider spiking times recorded during in two periods of 1 second duration, first homogeneously
-    distributed every 0.1 s, and then every 0.2 s. The firing rate is expected to be 10 Hz in the
-    first period and 5 Hz in the second period.
+    distributed every 0.1 s, and then every 0.2 s:
 
     >>> spikes_1 = np.arange(0, 1, 0.1)
     [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
     >>> spikes_2 = np.arange(0, 1, 0.2)
     [0.0, 0.2, 0.4, 0.6, 0.8]
+
+    The firing rate is expected to be 10 Hz in the first period and 5 Hz in the second period.
+
     >>> converter = FiringRatesConverter(t_bin=0.1, t_max=1.0, smooth_window=0.5)
     >>> f_rates = converter.process(spikes=spikes1)
     >>> print(f_rates)
@@ -89,11 +72,8 @@ class FiringRatesConverter(Processor):
 
     See Also
     --------
-    :class:`core.processors.preprocess.base_processor.Processor`
-        Base class for all processors: see class-level attributes and template methods.
+    `core.processors.preprocess.base_processor.Processor`
     """
-
-    IS_RANDOM = False
 
     def __init__(
         self,
@@ -102,10 +82,51 @@ class FiringRatesConverter(Processor):
         smooth_window: float = 0.5,
         mode: str = "valid",
     ):
-        super().__init__(t_bin=t_bin, t_max=t_max, smooth_window=smooth_window, mode=mode)
+        self.t_bin = t_bin
+        self.t_max = t_max
+        self.smooth_window = smooth_window
+        self.mode = mode
 
-    def _process(self, **input_data: Any) -> FiringRates:
-        """Implement the template method called in the base class `process` method."""
+    @property
+    def n_t(self) -> int:
+        """
+        Number of time bins in the recording period.
+
+        Rule: ``n_t = t_max / t_bin``. If the division is not exact, the result is rounded down.
+        """
+        return int(self.t_max / self.t_bin)
+
+    @property
+    def n_t_smth(self) -> int:
+        """
+        Number of time bins in the smoothed firing rate time course.
+
+        Rule: Depend on the convolution mode. See :meth:`smooth` for details.
+        """
+        if self.mode == "same":
+            return self.n_t
+        elif self.mode == "valid":
+            return self.n_t - int(self.smooth_window / self.t_bin) + 1
+        else:
+            raise ValueError(f"Invalid mode: {self.mode}")
+
+    def process(self, **input_data: Any) -> FiringRates:
+        """
+        Implement the abstract method of the base class `Processor`.
+
+        Arguments
+        --------------------
+        spikes: SpikingTimes
+            Spiking times. Shape: ``(n_spikes,)``
+
+        Returns
+        -------
+        f_rates: FiringRates
+            Firing rate time course (in spikes/s), obtained in two steps:
+            1. Binning the spikes.
+            2. Smoothing the binned rates.
+            Shape: ``(n_t_smth,)`` (see attribute `n_t_smth`).
+        """
         spikes = input_data["spikes"]
         f_binned = self.spikes_to_rates(spikes)
         f_smooth = self.smooth(f_binned)
@@ -203,26 +224,3 @@ class FiringRatesConverter(Processor):
         kernel = np.ones(int(self.smooth_window / self.t_bin))  # boxcar kernel
         f_smoothed = fftconvolve(f_binned, kernel, mode=self.mode, axes=0) / len(kernel)
         return f_smoothed
-
-    @property
-    def n_t(self) -> int:
-        """
-        Number of time bins in the recording period.
-
-        Rule: ``n_t = t_max/t_bin``. If the division is not exact, the result is rounded down.
-        """
-        return int(self.t_max / self.t_bin)
-
-    @property
-    def n_t_smth(self) -> int:
-        """
-        Number of time bins in the smoothed firing rate time course.
-
-        Rule: Depend on the convolution mode. See :meth:`smooth` for details.
-        """
-        if self.mode == "same":
-            return self.n_t
-        elif self.mode == "valid":
-            return self.n_t - int(self.smooth_window / self.t_bin) + 1
-        else:
-            raise ValueError(f"Invalid mode: {self.mode}")
