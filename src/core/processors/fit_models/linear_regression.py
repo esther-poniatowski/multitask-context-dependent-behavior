@@ -5,13 +5,14 @@
 
 Classes
 -------
-`LinearRegressionModel`
+LinearRegressionModel
 
 Notes
 -----
 The processor is not called `LinearRegression` to avoid confusion with the scikit-learn class.
 
 """
+# TODO: Update to match the new interface
 # Disable error codes for attributes which are not detected by the type checker:
 # (configuration and data attributes are initialized by the base class constructor)
 # mypy: disable-error-code="attr-defined"

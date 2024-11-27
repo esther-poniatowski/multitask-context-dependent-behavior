@@ -5,7 +5,7 @@
 
 Classes
 -------
-`SpikesAligner`
+SpikesAligner
 
 Notes
 -----
@@ -177,8 +177,9 @@ class SpikesAligner(Processor):
             raise ValueError(f"Invalid stimulus: {categ}")
         return input_data
 
-    def _process(self, **input_data: Any) -> SpikingTimes:
-        """Implement the template method called in the base class `process` method."""
+    def process(self, **input_data: Any) -> SpikingTimes:
+        """
+        Implement the abstract method of the base class `Processor`."""
         spikes = input_data["spikes"]
         task = input_data["task"]
         categ = input_data["categ"]

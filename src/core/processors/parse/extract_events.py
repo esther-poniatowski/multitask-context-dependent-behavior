@@ -342,6 +342,7 @@ class BlockManager:
             setattr(self.current_slot, "error", True)
 
 
+# TODO: Update to match the new interface
 class SessionParser(Processor):
     """
     Extract trials information from raw data relative to the events in one session.

@@ -5,7 +5,8 @@
 
 Classes
 -------
-`TrialsCounter`
+TrialsCounter
+SampleSizer
 """
 
 from typing import List, Any, TypeAlias, Tuple
@@ -38,6 +39,23 @@ class TrialsCounter(Processor):
 
     Examples
     --------
+    Consider a population of two units with two features (task, category):
+
+    >>> coord_task_1 = CoordTask(['PTD', 'PTD', 'CLK'])
+    >>> coord_categ_1 = CoordCategory(['T', 'T', 'R'])
+    >>> coord_task_2 = CoordTask(['CLK', 'CLK', 'PTD'])
+    >>> coord_categ_2 = CoordCategory(['R', 'R', 'T'])
+    >>> features_1 = CoordinateSet(coord_task_1, coord_categ_1)
+    >>> features_2 = CoordinateSet(coord_task_2, coord_categ_2)
+    >>> features_by_unit = [features_1, features_2]
+
+    Count the trials in a specific condition:
+
+    >>> exp_condition = ExpCondition(Task('PTD'), Category('T'))
+    >>> counter = TrialsCounter(features_by_unit)
+    >>> counts = counter.process(exp_condition)
+    >>> counts
+    array([2, 1])
 
     See Also
     --------
@@ -47,12 +65,13 @@ class TrialsCounter(Processor):
     def __init__(self, features_by_unit: List[CoordinateSet]):
         self.features_by_unit = features_by_unit
 
-    def process(self, exp_cond: ExpCondition | None = None, **kwargs) -> Counts:
-        """Implement the template method called in the base class `process` method.
+    def process(self, exp_condition: ExpCondition | None = None, **kwargs) -> Counts:
+        """
+        Implement the abstract method of the base class `Processor`.
 
         Arguments
         ---------
-        exp_cond : ExpCondition
+        exp_condition : ExpCondition
             Experimental condition of interest.
 
         Returns
@@ -61,14 +80,14 @@ class TrialsCounter(Processor):
             Number of trials available for each unit in the population for the specified condition.
             Shape: ``(n_units,)``.
         """
-        assert exp_cond is not None
-        counts = self.count_in_condition(features_by_unit=self.features_by_unit, exp_cond=exp_cond)
+        assert exp_condition is not None
+        counts = self.count_in_condition(self.features_by_unit, exp_condition)
         return counts
 
     # --- Processing Methods -----------------------------------------------------------------------
 
     def count_in_condition(
-        self, features_by_unit: List[CoordinateSet], exp_cond: ExpCondition
+        self, features_by_unit: List[CoordinateSet], exp_condition: ExpCondition
     ) -> Counts:
         """
         Count the number of trials available for each unit in the population.
@@ -77,8 +96,8 @@ class TrialsCounter(Processor):
         ---------
         features_by_unit : List[CoordinateSet]
             See the class attribute `features_by_unit`.
-        exp_cond : ExpCondition
-            See the method argument `exp_cond`.
+        exp_condition : ExpCondition
+            See the method argument `exp_condition`.
 
         Returns
         -------
@@ -88,7 +107,7 @@ class TrialsCounter(Processor):
         n_units = len(features_by_unit)
         counts = np.zeros(n_units, dtype=int)
         for i, coords in enumerate(features_by_unit):
-            counts[i] = coords.count(exp_cond)
+            counts[i] = coords.count(exp_condition)
         return counts
 
 
@@ -115,7 +134,7 @@ class SampleSizer(Processor):
 
     def process(self, counts: Counts | None = None, **kwargs) -> int:
         """
-        Implement the template method called in the base class `process` method.
+        Implement the abstract method of the base class `Processor`.
 
         Arguments
         ---------
