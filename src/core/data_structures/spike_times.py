@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.data_structures.raw_spk_times` [module]
+`core.data_structures.spike_times` [module]
 """
 from types import MappingProxyType
 
@@ -138,7 +138,6 @@ class SpikeTimesRaw(DataStructure):
 
             - ``raw[0]`` : Block of trials in which each spike occurred.
             - ``raw[1]`` : Spiking times.
-
 
         Notes
         -----
