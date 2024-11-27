@@ -23,12 +23,11 @@ from core.attributes.brain_info import Area, Training, Unit
 from core.composites.exp_conditions import ExpCondition
 from core.composites.coordinate_set import CoordinateSet
 from core.composites.base_container import Container
-from core.composites.containers_fixed import UnitsContainer, ExpCondContainer
 from core.composites.candidates import Candidates
 from core.coordinates.exp_factor_coord import CoordExpFactor
-from core.coordinates.trial_analysis_label_coord import CoordPseudoTrialsIdx, CoordFolds
+from core.coordinates.trial_analysis_label_coord import CoordPseudoTrialsIdx
 from core.builders.build_ensembles import EnsemblesBuilder
-from core.builders.build_trial_coords import TrialCoordsBuilder
+from builders.build_exp_factor_coords import ExpFactorCoordBuilder
 from core.builders.build_folds import FoldsBuilder
 from core.builders.build_pseudo_trials import PseudoTrialsBuilder
 from core.data_structures.firing_rates_pop import FiringRatesPop
@@ -99,7 +98,7 @@ class FormatPopulationInputs(PipelineInputs):
     area: Area
     training: Training
     units: List[Unit]
-    trials_properties: UnitsContainer[TrialsProperties]
+    trials_properties: Container[Unit, TrialsProperties]
 
 
 class FormatPopulation(Pipeline[FormatPopulationConfig, FormatPopulationInputs]):
@@ -175,7 +174,7 @@ class FormatPopulation(Pipeline[FormatPopulationConfig, FormatPopulationInputs])
         data_structure.set_coord("pseudo_trials_idx", coord_pseudo_trials)
 
         # Build trial coordinates indicating experimental factors
-        builder_trials_coords = TrialCoordsBuilder(counts_by_condition, order_conditions)
+        builder_trials_coords = ExpFactorCoordBuilder(counts_by_condition, order_conditions)
         for name, coord_type in self.config.coords_trials.items():
             coord = builder_trials_coords.build(coord_type=coord_type)
             data_structure.set_coord(name, coord)
