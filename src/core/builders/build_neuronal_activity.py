@@ -39,7 +39,7 @@ class FiringRatesBuilder(CoreDataStructureBuilder):
     ensemble_size : int
         Number of units required to form each ensemble (imposed by the area with the lowest number
         of units).
-    k : int
+    n_folds : int
         Number of folds for cross-validation.
 
 

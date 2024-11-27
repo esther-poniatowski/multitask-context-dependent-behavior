@@ -33,7 +33,7 @@ class EventsProperties(DataStructure):
     - ``t_end``
     - ``description``
 
-    Idattribute Metadata: ``session_id``
+    Identity Metadata: ``session_id``
 
     Attributes
     ----------

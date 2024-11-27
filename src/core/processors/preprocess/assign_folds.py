@@ -37,7 +37,7 @@ class FoldAssigner(Processor):
 
     Attributes
     ----------
-    k : int
+    n_folds : int
         Number of folds in which the samples will be divided.
 
     Methods
@@ -48,12 +48,12 @@ class FoldAssigner(Processor):
 
     Examples
     --------
-    Assign 10 samples to 3 folds:
+    Assign ``n=10`` samples to ``k=3`` folds:
 
     - ``n % k = 1`` array of size ``n // k + 1 = 4``.
     - ``k - (n % k) = 2`` arrays of size ``n // k = 3``.
 
-    >>> assigner = FoldAssigner(k=3)
+    >>> assigner = FoldAssigner(n_folds=3)
     >>> fold_members = assigner.process(n_samples=10)
     >>> fold_members
     [array([0, 1, 2, 3]), array([4, 5, 6]), array([7, 8, 9])]
@@ -67,8 +67,8 @@ class FoldAssigner(Processor):
         Base class for all processors: see class-level attributes and template methods.
     """
 
-    def __init__(self, k: int):
-        self.k = k
+    def __init__(self, n_folds: int):
+        self.n_folds = n_folds
 
     # --- Processing Methods -----------------------------------------------------------------------
 
@@ -122,7 +122,7 @@ class FoldAssigner(Processor):
             Fold labels assigned to each sample. Shape: ``(n_samples,)``.
         """
         assert n_samples is not None
-        fold_members = self.assign(n_samples, self.k)
+        fold_members = self.assign(n_samples, self.n_folds)
         if mode == "members":
             return fold_members
         elif mode == "labels":
@@ -132,7 +132,7 @@ class FoldAssigner(Processor):
 
     @staticmethod
     @set_random_state
-    def assign(n_samples: int, k: int, seed: int = 0) -> FoldMembers:
+    def assign(n_samples: int, n_folds: int, seed: int = 0) -> FoldMembers:
         """
         Assign each sample to one fold.
 
@@ -140,8 +140,8 @@ class FoldAssigner(Processor):
         ---------
         n_samples : int
             See the argument `n_samples` in the `process` method.
-        k : int
-            See the attribute `k`.
+        n_folds : int
+            See the attribute `n_folds`.
 
         Returns
         -------
@@ -153,7 +153,7 @@ class FoldAssigner(Processor):
         1. Extract the samples by strata.
         2. Within each strata, shuffle the samples to balance across folds the remaining variables
            have not been considered in stratification.
-        3. Within the considered strata, distribute the shuffled samples into k groups.
+        3. Within the considered strata, distribute the shuffled samples into n_folds groups.
         4. For each sample, associate the fold index based on the group to which it belongs.
 
         See Also
@@ -165,7 +165,7 @@ class FoldAssigner(Processor):
         """
         idx = np.arange(n_samples)  # indices of the samples
         np.random.shuffle(idx)  # shuffle samples before splitting
-        fold_members = np.array_split(idx, k)  # split samples into k groups
+        fold_members = np.array_split(idx, n_folds)  # split samples into n_folds groups
         return fold_members
 
     # --- Conversion Methods -----------------------------------------------------------------------
@@ -211,23 +211,23 @@ class FoldAssigner(Processor):
         return fold_labels
 
     @staticmethod
-    def eval_min_count(n_samples: int, k: int) -> int:
+    def eval_min_count(n_samples: int, n_folds: int) -> int:
         """
         Evaluate the minimum count of samples assigned to each fold based on the total number of
         samples. Useful to determine the number of pseudo-trials fo form.
 
-        Rule: `count_min = n_samples // k` (see the `assign` method).
+        Rule: `count_min = n_samples // n_folds` (see the `assign` method).
 
         Arguments
         ---------
         n_samples : int
             See the argument `n_samples` in the `process` method.
-        k : int
-            See the attribute `k`.
+        n_folds : int
+            See the attribute `n_folds`.
 
         Returns
         -------
         count : int
             Number of samples in each fold after assignment.
         """
-        return n_samples // k
+        return n_samples // n_folds
