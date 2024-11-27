@@ -40,10 +40,8 @@ Usage of the concrete builder:
 from abc import ABC, abstractmethod
 from typing import TypeVar, Generic, Type, Tuple, Optional
 
-import numpy as np
-
 from core.coordinates.base_coord import Coordinate
-from core.data_structures.core_data import CoreData, DimName
+from core.data_structures.core_data import CoreData
 from core.data_structures.base_data_struct import DataStructure
 
 
