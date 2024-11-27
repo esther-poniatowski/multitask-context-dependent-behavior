@@ -47,7 +47,7 @@ class SpikeTimesRaw(DataStructure):
 
     Methods
     -------
-    `get_block`
+    get_block
 
     Notes
     -----
