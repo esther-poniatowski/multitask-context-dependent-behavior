@@ -5,7 +5,7 @@
 
 Classes
 -------
-`TrialCoordsBuilder`
+ExpFactorCoordBuilder
 """
 from typing import Type, Dict, Iterable, Tuple
 from functools import cached_property
@@ -15,7 +15,7 @@ from core.coordinates.exp_factor_coord import CoordExpFactor
 from core.composites.exp_conditions import ExpCondition
 
 
-class TrialCoordsBuilder(Builder[CoordExpFactor]):
+class ExpFactorCoordBuilder(Builder[CoordExpFactor]):
     """
     Build coordinates for experimental factors.
 
@@ -46,7 +46,7 @@ class TrialCoordsBuilder(Builder[CoordExpFactor]):
     >>> exp_condition_2 = ExpCondition(task='CLK', attention='a')
     >>> counts_by_condition = {exp_condition_1: 3, exp_condition_2: 2}
     >>> order_conditions = (exp_condition_1, exp_condition_2)
-    >>> builder = TrialCoordsBuilder(counts_by_condition, order_conditions)
+    >>> builder = ExpFactorCoordBuilder(counts_by_condition, order_conditions)
     >>> builder.conditions_boundaries
     {ExpCondition(task='PTD', attention='a'): (0, 3),
      ExpCondition(task='CLK', attention='a'): (3, 5)}

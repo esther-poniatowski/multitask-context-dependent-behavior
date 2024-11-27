@@ -91,7 +91,6 @@ class FiringRatesBuilder(Builder[CoreData]):
         product = self.construct_core_data()
         return self.get_product()
 
-
     # --- Construct Core Data ----------------------------------------------------------------------
 
     @staticmethod
@@ -226,6 +225,9 @@ class FiringRatesBuilder(Builder[CoreData]):
 
 class TimeCoordBuilder(CoordTime):
     """
+    Build the time coordinate for the firing rates of the pseudo-population.
+    """
+
     def construct_time_coord(self) -> CoordTime:
         """
         Construct the time coordinate, if all the units share the same time axis.
