@@ -30,7 +30,7 @@ class FiringRatesPop(DataStructure):
     - ``category``  (dimension ``trials``)
     - ``time``  (dimension ``time``)
 
-    Idattribute Metadata: ``area``, ``training`
+    Identity Metadata: ``area``, ``training`
 
     Descriptive Metadata: ``with_error``
 

@@ -23,26 +23,26 @@ class SpikeTimesRaw(DataStructure):
 
     Coordinates: ``block``
 
-    Idattribute Metadata: ``unit_id``, ``session_id``
+    Identity Metadata: ``unit_id``, ``session_id``
 
     Descriptive Metadata: ``smpl_rate``
 
     Attributes
     ----------
-    data: CoreData
+    data : CoreData
         Spiking times for the unit in the session (in seconds).
         Times are reset at 0 in each block.
-    block: CoordBlock
+    block : CoordBlock
         Coordinate for the block of trials in which each spike occurred within the session.
         Ascending order, from 1 to the number of blocks in the session, with contiguous duplicates.
         Example: ``1111122223333...``
-    unit_id: str
+    unit_id : str
         Unit's identifier.
-    session_id: str
+    session_id : str
         Session's identifier.
-    smpl_rate: float, default=:obj:`core.constants.SMPL_RATE`
+    smpl_rate : float, default=`core.constants.SMPL_RATE`
         Sampling time for the recording (in seconds).
-    n_blocks: int
+    n_blocks : int
         (Property) Number of blocks in the session.
 
     Methods
@@ -109,7 +109,7 @@ class SpikeTimesRaw(DataStructure):
 
         Parameters
         ----------
-        block: int
+        block : int
             Block number, comprised between 1 and the total number of blocks.
 
         Returns
@@ -124,7 +124,7 @@ class SpikeTimesRaw(DataStructure):
         """
         return self.data[self.block == block]
 
-    def format(self, raw) -> None:
+    def format(self, raw: np.ndarray) -> None:
         """
         Retrieve data from a file and extract separately the spiking times and the blocks of trials.
 
@@ -159,7 +159,7 @@ class SpikeTimesRaw(DataStructure):
         if raw.ndim != 2 or raw.shape[0] != 2:
             raise ValueError(f"Invalid shape: {raw.shape}. Expected: (2, nspikes).")
         # Extract data
-        block = CoordBlock(values=raw[0].astype(np.int64))  # convert to integer
+        block = CoordBlock(values=raw[0].astype(int))  # convert to integer
         data = CoreData(raw[1])
         # Filled with new data (base class methods)
         self.set_data(data)

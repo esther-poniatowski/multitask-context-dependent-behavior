@@ -25,7 +25,7 @@ Each data structure object encapsulates :
 
 - Schema metadata: Intrinsic properties of the data structure family, which define its structure and
   organization. Examples: dimension names, types, mappings between coordinates and dimensions.
-- Idattribute metadata: Labels or names which jointly anf uniquely identify each data structure
+- Identity metadata: Labels or names which jointly anf uniquely identify each data structure
   instance within its family. Examples: session ID, unit ID.
 - Descriptive Metadata: Informative parameters which provide additional context about the data
   structure, and can be shared across instances. They stored alongside with data since they can be
@@ -46,7 +46,7 @@ Usage: to perform fast tests of the class with simple inputs.
 
 >>> data = DataStruct(id="session_1", data=spikes, time=CoordTime(time_values))
 
-Initialize an empty data structure with idattribute metadata
+Initialize an empty data structure with identity metadata
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Usage: to create a product progressively, within a builder pattern.
 

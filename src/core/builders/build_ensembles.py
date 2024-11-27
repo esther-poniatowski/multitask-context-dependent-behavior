@@ -11,13 +11,13 @@ from typing import List
 
 import numpy as np
 
-from core.builders.base_builder import CoordinateBuilder
+from core.builders.base_builder import Builder
 from core.coordinates.brain_info_coord import CoordUnit
 from core.processors.preprocess.assign_ensembles import EnsembleAssigner, Ensembles
 from core.attributes.brain_info import Unit
 
 
-class EnsemblesBuilder(CoordinateBuilder[CoordUnit]):
+class EnsemblesBuilder(Builder[CoordUnit]):
     """
     Build ensembles of units to form pseudo-populations for cross-validation.
 
