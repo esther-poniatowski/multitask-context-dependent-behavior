@@ -95,7 +95,7 @@ class Pipeline(ABC, Generic[C, I]):
         self.config = config
 
     @abstractmethod
-    def execute(self, inputs: I, **kwargs: Any) -> None:
+    def execute(self, inputs: I) -> None:
         """
         Execute all the steps of the analysis.
 
@@ -103,6 +103,4 @@ class Pipeline(ABC, Generic[C, I]):
         ---------
         inputs : PipelineInputs
             Input data for the pipeline.
-        kwargs
-            Additional keyword arguments to pass to the execution steps.
         """

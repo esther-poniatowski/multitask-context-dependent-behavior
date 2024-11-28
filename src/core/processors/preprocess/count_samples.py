@@ -8,6 +8,13 @@ Classes
 TrialsCounter
 SampleSizer
 """
+# DISABLED WARNINGS
+# --------------------------------------------------------------------------------------------------
+# pylint: disable=arguments-differ
+# Scope: `process` method in `TrialsCounter` and `SampleSizer`.
+# Reason: See the note in ``core/__init__.py``
+# --------------------------------------------------------------------------------------------------
+
 
 from typing import List, Any, TypeAlias, Tuple
 
@@ -65,7 +72,7 @@ class TrialsCounter(Processor):
     def __init__(self, features_by_unit: List[CoordinateSet]):
         self.features_by_unit = features_by_unit
 
-    def process(self, exp_condition: ExpCondition | None = None, **kwargs) -> Counts:
+    def process(self, exp_condition: ExpCondition) -> Counts:
         """
         Implement the abstract method of the base class `Processor`.
 
@@ -132,7 +139,7 @@ class SampleSizer(Processor):
         self.n_min = n_min
         self.thres_perc = thres_perc
 
-    def process(self, counts: Counts | None = None, **kwargs) -> int:
+    def process(self, counts: Counts) -> int:
         """
         Implement the abstract method of the base class `Processor`.
 

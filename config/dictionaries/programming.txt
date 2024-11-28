@@ -10,3 +10,4 @@ POSIX
 realpath
 Redeclaration
 subpackage
+Variadics

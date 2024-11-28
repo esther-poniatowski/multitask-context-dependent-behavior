@@ -17,6 +17,13 @@ all models is imposed by the minimal number of neurons across all the brain area
 leverage the full dat set for areas (i.e. to encompass all the neurons in each area), multiple
 models have to be fitted for ensembles in areas with larger neuron populations.
 """
+# DISABLED WARNINGS
+# --------------------------------------------------------------------------------------------------
+# pylint: disable=arguments-differ
+# Scope: `process` method in `EnsembleAssigner`.
+# Reason: See the note in ``core/__init__.py``
+# --------------------------------------------------------------------------------------------------
+
 
 from typing import TypeAlias, Any, Tuple, Optional
 
@@ -75,7 +82,7 @@ class EnsembleAssigner(Processor):
         self.n_ensembles_max = n_ensembles_max
 
     @set_random_state
-    def process(self, n_units: int | None = None, **kwargs) -> Ensembles:
+    def process(self, n_units: int) -> Ensembles:
         """
         Implement the abstract method of the base class `Processor`.
 
@@ -90,7 +97,6 @@ class EnsembleAssigner(Processor):
             Ensemble assignments, containing the indices of the units forming each ensemble.
             Shape: ``(n_ensembles, ensemble_size)``.
         """
-        assert n_units is not None
         self.validate(n_units)
         ensembles = self.assign(n_units, self.ensemble_size)
         if self.n_ensembles_max is not None:

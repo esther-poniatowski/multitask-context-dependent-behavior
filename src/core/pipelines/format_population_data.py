@@ -118,7 +118,7 @@ class FormatPopulation(Pipeline[FormatPopulationConfig, FormatPopulationInputs])
         super().__init__(config, **kwargs)
         self.exp_conditions = self.config.exp_condition_type.generate()
 
-    def execute(self, inputs: FormatPopulationInputs, **kwargs: Any) -> None:
+    def execute(self, inputs: FormatPopulationInputs) -> None:
         """
         Implement the abstract method from the base class `Pipeline`.
         """

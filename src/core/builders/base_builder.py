@@ -116,7 +116,7 @@ class Builder(Generic[Product], ABC):
         return product
 
     @abstractmethod
-    def build(self, **kwargs) -> Product:
+    def build(self, *args, **kwargs) -> Product:
         """
         Orchestrate the creation of a product step-by-step.
 

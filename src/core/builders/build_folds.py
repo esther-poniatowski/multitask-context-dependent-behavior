@@ -7,6 +7,13 @@ Classes
 -------
 FoldsBuilder
 """
+# DISABLED WARNINGS
+# --------------------------------------------------------------------------------------------------
+# pylint: disable=arguments-differ
+# Scope: `build` method in `FoldsBuilder`
+# Reason: See the note in ``core/__init__.py``
+# --------------------------------------------------------------------------------------------------
+
 from typing import Iterable
 
 from core.builders.base_builder import Builder
@@ -32,10 +39,10 @@ class FoldsBuilder(Builder[CoordFolds]):
     Warning
     -------
     The order in which the trials are stored in the output coordinate of the `FoldsBuilder` builder
-    should be consistent with the other output coordinates of the `ExpFactorCoordBuilder` (which label
-    the experimental factors of interest, see `core.builders.build_trial_coords`). To ensure this
-    consistency along the trials dimension, the experimental conditions should be treated in the
-    same order across both builders. This is achieved by passing them the same configuration
+    should be consistent with the other output coordinates of the `ExpFactorCoordBuilder` (which
+    label the experimental factors of interest, see `core.builders.build_trial_coords`). To ensure
+    this consistency along the trials dimension, the experimental conditions should be treated in
+    the same order across both builders. This is achieved by passing them the same configuration
     parameters on which they operate: `order_conditions`.
 
     Attributes
@@ -72,12 +79,7 @@ class FoldsBuilder(Builder[CoordFolds]):
         self.n_folds = n_folds
         self.order_conditions = order_conditions
 
-    def build(
-        self,
-        features: CoordinateSet | None = None,
-        seed: int = 0,
-        **kwargs,
-    ) -> CoordFolds:
+    def build(self, features: CoordinateSet, seed: int = 0) -> CoordFolds:
         """
         Implement the base class method.
 
@@ -93,7 +95,6 @@ class FoldsBuilder(Builder[CoordFolds]):
         pseudo_trials : PseudoTrials
             Data structure product instance.
         """
-        assert features is not None
         # Initialize empty coordinate
         n_trials = features.n_samples
         folds_labels = CoordFolds.from_shape((n_trials,))

@@ -81,7 +81,7 @@ class Processor(ABC):
         return f"<{self.__class__.__name__}(config={config})"
 
     @abstractmethod
-    def process(self, **kwargs: Any) -> Any:
+    def process(self, *args, **kwargs: Any) -> Any:
         """
         Main processing method. Implementation is required in each concrete processor subclass.
 
