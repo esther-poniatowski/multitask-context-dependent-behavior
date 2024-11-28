@@ -187,9 +187,11 @@ class FormatPopulation(Pipeline[FormatPopulationConfig, FormatPopulationInputs])
             coord = builder_trials_coords.build(coord_type=coord_type)
             data_structure.set_coord(name, coord)
 
-        # Create core data values (firing rates)
-
         # Build time coordinate if needed
         if self.config.with_time:
             coord_time = CoordTime.build_labels(t_bin=self.config.t_bin, t_max=self.config.t_max)
             data_structure.set_coord("time", coord_time)
+
+        # Create core data values (firing rates)
+
+        # Apply pre-processing transformations (normalization, firing rates)

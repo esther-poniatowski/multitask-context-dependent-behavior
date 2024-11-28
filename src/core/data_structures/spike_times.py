@@ -2,6 +2,11 @@
 # -*- coding: utf-8 -*-
 """
 `core.data_structures.spike_times` [module]
+
+Classes
+-------
+SpikeTimesRaw
+SpikeTrains
 """
 from types import MappingProxyType
 
