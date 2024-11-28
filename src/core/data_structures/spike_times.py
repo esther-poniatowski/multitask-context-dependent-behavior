@@ -13,6 +13,8 @@ from types import MappingProxyType
 import numpy as np
 
 from core.constants import SMPL_RATE
+from core.attributes.brain_info import Unit
+from core.attributes.exp_structure import Session
 from core.coordinates.exp_structure_coord import CoordRecNum, CoordBlock, CoordSlot
 from core.data_structures.base_data_struct import DataStructure
 from core.data_structures.core_data import Dimensions, CoreData
@@ -28,7 +30,7 @@ class SpikeTimesRaw(DataStructure):
 
     Coordinates: ``block``
 
-    Identity Metadata: ``unit_id``, ``session_id``
+    Identity Metadata: ``unit``, ``session``
 
     Descriptive Metadata: ``smpl_rate``
 
@@ -41,9 +43,9 @@ class SpikeTimesRaw(DataStructure):
         Coordinate for the block of trials in which each spike occurred within the session.
         Ascending order, from 1 to the number of blocks in the session, with contiguous duplicates.
         Example: ``1111122223333...``
-    unit_id : str
+    unit : Unit
         Unit's identifier.
-    session_id : str
+    session : Session
         Session's identifier.
     smpl_rate : float, default=`core.constants.SMPL_RATE`
         Sampling time for the recording (in seconds).
@@ -74,21 +76,21 @@ class SpikeTimesRaw(DataStructure):
     dims = Dimensions("spikes")
     coords = MappingProxyType({"block": CoordBlock})
     coords_to_dims = MappingProxyType({"block": Dimensions("spikes")})
-    identifiers = ("unit_id", "session_id")
+    identifiers = ("unit", "session")
 
     # --- Key Features -----------------------------------------------------------------------------
 
     def __init__(
         self,
-        unit_id: str,
-        session_id: str,
+        unit: Unit,
+        session: Session,
         smpl_rate: float = SMPL_RATE,
         data: CoreData | None = None,
         block: CoordBlock | None = None,
     ) -> None:
         # Set sub-class specific metadata
-        self.unit_id = unit_id
-        self.session_id = session_id
+        self.unit = unit
+        self.session = session
         self.smpl_rate = smpl_rate
         # Set data and coordinate attributes via the base class constructor
         coords = {"block": block}
@@ -96,7 +98,7 @@ class SpikeTimesRaw(DataStructure):
 
     def __repr__(self) -> str:
         return (
-            f"<{self.__class__.__name__}>: Unit {self.unit_id}, Session {self.session_id}\n"
+            f"<{self.__class__.__name__}>: Unit {self.unit}, Session {self.session}\n"
             + super().__repr__()
         )
 
@@ -184,7 +186,7 @@ class SpikeTrains(DataStructure):
     - ``block``: Block of trials in which each spike occurred within the recording.
     - ``slot``: Slot of trials in which each spike occurred within the block.
 
-    Identity Metadata: ``unit_id``
+    Identity Metadata: ``unit``
 
     Descriptive Metadata: ``smpl_rate``
 
@@ -199,7 +201,7 @@ class SpikeTrains(DataStructure):
         Block of trials in which each spike occurred within the recording.
     slot : np.ndarray
         Slot of trials in which each spike occurred within the block.
-    unit_id : str
+    unit : Unit
         Unit's identifier.
     smpl_rate : float, default=`core.constants.SMPL_RATE`
         Sampling time for the recording (in seconds).
@@ -227,13 +229,13 @@ class SpikeTrains(DataStructure):
             "slot": Dimensions("spikes"),
         }
     )
-    identifiers = ("unit_id",)
+    identifiers = ("unit",)
 
     # --- Key Features -----------------------------------------------------------------------------
 
     def __init__(
         self,
-        unit_id: str,
+        unit: Unit,
         smpl_rate: float = SMPL_RATE,
         data: CoreData | None = None,
         recnum: CoordRecNum | None = None,
@@ -241,11 +243,11 @@ class SpikeTrains(DataStructure):
         slot: CoordSlot | None = None,
     ) -> None:
         # Set sub-class specific metadata
-        self.unit_id = unit_id
+        self.unit = unit
         self.smpl_rate = smpl_rate
         # Set data and coordinate attributes via the base class constructor
         coords = {"recnum": recnum, "block": block, "slot": slot}
         super().__init__(data=data, **coords)
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}>: Unit {self.unit_id}\n" + super().__repr__()
+        return f"<{self.__class__.__name__}>: Unit {self.unit}\n" + super().__repr__()

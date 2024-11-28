@@ -21,7 +21,7 @@ from core.attributes.brain_info import Unit
 # Test values for CoordUnit
 UNITS_IDS = ["avo052a-d1", "daf035b-d2"]
 DEPTHS = ["a", "b"]  # letter after the first number in the unit ID
-POP = [Unit(unit_id) for unit_id in UNITS_IDS]
+POP = [Unit(unit) for unit in UNITS_IDS]
 
 
 def test_coord_unit_build_labels_valid():

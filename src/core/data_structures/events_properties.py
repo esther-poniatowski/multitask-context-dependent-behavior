@@ -11,11 +11,10 @@ import numpy as np
 
 from core.data_structures.base_data_struct import DataStructure
 from core.data_structures.core_data import Dimensions, CoreData
+from core.attributes.exp_structure import Session
 from core.coordinates.exp_structure_coord import CoordBlock
 from core.coordinates.time_coord import CoordTimeEvent
 from core.coordinates.exp_factor_coord import CoordEventDescription
-from utils.io_data.loaders import LoaderCSVtoDataFrame
-from utils.storage_rulers.impl_path_rulers import EventsPropertiesPath
 
 
 class EventsProperties(DataStructure):
@@ -33,7 +32,7 @@ class EventsProperties(DataStructure):
     - ``t_end``
     - ``description``
 
-    Identity Metadata: ``session_id``
+    Identity Metadata: ``session``
 
     Attributes
     ----------
@@ -47,7 +46,7 @@ class EventsProperties(DataStructure):
         Coordinate for the nature of each event. Each element is a string comprising one or more
         event descriptions separated by commas. Examples: ``'PreStimSilence , TORC_448_06_v501 ,
         Reference'``, ``'TRIALSTART'``, etc.
-    session_id : str
+    session : Session
         Session's identifier.
 
     Notes
@@ -61,38 +60,34 @@ class EventsProperties(DataStructure):
     dims = Dimensions("events")
     coords = MappingProxyType({})
     coords_to_dims = MappingProxyType({name: Dimensions("events") for name in coords.keys()})
-    identifiers = ("session_id",)
-
-    # --- IO Handlers ---
-    path_ruler = EventsPropertiesPath
-    loader = LoaderCSVtoDataFrame
+    identifiers = ("session",)
 
     # --- Key Features -----------------------------------------------------------------------------
 
     def __init__(
         self,
-        session_id: str,
-        data: Optional[Union[CoreData, np.ndarray]] = None,
-        block: Optional[Union[CoordBlock, np.ndarray]] = None,
-        t_start: Optional[Union[CoordTimeEvent, np.ndarray]] = None,
-        t_end: Optional[Union[CoordTimeEvent, np.ndarray]] = None,
-        description: Optional[Union[CoordEventDescription, np.ndarray]] = None,
+        session: Session,
+        data: CoreData | None = None,
+        block: CoordBlock | None = None,
+        t_start: CoordTimeEvent | None = None,
+        t_end: CoordTimeEvent | None = None,
+        description: CoordEventDescription | None = None,
     ) -> None:
         # Set sub-class specific metadata
-        self.session_id = session_id
+        self.session = session
         # Set data and coordinate attributes via the base class constructor
         super().__init__(
             data=data, block=block, t_start=t_start, t_end=t_end, description=description
         )
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}>: Session {self.session_id}\n" + super().__repr__()
+        return f"<{self.__class__.__name__}>: Session {self.session}\n" + super().__repr__()
 
     # --- IO Handling ------------------------------------------------------------------------------
 
     @property
     def path(self) -> Path:
-        return self.path_ruler().get_path(self.session_id)
+        return self.path_ruler().get_path(self.session)
 
     def load(self) -> None:
         """
@@ -153,7 +148,7 @@ class EventsProperties(DataStructure):
         description = CoordEventDescription(values=raw["Event"].values)
         # Create new instance filled with the loaded data
         obj = EventsProperties(
-            session_id=self.session_id,
+            session=self.session,
             data=data,
             block=block,
             t_start=t_start,
