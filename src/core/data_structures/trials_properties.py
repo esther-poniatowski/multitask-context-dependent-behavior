@@ -210,7 +210,7 @@ class TrialsProperties(DataStructure):
 
         Returns
         -------
-        session_id : Session
+        session : Session
             Identifier of the session from which the trial comes.
 
         Raises
