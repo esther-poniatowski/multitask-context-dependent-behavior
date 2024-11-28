@@ -20,6 +20,12 @@ The main operations performed by the current class are:
 2. Processing those epochs to compute the firing rates.
 3. Filling the core data with the result.
 """
+# DISABLED WARNINGS
+# --------------------------------------------------------------------------------------------------
+# pylint: disable=arguments-differ
+# Scope: `build` method in `NeuronalActivityBuilder`
+# Reason: See the note in ``core/__init__.py``
+# --------------------------------------------------------------------------------------------------
 
 from typing import List, Dict
 
@@ -65,10 +71,9 @@ class NeuronalActivityBuilder(Builder[CoreData]):
 
     def build(
         self,
-        spikes: SpikeTrains | None = None,
-        trials_properties: TrialsProperties | None = None,
-        pseudo_trials_idx: CoordPseudoTrialsIdx | None = None,
-        **kwargs,
+        spikes: SpikeTrains,
+        trials_properties: TrialsProperties,
+        pseudo_trials_idx: CoordPseudoTrialsIdx,
     ) -> CoreData:
         """
         Implement the base class method.
@@ -89,9 +94,6 @@ class NeuronalActivityBuilder(Builder[CoreData]):
         product : CoreData
             Firing rates of the unit in pseudo-trials, i.e. actual values to analyze.
         """
-        assert spikes is not None
-        assert trials_properties is not None
-        assert pseudo_trials_idx is not None
         # Initialize core data
         n_folds, n_pseudo = pseudo_trials_idx.shape
         shape = (n_folds, n_pseudo)

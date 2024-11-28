@@ -7,6 +7,13 @@ Classes
 -------
 ExpFactorCoordBuilder
 """
+# DISABLED WARNINGS
+# --------------------------------------------------------------------------------------------------
+# pylint: disable=arguments-differ
+# Scope: `build` method in `ExpFactorCoordBuilder`
+# Reason: See the note in ``core/__init__.py``
+# --------------------------------------------------------------------------------------------------
+
 from typing import Type, Dict, Iterable, Tuple
 from functools import cached_property
 
@@ -74,7 +81,7 @@ class ExpFactorCoordBuilder(Builder[CoordExpFactor]):
         self.counts_by_condition = counts_by_condition
         self.order_conditions = order_conditions
 
-    def build(self, coord_type: Type[CoordExpFactor] | None = None, **kwargs) -> CoordExpFactor:
+    def build(self, coord_type: Type[CoordExpFactor]) -> CoordExpFactor:
         """
         Implement the base class method.
 
@@ -89,7 +96,6 @@ class ExpFactorCoordBuilder(Builder[CoordExpFactor]):
         coord : CoordExpFactor
             Coordinates for the experimental factor in the pseudo-trials.
         """
-        assert coord_type is not None
         self.validate_factor(coord_type)
         # Initialize empty coordinates with as many trials as the total number of pseudo-trials
         coord = coord_type.from_shape(self.n_trials)

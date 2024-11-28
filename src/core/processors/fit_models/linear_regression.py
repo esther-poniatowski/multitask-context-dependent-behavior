@@ -12,11 +12,13 @@ Notes
 The processor is not called `LinearRegression` to avoid confusion with the scikit-learn class.
 
 """
-# TODO: Update to match the new interface
-# Disable error codes for attributes which are not detected by the type checker:
-# (configuration and data attributes are initialized by the base class constructor)
-# mypy: disable-error-code="attr-defined"
-# pylint: disable=no-member
+# DISABLED WARNINGS
+# --------------------------------------------------------------------------------------------------
+# pylint: disable=arguments-differ
+# Scope: `process` method in `LinearRegressionModel`.
+# Reason: See the note in ``core/__init__.py``
+# --------------------------------------------------------------------------------------------------
+
 
 from typing import Literal, overload, TypeAlias, Any, Tuple, Union, List, Dict
 
@@ -36,9 +38,11 @@ class LinearRegressionModel(Processor):
     Configuration Attributes
     ------------------------
     fit_intercept : bool, optional
-        Whether to calculate the intercept for this model. If set to False, no intercept will be used.
+        Whether to calculate the intercept for this model. If set to False, no intercept will be
+        used.
     normalize : bool, optional
-        Whether to normalize the predictors before fitting. If `fit_intercept` is set to False, this is ignored.
+        Whether to normalize the predictors before fitting. If `fit_intercept` is set to False, this
+        is ignored.
 
     Processing Arguments
     --------------------
@@ -65,8 +69,7 @@ class LinearRegressionModel(Processor):
 
     See Also
     --------
-    :class:`core.processors.preprocess.base_processor.Processor`
-        Base class for all processors: see class-level attributes and template methods.
+    `core.processors.preprocess.base_processor.Processor`
     """
 
     IS_RANDOM = False
@@ -80,7 +83,6 @@ class LinearRegressionModel(Processor):
         """Implement the template method called in the base class `process` method."""
 
     def __init__(self, fit_intercept: bool = True, normalize: bool = False) -> None:
-        super().__init__()
         self.fit_intercept = fit_intercept
         self.normalize = normalize
         self.model = LinearRegression(fit_intercept=self.fit_intercept)

@@ -35,6 +35,13 @@ Implementation
 3. Combine trials across units to form actual pseudo-trials by shuffling the trials retained for
    each unit.
 """
+# DISABLED WARNINGS
+# --------------------------------------------------------------------------------------------------
+# pylint: disable=arguments-differ
+# Scope: `process` method in `Bootstrapper`.
+# Reason: See the note in ``core/__init__.py``
+# --------------------------------------------------------------------------------------------------
+
 from typing import TypeAlias, Any, Tuple
 
 import numpy as np
@@ -98,7 +105,7 @@ class Bootstrapper(Processor):
         self.n_pseudo = n_pseudo
 
     @set_random_state
-    def process(self, counts: Counts | None = None, seed: int = 0, **kwargs) -> PseudoTrials:
+    def process(self, counts: Counts, seed: int = 0) -> PseudoTrials:
         """
         Implement the abstract method called in the base class `process` method.
 

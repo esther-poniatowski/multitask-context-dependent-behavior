@@ -7,7 +7,7 @@ Define a common interface for all classes representing attributes (core objects)
 
 Classes
 -------
-`Attribute` (generic, base class)
+Attribute (generic, base class)
 """
 from typing import (
     Generic,

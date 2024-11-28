@@ -7,6 +7,13 @@ Classes
 -------
 PseudoTrialsBuilder
 """
+# DISABLED WARNINGS
+# --------------------------------------------------------------------------------------------------
+# pylint: disable=arguments-differ
+# Scope: `build` method in `PseudoTrialsBuilder`
+# Reason: See the note in ``core/__init__.py``
+# --------------------------------------------------------------------------------------------------
+
 from typing import List, Dict, Iterable
 
 import numpy as np
@@ -96,10 +103,9 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
 
     def build(
         self,
-        features_by_unit: List[CoordinateSet] | None = None,
-        folds_by_unit: List[CoordFolds] | None = None,
+        features_by_unit: List[CoordinateSet],
+        folds_by_unit: List[CoordFolds],
         seed: int = 0,
-        **kwargs,
     ) -> CoordPseudoTrialsIdx:
         """
         Implement the base class method.
@@ -125,8 +131,6 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
         `CoordPseudoTrialsIdx.from_shape`
         `CoordPseudoTrialsIdx.SENTINEL`
         """
-        assert features_by_unit is not None
-        assert folds_by_unit is not None
         # Initialize the coordinate for the pseudo-trials
         n_units = len(features_by_unit)
         n_pseudo_tot = sum(self.counts_by_condition.values())  # across conditions

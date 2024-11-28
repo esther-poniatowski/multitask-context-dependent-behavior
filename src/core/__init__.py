@@ -54,22 +54,40 @@ Coordinates, Data Structures, Processors, Builders, and Pipelines.
 Each sub-package contains a base class that defines the interface, common attributes, and methods
 shared across the concrete implementations within that sub-package.
 
+Disabled Warnings
+^^^^^^^^^^^^^^^^^
+In the modules where a subclass implements an abstract method while specializing the method
+signature:
+
+``# pylint: disable=arguments-differ``
+
+Initial problems:
+
+- Number of parameters was x in 'AbstractBaseClass.method' and is now y in overriding
+  'Subclass.method' method.
+- Variadics removed in overriding 'Subclass.method' method.
+
+Reason for silencing: The abstract methods signatures use variadics ``(*args, **kwarg)``. This allow
+subclasses to specialize the method signature without violating the Liskov Substitution Principle
+(LSP). Calls to any subclass methods with specific signatures through the base class reference will
+be correctly dispatched, as ``(*args, **kwargs)`` can handle arbitrary arguments.
+
 Modules
 -------
-:mod:`constants`
+`constants`
 
 Sub-Packages
 ------------
-:mod:`attributes`
-:mod:`coordinates`
-:mod:`data_structures`
-:mod:`processors`
-:mod:`builders`
-:mod:`pipelines`
+`attributes`
+`coordinates`
+`data_structures`
+`processors`
+`builders`
+`pipelines`
 
 See Also
 --------
-:mod:`test_core`: Tests for the entire package.
+`test_core`: Tests for the entire package.
 """
 # pylint: disable=unused-variable
 # pylint: disable=unused-wildcard-import

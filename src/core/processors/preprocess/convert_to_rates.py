@@ -7,13 +7,19 @@ Classes
 -------
 FiringRatesConverter
 """
+# DISABLED WARNINGS
+# --------------------------------------------------------------------------------------------------
+# pylint: disable=arguments-differ
+# Scope: `process` method in `FiringRatesConverter`.
+# Reason: See the note in ``core/__init__.py``
+# --------------------------------------------------------------------------------------------------
 
 from typing import TypeAlias, Any, Tuple, Optional
 
 import numpy as np
 from scipy.signal import fftconvolve
 
-from core.constants import T_BIN
+from core.constants import T_BIN, T_MAX
 from core.processors.base_processor import Processor
 
 
@@ -73,11 +79,10 @@ class FiringRatesConverter(Processor):
     def __init__(
         self,
         t_bin: float = T_BIN,
-        t_max: Optional[float] = None,
+        t_max: float = T_MAX,
         smooth_window: float = 0.5,
         mode: str = "valid",
     ):
-        assert t_max is not None
         self.t_bin = t_bin
         self.t_max = t_max
         self.smooth_window = smooth_window
@@ -106,7 +111,7 @@ class FiringRatesConverter(Processor):
         else:
             raise ValueError(f"Invalid mode: {self.mode}")
 
-    def process(self, **input_data: Any) -> FiringRates:
+    def process(self, spikes: SpikingTimes) -> FiringRates:
         """
         Implement the abstract method of the base class `Processor`.
 
@@ -130,7 +135,6 @@ class FiringRatesConverter(Processor):
         1. Binning the spikes.
         2. Smoothing the binned rates.
         """
-        spikes = input_data["spikes"]
         f_binned = self.spikes_to_rates(spikes, self.t_max, self.t_bin)
         f_smooth = self.smooth(f_binned, self.t_bin, self.smooth_window, self.mode)
         return f_smooth

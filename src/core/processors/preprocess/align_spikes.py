@@ -61,10 +61,14 @@ Aligning a Click train
 - Start: ``t_on + d_warn`` (onset of the Click = offset of the TORC)
 - End: ``t_start2 + d_stim + d_post`` (duration of the stimulus AND post-stimulus periods)
 """
-# Disable error codes for attributes which are not detected by the type checker:
-# (configuration and data attributes are initialized by the base class constructor)
-# mypy: disable-error-code="attr-defined"
-# pylint: disable=no-member
+# TODO: Adapt to new interface
+# DISABLED WARNINGS
+# --------------------------------------------------------------------------------------------------
+# pylint: disable=arguments-differ
+# Scope: `process` method in `SpikesAligner`
+# Reason: See the note in ``core/__init__.py``
+# --------------------------------------------------------------------------------------------------
+
 
 from typing import Literal, TypeAlias, Any, Tuple, Dict
 

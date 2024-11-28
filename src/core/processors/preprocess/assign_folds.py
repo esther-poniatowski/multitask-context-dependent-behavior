@@ -5,7 +5,7 @@
 
 Classes
 -------
-`FoldAssigner`
+FoldAssigner
 
 Notes
 -----
@@ -17,6 +17,12 @@ fold assignments (methods `CoordFold.get_train` and `CoordFold.get_test`). This 
 to the samples in each set through the coordinate, without resorting to external cross-validation
 tools.
 """
+# DISABLED WARNINGS
+# --------------------------------------------------------------------------------------------------
+# pylint: disable=arguments-differ
+# Scope: `process` method in `FoldAssigner`.
+# Reason: See the note in ``core/__init__.py``
+# --------------------------------------------------------------------------------------------------
 
 from typing import Literal, overload, TypeAlias, Any, Tuple, Union, List
 
@@ -75,29 +81,17 @@ class FoldAssigner(Processor):
 
     @overload
     def process(
-        self,
-        n_samples: int | None = None,
-        mode: Literal["labels"] = "labels",
-        seed: int = 0,
-        **kwargs,
+        self, n_samples: int, mode: Literal["labels"] = "labels", seed: int = 0
     ) -> FoldLabels: ...
 
     @overload
     def process(
-        self,
-        n_samples: int | None = None,
-        mode: Literal["members"] = "members",
-        seed: int = 0,
-        **kwargs,
+        self, n_samples: int, mode: Literal["members"] = "members", seed: int = 0
     ) -> FoldMembers: ...
 
     @set_random_state
     def process(
-        self,
-        n_samples: int | None = None,
-        mode: Literal["labels", "members"] = "labels",
-        seed: int = 0,
-        **kwargs,
+        self, n_samples: int, mode: Literal["labels", "members"] = "labels", seed: int = 0
     ) -> Union[FoldLabels, FoldMembers]:
         """
         Implement the abstract method of the base class `Processor`.
@@ -122,7 +116,6 @@ class FoldAssigner(Processor):
         fold_labels : FoldLabels
             Fold labels assigned to each sample. Shape: ``(n_samples,)``.
         """
-        assert n_samples is not None
         fold_members = self.assign(n_samples, self.n_folds)
         if mode == "members":
             return fold_members

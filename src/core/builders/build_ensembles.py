@@ -5,8 +5,15 @@
 
 Classes
 -------
-`EnsemblesBuilder`
+EnsemblesBuilder
 """
+# DISABLED WARNINGS
+# --------------------------------------------------------------------------------------------------
+# pylint: disable=arguments-differ
+# Scope: `build` method in `EnsemblesBuilder`
+# Reason: See the note in ``core/__init__.py``
+# --------------------------------------------------------------------------------------------------
+
 from typing import List
 
 import numpy as np
@@ -58,7 +65,7 @@ class EnsemblesBuilder(Builder[CoordUnit]):
         self.ensemble_size = ensemble_size
         self.n_ensembles_max = n_ensembles_max
 
-    def build(self, units: List[Unit] | None = None, seed: int = 0, **kwargs) -> CoordUnit:
+    def build(self, units: List[Unit], seed: int = 0) -> CoordUnit:
         """
         Implement the base class method.
 
