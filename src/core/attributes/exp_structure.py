@@ -156,7 +156,7 @@ class Session(str, Attribute[str]):
 
     Arguments
     ---------
-    session_id : str
+    value : str
         (Core value) Identifier of the session. Example: ``'avo052a04_p_PTD'``
 
     Attributes
@@ -189,13 +189,13 @@ class Session(str, Attribute[str]):
     )
     DEFAULT_VALUE = ""
 
-    def __new__(cls, session_id: str) -> Self:
-        if not cls.is_valid(id):  # overridden in this subclass
-            raise ValueError(f"Invalid value for {cls.__name__}: {session_id}.")
-        return super().__new__(cls, session_id)
+    def __new__(cls, value: str) -> Self:
+        if not cls.is_valid(value):  # overridden in this subclass
+            raise ValueError(f"Invalid value for {cls.__name__}: {value}.")
+        return super().__new__(cls, value)
 
     @classmethod
-    def is_valid(cls, session_id: str) -> bool:
+    def is_valid(cls, value: str) -> bool:
         """
         Check if the value is a valid session ID. Override the method from the base class
         `Attribute`.
@@ -212,7 +212,7 @@ class Session(str, Attribute[str]):
         `Attention.is_valid` (method from the class `ExpFactor` inheriting from `Attribute`)
         `Task.is_valid`      (idem)
         """
-        site, rec, attn, task = cls.split_id(session_id)
+        site, rec, attn, task = cls.split_id(value)
         if not all([site, rec, attn, task]):  # checks for any empty string or zero
             return False
         return (
