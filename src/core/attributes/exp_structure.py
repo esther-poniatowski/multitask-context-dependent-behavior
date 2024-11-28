@@ -39,7 +39,7 @@ class ExpStructure(int, Attribute[int]):
 
     Methods
     -------
-    `is_valid` (override the method from the base class `Attribute`)
+    is_valid (override the method from the base class `Attribute`)
 
     Notes
     -----
@@ -296,6 +296,14 @@ class Session(str, Attribute[str]):
         -------
         List[Session]
             Ordered list of sessions.
+
+        Examples
+        --------
+        >>> s1 = Session("avo052a04_p_PTD")
+        >>> s2 = Session("avo052a05_p_PTD")
+        >>> s3 = Session("avo052a03_p_PTD")
+        >>> Session.order(s1, s2, s3)
+        [s3, s1, s2]
 
         See Also
         --------
