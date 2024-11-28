@@ -23,6 +23,9 @@ Q = TypeVar("Q")
 R = TypeVar("R")
 """Type variable for the return type of a function or method applied to the values."""
 
+C = TypeVar("C", bound="Container")
+"""Type variable for Container and its subclasses."""
+
 
 class Container(UserDict[K, V], Generic[K, V]):
     """
@@ -143,13 +146,13 @@ class Container(UserDict[K, V], Generic[K, V]):
 
     @classmethod
     def from_keys(
-        cls,
+        cls: Type[C],
         keys: Iterable[K],
         fill_value: V,
         *,
         key_type: Type[K] | None = None,
         value_type: Type[V] | None = None,
-    ) -> "Container[K, V]":
+    ) -> C:
         """
         Initialize a Container with keys and a specified fill value.
 
@@ -183,6 +186,11 @@ class Container(UserDict[K, V], Generic[K, V]):
         >>> container = Container.from_keys(keys, 0, key_type=str, value_type=int)
         >>> print(container.data)
         {"a": 0, "b": 0}
+
+        Implementation
+        --------------
+        The method is now type-annotated to return an instance of the same class (``C``) on which it
+        was called. This is more dynamic than hardcoding the return type as ``Container[K, V]``.
         """
         if key_type is None:
             raise ValueError("Missing argument: `key_type`")
