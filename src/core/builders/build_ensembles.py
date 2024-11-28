@@ -34,8 +34,8 @@ class EnsemblesBuilder(Builder[CoordUnit]):
 
     Methods
     -------
-    `build` (required)
-    `construct_coord`
+    build (required)
+    construct_coord
 
     Examples
     --------

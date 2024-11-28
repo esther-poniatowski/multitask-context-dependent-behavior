@@ -7,7 +7,7 @@ Base classes for data structure builders.
 
 Classes
 -------
-`Builder[DataStructure]`
+Builder
 
 Examples
 --------
