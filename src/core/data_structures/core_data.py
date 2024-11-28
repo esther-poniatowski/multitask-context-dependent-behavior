@@ -148,6 +148,24 @@ class CoreData(np.ndarray):
         else:  # reset to default
             self.dims = self.default_dims(self)
 
+    def __getitem__(self, index) -> Self:
+        """
+        Index the data and convert it to a `CoreData` object.
+
+        Parameters
+        ----------
+        index : Any
+            Index or slice to retrieve from the data.
+        """
+        result = super().__getitem__(index)
+        if isinstance(result, np.ndarray) and not isinstance(result, CoreData):
+            result = result.view(type(self))  # convert back to CoreData
+            if result.ndim == self.ndim:
+                result.dims = self.dims
+            else:
+                result.dims = self.default_dims(result)
+        return result
+
     @classmethod
     def from_shape(
         cls, shape: Tuple[int, ...], dims: Dimensions | Tuple[str | DimName, ...] | None = None
