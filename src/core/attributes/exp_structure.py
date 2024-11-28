@@ -15,7 +15,7 @@ Session
 """
 from functools import cached_property
 import re
-from typing import Optional, Self, Tuple
+from typing import Optional, Self, Tuple, List
 
 from core.attributes.base_attribute import Attribute
 from core.attributes.exp_factors import Task, Attention
@@ -154,23 +154,27 @@ class Session(str, Attribute[str]):
     DEFAULT_VALUE : str
         Default value for a missing component in the session ID.
 
+    Arguments
+    ---------
+    session_id : str
+        (Core value) Identifier of the session. Example: ``'avo052a04_p_PTD'``
+
     Attributes
     ----------
-    id : str
-        (Core value) Identifier of the session. Example: ``'avo052a04_p_PTD'``
     site : Site
         Location where the session was recorded. Example : ``'avo052a'``
-    rec : Recording
+    recording : Recording
         Recording number associated to the session at this site (used for ordering sessions).
     task : Task
         Task performed during the session.
-    attn : Attention
+    attention : Attention
         Engagement of the animal in the task.
 
     Methods
     -------
     is_valid (override the method from the base class `Attribute`)
     split_id
+    order (class method)
 
     See Also
     --------
@@ -185,13 +189,13 @@ class Session(str, Attribute[str]):
     )
     DEFAULT_VALUE = ""
 
-    def __new__(cls, value: str) -> Self:
-        if not cls.is_valid(value):  # overridden in this subclass
-            raise ValueError(f"Invalid value for {cls.__name__}: {value}.")
-        return super().__new__(cls, value)
+    def __new__(cls, session_id: str) -> Self:
+        if not cls.is_valid(id):  # overridden in this subclass
+            raise ValueError(f"Invalid value for {cls.__name__}: {session_id}.")
+        return super().__new__(cls, session_id)
 
     @classmethod
-    def is_valid(cls, value: str) -> bool:
+    def is_valid(cls, session_id: str) -> bool:
         """
         Check if the value is a valid session ID. Override the method from the base class
         `Attribute`.
@@ -208,7 +212,7 @@ class Session(str, Attribute[str]):
         `Attention.is_valid` (method from the class `ExpFactor` inheriting from `Attribute`)
         `Task.is_valid`      (idem)
         """
-        site, rec, attn, task = cls.split_id(value)
+        site, rec, attn, task = cls.split_id(session_id)
         if not all([site, rec, attn, task]):  # checks for any empty string or zero
             return False
         return (
@@ -255,7 +259,7 @@ class Session(str, Attribute[str]):
         return Site(site_str)
 
     @cached_property
-    def rec(self) -> Recording:
+    def recording(self) -> Recording:
         """
         Recording number of the session at the site (cached).
         """
@@ -263,7 +267,7 @@ class Session(str, Attribute[str]):
         return Recording(int(rec_str))  # convert string to int first
 
     @cached_property
-    def attn(self) -> Attention:
+    def attention(self) -> Attention:
         """
         Attentional state of the animal in the session (cached).
         """
@@ -277,3 +281,24 @@ class Session(str, Attribute[str]):
         """
         _, _, _, task_str = self.split_id(self)
         return Task(task_str)
+
+    @classmethod
+    def order(cls, *args: Self) -> List[Self]:
+        """
+        Order sessions chronologically, based on their recording number.
+
+        Parameters
+        ----------
+        args : Session
+            Sessions to order.
+
+        Returns
+        -------
+        List[Session]
+            Ordered list of sessions.
+
+        See Also
+        --------
+        `sorted`: Python built-in function to sort iterables based on a key function.
+        """
+        return sorted(args, key=lambda session: session.recording)
