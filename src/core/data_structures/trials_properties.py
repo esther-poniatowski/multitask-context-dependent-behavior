@@ -6,7 +6,7 @@
 from types import MappingProxyType
 from typing import Generator, List
 
-from core.coordinates.exp_structure_coord import CoordRecNum, CoordBlock, CoordSlot
+from core.coordinates.exp_structure_coord import CoordRecording, CoordBlock, CoordSlot
 from core.coordinates.exp_factor_coord import (
     Coordinate,
     CoordTask,
@@ -31,7 +31,7 @@ class TrialsProperties(DataStructure):
 
     Coordinates:
 
-    - ``recnum`` (optional)
+    - ``recording`` (optional)
     - ``block``
     - ``slot``
     - ``task`` (optional)
@@ -52,7 +52,7 @@ class TrialsProperties(DataStructure):
         Identifier(s) of the session(s) from which the trials come.
     data : CoreData
         Indices of the trials relative to the considered set (e.g. session or experiment).
-    recnum : CoordRecNum
+    recording : CoordRecording
         Coordinate for the recording number of each trial (identifying a session at a site).
     block : CoordBlock
         Coordinate for the block of trials to which each trial belongs in its session.
@@ -96,23 +96,21 @@ class TrialsProperties(DataStructure):
     For a single session:
 
     - The attribute `sessions` contains a single session identifier.
-    - The coordinates `recnum`, `task`, and `attention` are optional, since they would contain a
+    - The coordinates `recording`, `task`, and `attention` are optional, since they would contain a
       unique label for all the trials.
     - The property `n_blocks` indicates the number of blocks in the unique session.
 
     For an experiment:
 
     - The attribute `sessions` contains several session identifiers.
-    - The coordinate `recnum` indicates the origin of each trial (i.e. the session from which it
+    - The coordinate `recording` indicates the origin of each trial (i.e. the session from which it
       comes from).
     - The property `n_blocks` indicates the maximal number of blocks across the different sessions.
 
-
-    TODO: Add a method to check the consistency of the coordinates with the sessions' IDs.
     Raises
     ------
     ValueError
-        If the content of coordinates (`recnum`, `task`, `attention` is not consistent with the
+        If the content of coordinates (`recording`, `task`, `attention` is not consistent with the
         sessions' IDs. This is the case if the unique labels contained in the coordinate do not
         match the respective values in the sessions' IDs.
     """
@@ -121,7 +119,7 @@ class TrialsProperties(DataStructure):
     dims = Dimensions("trials")
     coords = MappingProxyType(
         {
-            "recnum": CoordRecNum,
+            "recording": CoordRecording,
             "block": CoordBlock,
             "slot": CoordSlot,
             "task": CoordTask,
@@ -176,36 +174,54 @@ class TrialsProperties(DataStructure):
         else:
             return 0
 
-    def iter_trials(self) -> Generator:
+    def get_info(self, trial: int, *args: str) -> tuple:
+        """
+        Get the metadata of a trial.
+
+        Parameters
+        ----------
+        trial : int
+            Index of the trial in the subset.
+        args : str
+            Names of the coordinates to return.
+
+        Returns
+        -------
+        info : Tuple
+            Metadata of the trial, in the order of the requested coordinates.
+
+        Examples
+        --------
+        >>> trial_info = trials.get_info(0, "block", "category")
+        >>> print(trial_info)
+        (1, "R")
+        """
+        return tuple(self.get_coord(name)[trial] for name in args)
+
+    def iter_trials(self, *args: str) -> Generator[tuple, None, None]:
         """
         Iterate over the trials in the session and yield their metadata.
 
+        Arguments
+        ---------
+        args : str
+            Names of the coordinates to yield.
+
         Yields
         ------
-        block : int
-            Block number of the trial.
-        slot : int
-            Slot number of the trial within its block.
-        t_start : float
-            Start time of the trial (onset of the stimulus).
-        t_end : float
-            End time of the trial.
+        trial : Tuple
+            Metadata of the trial, in the order of the requested coordinates.
         """
-        for block, slot, t_on, t_end in zip(
-            self.get_coord("block"),
-            self.get_coord("slot"),
-            self.get_coord("t_on"),
-            self.get_coord("t_end"),
-        ):
-            yield block, slot, t_on, t_end
+        for i in range(self.n_trials):
+            yield tuple(self.get_coord(name)[i] for name in args)
 
-    def get_session_from_recording(self, recnum: int | Recording) -> Session:
+    def get_session_from_recording(self, recording: int | Recording) -> Session:
         """
         Get the session identifier corresponding to one recording number.
 
         Parameters
         ----------
-        recnum : int or Recording
+        recording : int or Recording
             Recording number.
 
         Returns
@@ -218,13 +234,13 @@ class TrialsProperties(DataStructure):
         ValueError
             If the recording number is not found in the sessions' IDs.
 
-        return next((s for s, rec in sessions_to_recnums.items() if rec == recnum), None)
+        return next((s for s, rec in sessions_to_recordings.items() if rec == recording), None)
         --------
         `core.attributes.exp_structure.Session.rec`
         """
-        if isinstance(recnum, int):
-            recnum = Recording(recnum)
-        recnums_to_sessions = {s.rec: s for s in self.sessions}
-        if recnum not in recnums_to_sessions:
-            raise ValueError(f"Invalid recording number ({recnum}) in sessions: {self.sessions}")
-        return recnums_to_sessions[recnum]
+        if isinstance(recording, int):
+            recording = Recording(recording)
+        recordings_to_sessions = {s.rec: s for s in self.sessions}
+        if recording not in recordings_to_sessions:
+            raise ValueError(f"Invalid recording number ({recording}) in sessions: {self.sessions}")
+        return recordings_to_sessions[recording]

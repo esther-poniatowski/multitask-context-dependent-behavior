@@ -8,7 +8,7 @@ Coordinates for labelling the sequential structure of the experiment (positional
 Classes
 -------
 CoordExpStructure (Generic)
-CoordRecNum
+CoordRecording
 CoordBlock
 CoordSlot
 """
@@ -95,7 +95,7 @@ class CoordExpStructure(Coordinate[np.int64, AnyExpStructure]):
         return {self.ATTRIBUTE(pos): np.sum(self == pos) for pos in np.unique(self)}
 
 
-class CoordRecNum(CoordExpStructure[Recording]):
+class CoordRecording(CoordExpStructure[Recording]):
     """
     Coordinate labels for recording numbers.
     """
