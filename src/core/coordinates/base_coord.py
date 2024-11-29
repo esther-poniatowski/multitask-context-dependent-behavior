@@ -101,6 +101,32 @@ class Coordinate(Generic[Dtype, AnyAttribute], np.ndarray):
         for attr in self.METADATA:
             setattr(self, attr, getattr(obj, attr, None))
 
+    def __getitem__(self, index) -> Self:
+        """
+        Get a subset of the data by indexing and convert it to a `Coordinate` object.
+
+        Parameters
+        ----------
+        index : Any
+            Index or slice to retrieve from the data.
+
+        Returns
+        -------
+        Coordinate
+            Subset of the coordinate.
+
+        Warning
+        -------
+        By default, all the metadata attributes are copied to the new object. Override this method
+        in subclasses to implement more fine-grained behavior.
+        """
+        result = super().__getitem__(index)
+        if isinstance(result, np.ndarray) and not isinstance(result, type(self)):
+            result = result.view(type(self))  # convert back to the subclass
+            for attr in self.METADATA:
+                setattr(result, attr, getattr(self, attr, None))
+        return result
+
     @classmethod
     def validate(cls, values: ArrayLike, **kwargs) -> None:
         """

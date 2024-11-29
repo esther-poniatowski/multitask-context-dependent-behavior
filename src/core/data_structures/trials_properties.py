@@ -4,7 +4,9 @@
 `core.data_structures.trials_properties` [module]
 """
 from types import MappingProxyType
-from typing import Generator, List
+from typing import Generator, List, Self
+
+import numpy as np
 
 from core.coordinates.exp_structure_coord import CoordRecording, CoordBlock, CoordSlot
 from core.coordinates.exp_factor_coord import (
@@ -34,7 +36,7 @@ class TrialsProperties(DataStructure):
     - ``recording`` (optional)
     - ``block``
     - ``slot``
-    - ``task`` (optional)
+    - ``task``      (optional)
     - ``attention`` (optional)
     - ``category``
     - ``behavior``
@@ -72,8 +74,12 @@ class TrialsProperties(DataStructure):
         Coordinate for the onset of the warning sound (only in task CLK).
     t_on, t_off : CoordTimeEvent
         Coordinates for the onset and offset times of the stimulus in each trial.
+    t_start : CoordTimeEvent
+        Coordinate for the start time of each trial relative to its block.
     t_end : CoordTimeEvent
-        Coordinate for the end time of each trial.
+        Coordinate for the end time of each trial relative to its block.
+    t_dur : CoordTimeEvent
+        Coordinate for the duration of each trial.
     error : CoordError
         Coordinate for the behavioral choice of each trial.
     n_trials : int
@@ -85,8 +91,11 @@ class TrialsProperties(DataStructure):
 
     Methods
     -------
-    `iter_trials`
-    `get_session_from_recording`
+    get_subset
+    get_session
+    get_info
+    iter_trials
+    map_recording_to_session
 
     Notes
     -----
@@ -174,6 +183,59 @@ class TrialsProperties(DataStructure):
         else:
             return 0
 
+    def get_subset(self, idx: np.ndarray | List[int]) -> Self:
+        """
+        Get a subset of the trials based on a boolean mask.
+
+        Parameters
+        ----------
+        idx : ArrayLike
+            Boolean mask to select the trials.
+
+        Returns
+        -------
+        subset : TrialsProperties
+            Subset of the trials corresponding to the mask.
+        """
+        data = self.data[idx]
+        coords = {name: self.get_coord(name)[idx] for name in self.coords}
+        return self.__class__(sessions=self.sessions, data=data, **coords)
+
+    def get_session(self, session: str | Session) -> Self:
+        """
+        Get a subset of the trials corresponding to a single session.
+
+        Parameters
+        ----------
+        session : str or Session
+            Identifier of the session to select.
+
+        Returns
+        -------
+        subset : TrialsProperties
+            Subset of the trials corresponding to the session.
+
+        Raises
+        ------
+        ValueError
+            If the session identifier is not found in the sessions' IDs.
+
+        See Also
+        --------
+        `core.attributes.exp_structure.Session`
+        """
+        # Validate the session identifier
+        if isinstance(session, str):
+            session = Session(session)
+        if session not in self.sessions:
+            raise ValueError(f"Invalid session identifier ({session}) in sessions: {self.sessions}")
+        # Find the trials' indices from the recording number of the session
+        recording = session.recording
+        coord = self.get_coord("recording")
+        idx = coord == recording
+        # Return the subset of trials
+        return self.get_subset(idx)
+
     def get_info(self, trial: int, *args: str) -> tuple:
         """
         Get the metadata of a trial.
@@ -215,9 +277,9 @@ class TrialsProperties(DataStructure):
         for i in range(self.n_trials):
             yield tuple(self.get_coord(name)[i] for name in args)
 
-    def get_session_from_recording(self, recording: int | Recording) -> Session:
+    def map_recording_to_session(self, recording: int | Recording) -> Session:
         """
-        Get the session identifier corresponding to one recording number.
+        Provide the session identifier corresponding to one recording number.
 
         Parameters
         ----------
@@ -234,13 +296,13 @@ class TrialsProperties(DataStructure):
         ValueError
             If the recording number is not found in the sessions' IDs.
 
-        return next((s for s, rec in sessions_to_recordings.items() if rec == recording), None)
+        See Also
         --------
-        `core.attributes.exp_structure.Session.rec`
+        `core.attributes.exp_structure.Session.recording`
         """
         if isinstance(recording, int):
             recording = Recording(recording)
-        recordings_to_sessions = {s.rec: s for s in self.sessions}
+        recordings_to_sessions = {s.recording: s for s in self.sessions}
         if recording not in recordings_to_sessions:
             raise ValueError(f"Invalid recording number ({recording}) in sessions: {self.sessions}")
         return recordings_to_sessions[recording]

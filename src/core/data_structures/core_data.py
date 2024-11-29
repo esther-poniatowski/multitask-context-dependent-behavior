@@ -150,7 +150,7 @@ class CoreData(np.ndarray):
 
     def __getitem__(self, index) -> Self:
         """
-        Index the data and convert it to a `CoreData` object.
+        Get a subset of the data by indexing and convert it to a `CoreData` object.
 
         Parameters
         ----------
