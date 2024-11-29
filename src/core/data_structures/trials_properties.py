@@ -65,9 +65,9 @@ class TrialsProperties(DataStructure):
     category : CoordCategory
         Coordinate for the nature of the stimulus presented in each trial.
     behavior : CoordBehavior
-        Coordinate for the behavioral choice of each trial.
+        Coordinate for the behavioral choice of the animal in each trial.
     outcome : CoordOutcome
-        Coordinate for the outcome of each trial.
+        Coordinate for the outcome of each trial (correct, incorrect, etc.).
     t_warn : CoordTimeEvent
         Coordinate for the onset of the warning sound (only in task CLK).
     t_on, t_off : CoordTimeEvent
