@@ -5,7 +5,7 @@
 
 Classes
 -------
-`DataStructure` (abstract base class)
+DataStructure (abstract base class)
 
 Implementation
 --------------
