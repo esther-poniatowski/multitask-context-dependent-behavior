@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.builders.build_spike_trains` [module]
+`core.builders.build_core_spikes` [module]
 
 Classes
 -------
@@ -20,13 +20,14 @@ import numpy as np
 
 from core.builders.base_builder import Builder
 from core.data_structures.core_data import CoreData
+from core.coordinates.exp_structure_coord import CoordSlot
 from core.data_structures.spike_times import SpikeTrains, SpikeTimesRaw
 from core.data_structures.trials_properties import TrialsProperties
 from core.attributes.exp_structure import Session, Recording, Block, Slot
 from core.composites.base_container import Container
 
 
-class SpikeTrainsBuilder(Builder[SpikeTrains]):
+class SpikeTrainsBuilder(Builder[CoreData]):
     """
     Build the matrix gathering the spiking times of a single unit across all its recording sessions,
     from the raw spike times and trials properties in multiple individual sessions.
@@ -41,7 +42,7 @@ class SpikeTrainsBuilder(Builder[SpikeTrains]):
     build (implementation of the base class method)
     """
 
-    PRODUCT_CLASS = SpikeTrains
+    PRODUCT_CLASS = CoreData
 
     def __init__(
         self,
@@ -54,12 +55,12 @@ class SpikeTrainsBuilder(Builder[SpikeTrains]):
         self,
         spikes_in_sessions: Container[Session, SpikeTimesRaw],
         trials_properties: TrialsProperties,
-    ) -> SpikeTrains:
+    ) -> CoreData:
         """
         Implement the base class method.
 
-        Parameters
-        ----------
+        Arguments
+        ---------
         spikes_in_sessions : Container[Session, SpikeTrains]
             Spiking times of one unit in each recording session (dictionary-like container).
         trials_properties : TrialsProperties
@@ -91,7 +92,7 @@ class SpikeTrainsBuilder(Builder[SpikeTrains]):
         # Initialize the core data array with empty values
         n_spk_tot = self.eval_spikes_number(spikes_in_sessions.list_values())
         shape = (n_spk_tot,)
-        data = CoreData(shape)
+        product = CoreData(shape)
         # Determine the order of the sessions
         order_sessions = Session.order(*spikes_in_sessions.keys())
         # Format sessions one by one
@@ -119,7 +120,7 @@ class SpikeTrainsBuilder(Builder[SpikeTrains]):
                 self.fill_data(data, spike_times=spikes_slot, idx_trial=idx_trial)
             if i != end - 1:  # check that all trials have been filled at the end of the loop
                 raise ValueError(f"Trials mismatch: {i} (spikes) != {end} (session).")
-        return data
+        return self.get_product()
 
     @staticmethod
     def eval_spikes_number(spikes_in_sessions: List[SpikeTimesRaw]) -> int:
@@ -137,25 +138,6 @@ class SpikeTrainsBuilder(Builder[SpikeTrains]):
             Total number of spikes across all the sessions.
         """
         return sum(spikes.n_spikes for spikes in spikes_in_sessions)
-
-    @staticmethod
-    def mark_slots(spikes, trials_properties):
-        """
-        Mark the slots in the spike times with the corresponding trial index.
-
-        Returns
-        -------
-        CoordSlot
-            Coordinate marking the slots in the spike times.
-
-        See Also
-        --------
-        `CoordSlot`
-        """
-        pass
-
-    @staticmethod
-    def
 
     @staticmethod
     def segment_in_blocks(raw_data: SpikeTimesRaw) -> Container[Block, CoreData]:
@@ -178,3 +160,68 @@ class SpikeTrainsBuilder(Builder[SpikeTrains]):
         slots = sorted(np.unique(raw_data.get_coord("slot")))
         spikes_in_slots = [raw_data.get_slot(slot) for slot in slots]
         return spikes_in_slots
+
+
+class SlotCoordBuilder(Builder[CoordSlot]):
+    """
+    Build the coordinate representing the slots in which spikes occur.
+
+    Product: `CoordSlot`
+
+    - Inputs: Spike times and trials properties.
+    - Output: Coordinate marking the slots in the spike times.
+
+    Methods
+    -------
+    build (required)
+
+    """
+
+    @staticmethod
+    def mark_slots(spikes: CoreData, trials_properties: TrialsProperties) -> CoordSlot:
+        """
+        Mark the slots in the spike times with the corresponding trial index in a single session.
+
+        Arguments
+        ---------
+        spikes : CoreData
+            Spiking times of one unit in a single session. Shape: ``(n_spikes,)``.
+        trials_properties : TrialsProperties
+            Metadata about the *trials* in the session.
+
+        Notes
+        -----
+        Coordinates of interest among the trials properties:
+
+        - "slot": Index of the slot of the trial relative to the block to which it belongs.
+        - "t_start": Start time of each trial relative to its block.
+        - "t_end": End time of each trial relative to its block.
+
+        Returns
+        -------
+        CoordSlot
+            Coordinate marking the slots in the spike times.
+
+        Implementation
+        --------------
+        To associate one slot to each spike:
+
+        - Iterate over the slots (trials) referenced in the trials properties.
+        - For each slot, retrieve its time boundaries.
+        - Identify the spikes occurring in this time interval.
+        - Assign the slot index to those spikes.
+
+        Reference for time intervals: In the `spikes` array, the spiking times are relative to the
+        beginning of the *block*, which indeed matches the time boundaries of the slots in the
+        coordinates `t_start` and `t_end`.
+
+        See Also
+        --------
+        `CoordSlot`
+        """
+        n_spikes = len(spikes)
+        coord = CoordSlot.from_shape(n_spikes)
+        for slot, (start, end) in trials_properties.iter_trials("slot", "t_start", "t_end"):
+            idx_spikes = np.where((spikes >= start) & (spikes < end))[0]
+            coord[idx_spikes] = slot
+        return coord
