@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.builders.build_neuronal_activity` [module]
+`core.builders.build_core_rates` [module]
 
 # TODO: This is the place where to pass options such as computing firing rates, normalization...
 

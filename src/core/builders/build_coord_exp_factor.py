@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.builders.build_trial_coords` [module]
+`core.builders.build_coord_exp_factor` [module]
 
 Classes
 -------
