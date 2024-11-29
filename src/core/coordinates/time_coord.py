@@ -35,10 +35,13 @@ class CoordTime(Coordinate[np.float64]):
 
     Arguments
     ---------
-    values : npt.ndarray[Tuple[Any], np.float64]
-        Time labels (in seconds), one dimensional.
+    values : np.ndarray[Tuple[Any], np.float64]
+       (Core values) Time labels (in seconds), one dimensional.
         Homogeneous sequence starting from 0 and incremented by the time bin.
         Shape : ``(n_smpl,)`` with ``n_smpl`` the number of time stamps.
+
+    Attributes
+    ----------
     t_bin : Optional[float]
         Time bin of the sampling (in seconds).
         None if the time stamps are not uniformly spaced or if the coordinate is empty.
@@ -215,8 +218,14 @@ class CoordTimeEvent(Coordinate[np.float64]):
     Arguments
     ---------
     values : np.ndarray[Tuple[Any], np.float64]
-        Time labels (in seconds), one dimensional.
+        (Core values) Time labels (in seconds), one dimensional.
         Shape: ``(n_smpl,)``, number of samples in which events occurred.
+
+    Attributes
+    ----------
+    reference : str, optional
+        Reference time event for the coordinate.
+        Examples: "onset", "offset", "shock".
 
     Notes
     -----
@@ -226,3 +235,11 @@ class CoordTimeEvent(Coordinate[np.float64]):
     # No ATTRIBUTE
     DTYPE = np.float64
     SENTINEL: float = np.nan
+
+    def __new__(cls, values: ArrayLike, reference: Optional[str] = ""):
+        """Override the base method to pass metadata."""
+        obj = Coordinate.__new__(cls, values, reference=reference)
+        return obj
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__}>: {len(self)} events, reference: {self.reference} (t=0)"
