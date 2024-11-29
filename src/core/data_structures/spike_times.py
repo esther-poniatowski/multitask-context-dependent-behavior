@@ -15,7 +15,7 @@ import numpy as np
 from core.constants import SMPL_RATE
 from core.attributes.brain_info import Unit
 from core.attributes.exp_structure import Session
-from core.coordinates.exp_structure_coord import CoordRecNum, CoordBlock, CoordSlot
+from core.coordinates.exp_structure_coord import CoordRecording, CoordBlock, CoordSlot
 from core.data_structures.base_data_struct import DataStructure
 from core.data_structures.core_data import Dimensions, CoreData
 
@@ -38,7 +38,7 @@ class SpikeTimesRaw(DataStructure):
     ----------
     data : CoreData
         Spiking times for the unit in the session (in seconds).
-        Times are reset at 0 in each block.
+        Times are reset at 0 in each **block**.
     block : CoordBlock
         Coordinate for the block of trials in which each spike occurred within the session.
         Ascending order, from 1 to the number of blocks in the session, with contiguous duplicates.
@@ -110,7 +110,12 @@ class SpikeTimesRaw(DataStructure):
         else:
             return 0
 
-    def get_block(self, block: int):
+    @property
+    def n_spikes(self) -> int:
+        """Number of spikes in the session."""
+        return len(self.data)
+
+    def get_block(self, block: int) -> CoreData:
         """
         Extract the spiking times which occurred in one block of trials.
 
@@ -121,13 +126,8 @@ class SpikeTimesRaw(DataStructure):
 
         Returns
         -------
-        raw_data : CoreData
+        spikes : CoreData
             Spiking times for the unit in the session which occurred in the specified block.
-
-        Warning
-        -------
-        This method returns the underlying data as a numpy array instead of a new instance of the
-        class. It is aimed to extract and manipulate data efficiently in builder pipelines.
         """
         return self.data[self.block == block]
 
@@ -182,7 +182,7 @@ class SpikeTrains(DataStructure):
 
     Coordinates: Positional information allowing to locate the spikes in the full experiment.
 
-    - ``recnum``: Recording number.
+    - ``recording``: Recording number.
     - ``block``: Block of trials in which each spike occurred within the recording.
     - ``slot``: Slot of trials in which each spike occurred within the block.
 
@@ -194,8 +194,8 @@ class SpikeTrains(DataStructure):
     ----------
     data : CoreData
         Spiking times for the unit in the experiment (in seconds).
-        Times are reset at 0 in each block.
-    recnum : np.ndarray
+        Times are reset at 0 in each **slot** (trial, i.e. peri-stimulus period).
+    recording : np.ndarray
         Recording number in which each spike occurred.
     block : np.ndarray
         Block of trials in which each spike occurred within the recording.
@@ -217,14 +217,14 @@ class SpikeTrains(DataStructure):
     dims = Dimensions("spikes")
     coords = MappingProxyType(
         {
-            "recnum": CoordRecNum,
+            "recording": CoordRecording,
             "block": CoordBlock,
             "slot": CoordSlot,
         }
     )
     coords_to_dims = MappingProxyType(
         {
-            "recnum": Dimensions("spikes"),
+            "recording": Dimensions("spikes"),
             "block": Dimensions("spikes"),
             "slot": Dimensions("spikes"),
         }
@@ -238,7 +238,7 @@ class SpikeTrains(DataStructure):
         unit: Unit,
         smpl_rate: float = SMPL_RATE,
         data: CoreData | None = None,
-        recnum: CoordRecNum | None = None,
+        recording: CoordRecording | None = None,
         block: CoordBlock | None = None,
         slot: CoordSlot | None = None,
     ) -> None:
@@ -246,8 +246,31 @@ class SpikeTrains(DataStructure):
         self.unit = unit
         self.smpl_rate = smpl_rate
         # Set data and coordinate attributes via the base class constructor
-        coords = {"recnum": recnum, "block": block, "slot": slot}
+        coords = {"recording": recording, "block": block, "slot": slot}
         super().__init__(data=data, **coords)
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}>: Unit {self.unit}\n" + super().__repr__()
+
+    def get_trial(self, recording, block, slot) -> CoreData:
+        """
+        Extract the all the spiking times which occurred in one trial, defined by a recording, a
+        block, and a slot.
+
+        Parameters
+        ----------
+        recording : int
+            Recording number associated with the trial.
+        block : int
+            Block number associated with the trial, relative to the recording.
+        slot : int
+            Slot number associated with the trial, relative to the block.
+
+        Returns
+        -------
+        spikes : CoreData
+            Spiking times for the unit in the experiment which occurred in the specified trial.
+        """
+        return self.data[
+            (self.recording == recording) & (self.block == block) & (self.slot == slot)
+        ]
