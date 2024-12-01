@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`test_core.test_data_structures.core_data` [module]
+`test_core.test_data_components.core_data` [module]
 
 See Also
 --------
-`core.data_structures.core_data`: Tested module.
+`core.data_components.core_data`: Tested module.
 """
 
 import numpy as np
 import pytest
 
-from core.data_structures.core_data import CoreData
+from core.data_components.core_data import CoreData
 
 
 @pytest.mark.parametrize("dims", argvalues=[None, ("time", "units")], ids=["default", "with_dims"])

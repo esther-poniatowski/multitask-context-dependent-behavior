@@ -9,5 +9,6 @@ nargs
 POSIX
 realpath
 Redeclaration
+Statefulness
 subpackage
 Variadics

@@ -7,7 +7,7 @@ Classes representing data structures used in the analysis.
 
 Modules
 -------
-:mod:`core.data_structures.base_data_struct`
+:mod:`core.data_structures.base_data_structure`
 
 Notes
 -----

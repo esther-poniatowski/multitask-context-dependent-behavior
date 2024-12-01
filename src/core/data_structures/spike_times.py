@@ -16,8 +16,8 @@ from core.constants import SMPL_RATE
 from core.attributes.brain_info import Unit
 from core.attributes.exp_structure import Session
 from core.coordinates.exp_structure_coord import CoordRecording, CoordBlock, CoordSlot
-from core.data_structures.base_data_struct import DataStructure
-from core.data_structures.core_data import Dimensions, CoreData
+from core.data_structures.base_data_structure import DataStructure
+from core.data_components.core_data import Dimensions, CoreData
 
 
 class SpikeTimesRaw(DataStructure):

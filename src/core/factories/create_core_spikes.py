@@ -20,7 +20,7 @@ import numpy as np
 
 
 from core.builders.base_builder import Builder
-from core.data_structures.core_data import CoreData
+from core.data_components.core_data import CoreData
 from core.coordinates.exp_structure_coord import CoordSlot
 from core.coordinates.time_coord import CoordTimeEvent
 from core.data_structures.spike_times import SpikeTrains, SpikeTimesRaw

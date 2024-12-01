@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.data_structures.core_data` [module]
+`core.data_components.core_data` [module]
 
 Classes
 -------
-`CoreData`
+CoreData
 """
 from typing import Tuple, Self, Iterable
 
 import numpy as np
 
-from core.data_structures.core_dimensions import DimName, Dimensions
+from core.data_components.core_dimensions import DimName, Dimensions
 
 
 class CoreData(np.ndarray):

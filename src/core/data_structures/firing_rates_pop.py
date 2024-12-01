@@ -5,12 +5,12 @@
 """
 from types import MappingProxyType
 
-from core.data_structures.core_data import CoreData, Dimensions
+from core.data_components.core_data import CoreData, Dimensions
 from core.coordinates.brain_info_coord import CoordUnit
 from core.coordinates.exp_factor_coord import CoordTask, CoordAttention, CoordCategory
 from core.coordinates.time_coord import CoordTime
 
-from core.data_structures.base_data_struct import DataStructure
+from core.data_structures.base_data_structure import DataStructure
 from core.attributes.brain_info import Area, Training
 
 
