@@ -1,30 +1,30 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.builders.build_coord_exp_factor` [module]
+`core.factories.create_coord_exp_factor` [module]
 
 Classes
 -------
-ExpFactorCoordBuilder
+FactoryCoordExpFactor
 """
 # DISABLED WARNINGS
 # --------------------------------------------------------------------------------------------------
 # pylint: disable=arguments-differ
-# Scope: `build` method in `ExpFactorCoordBuilder`
+# Scope: `create` method in `FactoryCoordExpFactor`
 # Reason: See the note in ``core/__init__.py``
 # --------------------------------------------------------------------------------------------------
 
 from typing import Type, Dict, Iterable, Tuple
 from functools import cached_property
 
-from core.builders.base_builder import Builder
+from core.factories.base_factory import Factory
 from core.coordinates.exp_factor_coord import CoordExpFactor
 from core.composites.exp_conditions import ExpCondition
 
 
-class ExpFactorCoordBuilder(Builder[CoordExpFactor]):
+class FactoryCoordExpFactor(Factory[CoordExpFactor]):
     """
-    Build coordinates for experimental factors.
+    Create coordinates for experimental factors.
 
     Product: `CoordExpFactor`
 
@@ -42,7 +42,7 @@ class ExpFactorCoordBuilder(Builder[CoordExpFactor]):
 
     Methods
     -------
-    build (required)
+    create (required)
     validate_factor
 
     Examples
@@ -53,14 +53,14 @@ class ExpFactorCoordBuilder(Builder[CoordExpFactor]):
     >>> exp_condition_2 = ExpCondition(task='CLK', attention='a')
     >>> counts_by_condition = {exp_condition_1: 3, exp_condition_2: 2}
     >>> order_conditions = (exp_condition_1, exp_condition_2)
-    >>> builder = ExpFactorCoordBuilder(counts_by_condition, order_conditions)
-    >>> builder.conditions_boundaries
+    >>> factory = FactoryCoordExpFactor(counts_by_condition, order_conditions)
+    >>> factory.conditions_boundaries
     {ExpCondition(task='PTD', attention='a'): (0, 3),
      ExpCondition(task='CLK', attention='a'): (3, 5)}
 
     Build the task coordinate for the pseudo-trials:
 
-    >>> builder.build(coord_type=CoordTask)
+    >>> factory.create(coord_type=CoordTask)
     CoordTask(['PTD', 'PTD', 'PTD', 'CLK', 'CLK'])
 
     """
@@ -72,8 +72,6 @@ class ExpFactorCoordBuilder(Builder[CoordExpFactor]):
         counts_by_condition: Dict[ExpCondition, int],
         order_conditions: Iterable[ExpCondition],
     ) -> None:
-        # Call the base class constructor: declare empty product and internal data
-        super().__init__()
         # Check identical conditions in both attributes
         if set(counts_by_condition.keys()) != set(order_conditions):
             raise ValueError("Different conditions in `counts_by_condition` and `order_conditions`")
@@ -81,14 +79,14 @@ class ExpFactorCoordBuilder(Builder[CoordExpFactor]):
         self.counts_by_condition = counts_by_condition
         self.order_conditions = order_conditions
 
-    def build(self, coord_type: Type[CoordExpFactor]) -> CoordExpFactor:
+    def create(self, coord_type: Type[CoordExpFactor]) -> CoordExpFactor:
         """
         Implement the base class method.
 
         Parameters
         ----------
         coord_type : Type[CoordExpFactor]
-            Class of the coordinate to build, representing one experimental factor specified in the
+            Class of the coordinate to create, representing one experimental factor specified in the
             all the conditions of the `counts_by_condition` attribute. .. _coord_type:
 
         Returns
@@ -104,8 +102,7 @@ class ExpFactorCoordBuilder(Builder[CoordExpFactor]):
         for cond, (start, end) in self.conditions_boundaries.items():
             value = cond.get(attribute_type)  # value to fill
             coord[start:end] = value
-        self.product = coord
-        return self.get_product()
+        return coord
 
     @cached_property
     def n_trials(self) -> int:
@@ -135,7 +132,7 @@ class ExpFactorCoordBuilder(Builder[CoordExpFactor]):
 
     def validate_factor(self, coord_type: Type[CoordExpFactor]) -> None:
         """
-        Check that the type of the coordinate to build is relevant for the trial dimension in the
+        Check that the type of the coordinate to create is relevant for the trial dimension in the
         current pipeline.
 
         Rule: The coordinate type is valid if the experimental factor associated with the coordinate

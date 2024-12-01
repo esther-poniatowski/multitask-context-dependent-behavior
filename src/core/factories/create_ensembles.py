@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.builders.build_ensembles` [module]
+`core.factories.create_ensembles` [module]
 
 Classes
 -------

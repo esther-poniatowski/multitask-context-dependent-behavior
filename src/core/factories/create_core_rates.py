@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.builders.build_core_rates` [module]
-
-# TODO: This is the place where to pass options such as computing firing rates, normalization...
+`core.factories.create_core_rates` [module]
 
 Classes
 -------
-NeuronalActivityBuilder
+FactoryFiringRates
 
 Notes
 -----
@@ -38,7 +36,7 @@ from core.data_structures.trials_properties import TrialsProperties
 from core.coordinates.trial_analysis_label_coord import CoordPseudoTrialsIdx
 
 
-class NeuronalActivityBuilder(Builder[CoreData]):
+class FactoryFiringRates(Factory[CoreData]):
     """
     Build the matrix gathering the activity of a single unit in selected pseudo-trials, from the raw
     spike times and trials properties in multiple sessions.

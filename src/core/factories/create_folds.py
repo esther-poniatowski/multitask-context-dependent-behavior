@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.builders.build_folds` [module]
+`core.factories.create_folds` [module]
 
 Classes
 -------

@@ -8,34 +8,6 @@ Base classes for data structure builders.
 Classes
 -------
 Builder
-
-Examples
---------
-Implementation of a concrete builder class:
-
-.. code-block:: python
-
-    class ConcreteBuilder(Builder[DataStructure]):
-        data_class = ConcreteDataStructure
-
-        def build(self,
-                  input_for_data: np.ndarray,
-                  input_for_coord: np.ndarray,
-                  input_metadata: str
-        ) -> ConcreteDataStructure:
-            data_pipeline = DataPipeline()
-            coord_pipeline = CoordPipeline()
-            data = data_pipeline.process(input_for_data)
-            coord = coord_pipeline.process(input_for_coord)
-            return self.data_class(data=data, coord=coord, metadata=input_metadata)
-
-Usage of the concrete builder:
-
-.. code-block:: python
-
-        builder = ConcreteBuilder()
-        data_structure = builder.build(input_for_data, input_for_coord, input_metadata)
-
 """
 from abc import ABC, abstractmethod
 from typing import TypeVar, Generic, Type, Tuple, Optional
