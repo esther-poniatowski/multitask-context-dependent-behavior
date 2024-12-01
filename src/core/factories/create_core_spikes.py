@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.builders.build_core_spikes` [module]
+`core.factories.create_core_spikes` [module]
 
 Classes
 -------

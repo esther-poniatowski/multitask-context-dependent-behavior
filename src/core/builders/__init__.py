@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.builders` [subpackage]
+`core.builders` [subpackage]
 
-Classes implementing builders for data structures used in the analysis.
+Classes implementing builders (creators) for **data structures**.
 
 Functionalities of each builder class:
 
-- Collect components (e.g., features, metadata) to progressively build the associated data structure.
-- Finalize the creation of the data structure (`build()` method) which may validate and handle any missing components.
+- Collect components (e.g., features, metadata) to progressively build the associated data
+  structure.
+- Finalize the creation of the data structure (`build()` method) which may validate and handle any
+  missing components.
 
-Flexible configurations of data structured can be obtained by adding different components to the builder.
+Flexible configurations of data structured can be obtained by adding different components to the
+builder.
 
 Modules
 -------
-
+`base_builder`
 
 Notes
 -----
@@ -66,12 +69,38 @@ Statefulness:
 - Builder: Builders are often *stateful*. They may need to store intermediate results between steps
   or manage temporary states during the assembly process.
 
+Examples
+--------
+Implementation of a concrete builder class:
+
+.. code-block:: python
+
+    class ConcreteBuilder(Builder[DataStructure]):
+        data_class = ConcreteDataStructure
+
+        def build(self,
+                  input_for_data: np.ndarray,
+                  input_for_coord: np.ndarray,
+                  input_metadata: str
+        ) -> ConcreteDataStructure:
+            data_pipeline = DataPipeline()
+            coord_pipeline = CoordPipeline()
+            data = data_pipeline.process(input_for_data)
+            coord = coord_pipeline.process(input_for_coord)
+            return self.data_class(data=data, coord=coord, metadata=input_metadata)
+
+Usage of the concrete builder:
+
+.. code-block:: python
+
+        builder = ConcreteBuilder()
+        data_structure = builder.build(input_for_data, input_for_coord, input_metadata)
 
 See Also
 --------
-:mod:`core.data_structures`
+`core.data_structures`
     Data structure classes which are constructed by the builders.
-:mod:`core.processors`
+`core.processors`
     Pipelines used to process and transform data before final assembly by the builders.
 
 """
