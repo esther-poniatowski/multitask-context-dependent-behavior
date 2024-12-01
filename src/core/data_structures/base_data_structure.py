@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.data_structures.base_data_struct` [module]
+`core.data_structures.base_data_structure` [module]
 
 Classes
 -------
@@ -27,7 +27,7 @@ from abc import ABC
 import copy
 from typing import Tuple, Mapping, Type, Self
 
-from core.data_structures.core_data import CoreData, Dimensions
+from core.data_components.core_data import CoreData, Dimensions
 
 from core.coordinates.base_coord import Coordinate
 

@@ -5,7 +5,7 @@
 
 See Also
 --------
-`core.data_structures.base_data_struct`: Tested module.
+`core.data_structures.base_data_structure`: Tested module.
 :class:`unittest.mock.MagicMock`: Mocking class.
     Principle: Create a mock object to replace the loader method.
 
@@ -27,8 +27,8 @@ from typing import Dict, Tuple, Mapping
 import numpy as np
 import pytest
 
-from core.data_structures.base_data_struct import DataStructure, LazyAttribute
-from core.data_structures.core_data import Dimensions, CoreData
+from core.data_structures.base_data_structure import DataStructure, LazyAttribute
+from core.data_components.core_data import Dimensions, CoreData
 
 # --- Fixture to Define a Subclass -----------------------------------------------------------------
 

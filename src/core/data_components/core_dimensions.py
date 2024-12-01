@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-`core.data_structures.core_dimensions` [module]
+`core.data_components.core_dimensions` [module]
 
 Classes
 -------

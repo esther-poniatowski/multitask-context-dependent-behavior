@@ -13,8 +13,8 @@ from abc import ABC, abstractmethod
 from typing import TypeVar, Generic, Type, Tuple, Optional
 
 from core.coordinates.base_coord import Coordinate
-from core.data_structures.core_data import CoreData
-from core.data_structures.base_data_struct import DataStructure
+from core.data_components.core_data import CoreData
+from core.data_structures.base_data_structure import DataStructure
 
 
 Product = TypeVar("Product", bound=DataStructure | CoreData | Coordinate)

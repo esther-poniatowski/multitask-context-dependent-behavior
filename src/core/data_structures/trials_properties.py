@@ -18,8 +18,8 @@ from core.coordinates.exp_factor_coord import (
     CoordOutcome,
 )
 from core.coordinates.time_coord import CoordTimeEvent
-from core.data_structures.base_data_struct import DataStructure
-from core.data_structures.core_data import Dimensions, CoreData
+from core.data_structures.base_data_structure import DataStructure
+from core.data_components.core_data import Dimensions, CoreData
 from core.attributes.exp_structure import Session, Recording
 
 

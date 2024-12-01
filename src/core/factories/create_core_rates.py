@@ -30,7 +30,7 @@ from typing import List
 import numpy as np
 
 from core.builders.base_builder import Builder
-from core.data_structures.core_data import CoreData
+from core.data_components.core_data import CoreData
 from core.data_structures.spike_times import SpikeTrains
 from core.data_structures.trials_properties import TrialsProperties
 from core.coordinates.trial_analysis_label_coord import CoordPseudoTrialsIdx
