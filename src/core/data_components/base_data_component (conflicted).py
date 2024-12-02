@@ -7,18 +7,18 @@ Classes
 -------
 DataComponent
 """
-from typing import Tuple, Self, TypeVar, Generic, FrozenSet
+from typing import Tuple, Self, Iterable, TypeVar, Type
 
 import numpy as np
 from numpy.typing import ArrayLike
 
-from core.data_components.core_dimensions import Dimensions, DimensionsSpec
+from core.data_components.core_dimensions import Dimensions
 
 Dtype = TypeVar("Dtype", bound=np.generic)
 """Type variable for the data type of the underlying numpy array."""
 
 
-class DataComponent(np.ndarray, Generic[Dtype]):
+class DataComponent(np.ndarray):
     """
     Core component of a data structure, containing data values to analyze or companion labels.
 
@@ -26,22 +26,20 @@ class DataComponent(np.ndarray, Generic[Dtype]):
 
     Class Attributes
     ----------------
-    DIMS : DimensionSpec
-        Names of the dimensions allowed for the data, in order, along with their status (required:
-        True, optional: False).
+    DIMS : OrderedDict[str, bool]
+        Names of the dimensions allowed for the data, in order. The boolean value indicates whether
+        this dimension is required (True) or optional (False).
         To be defined in subclasses.
-    METADATA : FrozenSet[str]
-        Names of the additional attributes storing metadata alongside with the values.
-        To be defined in subclasses.
+    METADATA : Tuple[str, ...]
+        Names of the additional attributes storing metadata alongside with the values. To be defined
+        in subclasses.
     DTYPE : np.generic
-        Data type for the values stored in the array.
-        To be defined in subclasses.
+        Data type for the values stored in the array. To be defined in subclasses.
     SENTINEL : Any
         Sentinel value marking missing or unset values in the array.
         For float dtype: `np.nan`.
         For integer dtype: usually ``-1`` (depending on the purpose of the coordinate).
         For string dtype: usually empty string ``''``.
-        To be defined in subclasses.
 
     Arguments
     ---------
@@ -56,16 +54,10 @@ class DataComponent(np.ndarray, Generic[Dtype]):
     __new__
     __array_finalize__
     __repr__
-    default
-    validate
-    propagate_dimensions
-    propagate_metadata
-    cast_to_self
-    from_shape
+    default_dims
     get_dim   (delegate to the `dims` attribute)
     get_axis  (delegate to the `dims` attribute)
     get_size
-    get_missing
     transpose (override numpy method)
     T         (override numpy method)
     swapaxes  (override numpy method)
@@ -124,23 +116,10 @@ class DataComponent(np.ndarray, Generic[Dtype]):
     implemented to prevent their usage (for methods which are less likely to be used in practice).
     """
 
-    DIMS: DimensionsSpec
-    dims: Dimensions  # type hint for the instance attribute
-    METADATA: FrozenSet[str]
-    DTYPE: Dtype
+    DIMS: Dimensions
+    METADATA: Tuple[str, ...]
+    DTYPE: Type[Dtype]
     SENTINEL: int | float | str
-
-    def __repr__(self):
-        if hasattr(self, "METADATA"):
-            metadata = ", ".join(f"{attr}={getattr(self, attr, None)}" for attr in self.METADATA)
-        else:
-            metadata = ""
-        return (
-            f"{self.__class__.__name__}("
-            f"shape={self.shape}, "
-            f"dims={getattr(self, 'dims', None)}, "
-            f"{metadata})"
-        )
 
     # --- Initialization Methods -------------------------------------------------------------------
 
@@ -161,33 +140,35 @@ class DataComponent(np.ndarray, Generic[Dtype]):
             New instance of a `DataComponent` object.
         """
         # Process input values and create the array
-        cls.validate(values)  # validate input values
-        # Convert input values to array - Set the data type if imposed
-        if hasattr(cls, "DTYPE"):
+        cls.validate(values)  # check the validity of the input values
+        if hasattr(cls, "DTYPE"):  # set the dtype if the class imposes
             values = np.asarray(values, dtype=cls.DTYPE)
         else:
             values = np.asarray(values)
-        obj = values.view(cls)  # cast to current class
-        # Set dimensions
+        obj = values.view(cls)  # create NumPy array and cast to current class
+        # Set dimension attributes
         if dims is None:  # default dimension names
-            dims = Dimensions.default(obj.ndim)
-        else:  # validate the dimension names for this class
-            cls.DIMS.validate(dims)
+            dims = cls.default_dims(obj)
         if len(dims) != obj.ndim:  # check consistency between dimensions and array shape
             raise ValueError(f"len(dims) = {len(dims)} != array.ndim = {obj.ndim}")
         obj.dims = dims  # assign dimension names as new attribute
         # Set additional metadata attributes
-        if hasattr(cls, "METADATA"):  # enforce specific metadata attributes
+        if hasattr(cls, "METADATA"):  # enforce specific metadata attributes if defined
             for attr in cls.METADATA:
                 setattr(obj, attr, metadata.get(attr, None))
-        else:  # set any metadata attributes
+        else:  # set any additional metadata attributes
             for attr, value in metadata.items():
                 setattr(obj, attr, value)
         return obj
 
     def __array_finalize__(self, obj: np.ndarray | None) -> None:
         """
-        Finalize the creation of a `DataComponent` object to handle custom attributes.
+        Finalize the creation of a `DataComponent` object to handle the custom attribute `dims`.
+
+        Rules:
+
+        - If the dimension is preserved, transfer the attribute from the initial object.
+        - If the dimension is changed, reset the attribute to the default value.
 
         Parameters
         ----------
@@ -196,123 +177,83 @@ class DataComponent(np.ndarray, Generic[Dtype]):
         """
         if obj is None:  # brand-new object with no parent (in __new__)
             return
-        self.propagate_dimensions(obj, self)
-        self.propagate_metadata(obj, self)
-
-    @classmethod
-    def validate(cls, values: ArrayLike) -> None:
-        """
-        Validate input values before creating the array.
-
-        To be overridden in subclasses for specific behavior.
-
-        Parameters
-        ----------
-        values : ArrayLike
-            Input values to validate.
-        """
-        pass
-
-    @classmethod
-    def propagate_dimensions(cls, child: np.ndarray, parent: Self) -> None:
-        """
-        Propagate the dimensions attribute from a parent object to a child object, if possible.
-
-        Rules:
-
-        - If the dimensions are preserved, transfer the attribute from the parent.
-        - If the dimensions are changed, reset the attribute to the default value.
-
-        Parameters
-        ----------
-        child : np.ndarray
-            Child object to update with the dimensions.
-        parent : DataComponent
-            Parent object to propagate the dimensions from.
-        """
-        if parent.ndim == child.ndim:  # transfer from parent if dimensions are preserved
-            dims = getattr(parent, "dims", Dimensions.default(parent.ndim))
+        if obj.ndim == self.ndim:  # transfer from parent if dimensions are preserved
+            self.dims = getattr(obj, "dims", self.default_dims(obj))
         else:  # reset to default
-            dims = Dimensions.default(child.ndim)
-        setattr(child, "dims", dims)
+            self.dims = self.default_dims(self)
 
-    @classmethod
-    def propagate_metadata(cls, child: np.ndarray, parent: Self) -> None:
+    def __getitem__(self, index) -> Self:
         """
-        Propagate the metadata attributes from a parent object to a child object, if possible.
+        Get a subset of the data by indexing and convert it to a `DataComponent` object.
 
-        Rules:
-
-        - By default, propagate all metadata attributes from the parent, if mentioned in the class
-          attribute `METADATA`.
-        - Any unpredicted instance-specific metadata attributes are not transferred.
-        - Any missing metadata attributes are set to `None`.
-
-        To be overridden in subclasses for specific behavior.
+        Overridden to convert the result back to a `DataComponent` object if it is a NumPy array.
 
         Parameters
         ----------
-        child : np.ndarray
-            Child object to update with the metadata.
-        parent : DataComponent
-            Parent object to propagate the metadata from.
+        index : Any
+            Index or slice to retrieve from the data.
         """
-        if hasattr(cls, "METADATA"):
-            for attr in cls.METADATA:
-                setattr(child, attr, getattr(parent, attr, None))
-
-    def cast_to_self(self, obj: np.ndarray) -> Self:
-        """
-        Cast a numpy array to a `DataComponent` object.
-
-        Parameters
-        ----------
-        obj : np.ndarray
-            Array to cast to the current class.
-
-        Returns
-        -------
-        DataComponent
-            Array cast to the current class.
-        """
-        return obj.view(type(self))  # convert back to DataComponent
+        result = super().__getitem__(index)
+        if isinstance(result, np.ndarray) and not isinstance(result, DataComponent):
+            result = result.view(type(self))  # convert back to DataComponent
+            if result.ndim == self.ndim:
+                result.dims = self.dims
+            else:
+                result.dims = self.default_dims(result)
+        return result
 
     @classmethod
     def from_shape(
-        cls, shape: int | Tuple[int, ...], dims: Dimensions | None = None, **metadata
+        cls, shape: Tuple[int, ...], dims: Dimensions | Tuple[str | DimName, ...] | None = None
     ) -> Self:
         """
-        Create an empty instance of a `DataComponent` object with a given shape. The value used to
-        mark unset or missing values is the class attribute `SENTINEL`.
+        Create an empty instance of a `DataComponent` object with a given shape.
 
         Parameters
         ----------
-        shape : int | Tuple[int, ...]
-            Shape of the data to create. If an integer is passed, the array will be 1D.
-        dims : Dimensions, optional
+        shape : Tuple[int, ...]
+            Shape of the data to create.
+        dims : Dimensions | Tuple[str | DimName, ...], optional
             Names of the dimensions of the data.
 
         Returns
         -------
         DataComponent
-            New instance of a `DataComponent` object, filled with the sentinel value.
+            New instance of a `DataComponent` object. Empty values are filled with NaNs.
         """
-        if isinstance(shape, int):  # convert to tuple for consistency
-            shape = (shape,)
-        values = np.full(shape=shape, fill_value=cls.SENTINEL, dtype=cls.DTYPE)
-        return cls(values, dims=dims, **metadata)
+        return cls(np.full(shape, np.nan), dims)
 
-    # --- Getter Methods ---------------------------------------------------------------------------
+    def __repr__(self):
+        return f"DataComponent(shape={self.shape}, dims={self.dims}, array={super().__repr__()})"
 
-    def get_dim(self, axis: int) -> str:
+    @staticmethod
+    def default_dims(obj) -> Dimensions:
+        """
+        Create default dimension names: one empty string per dimension in the object.
+
+        Parameters
+        ----------
+        obj : DataComponent
+            Object to create dimension names for.
+
+        Returns
+        -------
+        Dimensions
+            Default dimension names.
+        """
+        return Dimensions(DimName.DEFAULT) * obj.ndim
+
+    # --- Utility Methods --------------------------------------------------------------------------
+
+    def get_dim(self, axis: int) -> DimName:
         """Delegate to the `dims` attribute."""
         return self.dims.get_dim(axis)
 
-    def get_axis(self, dim: str) -> int:
+    def get_axis(self, dim: str | DimName) -> int:
         """Delegate to the `dims` attribute."""
         return self.dims.get_axis(dim)
 
-    def get_size(self, dim: str) -> int:
+    def get_size(self, dim: str | DimName) -> int:
         """
         Retrieve the length of a dimension.
 
@@ -328,36 +269,7 @@ class DataComponent(np.ndarray, Generic[Dtype]):
         """
         return self.shape[self.get_axis(dim)]  # automatic check of the dimension
 
-    def get_missing(self) -> np.ndarray:
-        """
-        Get a boolean mask for missing values in the array, based on the sentinel value.
-
-        Returns
-        -------
-        np.ndarray
-            Boolean mask with `True` for missing values and `False` for valid values.
-        """
-        return self == self.SENTINEL
-
     # --- Overridden Numpy Methods -----------------------------------------------------------------
-
-    def __getitem__(self, index) -> Self:
-        """
-        Get a subset of the data by indexing and cast it to a `DataComponent` object.
-
-        Override the base numpy method to convert the result back to a `DataComponent` object.
-
-        Parameters
-        ----------
-        index : Any
-            Index or slice to retrieve from the data.
-        """
-        result = super().__getitem__(index)
-        if isinstance(result, np.ndarray) and not isinstance(result, DataComponent):
-            result = self.cast_to_self(result)
-            self.propagate_dimensions(result, self)
-            self.propagate_metadata(result, self)
-        return result
 
     def transpose(self, *axes) -> Self:
         """
@@ -373,9 +285,12 @@ class DataComponent(np.ndarray, Generic[Dtype]):
         --------
         :meth:`np.ndarray.transpose`: Numpy method to transpose arrays.
         """
-        result = super().transpose(*axes)
-        result.dims = self.dims.transpose(*axes)
-        return result
+        transposed_array = super().transpose(*axes)
+        if len(axes) == 0:  # default transpose: reverses axes
+            transposed_array.dims = Dimensions(self.dims[::-1])
+        else:  # custom axis order: swap dimension names
+            transposed_array.dims = Dimensions(self.dims[i] for i in axes)
+        return transposed_array
 
     @property
     def T(self):  # pylint: disable=invalid-name
@@ -395,10 +310,11 @@ class DataComponent(np.ndarray, Generic[Dtype]):
         --------
         :meth:`np.ndarray.swapaxes`: Numpy method to swap two axes.
         """
-        result = super().swapaxes(axis1, axis2)  # output: ndarray
-        result = self.cast_to_self(result)  # cast to the current class
-        result.dims = self.dims.swap(axis1, axis2)
-        return result
+        swapped_array = super().swapaxes(axis1, axis2)
+        swapped_dims = list(self.dims)  # convert tuple to list to modify
+        swapped_dims[axis1], swapped_dims[axis2] = swapped_dims[axis2], swapped_dims[axis1]
+        swapped_array.dims = tuple(swapped_dims)  # type: ignore[attr-defined]
+        return swapped_array  # type: ignore[return-value]
 
     def moveaxis(self, source, destination) -> Self:
         """
@@ -415,10 +331,16 @@ class DataComponent(np.ndarray, Generic[Dtype]):
         --------
         :meth:`np.moveaxis`: Numpy method to move axes to new positions.
         """
-        result = np.moveaxis(self, source, destination)  # output: ndarray
-        result = self.cast_to_self(result)  # cast to the current class
-        result.dims = self.dims.move(source, destination)
-        return result
+        moved_array = np.moveaxis(self, source, destination)
+        moved_dims = list(self.dims)  # convert tuple to list to modify
+        if isinstance(source, int):
+            source = [source]
+        if isinstance(destination, int):
+            destination = [destination]
+        for src, dest in zip(source, destination):
+            moved_dims.insert(dest, moved_dims.pop(src))  # remove src and insert at dest
+        moved_array.dims = tuple(moved_dims)  # type: ignore[attr-defined]
+        return moved_array  # type: ignore[return-value]
 
     def rollaxis(self, axis, start=0) -> Self:
         """

@@ -7,37 +7,62 @@
 ## Current Status
 
 ## To Do
-- [ ] Create a Config object for the different pipelines and analyses.
-- [ ] Find a way to label the experimental conditions for access with a descriptive label.
-- [ ] Add a functionality in pipelines to flexibly select steps to run and restart on checkpoints
-- [ ] Implement data structure methods required by the builders: `iter_slots` in the session's metadata.
-- [ ] Update tests for the concrete processors, coordinates, entities...
-- [ ] Write tests for the builders, z-score.
-- [ ] Update documentations in `__init__.py` files.
+- In coordinates, add interactions with attributes. Other subclasses are different data values.
+- Distinguish between data components and data structures.
+- Distinguish between builders and factories
+- Implement TypeDict for coordinate mappings in DataStructure
+- Implement a processor to gather folds, ensembles...
 - [ ] Refactor SpikesAligner to reduce conditionals: Create Task/Stimulus Subclasses PTDAligner and
   CLKAligner under a shared BaseAligner interface.
+- [ ] Add a functionality in pipelines to flexibly select steps to run and restart on checkpoints
+- [ ] Update tests.
+- [ ] Update documentations in `__init__.py` files.
+- [ ] Start back geom-baseline analysis and subpopulation analysis once the interface is fixed.
 
 ## Next steps
-- Implement the data structure for single units firing rates and the corresponding builder.
 - Add a `collect` method to the builder base class to gather all the required data for building the
   final object.
 - Implement a processor `TrialOrganizer` to extract the trials from the sessions' blocks.
-- Implement the concrete data structure class for storing the neuron-specific properties of the
-  trials and their inclusion/exclusion in the analysis.
+ in the analysis.
 - Implement a `TrialSelector` class
 
 ## Open Questions
 
-What questions should be addressed ?
+Improvements:
+- Break down the execute method into smaller, more focused methods
+- Use a factory method for creating ExpCondition instances
+- Use a dataclass for attributes that define the pipeline configuration. This makes the code easier
+  to read and ensures type validation.
+- Configuration object
+- Use dependency injection for external dependencies like ExpCondition, Candidates, and UnitsContainer.
 
-I have to design a workflow which carries out a full processing of the data. It takes as input:
-- The different analyses that should be performed.
-- The areas, units, contexts or tasks that should be considered (depending on the analysis).
+## Saveguard from `subpopulation_analysis`
 
+Notes
+-----
+Preprocessing steps:
 
-Understand why the steps are coupled in the builder and find how to reduce this coupling.
+- Reconstruct pseudo-trials for each experimental condition.
+- Define the regressor matrix X and normalize the regressors.
+- Z-score the activity of each neuron across all the pseudo-trials.
+- Denoise with Principal Component Analysis (PCA): Fit the PCA on the means intra-condition, keep
+  the first components which explain 90% of the variance, invert the transformation to obtain the
+  regressand matrix Y (to predict).
 
-So I am going to create a Pipeline interface and then different pipelines for different analyses via
-a Pipeline Factory.
+Analysis Steps:
 
-The Steps will be analogous to the Directors of the builders (when they are aimed to build data).
+- Fit the linear regression model and retrieve the coefficients.
+- Assess the model with cross-validation ?
+- Compute the ePAIRS distribution across the population of neurons.
+- Fit a GMM on the distribution of the selectivity coefficients.
+- Estimate the number of subpopulations by the log-likelihood increase for each additional cluster
+
+Data Structures Milestones:
+
+- TrialsProperties
+- PseudoTrialsSelection
+- Regressors (matrix X)
+- FiringRatesPopulation (matrix Y, both before and after z-scoring and denoising)
+- SelectivityCoefficients (matrix B)
+- EPAIRSModel
+- GMMModel

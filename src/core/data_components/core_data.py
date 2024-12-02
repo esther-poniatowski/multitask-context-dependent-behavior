@@ -11,18 +11,18 @@ from typing import Tuple, Self, Iterable
 
 import numpy as np
 
-from core.data_components.core_dimensions import DimName, Dimensions
+from core.data_components.core_dimensions import Dimensions
 
 
 class CoreData(np.ndarray):
     """
-    Core component of a data structure, containing the actual data values to analyze.
+    Core component of a data structure, containing data values to analyze or companion labels.
 
     Each object behaves like a `numpy.ndarray`, with additional dimension annotations (names).
 
     Attributes
     ----------
-    dims : Tuple[DimName, ...]
+    dims : Dimensions
         Names of each dimension in the numpy array.
 
     Methods
