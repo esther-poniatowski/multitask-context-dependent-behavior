@@ -7,23 +7,28 @@ Classes
 -------
 Coordinate
 """
+# DISABLED WARNINGS
+# --------------------------------------------------------------------------------------------------
+# pylint: disable=abstract-method
+# Scope: `Coordinate` class
+# Reason: The methods `flip` and `rollaxis` are not implemented in the base class `DataComponent`.
+# --------------------------------------------------------------------------------------------------
 
-from typing import Type, TypeVar, Union, Generic, Tuple, Self, FrozenSet
+
+from typing import Type, TypeVar, Generic
 
 import numpy as np
 from numpy.typing import ArrayLike
 
+from core.data_components.base_data_component import DataComponent, Dtype
 from core.attributes.base_attribute import Attribute
 
-
-Dtype = TypeVar("Dtype", bound=np.generic)
-"""Type variable for the data type of the underlying numpy array."""
 
 AnyAttribute = TypeVar("AnyAttribute", bound=Attribute)
 """Type variable for the attribute type associated with the coordinate labels."""
 
 
-class Coordinate(Generic[Dtype, AnyAttribute], np.ndarray):
+class Coordinate(DataComponent[Dtype], Generic[Dtype, AnyAttribute]):
     """
     Base class representing coordinates for one dimension of a data set.
 
@@ -32,21 +37,11 @@ class Coordinate(Generic[Dtype, AnyAttribute], np.ndarray):
     ATTRIBUTE : Type[Attribute]
         Attribute represented by the coordinate. It determines the data type and the valid values
         for the underlying numpy array.
-    DTYPE: Type[Dtype]
-        Data type for the coordinate labels.
-    METADATA : Tuple[str, ...]
-        Names of the additional attributes storing metadata alongside with the coordinate values.
-    SENTINEL : Any
-        Sentinel value marking missing or unset coordinate values.
-        For float dtype: `np.nan`.
-        For integer dtype: usually ``-1`` (depending on the purpose of the coordinate).
-        For string dtype: usually empty string ``''``.
 
     Arguments
     ---------
     values : np.ndarray[Tuple[Any, ...], np.dtype[Dtype]]
-        Labels of the coordinate associated with data dimension(s). Length : ``n_smpl``, total
-        number of samples labelled by the coordinates across its dimensions.
+        Coordinate labels associated with data dimension(s).
     **metadata : Any
         Additional attributes to store alongside the coordinate values. The names of the attributes
         should be specified in the class attribute `METADATA`.
@@ -54,78 +49,14 @@ class Coordinate(Generic[Dtype, AnyAttribute], np.ndarray):
     Methods
     -------
     validate
-    from_shape
     get_attribute
     has_attribute
     are_valid
     """
 
     ATTRIBUTE: Type[AnyAttribute]
-    DTYPE: Type[Dtype]
-    METADATA: FrozenSet[str] = frozenset()  # default empty set to avoid errors
-    SENTINEL: Union[int, float, str]
-
-    def __repr__(self) -> str:
-        metadata_str = ", ".join(f"{attr}={getattr(self, attr, None)}" for attr in self.METADATA)
-        return f"<{self.__class__.__name__}(shape={self.shape}, {metadata_str})>"
 
     # --- Creation of Coordinate objects -----------------------------------------------------------
-
-    def __new__(cls, values: ArrayLike, **metadata) -> Self:
-        """
-        Create a new coordinate object behaving as a numpy array.
-
-        Notes
-        -----
-        In NumPy subclassing, no keyword arguments can be passed to the `__new__` method should only
-        directly impact the creation of the array, not being metadata attributes to store in the
-        instance. Any metadata should be explicitly specified in the signature.
-        """
-        cls.validate(values)
-        obj = np.asarray(values, dtype=cls.DTYPE).view(cls)
-        for attr in cls.METADATA:
-            setattr(obj, attr, metadata.get(attr, None))
-        return obj
-
-    def __array_finalize__(self, obj) -> None:
-        """
-        Create a new coordinate object from a previous one in a numpy operation.
-
-        Notes
-        -----
-        By default, metadata is retained from the parent object. Override this method in subclasses
-        to implement more fine-grained behavior.
-        """
-        if obj is None:
-            return
-        for attr in self.METADATA:
-            setattr(self, attr, getattr(obj, attr, None))
-
-    def __getitem__(self, index) -> Self:
-        """
-        Get a subset of the data by indexing and convert it to a `Coordinate` object.
-
-        Parameters
-        ----------
-        index : Any
-            Index or slice to retrieve from the data.
-
-        Returns
-        -------
-        Coordinate
-            Subset of the coordinate.
-
-        Warning
-        -------
-        By default, all the metadata attributes are copied to the new object. Override this method
-        in subclasses to implement more fine-grained behavior.
-        """
-        result = super().__getitem__(index)
-        if isinstance(result, np.ndarray) and not isinstance(result, type(self)):
-            result = result.view(type(self))  # convert back to the subclass
-            for attr in self.METADATA:
-                setattr(result, attr, getattr(self, attr, None))
-        return result
 
     @classmethod
     def validate(cls, values: ArrayLike, **kwargs) -> None:
@@ -160,31 +91,10 @@ class Coordinate(Generic[Dtype, AnyAttribute], np.ndarray):
         --------
         `Attribute.is_valid`
         """
-        if not hasattr(cls, "ATTRIBUTE"):  # only if ATTRIBUTE is defined
+        if hasattr(cls, "ATTRIBUTE"):  # only if ATTRIBUTE is defined
             mask = cls.are_valid(values)
             if not np.all(mask):
-                invalid_values = np.asarray(values)[~mask]
-                raise ValueError(f"Invalid values for {cls.__name__}: {invalid_values}")
-
-    @classmethod
-    def from_shape(cls, shape: int | Tuple[int, ...], **metadata) -> Self:
-        """
-        Create an empty coordinate object with no labels.
-
-        Parameters
-        ----------
-        shape : int, Tuple[int, ...]
-            Shape of the array to create. If an integer is passed, the array will be 1D.
-
-        Returns
-        -------
-        Coordinate
-            Instance of the subclass with an empty array as labels.
-        """
-        if isinstance(shape, int):  # convert to tuple for consistency
-            shape = (shape,)
-        values = np.full(shape=shape, fill_value=cls.SENTINEL, dtype=cls.DTYPE)
-        return cls(values=values, **metadata)
+                raise ValueError(f"Invalid values for {cls.__name__}")
 
     # --- Interaction with Attributes --------------------------------------------------------------
 
