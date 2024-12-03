@@ -17,7 +17,8 @@ import warnings
 import numpy as np
 from numpy.typing import ArrayLike
 
-from coordinates.base_coord import Coordinate
+from core.coordinates.base_coord import Coordinate
+from core.data_components.core_dimensions import Dimensions
 
 
 class CoordTime(Coordinate):
@@ -89,11 +90,14 @@ class CoordTime(Coordinate):
         t_off: Optional[float] = None,
         t_shock: Optional[float] = None,
         t_bin: Optional[float] = None,
+        dims: Dimensions | None = None,
     ):
         """Override the base method to pass metadata."""
         if t_bin is None:
             t_bin = cls.eval_t_bin(values)
-        obj = Coordinate.__new__(cls, values, t_on=t_on, t_off=t_off, t_shock=t_shock, t_bin=t_bin)
+        obj = Coordinate.__new__(
+            cls, values, dims=dims, t_on=t_on, t_off=t_off, t_shock=t_shock, t_bin=t_bin
+        )
         return obj
 
     @classmethod
@@ -245,9 +249,14 @@ class CoordTimeEvent(Coordinate):
     # Declare instance attributes for metadata (type annotations for type checking)
     reference: Optional[str] = None
 
-    def __new__(cls, values: ArrayLike, reference: Optional[str] = ""):
+    def __new__(
+        cls,
+        values: ArrayLike,
+        reference: Optional[str] = "",
+        dims: Dimensions | None = None,
+    ):
         """Override the base method to pass metadata."""
-        obj = Coordinate.__new__(cls, values, reference=reference)
+        obj = Coordinate.__new__(cls, values, dims=dims, reference=reference)
         return obj
 
     def __repr__(self):
