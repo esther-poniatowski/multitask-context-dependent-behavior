@@ -19,7 +19,7 @@ from typing import Type, TypeVar, Generic
 import numpy as np
 from numpy.typing import ArrayLike
 
-from core.data_components.base_data_component import DataComponent, Dtype
+from core.data_components.base_data_component import DataComponent
 from core.attributes.base_attribute import Attribute
 
 
@@ -27,7 +27,7 @@ AnyAttribute = TypeVar("AnyAttribute", bound=Attribute)
 """Type variable for the attribute type associated with the coordinate labels."""
 
 
-class Coordinate(DataComponent[Dtype], Generic[Dtype, AnyAttribute]):
+class Coordinate(DataComponent, Generic[AnyAttribute]):
     """
     Base class representing coordinates for one dimension of a data set.
 

@@ -20,7 +20,7 @@ from core.attributes.brain_info import CorticalDepth
 from core.attributes.brain_info import Unit
 
 
-class CoordUnit(Coordinate[np.str_, Unit]):
+class CoordUnit(Coordinate[Unit]):
     """
     Coordinate labels for the units (neurons) in a population.
 
@@ -67,7 +67,7 @@ class CoordUnit(Coordinate[np.str_, Unit]):
     """
 
     ATTRIBUTE = Unit
-    DTYPE = np.str_
+    DTYPE = np.dtype("str")
     SENTINEL = ""
 
     def __repr__(self) -> str:
@@ -116,7 +116,7 @@ class CoordUnit(Coordinate[np.str_, Unit]):
             yield unit_value_dict[unit]
 
 
-class CoordDepth(Coordinate[np.str_, CorticalDepth]):
+class CoordDepth(Coordinate[CorticalDepth]):
     """
     Coordinate indicating the cortical depth of each unit in a population.
 
@@ -137,7 +137,7 @@ class CoordDepth(Coordinate[np.str_, CorticalDepth]):
     """
 
     ATTRIBUTE = CorticalDepth
-    DTYPE = np.str_
+    DTYPE = np.dtype("str")
     SENTINEL = ""
 
     def __repr__(self) -> str:

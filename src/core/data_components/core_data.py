@@ -15,10 +15,10 @@ CoreData
 # --------------------------------------------------------------------------------------------------
 
 from core.data_components.core_dimensions import Dimensions
-from core.data_components.base_data_component import DataComponent, Dtype
+from core.data_components.base_data_component import DataComponent
 
 
-class CoreData(DataComponent[Dtype]):
+class CoreData(DataComponent):
     """
     Core component of a data structure, containing data values to analyze or companion labels.
 

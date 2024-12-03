@@ -7,18 +7,15 @@ Classes
 -------
 DataComponent
 """
-from typing import Tuple, Self, TypeVar, Generic, FrozenSet, Dict, Type
+from typing import Tuple, Self, FrozenSet, Dict, Type
 
 import numpy as np
 from numpy.typing import ArrayLike
 
 from core.data_components.core_dimensions import Dimensions, DimensionsSpec
 
-Dtype = TypeVar("Dtype", bound=np.generic)
-"""Type variable for the data type of the underlying numpy array."""
 
-
-class DataComponent(np.ndarray, Generic[Dtype]):
+class DataComponent(np.ndarray):
     """
     Core component of a data structure, containing data values to analyze or companion labels.
 
@@ -45,7 +42,7 @@ class DataComponent(np.ndarray, Generic[Dtype]):
 
     Arguments
     ---------
-    values : np.ndarray[Tuple[Any, ...], np.dtype[Dtype]]
+    values : np.ndarray[Tuple[Any, ...], np.dtype[np.generic]]
         Values for the underlying numpy array.
         Shape: At least the number of required dimensions, at most the total number of dimensions in
         the `DIMENSIONS_SPEC` attribute.
@@ -135,7 +132,7 @@ class DataComponent(np.ndarray, Generic[Dtype]):
     DIMENSIONS_SPEC: DimensionsSpec
     dims: Dimensions  # type hint for the instance attribute
     METADATA: FrozenSet[str]
-    DTYPE: Dtype
+    DTYPE: np.dtype
     SENTINEL: int | float | str
 
     def __repr__(self):
