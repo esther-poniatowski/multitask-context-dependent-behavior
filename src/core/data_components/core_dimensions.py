@@ -37,6 +37,7 @@ class Dimensions(UserList):
     get_axis
     is_subset
     is_ordered_as
+    intersection
     add
     transpose
 
@@ -195,6 +196,26 @@ class Dimensions(UserList):
         order_other = list(other[i] for i in range(len(other)) if other[i] in common_dims)
         return order_self == order_other
 
+    @classmethod
+    def intersection(cls, *dims: Self) -> Self:
+        """
+        Get the common dimensions between multiple sets of dimensions.
+
+        Parameters
+        ----------
+        *dims : Dimensions
+            Multiple sets of dimensions.
+
+        Returns
+        -------
+        Dimensions
+            Common dimensions between the sets.
+        """
+        common_dims = set(dims[0])
+        for dim in dims[1:]:
+            common_dims &= set(dim)
+        return cls(*common_dims)
+
     # --- Manipulation methods ---------------------------------------------------------------------
 
     def add(self, name: str = DEFAULT, axis: int = -1) -> None:
@@ -330,18 +351,51 @@ class DimensionsSpec:
         Values (bool): Boolean indicating if the dimension is required (True) or optional (False).
         The order of the keys determines the expected order of the dimensions in the instances.
 
+    Arguments
+    ---------
+    kwargs : bool
+        Dimension names and their requirements, in the order they should appear in the instance.
+
     Methods
     -------
-    validate
     required
     optional
-    order
+    validate
+
+    Examples
+    --------
+    Create a specification for dimensions:
+
+    >>> spec = DimensionsSpec(units=False, trials=True, time=False)
+
+    Get the required dimensions:
+
+    >>> spec.required()
+    Dimensions("trials")
+
+    Get the optional dimensions:
+
+    >>> spec.optional()
+    Dimensions("units", "time")
+
+    Validate a set of dimensions against the specification:
+
+    >>> dims = Dimensions("trials", "units")
+    >>> spec.validate(dims)
+    Traceback (most recent call last):
+    ...
+    ValueError: Missing required dimensions: ['time']
+
+    See Also
+    --------
+    `collections.OrderedDict` : Uses to ensure the order of the dimensions in the spec.
     """
 
-    def __init__(self, spec: OrderedDict[str, bool]) -> None:
-        if len(set(spec.keys())) != len(spec):
+    def __init__(self, **kwargs: bool) -> None:
+        self.spec: OrderedDict[str, bool]
+        if len(set(kwargs.keys())) != len(kwargs):
             raise ValueError("Duplicate dimension names in the specification.")
-        self.spec = spec
+        self.spec = OrderedDict(*kwargs)
 
     def required(self) -> Dimensions:
         """Get the required dimensions in an instance of the `Dimensions` class."""
@@ -353,7 +407,7 @@ class DimensionsSpec:
 
     def validate(self, dims: Dimensions) -> None:
         """
-        Validate an instance of Dimensions against the specification.
+        Validate an instance of `Dimensions` against the specification.
 
         Parameters
         ----------
