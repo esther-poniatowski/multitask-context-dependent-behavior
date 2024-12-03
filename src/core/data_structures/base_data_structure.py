@@ -17,22 +17,26 @@ metaclass approach.
 
 Separation of concerns between the base and subclasses constructors:
 
-- Base class constructor: Declare and (optionally) set the content-related attributes (data and
+- Base class constructor: Declare and (optionally) set the data component attributes (core data and
   coordinates).
 - Subclass constructors: Assign the metadata attributes (identifiers for the data structure and
-  optional descriptive information) AND call the base class constructor with the content-related
+  optional descriptive information) AND call the base class constructor with the data component
   arguments.
 """
 from abc import ABC
 import copy
-from typing import Tuple, Mapping, Type, Self
+from typing import Tuple, Mapping, Self, FrozenSet, Set, TypeVar, Generic, Generator
 
-from core.data_components.core_data import CoreData, Dimensions
-
+from core.data_components.core_dimensions import Dimensions, DimensionsSpec
+from core.data_components.base_data_component import DataComponent, ComponentSpec
+from core.data_components.core_data import CoreData
 from core.coordinates.base_coord import Coordinate
 
+AnyCoreData = TypeVar("AnyCoreData", bound=CoreData)
+"""Type variable for the core data component stored in the data structure."""
 
-class DataStructure(ABC):
+
+class DataStructure(ABC, Generic[AnyCoreData]):
     """
     Abstract base class for data structures, defining the interface to interact with data.
 
@@ -41,15 +45,22 @@ class DataStructure(ABC):
     REQUIRED_IN_SUBCLASSES : Tuple[str]
         Names of the class-level attributes which have to be defined in each data structure
         subclass.
+    DIMENSIONS_SPEC : DimensionsSpec
+        Specification of the dimensions of the data structure class (names, order, required and
+        optional).
+        To be defined in each subclass.
+    COMPONENTS_SPEC : ComponentSpec
+        Specification of the data components allowed in the data structure class (names and types).
+        To be defined in each subclass.
     dims : Dimensions
-        Names of the dimensions, ordered to label the axes of the underlying data.
-    coords : Mapping[str, Type[Coordinate]]
-        Names of the coordinates (as attributes) and their expected types.
-    coords_to_dims : Mapping[str, Tuple[str, ...]]
-        Mapping from coordinates to their associated dimension(s) in the data structure.
-        Keys: Coordinate names.
-        Values: Dimension names, ordered to match the coordinate axes.
-    identifiers : Tuple[str, ...]
+        Registry of actual dimensions in an instance (subset of the `DIMENSIONS_SPEC` attribute).
+        Updated as new data components are added to the data structure (see the
+        `register_dimensions` method).
+    coords : Set[str]
+        Registry of active coordinates in the data structure instance (subset of the
+        `COMPONENTS_SPEC` attribute). Updated as new coordinates are added to the data structure
+        (see the `register_coord` method).
+    identifiers : FrozenSet[str]
         Names of the metadata attributes which jointly and uniquely identify each data structure
         instance within its class. Handled by each subclass' constructor.
 
@@ -57,17 +68,23 @@ class DataStructure(ABC):
     ----------
     data : CoreData
         Actual data values to analyze.
+        Shape: As many dimensions as the length of the `dims` attribute (by construction).
     shape : Tuple[int]
-        (Property) Shape of the data array (delegated to the CoreData object).
+        (Property) Shape of the data array (delegated to the `CoreData` object).
 
     Methods
     -------
-    `get_coord`
-    `__getattr__`
-    `set_data`
-    `set_coord`
-    `copy`
-    `sel`
+    get_data
+    get_coord
+    get_coords_from_dim
+    iter_coords
+    __getattr__
+    set_data
+    set_coord
+    register_coord
+    register_dimensions
+    copy
+    sel
 
     Examples
     --------
@@ -75,12 +92,12 @@ class DataStructure(ABC):
 
     >>> data.dims[0]
     "time"
-    >>> data.get_dim(0) # delegated to the core data object
+    >>> data.get_dim(0) # delegated to the dimension object
     "time"
 
     Get the axis of the time dimension:
 
-    >>> data.get_axis('time') # delegated to the core data object
+    >>> data.get_axis('time') # delegated to the dimension object
     0
 
     Get the size of the time dimension:
@@ -88,10 +105,8 @@ class DataStructure(ABC):
     >>> data.get_size('time') # delegated to the core data object
     10
 
-    Get the time coordinate (two equivalent approaches):
+    Get the time coordinate:
 
-    >>> data.time
-    array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
     >>> data.get_coord('time')
     array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
 
@@ -104,46 +119,61 @@ class DataStructure(ABC):
 
     Notes
     -----
-    Setting content-related attributes (core data and coordinates):
+    Hierarchy of dimensions in data structures and their components:
 
-    - Lazy initialization: Content-related attributes can be set at the initialization of the data
-      structure, or later via the dedicated setter methods (`set_data` and `set_coord`). If no
-      values are provided at initialization, the attributes are *not* set to `None` to avoid type
-      checking errors in methods which expect the attributes to be filled.
-    - Expected types are specified by the constructor for the `data` attribute (declaration, without
-      actually initialization if no values are provided) and by the class-level attribute `coords`
-      for the coordinates.
+    - The general dimensions for the data structure class are specified in the `DIMENSIONS_SPEC`
+      class attribute. It sets the names of the allowed dimension, their order, and whether they are
+      required or optional.
+    - Each class instance stores its actual dimensions under the `dims` attribute, which is a
+      `Dimensions` object containing a subset of the dimensions in the `DIMENSIONS_SPEC` class-level
+      attribute.
+    - Each of the data component nested in a data structure instance owns its `Dimensions` object,
+      which should be consistent with the instance-level `dims` attribute.
+
+    Setting data components (core data and coordinates):
+
+    - Lazy initialization: Data component attributes can be set at the initialization of the data
+      structure, or later via the dedicated setter methods (`set_data` and `set_coord`). This
+      behavior allows to construct data structures step by step in builders. If no values are
+      provided at initialization, the attributes are *not* set to `None` to avoid type checking
+      errors in methods which expect the attributes to be filled.
+    - Expected types are specified in and the class-level attribute `COMPONENTS_SPEC`. In the base
+      constructor, type annotations are specified for the `data` attribute (declaration, without
+      actual initialization if no values are provided).
     - Validation of the input values is performed by the setter methods, which are themselves called
       by the constructor if the arguments are provided.
 
-    Accessing content-related attributes:
+    Accessing attributes:
 
-        - Getter methods are provided to access the content-related attributes: `get_data` and
-      `get_coord`. The `get_coord` method allows to retrieve a coordinate using its attribute name,
-      which is useful to iterate over coordinates (whose names are registered in the `coords`
-      class-level attribute).
-    - Delegation to nested attributes is implemented by two approaches:
-       - Specific methods: `shape` property (delegated to the core data object).
-       - Overriding the `__getattr__` method: shortcuts to the dimensions and coordinates (e.g.,
-         `get_dim`, `get_axis`, `get_size`).
-    - If a content-related attribute is not provided, then:
-        - Trying to access it via the dot notation (`self.attr`) or the `getattr` function
-          (`getattr(self, 'attr')`) will raise an error (`AttributeError` or `KeyError`) since the
-          attribute does not exist in the dictionary of the instance.
-        - Trying to access it via the dedicated getter method (`self.get_data()` or
-          `self.get_coord()`) will raise an `AttributeError` (custom behavior).
+    - To access the data components, use the dedicated getter methods: `get_data` and `get_coord`
+      (using its attribute name). Those methods raise an error in case the attribute is not set, to
+      ensure that the client code operates on valid objects (instead of `None`).
+    - To access the attributes or methods of the nested objects (delegation):
+       - Use specific methods implemented in the `DataStructure` class: `shape` (property),
+         `get_dim`, `get_axis`, `get_size`.
+       - Use the dot notation or the `getattr` function to access any method or attribute which is
+         not explicitly handled by the data structure class but exists in the nested objects. This
+         is possible because the `DataStructure` class overrides the `__getattr__` method, which
+         iterates through the nested objects to find the requested attribute.
 
     See Also
     --------
+    `Dimensions`: Base class for dimensions.
+    `DimensionsSpec`: Specification of the dimensions of a data structure.
+    `DataComponent`: Base class for data components.
+    `CoreData`: Base class for core data.
     `Coordinate`: Base class for coordinates.
+    `ComponentSpec`: Specification of the data components allowed in a data structure.
     """
 
-    # --- Schema of the Data Structure ---
-    REQUIRED_IN_SUBCLASSES = ("dims", "coords", "coords_to_dims", "identifiers")
-    dims: Dimensions
-    coords: Mapping[str, Type[Coordinate]]
-    coords_to_dims: Mapping[str, Dimensions]
-    identifiers: Tuple[str, ...]
+    # --- Schema of the Data Structure -------------------------------------------------------------
+
+    REQUIRED_IN_SUBCLASSES = ("DIMENSIONS_SPEC", "COMPONENTS_SPEC", "identifiers")
+    # Type hints for class-level attributes
+    DIMENSIONS_SPEC: DimensionsSpec
+    COMPONENTS_SPEC: ComponentSpec = ComponentSpec(data=CoreData)
+
+    identifiers: FrozenSet[str]
 
     def __init_subclass__(cls) -> None:
         """
@@ -155,14 +185,12 @@ class DataStructure(ABC):
         cls : Type[DataStructure]
             Class of the concrete data structure being created.
         """
-        # Call parent hook (default behavior)
-        super().__init_subclass__()
-        # Check class-level attributes
-        for class_attr in cls.REQUIRED_IN_SUBCLASSES:
+        super().__init_subclass__()  # call parent hook (default behavior)
+        for class_attr in cls.REQUIRED_IN_SUBCLASSES:  # check class-level attributes
             if not hasattr(cls, class_attr):
                 raise TypeError(f"<{cls.__name__}> Missing class-level attribute: '{class_attr}'.")
 
-    def __init__(self, data: CoreData | None = None, **coords: Coordinate | None) -> None:
+    def __init__(self, data: AnyCoreData | None = None, **coords: Coordinate | None) -> None:
         """
         Instantiate a data structure and check the consistency of the input values (automatic).
 
@@ -170,16 +198,20 @@ class DataStructure(ABC):
         ----------
         data : CoreData | None
             Core data values for the attribute `data`.
-            Shape: Consistent with the dimensions expected for the data structure.
-        coords : Dict[str, Coordinate]
-            Coordinate values specific to the data structure subclass.
-            Keys: Coordinate names as specified in `coords_to_dims`.
-            Values: Coordinate values, corresponding to the expected type of coordinate.
-            .. _coord_args:
+            Type: Consistent with the type expected from the `COMPONENTS_SPEC` attribute.
+            Shape: Consistent with the dimensions expected from the `DIMENSIONS_SPEC` attribute, and
+            the other components if already set.
+        coords : Coordinate | None
+            Coordinates to store along the core data values.
+            Keys: Names expected from the `COMPONENTS_SPEC` attribute.
+            Type: Consistent with the type expected from the `COMPONENTS_SPEC` attribute.
+            Shape: Consistent with the other components if already set.
         """
-        # Lazy initialization: declare `data` as CoreData
-        self.data: CoreData
-        # Fill with actual values if provided
+        # Declare essential attributes
+        self.dims: Dimensions = Dimensions()
+        self.coords: Set[str] = set()
+        self.data: AnyCoreData
+        # Fill with actual values if provided (lazy initialization)
         if data is not None:
             self.set_data(data)
         for name, coord in coords.items():
@@ -188,15 +220,19 @@ class DataStructure(ABC):
 
     def __repr__(self) -> str:
         data_status = "empty" if not hasattr(self, "data") else "filled"
-        active_coords = ", ".join([name for name in self.coords if hasattr(self, name)])
+        active_coords = ", ".join(self.coords) if self.coords else "none"
         return (
             f"<{self.__class__.__name__}> Dims: {self.dims}, "
             f"Data: {data_status}, Coords: {active_coords}"
         )
 
-    # --- Access to Attributes ---------------------------------------------------------------------
+    # --- Getter Methods ---------------------------------------------------------------------------
 
-    def get_data(self) -> CoreData:
+    def has_data(self) -> bool:
+        """Check if the data attribute is set."""
+        return hasattr(self, "data")
+
+    def get_data(self) -> AnyCoreData:
         """
         Get the actual data values.
 
@@ -210,8 +246,8 @@ class DataStructure(ABC):
         AttributeError
             If the data attribute is not set.
         """
-        if not hasattr(self, "data"):
-            raise AttributeError("Data not set.")
+        if not self.has_data():
+            raise AttributeError(f"Data not set in {self.__class__.__name__} instance.")
         return self.data
 
     def get_coord(self, name: str) -> Coordinate:
@@ -231,10 +267,10 @@ class DataStructure(ABC):
         Raises
         ------
         AttributeError
-            If the coordinate name is not valid.
+            If the coordinate name is not among the active coordinates in the data structure.
         """
         if name not in self.coords:
-            raise AttributeError(f"Invalid coordinate: '{name}' not in {self.coords.keys()}.")
+            raise AttributeError(f"Coordinate '{name}' not active in {self.coords}.")
         return getattr(self, name)
 
     def get_coords_from_dim(self, dim: str) -> Mapping[str, Coordinate]:
@@ -246,44 +282,82 @@ class DataStructure(ABC):
         coords : Dict[str, Coordinate]
             Coordinates associated with the specified dimension of the data structure.
         """
-        return {
-            name: getattr(self, name) for name in self.coords if dim in self.coords_to_dims[name]
-        }
+        return {name: coord for name, coord in self.iter_coords() if dim in coord.dims}
+
+    def iter_coords(self) -> Generator[Tuple[str, Coordinate], None, None]:
+        """
+        Iterate over the active coordinates in the data structure.
+
+        Yields
+        ------
+        name : str
+            Name of the coordinate.
+        coord : Coordinate
+            Coordinate object stored in the data structure.
+        """
+        for name in self.coords:
+            yield name, getattr(self, name)
 
     @property
     def shape(self) -> Tuple[int, ...]:
         """Get the shape of the core data (delegate to the core data object)."""
         return self.data.shape
 
-    def get_dim(self, dim: int) -> str:
+    def get_dim(self, axis: int) -> str:
         """Delegate to the dimension object."""
-        return self.dims[dim]
+        return self.dims.get_dim(axis)
 
     def get_axis(self, name: str) -> int:
-        """Delegate to the core data object."""
-        return self.data.get_axis(name)
+        """Delegate to the dimension object."""
+        return self.dims.get_axis(name)
 
     def get_size(self, name: str) -> int:
-        """Delegate to the core data object."""
-        return self.data.get_size(name)
+        """Delegate to the first component object which owns this dimension."""
+        if name not in self.dims:
+            raise ValueError(f"Dimension '{name}' not active in {self.dims}.")
+        if self.has_data():
+            return self.data.get_size(name)
+        coords_with_dim = self.get_coords_from_dim(name)
+        if coords_with_dim:
+            return next(iter(coords_with_dim.values())).get_size(name)
+        raise ValueError(f"Dimension '{name}' not found in the data structure.")
 
     def __getattr__(self, name: str):
         """
-        Delegate the access to nested attributes and methods of the content objects.
+        Delegate the access to nested attributes and methods of the component objects.
 
         Parameters
         ----------
         name : str
             Name of the attribute to get.
+
+        Returns
+        -------
+        Any
+            Value of the attribute in the nested object.
+
+        Raises
+        ------
+        AttributeError
+            If the attribute is not found in the data structure or its nested objects.
+
+        Notes
+        -----
+        The attributes considered are all the active components, the dimensions and the identifiers.
         """
-        for obj in self.__dict__.values():
+        nested_attr = self.coords | {"data", "dims"} | self.identifiers
+        for attr in nested_attr:
+            obj = getattr(self, attr, None)
             if hasattr(obj, name):
                 return getattr(obj, name)
-        raise AttributeError(f"Invalid attribute '{name}' for '{self.__class__.__name__}'.")
+        raise AttributeError(
+            f"Invalid attribute '{name}' for '{self.__class__.__name__}'. "
+            f"Not in any nested object: {nested_attr}"
+        )
 
-    # --- Set Data and Coordinates -----------------------------------------------------------------
+    # --- Setter Methods ---------------------------------------------------------------------------
 
-    def set_data(self, data: CoreData) -> None:
+    def set_data(self, data: AnyCoreData) -> None:
         """
         Set the attribute `data` with actual values after validation.
 
@@ -299,12 +373,20 @@ class DataStructure(ABC):
         ValueError
             If the dimensions of the input data are not consistent with the dimensions expected by
             the data structure.
+
+        See Also
+        --------
+        `DimensionsSpec.validate`: Check the consistency of the dimensions.
         """
-        if not isinstance(data, CoreData):
-            raise TypeError(f"Invalid type for in DataStructure: {type(data)} != CoreData")
-        if data.dims != len(self.dims):
-            raise ValueError(f"Invalid number of dimensions: data {data.ndim} != {len(self.dims)}")
+        # Validate type (COMPONENTS_SPEC)
+        self.COMPONENTS_SPEC.validate("data", data)
+        # Validate dimensions
+        self.DIMENSIONS_SPEC.validate(data.dims)
+        # Validate shape consistency with the other components
+        self.validate_shape(data)
+        # Store the data
         self.data = data
+        self.register_dimensions(data.dims)
 
     def set_coord(self, name: str, coord: Coordinate) -> None:
         """
@@ -331,20 +413,59 @@ class DataStructure(ABC):
         --------
         `CoreData.get_size`: Get the length of a dimension.
         """
+        # Validate name and type (COMPONENTS_SPEC)
+        self.COMPONENTS_SPEC.validate(name, coord)
+        # Validate dimensions
+        self.DIMENSIONS_SPEC.validate(coord.dims)
+        # Validate shape consistency with the other components
+        self.validate_shape(coord)
+        # Store the coordinate
+        setattr(self, name, coord)
+        self.register_coord(name)
+        self.register_dimensions(coord.dims)
+
+    def register_coord(self, name: str) -> None:
+        """Register a new active coordinate in the data structure, if not already present."""
         if name not in self.coords:
-            raise AttributeError(f"Invalid coordinate name: '{name}' not in {self.coords.keys()}.")
-        if not isinstance(coord, self.coords[name]):
-            raise TypeError(f"Invalid type for '{name}': {type(coord)} != {self.coords[name]}")
-        if hasattr(self, "data"):  # check consistency with the data structure dimensions
-            valid_shape = tuple(self.data.get_size(dim) for dim in self.coords_to_dims[name])
-            if coord.shape != valid_shape:
-                raise ValueError(f"Invalid shape for '{name}': {coord.shape} != {valid_shape}")
-        setattr(self, name, coord)  # store in private attribute (bypass descriptor)
+            self.coords.add(name)
+
+    def register_dimensions(self, dims: Dimensions) -> None:
+        """Register new dimensions in the data structure, if not already present."""
+        for dim in dims:
+            if dim not in self.dims:
+                self.dims.add(dim)
+
+    def validate_shape(self, component: DataComponent) -> None:
+        """Validate the shape of a component before setting it.
+
+        Criteria: The shape of the new component should be consistent with the shape of the other
+        components already set in the data structure, along each dimension they have in common.
+
+        Parameters
+        ----------
+        component : DataComponent
+            New component to set in the data structure.
+
+        Raises
+        ------
+        ValueError
+            If the shape of the new component does not match the shape of the other components along
+            any common dimension.
+        """
+        common_dims = Dimensions.intersection(self.dims, component.dims)
+        for dim in common_dims:
+            expected_size = self.get_size(dim)
+            component_size = component.get_size(dim)
+            if component_size != expected_size:
+                raise ValueError(
+                    f"Invalid shape for component '{component.__class__.__name__}' "
+                    f"along dimension '{dim}': {component_size} != {expected_size}"
+                )
 
     # --- Data Manipulations -----------------------------------------------------------------------
 
     def copy(self) -> Self:
-        """Return a *deep copy* of the data structure."""
+        """Create a *deep copy* of the data structure."""
         return copy.deepcopy(self)
 
     # TODO: Implement the selection method
