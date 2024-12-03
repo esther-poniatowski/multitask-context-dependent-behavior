@@ -7,12 +7,13 @@ Classes
 -------
 DataComponent
 """
-from typing import Tuple, Self, FrozenSet, Dict, Type
+from typing import Tuple, Self, Mapping, Dict, Type
 
 import numpy as np
 from numpy.typing import ArrayLike
 
 from core.data_components.core_dimensions import Dimensions, DimensionsSpec
+from core.data_components.core_metadata import MetaDataField
 
 
 class DataComponent(np.ndarray):
@@ -27,8 +28,9 @@ class DataComponent(np.ndarray):
         Names of the dimensions allowed for the data, in order, along with their status (required:
         True, optional: False).
         To be defined in subclasses.
-    METADATA : FrozenSet[str]
-        Names of the additional attributes storing metadata alongside with the values.
+    METADATA : Mapping[str, MetaDataField]
+        Names of the additional attributes storing metadata, alongside with their expected types and
+        default values (if any).
         To be defined in subclasses.
     DTYPE : np.generic
         Data type for the values stored in the array.
@@ -130,8 +132,8 @@ class DataComponent(np.ndarray):
     """
 
     DIMENSIONS_SPEC: DimensionsSpec
-    dims: Dimensions  # type hint for the instance attribute
-    METADATA: FrozenSet[str]
+    dims: Dimensions  # type hint for instance attribute
+    METADATA: Mapping[str, MetaDataField]
     DTYPE: np.dtype
     SENTINEL: int | float | str
 
@@ -147,7 +149,7 @@ class DataComponent(np.ndarray):
             f"{metadata})"
         )
 
-    # --- Initialization Methods -------------------------------------------------------------------
+    # --- Creation Methods -------------------------------------------------------------------------
 
     def __new__(cls, values: ArrayLike, dims: Dimensions | None = None, **metadata) -> Self:
         """
@@ -194,10 +196,10 @@ class DataComponent(np.ndarray):
             raise ValueError(f"len(dims) = {len(dims)} != array.ndim = {obj.ndim}")
         obj.dims = dims  # assign dimension names as new attribute
         # Set additional metadata attributes
-        if hasattr(cls, "METADATA"):  # enforce specific metadata attributes
+        if hasattr(cls, "METADATA"):  # enforce only specific metadata attributes (still optional)
             for attr in cls.METADATA:
                 setattr(obj, attr, metadata.get(attr, None))
-        else:  # set any metadata attributes
+        else:  # set arbitrary metadata attributes
             for attr, value in metadata.items():
                 setattr(obj, attr, value)
         return obj
