@@ -7,7 +7,7 @@ Classes
 -------
 DataComponent
 """
-from typing import Tuple, Self, TypeVar, Generic, FrozenSet
+from typing import Tuple, Self, TypeVar, Generic, FrozenSet, Dict, Type
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -26,7 +26,7 @@ class DataComponent(np.ndarray, Generic[Dtype]):
 
     Class Attributes
     ----------------
-    DIMS : DimensionSpec
+    DIMENSIONS_SPEC : DimensionSpec
         Names of the dimensions allowed for the data, in order, along with their status (required:
         True, optional: False).
         To be defined in subclasses.
@@ -47,9 +47,15 @@ class DataComponent(np.ndarray, Generic[Dtype]):
     ---------
     values : np.ndarray[Tuple[Any, ...], np.dtype[Dtype]]
         Values for the underlying numpy array.
-        Shape:
-    dims : Dimensions
+        Shape: At least the number of required dimensions, at most the total number of dimensions in
+        the `DIMENSIONS_SPEC` attribute.
+    dims : Dimensions, optional
         Names of each dimension in the array.
+        Shape (if provided): As many elements at the number of dimensions in the input values.
+        Content: Names must be consistent with the `DIMENSIONS_SPEC` attribute. The required
+        dimensions must be present, and the order of dimensions should be respected.
+        If not provided, default dimension names are initialized for each dimension in the input
+        values.
 
     Methods
     -------
@@ -77,18 +83,18 @@ class DataComponent(np.ndarray, Generic[Dtype]):
 
     >>> data = DataComponent(np.zeros((10, 5)))
     >>> data.dims
-    (DimName(''), DimName(''))
+    ('', '')
 
     Create a `DataComponent` object with custom dimension names:
 
     >>> data = DataComponent(np.zeros(10, 5), dims=("units", "time"))
     >>> data.dims
-    (DimName('units'), DimName('time'))
+    ('units', 'time')
 
     Get the name of the first dimension:
 
     >>> data.get_dim(0)
-    DimName('units')
+    'units'
 
     Get the index of the dimension named "time":
 
@@ -106,25 +112,27 @@ class DataComponent(np.ndarray, Generic[Dtype]):
 
     Notes
     -----
-    The
+    Propagation of the `dims` attribute:
 
-    In operations that alter the shape or dimensionality of the array, the attribute `dims` should
-    not be preserved from the parent since they does not reflect the structure of the new object.
-    The attribute is transferred from the parent array only if the dimensions are preserved.
-    Otherwise, it is reset to the default value (empty strings) and must be manually updated.
+    - In operations which preserve the dimensionality of the array, the `dims` attribute is
+      automatically transferred from the parent array to the child array. This transfer is performed
+      in the `__array_finalize__` method.
+    - In operations which alter the dimensionality, the `dims` attribute is reset to the default
+      value (empty strings) and must be manually updated (if necessary).
 
-    Exceptions (not intercepted by the check in `__array_finalize__`):
+    Exceptions: Some operations preserve the dimensionality but still impact the actual
+    correspondence between the data and the dimension names. Since, those operations are not
+    intercepted by the checks in the `__array_finalize__` method, they are overridden.
 
-    - Operations which swap the axes but preserve the dimensions: `transpose`, `T`, `swapaxes`,
-      `moveaxis`, `rollaxis`.
-    - Operations which reverse the order of elements and may impact the actual correspondence
-      between the data and the dimension names: `flip`.
-
-    Those methods are either overridden to update the dimension names accordingly, or marked as not
-    implemented to prevent their usage (for methods which are less likely to be used in practice).
+    - In operations where the resulting dimensionality can be predicted, the `dims` attribute is
+      adjusted to reflect the new structure. This is done by calling the methods provided by the
+      `Dimensions` class. Operations include: `transpose`, `T`, `swapaxes`, `moveaxis`, `rollaxis`.
+    - In operations where the order of elements is reversed, an error is raised to prevent the use
+      of the method without updating the dimension names (`NotImplementedError`). Operations
+      include: `rollaxis`, `flip` (less likely to be used in practice).
     """
 
-    DIMS: DimensionsSpec
+    DIMENSIONS_SPEC: DimensionsSpec
     dims: Dimensions  # type hint for the instance attribute
     METADATA: FrozenSet[str]
     DTYPE: Dtype
@@ -159,6 +167,18 @@ class DataComponent(np.ndarray, Generic[Dtype]):
         -------
         DataComponent
             New instance of a `DataComponent` object.
+
+        Raises
+        ------
+        ValueError
+            If the number of dimensions in the input values does not match the number of dimensions
+            in the `dim` argument.
+            If the dimension names are not consistent with the `DIMENSIONS_SPEC` attribute, when
+            provided.
+
+        See Also
+        --------
+        `DimensionsSpec.validate`: Validate the dimension names against the `DIMENSIONS_SPEC`.
         """
         # Process input values and create the array
         cls.validate(values)  # validate input values
@@ -172,7 +192,7 @@ class DataComponent(np.ndarray, Generic[Dtype]):
         if dims is None:  # default dimension names
             dims = Dimensions.default(obj.ndim)
         else:  # validate the dimension names for this class
-            cls.DIMS.validate(dims)
+            cls.DIMENSIONS_SPEC.validate(dims)
         if len(dims) != obj.ndim:  # check consistency between dimensions and array shape
             raise ValueError(f"len(dims) = {len(dims)} != array.ndim = {obj.ndim}")
         obj.dims = dims  # assign dimension names as new attribute
@@ -439,3 +459,79 @@ class DataComponent(np.ndarray, Generic[Dtype]):
         :meth:`np.flip`: Numpy method to reverse the order of elements along an axis.
         """
         raise NotImplementedError("Update the dimension names accordingly.")
+
+
+class ComponentSpec:
+    """
+    Specification of the data components allowed in a data structure class.
+
+    Attributes
+    ----------
+    spec : Dict[str, Type[DataComponent]]
+        Mapping specifying constraints for the data components.
+        Keys: Attribute names for storing the data components.
+        Values: Types of the data components.
+
+    Arguments
+    ---------
+    kwargs : Type[DataComponent]
+        Component names and types for the specification.
+
+    Methods
+    -------
+    validate
+
+    Examples
+    --------
+    Define a specification for the data components of a class:
+
+    >>> spec = ComponentSpec(data=CoreData, time=CoordTime)
+
+    Validate the data components of an object against the specification:
+
+    >>> data = CoreData(np.zeros((10))
+    >>> spec.validate("data", data)
+
+    >>> time = CoordTime(np.zeros(10))
+    >>> spec.validate("time", time)
+
+    >>> spec.validate("data", time)
+    Traceback (most recent call last):
+    ...
+    TypeError: Invalid component type for 'data': <class 'CoordTime'> != <class 'CoreData'>
+
+    >>> spec.validate("units", data)
+    Traceback (most recent call last):
+    ...
+    AttributeError: Invalid component name: 'units' not in dict_keys(['data', 'time'])
+
+    """
+
+    def __init__(self, **kwargs: Type[DataComponent]):
+        self.spec: Dict[str, Type[DataComponent]]
+        if len(set(kwargs.keys())) != len(kwargs):
+            raise ValueError("Duplicate dimension names in the specification.")
+        self.spec = kwargs
+
+    def validate(self, name: str, component: DataComponent):
+        """
+        Validate an instance of `DataComponent` against the specification.
+
+        Parameters
+        ----------
+        component : DataComponent
+            Component to validate.
+
+        Raises
+        ------
+        AttributeError
+            If the name of the component is absent from the specification
+        TypeError
+            If the type of the component does not match the type expected for this name.
+        """
+        if name not in self.spec:
+            raise AttributeError(f"Invalid component name: '{name}' not in {self.spec.keys()}.")
+        if not isinstance(component, self.spec[name]):
+            raise TypeError(
+                f"Invalid component type for '{name}': {type(component)} != {self.spec[name]}"
+            )
