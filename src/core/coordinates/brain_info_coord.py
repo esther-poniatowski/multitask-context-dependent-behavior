@@ -159,8 +159,14 @@ class CoordDepth(Coordinate[CorticalDepth]):
         mask : np.ndarray[np.bool_]
             Boolean mask for the units in the layer.
             Shape : ``(n_smpl,)``, same as the coordinate.
+
+        See Also
+        --------
+        `numpy.equal`: Used to compare the coordinate values to the depth value, instead of the `==`
+        operator (which raises type errors due to inheritance of `np.ndarray` for the coordinate and
+        inheritance of `str` for the depth).
         """
-        return self == depth
+        return np.equal(self, depth)
 
     def count_by_lab(self) -> Dict[CorticalDepth, int]:
         """
