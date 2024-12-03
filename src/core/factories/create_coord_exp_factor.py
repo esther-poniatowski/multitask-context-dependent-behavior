@@ -58,14 +58,14 @@ class FactoryCoordExpFactor(Factory[CoordExpFactor]):
     {ExpCondition(task='PTD', attention='a'): (0, 3),
      ExpCondition(task='CLK', attention='a'): (3, 5)}
 
-    Build the task coordinate for the pseudo-trials:
+    Create the task coordinate for the pseudo-trials:
 
     >>> factory.create(coord_type=CoordTask)
     CoordTask(['PTD', 'PTD', 'PTD', 'CLK', 'CLK'])
 
     """
 
-    PRODUCT_CLASS = CoordExpFactor
+    PRODUCT_CLASSES = CoordExpFactor
 
     def __init__(
         self,

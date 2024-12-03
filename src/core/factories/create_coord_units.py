@@ -5,12 +5,12 @@
 
 Classes
 -------
-EnsemblesBuilder
+FactoryCoordUnit
 """
 # DISABLED WARNINGS
 # --------------------------------------------------------------------------------------------------
 # pylint: disable=arguments-differ
-# Scope: `build` method in `EnsemblesBuilder`
+# Scope: `create` method in `FactoryCoordUnit`
 # Reason: See the note in ``core/__init__.py``
 # --------------------------------------------------------------------------------------------------
 
@@ -18,15 +18,15 @@ from typing import List
 
 import numpy as np
 
-from core.builders.base_builder import Builder
+from core.factories.base_factory import Factory
 from core.coordinates.brain_info_coord import CoordUnit
 from core.processors.preprocess.assign_ensembles import EnsembleAssigner, Ensembles
 from core.attributes.brain_info import Unit
 
 
-class EnsemblesBuilder(Builder[CoordUnit]):
+class FactoryCoordUnit(Factory[CoordUnit]):
     """
-    Build ensembles of units to form pseudo-populations for cross-validation.
+    Create ensembles of units to form pseudo-populations for cross-validation.
 
     Product: `CoordUnits`
 
@@ -41,22 +41,22 @@ class EnsemblesBuilder(Builder[CoordUnit]):
 
     Methods
     -------
-    build (required)
+    create (required)
     construct_coord
 
     Examples
     --------
     Set the number of units in each ensemble (size) and the maximum number of ensembles:
 
-    >>> builder = EnsemblesBuilder(ensemble_size=20, n_ensembles_max=10)
+    >>> factory = FactoryCoordUnit(ensemble_size=20, n_ensembles_max=10)
 
     Generate ensembles for a population of units:
 
-    >>> builder.build(units=units, seed=0)
+    >>> factory.create(units=units, seed=0)
 
     """
 
-    PRODUCT_CLASS = CoordUnit
+    PRODUCT_CLASSES = CoordUnit
 
     def __init__(self, ensemble_size: int, n_ensembles_max: int) -> None:
         # Call the base class constructor: declare empty product and internal data
@@ -65,7 +65,7 @@ class EnsemblesBuilder(Builder[CoordUnit]):
         self.ensemble_size = ensemble_size
         self.n_ensembles_max = n_ensembles_max
 
-    def build(self, units: List[Unit], seed: int = 0) -> CoordUnit:
+    def create(self, units: List[Unit], seed: int = 0) -> CoordUnit:
         """
         Implement the base class method.
 
@@ -89,8 +89,8 @@ class EnsemblesBuilder(Builder[CoordUnit]):
         assigner = EnsembleAssigner(self.ensemble_size, self.n_ensembles_max)
         ensembles = assigner.process(n_units=n_units, seed=seed)
         # Construct the units coordinate
-        self.product = self.construct_coord(units, ensembles)
-        return self.get_product()
+        coord = self.construct_coord(units, ensembles)
+        return coord
 
     def construct_coord(self, units: List[Unit], ensembles: Ensembles) -> CoordUnit:
         """

@@ -21,7 +21,7 @@ The main operations performed by the current class are:
 # DISABLED WARNINGS
 # --------------------------------------------------------------------------------------------------
 # pylint: disable=arguments-differ
-# Scope: `build` method in `NeuronalActivityBuilder`
+# Scope: `create` method in `FactoryFiringRates`
 # Reason: See the note in ``core/__init__.py``
 # --------------------------------------------------------------------------------------------------
 
@@ -29,8 +29,9 @@ from typing import List
 
 import numpy as np
 
-from core.builders.base_builder import Builder
+from core.factories.base_factory import Factory
 from core.data_components.core_data import CoreData
+from core.data_components.core_dimensions import Dimensions
 from core.data_structures.spike_times import SpikeTrains
 from core.data_structures.trials_properties import TrialsProperties
 from core.coordinates.trial_analysis_label_coord import CoordPseudoTrialsIdx
@@ -38,7 +39,7 @@ from core.coordinates.trial_analysis_label_coord import CoordPseudoTrialsIdx
 
 class FactoryFiringRates(Factory[CoreData]):
     """
-    Build the matrix gathering the activity of a single unit in selected pseudo-trials, from the raw
+    Create the matrix gathering the activity of a single unit in selected pseudo-trials, from the raw
     spike times and trials properties in multiple sessions.
 
     Product: `CoreData`
@@ -55,19 +56,17 @@ class FactoryFiringRates(Factory[CoreData]):
 
     Methods
     -------
-    `build` (implementation of the base class method)
+    create (implementation of the base class method)
     """
 
-    PRODUCT_CLASS = CoreData
+    PRODUCT_CLASSES = CoreData
 
-    def __init__(
-        self,
-    ) -> None:
+    def __init__(self) -> None:
         # Call the base class constructor: declare empty product and internal data
         super().__init__()
         # Store configuration parameters
 
-    def build(
+    def create(
         self,
         spikes: SpikeTrains,
         trials_properties: TrialsProperties,
@@ -97,7 +96,10 @@ class FactoryFiringRates(Factory[CoreData]):
         # Initialize core data
         n_folds, n_pseudo = pseudo_trials_idx.shape
         shape = (n_folds, n_pseudo)
-        data = CoreData.from_shape(shape, dims=("trials",))
+        data = CoreData.from_shape(
+            shape,
+            dims=Dimensions("trials"),
+        )
         # Fill the data structure, trial by trial
         for i_final, i_init in enumerate(pseudo_trials_idx):
             # Extract all the spikes occurring in the trial
@@ -111,8 +113,7 @@ class FactoryFiringRates(Factory[CoreData]):
             firing_rates = converter.process(spikes_in_epochs)
             # Fill the core data with the result
             data[i_final] = firing_rates
-        self.product = data
-        return self.get_product()
+        return data
 
     # --- Construct Core Data ----------------------------------------------------------------------
 
@@ -153,7 +154,7 @@ class FactoryFiringRates(Factory[CoreData]):
 
         See Also
         --------
-        `Builder[DataStructure].initialize_core_data`
+        `Factory.initialize_core_data`
             Initialize the core data array with empty values (parent method).
         `SpikesAligner.slice_epoch`
             Extract spiking times within one epoch and reset them relative to the epoch start.

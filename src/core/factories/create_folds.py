@@ -5,27 +5,27 @@
 
 Classes
 -------
-FoldsBuilder
+FactoryFolds
 """
 # DISABLED WARNINGS
 # --------------------------------------------------------------------------------------------------
 # pylint: disable=arguments-differ
-# Scope: `build` method in `FoldsBuilder`
+# Scope: `create` method in `FactoryFolds`
 # Reason: See the note in ``core/__init__.py``
 # --------------------------------------------------------------------------------------------------
 
 from typing import Iterable
 
-from core.builders.base_builder import Builder
+from core.factories.base_factory import Factory
 from core.composites.coordinate_set import CoordinateSet
 from core.coordinates.trial_analysis_label_coord import CoordFolds
 from core.composites.exp_conditions import ExpCondition
 from core.processors.preprocess.assign_folds import FoldAssigner
 
 
-class FoldsBuilder(Builder[CoordFolds]):
+class FactoryFolds(Factory[CoordFolds]):
     """
-    Build the folds for cross-validation, stratified by experimental condition.
+    Create the folds for cross-validation, stratified by experimental condition.
 
     Product: `CoordFolds`
 
@@ -38,12 +38,12 @@ class FoldsBuilder(Builder[CoordFolds]):
 
     Warning
     -------
-    The order in which the trials are stored in the output coordinate of the `FoldsBuilder` builder
-    should be consistent with the other output coordinates of the `ExpFactorCoordBuilder` (which
-    label the experimental factors of interest, see `core.builders.build_trial_coords`). To ensure
-    this consistency along the trials dimension, the experimental conditions should be treated in
-    the same order across both builders. This is achieved by passing them the same configuration
-    parameters on which they operate: `order_conditions`.
+    The order in which the trials are stored in the output coordinate of the `FactoryFolds` factory
+    should be consistent with the other output coordinates of the `FactoryCoordExpFactor` (which
+    label the experimental factors of interest). To ensure this consistency along the trials
+    dimension, the experimental conditions should be treated in the same order across both
+    factories. This is achieved by passing them the same configuration parameters on which they
+    operate: `order_conditions`.
 
     Attributes
     ----------
@@ -54,7 +54,7 @@ class FoldsBuilder(Builder[CoordFolds]):
 
     Methods
     -------
-    build (required)
+    create (required)
 
     Notes
     -----
@@ -66,7 +66,7 @@ class FoldsBuilder(Builder[CoordFolds]):
       activity.
     """
 
-    PRODUCT_CLASS = CoordFolds
+    PRODUCT_CLASSES = CoordFolds
 
     def __init__(
         self,
@@ -79,7 +79,7 @@ class FoldsBuilder(Builder[CoordFolds]):
         self.n_folds = n_folds
         self.order_conditions = order_conditions
 
-    def build(self, features: CoordinateSet, seed: int = 0) -> CoordFolds:
+    def create(self, features: CoordinateSet, seed: int = 0) -> CoordFolds:
         """
         Implement the base class method.
 
@@ -98,11 +98,11 @@ class FoldsBuilder(Builder[CoordFolds]):
         # Initialize empty coordinate
         n_trials = features.n_samples
         folds_labels = CoordFolds.from_shape((n_trials,))
-        # Build folds by condition
+        # Create folds by condition
         assigner = FoldAssigner(n_folds=self.n_folds)
         for exp_cond in self.order_conditions:  # ensure correct order
             idx = features.match_idx(exp_cond)  # indices of the trials in the condition
             n_samples = len(idx)  # counts for FoldAssigner
             folds_in_cond = assigner.process(n_samples, seed=seed, mode="labels")
             folds_labels[idx] = folds_in_cond  # fill at the indices of the condition
-        return self.get_product()
+        return folds_labels

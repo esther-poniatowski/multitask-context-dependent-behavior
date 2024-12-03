@@ -25,7 +25,7 @@ from core.composites.candidates import Candidates
 from core.coordinates.exp_factor_coord import CoordExpFactor
 from core.coordinates.trial_analysis_label_coord import CoordPseudoTrialsIdx
 from core.coordinates.time_coord import CoordTime
-from core.factories.create_ensembles import EnsemblesBuilder
+from core.factories.create_coord_units import FactoryCoordUnit
 from core.factories.create_coord_exp_factor import ExpFactorCoordBuilder
 from core.factories.create_folds import FoldsBuilder
 from core.factories.create_pseudo_trials import PseudoTrialsBuilder
@@ -150,7 +150,7 @@ class FormatPopulation(Pipeline[FormatPopulationConfig, FormatPopulationInputs])
         ens_size = len(units) if self.config.ensemble_size is None else self.config.ensemble_size
 
         # Build ensembles (pseudo-populations)
-        builder_ens = EnsemblesBuilder(ens_size, self.config.n_ensembles_max)
+        builder_ens = FactoryCoordUnit(ens_size, self.config.n_ensembles_max)
         coord_units = builder_ens.build(units=units.to_list(), seed=0)
         # shape: (n_ensembles, ensemble_size)
         data_structure.set_coord("units", coord_units)
