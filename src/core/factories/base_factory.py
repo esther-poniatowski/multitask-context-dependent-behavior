@@ -8,23 +8,23 @@ Classes
 Factory (abstract base class)
 """
 from abc import ABC, abstractmethod
-from typing import TypeVar, Generic, Type, Tuple, Optional
+from typing import TypeVar, Generic, Type, Tuple
 
 from core.data_components.base_data_component import DataComponent
 
 
-Product = TypeVar("Product", bound=DataComponent)
-"""Type variable for the product class created by a specific factory."""
+Products = TypeVar("Products", bound=DataComponent | Tuple[DataComponent, ...])
+"""Type variable for the product class(es) created by a specific factory."""
 
 
-class Factory(Generic[Product], ABC):
+class Factory(Generic[Products], ABC):
     """
     Abstract base class for creating intermediate-level data components: core data, coordinates.
 
     Class Attributes
     ----------------
-    PRODUCT_CLASS : type
-        Class of the product to create.
+    PRODUCTS : Tuple[Type[DataComponent], ...]
+        Class(es) of the product to create.
 
     Attributes
     ----------
@@ -34,20 +34,20 @@ class Factory(Generic[Product], ABC):
     create (abstract)
     """
 
-    PRODUCT_CLASS: Type[Product]
+    PRODUCT_CLASSES: Type[DataComponent] | Tuple[Type[DataComponent], ...]
 
     @abstractmethod
-    def create(self, *args, **kwargs) -> Product:
+    def create(self, *args, **kwargs) -> Products:
         """
-        Orchestrate the creation of a product.
+        Orchestrate the creation of one or several coupled product(s).
 
         Arguments
         ---------
         args, kwargs:
-            Specific inputs required to create the product (data, metadata...).
+            Specific inputs required to create the products (data, metadata...).
 
         Returns
         -------
-        product
-            Product instance built by this builder.
+        products : Products
+            Product instance(s) built by this factory.
         """

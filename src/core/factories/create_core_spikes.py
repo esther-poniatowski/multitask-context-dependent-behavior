@@ -5,12 +5,12 @@
 
 Classes
 -------
-SpikeTrainsBuilder
+FactoryCoordSlot
 """
 # DISABLED WARNINGS
 # --------------------------------------------------------------------------------------------------
 # pylint: disable=arguments-differ
-# Scope: `build` method in `NeuronalActivityBuilder`
+# Scope: `create` method in `FactoryCoordSlot`
 # Reason: See the note in ``core/__init__.py``
 # --------------------------------------------------------------------------------------------------
 
@@ -19,92 +19,33 @@ from typing import List, Tuple, cast
 import numpy as np
 
 
-from core.builders.base_builder import Builder
+from core.factories.base_factory import Factory
 from core.data_components.core_data import CoreData
 from core.coordinates.exp_structure_coord import CoordSlot
 from core.coordinates.time_coord import CoordTimeEvent
-from core.data_structures.spike_times import SpikeTrains, SpikeTimesRaw
+from core.data_structures.spike_times import SpikeTimesRaw
 from core.data_structures.trials_properties import TrialsProperties
-from core.attributes.exp_structure import Session, Recording, Block, Slot
+from core.attributes.exp_structure import Session, Slot
 from core.composites.base_container import Container
-from core.attributes.brain_info import Unit
-from core.constants import SMPL_RATE
 
 
-class SpikeTrainsBuilder(Builder[SpikeTrains]):
+class FactoryCoordSlot(Factory[Tuple[CoreData, CoordSlot]]):
     """
-    Build the matrix gathering the spiking times of a single unit across all its recording sessions,
-    from the raw spike times and trials properties in multiple individual sessions.
+    Create the coordinate representing the slots in which spikes occur.
 
-    Product: `SpikeTrains`
-
-    - Inputs: List of spike times (flat structure) for a single unit in several recording sessions.
-    - Output: Single array of spike times (flat structure) across all the sessions.
-
-    Methods
-    -------
-    build (implementation of the base class method)
-    """
-
-    PRODUCT_CLASS = SpikeTrains
-
-    def __init__(
-        self,
-    ) -> None:
-        # Call the base class constructor: declare empty product and internal data
-        super().__init__()
-        # Store configuration parameters
-
-    def build(
-        self,
-        spikes: Container[Session, SpikeTimesRaw],
-        trials_properties: TrialsProperties,
-        unit: Unit,
-        smpl_rate: float = SMPL_RATE,
-    ) -> SpikeTrains:
-        """
-        Implement the base class method.
-
-        Arguments
-        ---------
-        spikes : List[SpikeTimesRaw]
-            Spiking times of one unit in one or several session(s).
-            Length: number of sessions.
-            Shape of each element: ``(n_spikes,)``, with ``n_spikes`` the number of spikes in the
-            considered session.
-        trials_properties : TrialsProperties
-            Metadata about the *trials* in *one or several* session(s).
-
-        Returns
-        -------
-        spike_trains : SpikeTrains
-            Spiking times of one unit across all the sessions.
-            Shape: ``(n_sessions, n_spikes_tot)``, with ``n_sessions`` the number of sessions and
-            ``n_spikes_tot`` the total number of spikes across all the sessions.
-        """
-        # Build the coordinate marking the slots in the spike times
-        spikes_aligned, coord_slot = SlotCoordBuilder().build(spikes, trials_properties)
-        return SpikeTrains(unit=unit, smpl_rate=smpl_rate, data=spikes_aligned, slot=coord_slot)
-
-
-class SlotCoordBuilder(Builder[Tuple[CoreData, CoordSlot]]):
-    """
-    Build the coordinate representing the slots in which spikes occur.
-
-    Product: `CoordSlot`
+    Products: `CoreData`, `CoordSlot`
 
     - Inputs: Spike times and trials properties.
-    - Output: Coordinate marking the slots in the spike times.
+    - Output: Spiking times and coordinate marking the slots in which the spike times occurred.
 
     Methods
     -------
-    build (required)
-
+    create (required)
     """
 
-    PRODUCT = Tuple[CoreData, CoordSlot]
+    PRODUCT_CLASSES = Tuple[CoreData, CoordSlot]
 
-    def build(
+    def create(
         self,
         spikes: SpikeTimesRaw | Container[Session, SpikeTimesRaw],
         trials_properties: TrialsProperties,
@@ -218,6 +159,10 @@ class SlotCoordBuilder(Builder[Tuple[CoreData, CoordSlot]]):
         for slot, start, end in zip(trials_slot, trials_start, trials_end):
             start = cast(float, start)
             idx_spikes = np.where((spikes >= start) & (spikes < end))[0]
-            spikes_aligned[idx_spikes] -= start
+            spikes_aligned[idx_spikes] -= start  # type: ignore[misc]
+            # Disabled: "Result type of - incompatible in assignment."
+            # Reason: In-place operation with `DataComponent` (subclass of `np.ndarray`) causes type
+            # mismatch between the result of the operation (numpy array) and the original object
+            # (DataComponent).
             coord[idx_spikes] = slot
         return spikes_aligned, coord

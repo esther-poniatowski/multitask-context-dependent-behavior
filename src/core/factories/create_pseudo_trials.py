@@ -5,12 +5,12 @@
 
 Classes
 -------
-PseudoTrialsBuilder
+FactoryPseudoTrials
 """
 # DISABLED WARNINGS
 # --------------------------------------------------------------------------------------------------
 # pylint: disable=arguments-differ
-# Scope: `build` method in `PseudoTrialsBuilder`
+# Scope: `create` method in `FactoryPseudoTrials`
 # Reason: See the note in ``core/__init__.py``
 # --------------------------------------------------------------------------------------------------
 
@@ -18,7 +18,7 @@ from typing import List, Dict, Iterable
 
 import numpy as np
 
-from core.builders.base_builder import Builder
+from core.factories.base_factory import Factory
 from core.attributes.trial_analysis_labels import Fold
 from core.composites.coordinate_set import CoordinateSet
 from core.coordinates.trial_analysis_label_coord import CoordPseudoTrialsIdx, CoordFolds
@@ -27,9 +27,9 @@ from core.processors.preprocess.bootstrap import Bootstrapper
 from core.processors.preprocess.map_indices import IndexMapper
 
 
-class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
+class FactoryPseudoTrials(Factory[CoordPseudoTrialsIdx]):
     """
-    Build the reconstructed pseudo-trials for a pseudo-population of units.
+    Reconstruct pseudo-trials for a pseudo-population of units.
 
     Product: `CoordPseudoTrialsIdx`
 
@@ -44,12 +44,12 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
 
     Warning
     -------
-    The order in which the trials are stored in the output coordinate of the `PseudoTrialsBuilder`
-    builder should be consistent with the other output coordinates of the `ExpFactorCoordBuilder`
-    (which label the experimental factors of interest, see `core.builders.build_trial_coords`). To
-    ensure this consistency along the trials dimension, the experimental conditions should be
-    treated in the same order across both builders. This is achieved by passing them the same
-    configuration parameters on which they operate:
+    The order in which the trials are stored in the output coordinate of the `FactoryPseudoTrials`
+    factory should be consistent with the other output coordinates of the `FactoryCoordExpFactor`
+    (which label the experimental factors of interest). To ensure this consistency along the trials
+    dimension, the experimental conditions should be treated in the same order across both
+    factories. This is achieved by passing them the same configuration parameters on which they
+    operate:
 
     - `order_conditions`: Order in which the experimental conditions are concatenated.
     - `counts_by_condition`: Number of pseudo-trials to form for each experimental condition.
@@ -68,7 +68,7 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
 
     Methods
     -------
-    build (required)
+    create (required)
     initialize_coord
     build_for_condition
     build_for_fold
@@ -85,7 +85,7 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
       trial types across groups.
     """
 
-    PRODUCT_CLASS = CoordPseudoTrialsIdx
+    PRODUCT_CLASSES = CoordPseudoTrialsIdx
     TRIALS_AXIS = -1
 
     def __init__(
@@ -101,7 +101,7 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
         self.counts_by_condition = counts_by_condition
         self.order_conditions = order_conditions
 
-    def build(
+    def create(
         self,
         features_by_unit: List[CoordinateSet],
         folds_by_unit: List[CoordFolds],
@@ -145,7 +145,9 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
                 n_pseudo = self.counts_by_condition[exp_condition]
                 stratum = exp_condition.add(Fold(fold))  # add fold label as factor
                 # Find the indices of the trials in the fold and condition for each unit
-                pseudo_trials_in_stratum = self.build_for_stratum(all_feat, stratum, n_pseudo, seed)
+                pseudo_trials_in_stratum = self.create_for_stratum(
+                    all_feat, stratum, n_pseudo, seed
+                )
                 pseudo_trials_by_cond.append(pseudo_trials_in_stratum)  # shape: (n_units, n_pseudo)
             # Gather pseudo-trials for all the conditions
             pseudo_trials_in_fold = self.gather_conditions(
@@ -155,22 +157,21 @@ class PseudoTrialsBuilder(Builder[CoordPseudoTrialsIdx]):
             )
             # Fill for the fold
             pseudo_trials[:, fold, :] = pseudo_trials_in_fold
-        self.product = pseudo_trials
-        return self.get_product()
+        return pseudo_trials
 
     @staticmethod
-    def build_for_stratum(
+    def create_for_stratum(
         strata: List[CoordinateSet], stratum: ExpCondition, n_pseudo: int, seed: int
     ) -> CoordPseudoTrialsIdx:
         """
-        Build the pseudo-trials for one stratum (fold x condition).
+        Reconstruct pseudo-trials for one stratum (fold x condition).
 
         Arguments
         ---------
         strata : List[CoordinateSet]
             CoordinateSet to consider to group trials in strata for each unit in the population.
         stratum : ExpCondition
-            Set of feature values defining the stratum for which to build the pseudo-trials.
+            Set of feature values defining the stratum for which to create the pseudo-trials.
         n_pseudo : int
             Number of pseudo-trials to form for this stratum.
         seed : int
