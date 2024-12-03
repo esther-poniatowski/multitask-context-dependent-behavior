@@ -12,18 +12,16 @@ Builder
 from abc import ABC, abstractmethod
 from typing import TypeVar, Generic, Type, Tuple, Optional
 
-from core.coordinates.base_coord import Coordinate
-from core.data_components.core_data import CoreData
 from core.data_structures.base_data_structure import DataStructure
 
 
-Product = TypeVar("Product", bound=DataStructure | CoreData | Coordinate)
+Product = TypeVar("Product", bound=DataStructure)
 """Type variable for the Data structure class produced by a specific builder."""
 
 
 class Builder(Generic[Product], ABC):
     """
-    Abstract base class for building high-level objects: data structures, core data, coordinates.
+    Abstract base class for building high-level objects: data structures.
 
     Class Attributes
     ----------------
@@ -39,9 +37,9 @@ class Builder(Generic[Product], ABC):
 
     Methods
     -------
-    `build`
-    `reset`
-    `get_product`
+    build (abstract)
+    reset
+    get_product
 
     Implementation
     --------------
