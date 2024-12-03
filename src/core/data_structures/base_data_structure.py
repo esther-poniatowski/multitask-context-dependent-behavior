@@ -29,8 +29,9 @@ from typing import Tuple, Mapping, Self, FrozenSet, Set, TypeVar, Generic, Gener
 
 from core.data_components.core_dimensions import Dimensions, DimensionsSpec
 from core.data_components.base_data_component import DataComponent, ComponentSpec
+from core.data_components.core_metadata import MetaDataField
 from core.data_components.core_data import CoreData
-from core.coordinates.base_coord import Coordinate
+from core.coordinates.base_coordinate import Coordinate
 
 AnyCoreData = TypeVar("AnyCoreData", bound=CoreData)
 """Type variable for the core data component stored in the data structure."""
@@ -42,9 +43,6 @@ class DataStructure(ABC, Generic[AnyCoreData]):
 
     Class Attributes
     ----------------
-    REQUIRED_IN_SUBCLASSES : Tuple[str]
-        Names of the class-level attributes which have to be defined in each data structure
-        subclass.
     DIMENSIONS_SPEC : DimensionsSpec
         Specification of the dimensions of the data structure class (names, order, required and
         optional).
@@ -52,6 +50,15 @@ class DataStructure(ABC, Generic[AnyCoreData]):
     COMPONENTS_SPEC : ComponentSpec
         Specification of the data components allowed in the data structure class (names and types).
         To be defined in each subclass.
+    IDENTIFIERS : FrozenSet[str]
+        Names of the metadata attributes which jointly and uniquely identify each data structure
+        instance within its class. Handled by each subclass' constructor.
+    REQUIRED_IN_SUBCLASSES : Tuple[str]
+        Names of the class-level attributes which have to be defined in each data structure
+        subclass.
+
+    Attributes
+    ----------
     dims : Dimensions
         Registry of actual dimensions in an instance (subset of the `DIMENSIONS_SPEC` attribute).
         Updated as new data components are added to the data structure (see the
@@ -60,12 +67,6 @@ class DataStructure(ABC, Generic[AnyCoreData]):
         Registry of active coordinates in the data structure instance (subset of the
         `COMPONENTS_SPEC` attribute). Updated as new coordinates are added to the data structure
         (see the `register_coord` method).
-    identifiers : FrozenSet[str]
-        Names of the metadata attributes which jointly and uniquely identify each data structure
-        instance within its class. Handled by each subclass' constructor.
-
-    Attributes
-    ----------
     data : CoreData
         Actual data values to analyze.
         Shape: As many dimensions as the length of the `dims` attribute (by construction).
@@ -168,12 +169,12 @@ class DataStructure(ABC, Generic[AnyCoreData]):
 
     # --- Schema of the Data Structure -------------------------------------------------------------
 
-    REQUIRED_IN_SUBCLASSES = ("DIMENSIONS_SPEC", "COMPONENTS_SPEC", "identifiers")
     # Type hints for class-level attributes
     DIMENSIONS_SPEC: DimensionsSpec
     COMPONENTS_SPEC: ComponentSpec = ComponentSpec(data=CoreData)
-
-    identifiers: FrozenSet[str]
+    IDENTIFIERS: Mapping[str, MetaDataField]
+    # Required class-level attributes in each subclass
+    REQUIRED_IN_SUBCLASSES = ("DIMENSIONS_SPEC", "COMPONENTS_SPEC", "IDENTIFIERS")
 
     def __init_subclass__(cls) -> None:
         """
@@ -343,7 +344,7 @@ class DataStructure(ABC, Generic[AnyCoreData]):
 
         Notes
         -----
-        The attributes considered are all the active components, the dimensions and the identifiers.
+        The attributes considered are all the active components, the dimensions and the IDENTIFIERS.
         """
         nested_attr = self.coords | {"data", "dims"} | self.identifiers
         for attr in nested_attr:

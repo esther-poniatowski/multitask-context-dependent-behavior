@@ -12,12 +12,16 @@ from types import MappingProxyType
 
 import numpy as np
 
+from core.data_components.core_dimensions import DimensionsSpec
+from core.data_components.base_data_component import ComponentSpec
+from core.data_components.core_metadata import MetaDataField
+from core.data_components.core_data import CoreData
+from core.coordinates.base_coordinate import Coordinate
 from core.constants import SMPL_RATE
 from core.attributes.brain_info import Unit
-from core.attributes.exp_structure import Session
+from core.attributes.exp_structure import Session, Recording, Block, Slot
 from core.coordinates.exp_structure_coord import CoordRecording, CoordBlock, CoordSlot
 from core.data_structures.base_data_structure import DataStructure
-from core.data_components.core_data import Dimensions, CoreData
 
 
 class SpikeTimesRaw(DataStructure):
@@ -36,7 +40,7 @@ class SpikeTimesRaw(DataStructure):
 
     Attributes
     ----------
-    data : CoreData
+    data : CoreTimes
         Spiking times for the unit in the session (in seconds).
         Times are reset at 0 in each **block**.
     block : CoordBlock
@@ -72,13 +76,19 @@ class SpikeTimesRaw(DataStructure):
     `core.coordinates.exp_structure.CoordBlock`
     """
 
-    # --- Schema Attributes ---
-    dims = Dimensions("spikes")
-    coords = MappingProxyType({"block": CoordBlock})
-    coords_to_dims = MappingProxyType({"block": Dimensions("spikes")})
-    identifiers = ("unit", "session")
+    # --- Data Structure Schema --------------------------------------------------------------------
 
-    # --- Key Features -----------------------------------------------------------------------------
+    DIMENSIONS_SPEC = DimensionsSpec(spikes=True)
+    COMPONENTS_SPEC = ComponentSpec(
+        data=CoreData,
+        block=CoordBlock,
+    )
+    IDENTIFIERS = MappingProxyType(
+        {
+            "unit": MetaDataField(Unit, ""),
+            "session": MetaDataField(Session, ""),
+        }
+    )
 
     def __init__(
         self,
@@ -86,14 +96,13 @@ class SpikeTimesRaw(DataStructure):
         session: Session,
         smpl_rate: float = SMPL_RATE,
         data: CoreData | None = None,
-        block: CoordBlock | None = None,
+        **coords: Coordinate,
     ) -> None:
         # Set sub-class specific metadata
         self.unit = unit
         self.session = session
         self.smpl_rate = smpl_rate
         # Set data and coordinate attributes via the base class constructor
-        coords = {"block": block}
         super().__init__(data=data, **coords)
 
     def __repr__(self) -> str:
@@ -101,6 +110,8 @@ class SpikeTimesRaw(DataStructure):
             f"<{self.__class__.__name__}>: Unit {self.unit}, Session {self.session}\n"
             + super().__repr__()
         )
+
+    # --- Getter Methods ---------------------------------------------------------------------------
 
     @property
     def n_blocks(self) -> int:
@@ -130,6 +141,8 @@ class SpikeTimesRaw(DataStructure):
             Spiking times for the unit in the session which occurred in the specified block.
         """
         return self.data[self.block == block]
+
+    # --- Formatting -------------------------------------------------------------------------------
 
     def format(self, raw: np.ndarray) -> None:
         """
@@ -213,23 +226,16 @@ class SpikeTrains(DataStructure):
     `core.coordinates.exp_structure.CoordSlot`
     """
 
-    # --- Schema Attributes ---
-    dims = Dimensions("spikes")
-    coords = MappingProxyType(
-        {
-            "recording": CoordRecording,
-            "block": CoordBlock,
-            "slot": CoordSlot,
-        }
+    # --- Data Structure Schema --------------------------------------------------------------------
+
+    DIMENSIONS_SPEC = DimensionsSpec(spikes=True)
+    COMPONENTS_SPEC = ComponentSpec(
+        data=CoreData,
+        recording=CoordRecording,
+        block=CoordBlock,
+        slot=CoordSlot,
     )
-    coords_to_dims = MappingProxyType(
-        {
-            "recording": Dimensions("spikes"),
-            "block": Dimensions("spikes"),
-            "slot": Dimensions("spikes"),
-        }
-    )
-    identifiers = ("unit",)
+    IDENTIFIERS = MappingProxyType({"unit": MetaDataField(Unit, "")})
 
     # --- Key Features -----------------------------------------------------------------------------
 
@@ -238,38 +244,43 @@ class SpikeTrains(DataStructure):
         unit: Unit,
         smpl_rate: float = SMPL_RATE,
         data: CoreData | None = None,
-        recording: CoordRecording | None = None,
-        block: CoordBlock | None = None,
-        slot: CoordSlot | None = None,
+        **coords: Coordinate,
     ) -> None:
         # Set sub-class specific metadata
         self.unit = unit
         self.smpl_rate = smpl_rate
-        # Set data and coordinate attributes via the base class constructor
-        coords = {"recording": recording, "block": block, "slot": slot}
+        # Set data and coordinate attributes via the base class constructor-
         super().__init__(data=data, **coords)
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}>: Unit {self.unit}\n" + super().__repr__()
 
-    def get_trial(self, recording, block, slot) -> CoreData:
+    # --- Getter Methods ---------------------------------------------------------------------------
+
+    def get_trial(self, recording: Recording, block: Block, slot: Slot) -> CoreData:
         """
         Extract the all the spiking times which occurred in one trial, defined by a recording, a
         block, and a slot.
 
         Parameters
         ----------
-        recording : int
+        recording : Recording
             Recording number associated with the trial.
-        block : int
+        block : Block
             Block number associated with the trial, relative to the recording.
-        slot : int
+        slot : Slot
             Slot number associated with the trial, relative to the block.
 
         Returns
         -------
         spikes : CoreData
             Spiking times for the unit in the experiment which occurred in the specified trial.
+
+        Raises
+        ------
+        AttributeError
+            If the coordinates are not found in the data structure. Automatically raised by
+            accessing the coordinates with the dot notation.
         """
         return self.data[
             (self.recording == recording) & (self.block == block) & (self.slot == slot)

@@ -2,15 +2,23 @@
 # -*- coding: utf-8 -*-
 """
 `core.data_structures.trials_properties` [module]
+
+Classes
+-------
+TrialsProperties
 """
 from types import MappingProxyType
 from typing import Generator, List, Self
 
 import numpy as np
 
+from core.data_components.core_dimensions import DimensionsSpec
+from core.data_components.base_data_component import ComponentSpec
+from core.data_components.core_metadata import MetaDataField
+from core.data_components.core_data import CoreIndices
+from core.coordinates.base_coordinate import Coordinate
 from core.coordinates.exp_structure_coord import CoordRecording, CoordBlock, CoordSlot
 from core.coordinates.exp_factor_coord import (
-    Coordinate,
     CoordTask,
     CoordAttention,
     CoordCategory,
@@ -19,11 +27,10 @@ from core.coordinates.exp_factor_coord import (
 )
 from core.coordinates.time_coord import CoordTimeEvent
 from core.data_structures.base_data_structure import DataStructure
-from core.data_components.core_data import Dimensions, CoreData
 from core.attributes.exp_structure import Session, Recording
 
 
-class TrialsProperties(DataStructure):
+class TrialsProperties(DataStructure[CoreIndices]):
     """
     Metadata about a set of trials the experiment (from a single or multiple sessions).
 
@@ -52,7 +59,7 @@ class TrialsProperties(DataStructure):
     ----------
     sessions : List[Session]
         Identifier(s) of the session(s) from which the trials come.
-    data : CoreData
+    data : CoreIndices
         Indices of the trials relative to the considered set (e.g. session or experiment).
     recording : CoordRecording
         Coordinate for the recording number of each trial (identifying a session at a site).
@@ -124,34 +131,28 @@ class TrialsProperties(DataStructure):
         match the respective values in the sessions' IDs.
     """
 
-    # --- Schema Attributes ---
-    dims = Dimensions("trials")
-    coords = MappingProxyType(
-        {
-            "recording": CoordRecording,
-            "block": CoordBlock,
-            "slot": CoordSlot,
-            "task": CoordTask,
-            "attention": CoordAttention,
-            "category": CoordCategory,
-            "behavior": CoordBehavior,
-            "outcome": CoordOutcome,
-            "t_on": CoordTimeEvent,
-            "t_off": CoordTimeEvent,
-            "t_warn": CoordTimeEvent,
-            "t_end": CoordTimeEvent,
-        }
-    )
-    coords_to_dims = MappingProxyType({name: Dimensions("trials") for name in coords.keys()})
-    identifiers = ("sessions",)
+    # --- Data Structure Schema --------------------------------------------------------------------
 
-    # --- Key Features ---
+    DIMENSIONS_SPEC = DimensionsSpec(trials=True)
+    COMPONENTS_SPEC = ComponentSpec(
+        data=CoreIndices,
+        recording=CoordRecording,
+        block=CoordBlock,
+        slot=CoordSlot,
+        task=CoordTask,
+        attention=CoordAttention,
+        category=CoordCategory,
+        behavior=CoordBehavior,
+        outcome=CoordOutcome,
+        t_on=CoordTimeEvent,
+        t_off=CoordTimeEvent,
+        t_warn=CoordTimeEvent,
+        t_end=CoordTimeEvent,
+    )
+    IDENTIFIERS = MappingProxyType({"sessions": MetaDataField(list, [])})
 
     def __init__(
-        self,
-        sessions: List[Session],
-        data: CoreData | None = None,
-        **coords: Coordinate,
+        self, sessions: List[Session], data: CoreIndices | None = None, **coords: Coordinate
     ) -> None:
         # Set sub-class specific metadata
         self.sessions = sessions
@@ -163,6 +164,8 @@ class TrialsProperties(DataStructure):
             f"<{self.__class__.__name__}>: Sessions {self.sessions}, "
             f"#trials={self.n_trials}" + super().__repr__()
         )
+
+    # --- Getter Methods ---------------------------------------------------------------------------
 
     @property
     def n_trials(self) -> int:
