@@ -20,7 +20,7 @@ from numpy.typing import ArrayLike
 from coordinates.base_coord import Coordinate
 
 
-class CoordTime(Coordinate[np.float64]):
+class CoordTime(Coordinate):
     """
     Coordinate labels for time stamps at which measurements were performed.
 
@@ -69,9 +69,15 @@ class CoordTime(Coordinate[np.float64]):
     """
 
     # No ATTRIBUTE
-    DTYPE = np.float64
+    DTYPE = np.dtype("float64")
     METADATA = frozenset(["t_on", "t_off", "t_shock", "t_bin"])
     SENTINEL: float = np.nan
+
+    # Declare instance attributes for metadata (type annotations for type checking)
+    t_bin: Optional[float] = None
+    t_on: Optional[float] = None
+    t_off: Optional[float] = None
+    t_shock: Optional[float] = None
 
     def __repr__(self):
         return f"<{self.__class__.__name__}>: {len(self)} time points, bin = {self.t_bin} sec"
@@ -143,7 +149,7 @@ class CoordTime(Coordinate[np.float64]):
         index : int
             Index of the closest value in the time sequence.
         """
-        return int(np.argmin(np.abs(self.values - t)))
+        return int(np.argmin(np.abs(self - t)))
 
     @classmethod
     def build_labels(
@@ -209,7 +215,7 @@ class CoordTime(Coordinate[np.float64]):
         return cls(values=values, t_bin=t_bin)
 
 
-class CoordTimeEvent(Coordinate[np.float64]):
+class CoordTimeEvent(Coordinate):
     """
     Coordinate labels for time stamps at which an experimental or behavioral event occurred.
 
@@ -233,8 +239,11 @@ class CoordTimeEvent(Coordinate[np.float64]):
     """
 
     # No ATTRIBUTE
-    DTYPE = np.float64
+    DTYPE = np.dtype("float64")
     SENTINEL: float = np.nan
+
+    # Declare instance attributes for metadata (type annotations for type checking)
+    reference: Optional[str] = None
 
     def __new__(cls, values: ArrayLike, reference: Optional[str] = ""):
         """Override the base method to pass metadata."""

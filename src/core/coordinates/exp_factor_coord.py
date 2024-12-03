@@ -17,7 +17,7 @@ CoordOutcome
 CoordEventDescription
 """
 
-from typing import TypeVar, Type, Optional, Union, Dict, Self, overload
+from typing import TypeVar, Type, Optional, Union, Dict, Self, overload, Generic
 
 import numpy as np
 
@@ -33,13 +33,12 @@ from core.attributes.exp_factors import (
     EventDescription,
 )
 
-
 AnyExpFactor = TypeVar("AnyExpFactor", bound=ExpFactor)
 """Type variable for experimental factors. Used to keep a generic narrower type for the attribute
 while specifying the data type of the coordinate labels."""
 
 
-class CoordExpFactor(Coordinate[np.str_, AnyExpFactor]):
+class CoordExpFactor(Coordinate[AnyExpFactor], Generic[AnyExpFactor]):
     """
     Coordinate labels representing one experimental factor.
 
@@ -71,7 +70,7 @@ class CoordExpFactor(Coordinate[np.str_, AnyExpFactor]):
     """
 
     ATTRIBUTE: Type[AnyExpFactor]
-    DTYPE = np.str_
+    DTYPE = np.dtype("str")
     SENTINEL: str = ""
 
     def __repr__(self):
@@ -197,7 +196,7 @@ class CoordOutcome(CoordExpFactor[ResponseOutcome]):
     ATTRIBUTE = ResponseOutcome
 
 
-class CoordEventDescription(Coordinate[np.str_, EventDescription]):
+class CoordEventDescription(Coordinate[EventDescription]):
     """
     Coordinate labels for event descriptions.
     """

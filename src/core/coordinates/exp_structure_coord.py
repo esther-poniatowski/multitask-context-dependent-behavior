@@ -26,7 +26,7 @@ AnyExpStructure = TypeVar("AnyExpStructure", Recording, Block, Slot)
 experimental factor while specifying the data type of the coordinate labels."""
 
 
-class CoordExpStructure(Coordinate[np.int64, AnyExpStructure]):
+class CoordExpStructure(Coordinate[AnyExpStructure]):
     """
     Coordinate labels for referencing measurements within a whole experiment.
 
@@ -70,7 +70,7 @@ class CoordExpStructure(Coordinate[np.int64, AnyExpStructure]):
     """
 
     ATTRIBUTE: Type[AnyExpStructure]
-    DTYPE = np.int64
+    DTYPE = np.dtype("int64")
     SENTINEL: int = -1
 
     def __repr__(self) -> str:
