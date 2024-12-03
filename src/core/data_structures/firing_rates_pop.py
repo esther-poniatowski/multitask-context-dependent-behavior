@@ -2,10 +2,18 @@
 # -*- coding: utf-8 -*-
 """
 `core.data_structures.firing_rates_pop` [module]
+
+Classes
+-------
+FiringRatesPop
 """
 from types import MappingProxyType
 
-from core.data_components.core_data import CoreData, Dimensions
+from core.data_components.core_dimensions import DimensionsSpec
+from core.data_components.base_data_component import ComponentSpec
+from core.data_components.core_metadata import MetaDataField
+from core.data_components.core_data import CoreRates
+from core.coordinates.base_coordinate import Coordinate
 from core.coordinates.brain_info_coord import CoordUnit
 from core.coordinates.exp_factor_coord import CoordTask, CoordAttention, CoordCategory
 from core.coordinates.time_coord import CoordTime
@@ -14,7 +22,7 @@ from core.data_structures.base_data_structure import DataStructure
 from core.attributes.brain_info import Area, Training
 
 
-class FiringRatesPop(DataStructure):
+class FiringRatesPop(DataStructure[CoreRates]):
     """
     Firing rates for a pseudo-population in a set of pseudo-trials.
 
@@ -42,7 +50,7 @@ class FiringRatesPop(DataStructure):
         Training condition of the animals from which the units were recorded.
     with_error : bool
         Flag indicating whether the data set comprises error trials.
-    data : CoreData
+    data : CoreRates
         Firing rates time courses of all the units in all the trials.
         Shape: ``(n_ens, n_units, n_folds, n_trials, n_t)``, with:
 
@@ -67,35 +75,37 @@ class FiringRatesPop(DataStructure):
         (Property) Number of trials in the subset.
     """
 
-    # --- Schema Attributes ---
-    dims = Dimensions("ensembles", "units", "folds", "trials", "time")
-    coords = MappingProxyType(
+    # --- Data Structure Schema --------------------------------------------------------------------
+
+    DIMENSIONS_SPEC = DimensionsSpec(
+        ensembles=False,  # optional, if unique pseudo-population
+        units=True,  # optional, if single unit
+        folds=False,  # optional, if no cross-validation
+        trials=True,
+        time=False,  # optional, if time-averaged data
+    )
+    COMPONENTS_SPEC = ComponentSpec(
+        data=CoreRates,
+        units=CoordUnit,
+        task=CoordTask,
+        attention=CoordAttention,
+        category=CoordCategory,
+        time=CoordTime,
+    )
+    IDENTIFIERS = MappingProxyType(
         {
-            "units": CoordUnit,
-            "task": CoordTask,
-            "attention": CoordAttention,
-            "category": CoordCategory,
-            "time": CoordTime,
+            "area": MetaDataField(Area, ""),
+            "training": MetaDataField(Training, ""),
         }
     )
-    coords_to_dims = MappingProxyType(
-        {
-            "units": Dimensions("ensembles", "units"),
-            "task": Dimensions("trials"),
-            "attention": Dimensions("trials"),
-            "category": Dimensions("trials"),
-            "time": Dimensions("time"),
-        }
-    )
-    identifiers = ("area", "training")
 
     def __init__(
         self,
         area: Area,
         training: Training,
         with_error: bool = False,
-        data: CoreData | None = None,
-        **coords,
+        data: CoreRates | None = None,
+        **coords: Coordinate,
     ):
         # Set sub-class specific metadata
         self.area = area
@@ -109,6 +119,8 @@ class FiringRatesPop(DataStructure):
             f"<{self.__class__.__name__}>: Area {self.area}, Training {self.training}, "
             f"#trials={self.n_trials}" + super().__repr__()
         )
+
+    # --- Getter Methods ---------------------------------------------------------------------------
 
     @property
     def n_trials(self) -> int:

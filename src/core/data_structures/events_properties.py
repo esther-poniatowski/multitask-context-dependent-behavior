@@ -2,22 +2,29 @@
 # -*- coding: utf-8 -*-
 """
 `core.data_structures.events_properties` [module]
+
+Classes
+-------
+EventsProperties
 """
-from pathlib import Path
 from types import MappingProxyType
-from typing import Optional, Union
 
 import numpy as np
+import pandas as pd
 
+from core.data_components.core_dimensions import Dimensions, DimensionsSpec
+from core.data_components.base_data_component import ComponentSpec
+from core.data_components.core_metadata import MetaDataField
 from core.data_structures.base_data_structure import DataStructure
-from core.data_components.core_data import Dimensions, CoreData
+from core.data_components.core_data import CoreIndices
+from core.coordinates.base_coordinate import Coordinate
 from core.attributes.exp_structure import Session
 from core.coordinates.exp_structure_coord import CoordBlock
 from core.coordinates.time_coord import CoordTimeEvent
 from core.coordinates.exp_factor_coord import CoordEventDescription
 
 
-class EventsProperties(DataStructure):
+class EventsProperties(DataStructure[CoreIndices]):
     """
     Metadata about the events occurring in one recording session of the experiment (raw).
 
@@ -36,7 +43,7 @@ class EventsProperties(DataStructure):
 
     Attributes
     ----------
-    data : CoreData
+    data : CoreIndices
         Indices of the events in the session.
     block : CoordBlock
         Coordinate for the block of trials in which each event occurred.
@@ -56,42 +63,46 @@ class EventsProperties(DataStructure):
     therefore no saver is defined.
     """
 
-    # --- Schema Attributes ---
-    dims = Dimensions("events")
-    coords = MappingProxyType({})
-    coords_to_dims = MappingProxyType({name: Dimensions("events") for name in coords.keys()})
-    identifiers = ("session",)
+    # --- Data Structure Schema --------------------------------------------------------------------
 
-    # --- Key Features -----------------------------------------------------------------------------
+    DIMENSIONS_SPEC = DimensionsSpec(events=True)
+    COMPONENTS_SPEC = ComponentSpec(
+        data=CoreIndices,
+        block=CoordBlock,
+        t_start=CoordTimeEvent,
+        t_end=CoordTimeEvent,
+        description=CoordEventDescription,
+    )
+    IDENTIFIERS = MappingProxyType({"session": MetaDataField(Session, "")})
 
     def __init__(
-        self,
-        session: Session,
-        data: CoreData | None = None,
-        block: CoordBlock | None = None,
-        t_start: CoordTimeEvent | None = None,
-        t_end: CoordTimeEvent | None = None,
-        description: CoordEventDescription | None = None,
+        self, session: Session, data: CoreIndices | None = None, **coords: Coordinate
     ) -> None:
         # Set sub-class specific metadata
         self.session = session
         # Set data and coordinate attributes via the base class constructor
-        super().__init__(
-            data=data, block=block, t_start=t_start, t_end=t_end, description=description
-        )
+        super().__init__(data=data, **coords)
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}>: Session {self.session}\n" + super().__repr__()
 
-    # --- IO Handling ------------------------------------------------------------------------------
+    # --- Formatting -------------------------------------------------------------------------------
 
-    @property
-    def path(self) -> Path:
-        return self.path_ruler().get_path(self.session)
-
-    def load(self) -> None:
+    # TODO: Define a mapping at the class level between CSV columns and the corresponding coordinates
+    def format(
+        self,
+        raw: pd.DataFrame,
+        columns=("TrialNum", "Event", "StartTime", "StopTime"),  # immutable
+    ) -> None:
         """
-        Retrieve data from a CSV file and extract the coordinates.
+        Format the raw data obtained as a pandas DataFrame from a CSV file.
+
+        Parameters
+        ----------
+        raw : pd.DataFrame
+            Raw data obtained from a CSV file.
+        columns : List[str], default=['TrialNum', 'Event', 'StartTime', 'StopTime']
+            Names of the columns expected in the CSV file.
 
         Notes
         -----
@@ -133,19 +144,19 @@ class EventsProperties(DataStructure):
         In the raw data, the term "trial" refers to a block of stimuli presentations.
         In the subsequent analysis, the term "trial" refers to a single slot form one block.
         """
-        # Load numpy array via LoaderNPY
-        raw = self.loader(path=self.path).load()  # dataframe
         # Check the header of the CSV file
-        if not np.array_equal(raw.columns, ["TrialNum", "Event", "StartTime", "StopTime"]):
-            raise ValueError(f"Invalid header in the CSV file at {self.path}.")
-        # Build data (events indices)
+        if not np.array_equal(raw.columns, columns):
+            raise ValueError(f"Invalid header in the raw data: {raw.columns} instead of {columns}")
+        # Set dimensions
         n_events = raw.shape[0]
-        data = CoreData(np.arange(n_events), dims=("events",))
+        dims = Dimensions("events")  # common dimension for data and coordinates
+        # Extract data (events indices)
+        data = CoreIndices(np.arange(n_events), dims=dims)
         # Extract coordinates
-        block = CoordBlock(values=raw["TrialNum"].values.astype(np.int64))
-        t_start = CoordTimeEvent(values=raw["StartTime"].values)
-        t_end = CoordTimeEvent(values=raw["StopTime"].values)
-        description = CoordEventDescription(values=raw["Event"].values)
+        block = CoordBlock(values=raw["TrialNum"].values.astype(np.int64), dims=dims)
+        t_start = CoordTimeEvent(values=raw["StartTime"].values, dims=dims)
+        t_end = CoordTimeEvent(values=raw["StopTime"].values, dims=dims)
+        description = CoordEventDescription(values=raw["Event"].values, dims=dims)
         # Create new instance filled with the loaded data
         obj = EventsProperties(
             session=self.session,
