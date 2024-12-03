@@ -17,7 +17,7 @@ from typing import TypeVar, Type, Dict
 
 import numpy as np
 
-from coordinates.base_coord import Coordinate
+from coordinates.base_coordinate import Coordinate
 from core.attributes.exp_structure import Recording, Block, Slot
 
 
@@ -65,7 +65,7 @@ class CoordExpStructure(Coordinate[AnyExpStructure]):
 
     See Also
     --------
-    `core.coordinates.base_coord.Coordinate`
+    `core.coordinates.base_coordinate.Coordinate`
     `core.attributes.exp_structure`
     """
 

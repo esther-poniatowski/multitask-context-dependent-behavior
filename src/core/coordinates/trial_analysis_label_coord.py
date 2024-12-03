@@ -13,7 +13,7 @@ CoordPseudoTrialsIdx
 
 import numpy as np
 
-from core.coordinates.base_coord import Coordinate
+from core.coordinates.base_coordinate import Coordinate
 from core.attributes.trial_analysis_labels import Fold, TrialIndex
 
 
@@ -38,7 +38,7 @@ class CoordFolds(Coordinate[Fold]):
 
     See Also
     --------
-    `core.coordinates.base_coord.Coordinate`
+    `core.coordinates.base_coordinate.Coordinate`
     """
 
     ATTRIBUTE = Fold
@@ -69,7 +69,7 @@ class CoordPseudoTrialsIdx(Coordinate[TrialIndex]):
 
     See Also
     --------
-    `core.coordinates.base_coord.Coordinate`
+    `core.coordinates.base_coordinate.Coordinate`
     """
 
     ATTRIBUTE = TrialIndex

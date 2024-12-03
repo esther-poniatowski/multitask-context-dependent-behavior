@@ -15,7 +15,7 @@ from typing import Dict, Tuple, Any, Iterable
 
 import numpy as np
 
-from core.coordinates.base_coord import Coordinate
+from core.coordinates.base_coordinate import Coordinate
 from core.attributes.brain_info import CorticalDepth
 from core.attributes.brain_info import Unit
 
@@ -63,7 +63,7 @@ class CoordUnit(Coordinate[Unit]):
     See Also
     --------
     `core.attributes.brain_info.Unit`
-    `core.coordinates.base_coord.Coordinate`
+    `core.coordinates.base_coordinate.Coordinate`
     """
 
     ATTRIBUTE = Unit

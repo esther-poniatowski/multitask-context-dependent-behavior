@@ -18,7 +18,7 @@ Each coordinate object encapsulates :
 
 Modules
 -------
-`base_coord`
+`base_coordinate`
 `time_coord`
 `exp_factor_coord`
 `exp_structure_coord`

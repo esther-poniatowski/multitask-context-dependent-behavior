@@ -17,7 +17,7 @@ import warnings
 import numpy as np
 from numpy.typing import ArrayLike
 
-from core.coordinates.base_coord import Coordinate
+from core.coordinates.base_coordinate import Coordinate
 from core.data_components.core_dimensions import Dimensions
 
 
@@ -66,7 +66,7 @@ class CoordTime(Coordinate):
 
     See Also
     --------
-    `core.coordinates.base_coord.Coordinate`
+    `core.coordinates.base_coordinate.Coordinate`
     """
 
     # No ATTRIBUTE
