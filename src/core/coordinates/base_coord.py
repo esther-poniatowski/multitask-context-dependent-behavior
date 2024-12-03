@@ -14,7 +14,6 @@ Coordinate
 # Reason: The methods `flip` and `rollaxis` are not implemented in the base class `DataComponent`.
 # --------------------------------------------------------------------------------------------------
 
-
 from typing import Type, TypeVar, Generic
 
 import numpy as np
@@ -52,6 +51,10 @@ class Coordinate(DataComponent[Dtype], Generic[Dtype, AnyAttribute]):
     get_attribute
     has_attribute
     are_valid
+
+    See Also
+    --------
+    `DataComponent` : Base class for all data components.
     """
 
     ATTRIBUTE: Type[AnyAttribute]

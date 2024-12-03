@@ -12,6 +12,7 @@ D_STIM
 D_WARN
 Denoise
 denoising
+DIMSPEC
 DPEG
 EPAIRS
 expt
