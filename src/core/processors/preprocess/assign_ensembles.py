@@ -82,7 +82,7 @@ class EnsembleAssigner(Processor):
         self.n_ensembles_max = n_ensembles_max
 
     @set_random_state
-    def process(self, n_units: int) -> Ensembles:
+    def process(self, n_units: int, seed: int = 0) -> Ensembles:
         """
         Implement the abstract method of the base class `Processor`.
 
