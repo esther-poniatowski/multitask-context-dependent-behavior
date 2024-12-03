@@ -15,7 +15,7 @@ import numpy as np
 
 from core.attributes.base_attribute import Attribute
 from core.composites.attribute_set import AttributeSet, AttributeSetUnion
-from core.coordinates.base_coord import Coordinate
+from core.coordinates.base_coordinate import Coordinate
 from core.composites.base_container import Container
 
 

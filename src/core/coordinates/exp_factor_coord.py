@@ -21,7 +21,7 @@ from typing import TypeVar, Type, Optional, Union, Dict, Self, overload, Generic
 
 import numpy as np
 
-from core.coordinates.base_coord import Coordinate
+from core.coordinates.base_coordinate import Coordinate
 from core.attributes.exp_factors import (
     ExpFactor,
     Task,
@@ -65,7 +65,7 @@ class CoordExpFactor(Coordinate[AnyExpFactor], Generic[AnyExpFactor]):
 
     See Also
     --------
-    `core.coordinates.base_coord.Coordinate`
+    `core.coordinates.base_coordinate.Coordinate`
     `core.attributes.exp_factors`
     """
 

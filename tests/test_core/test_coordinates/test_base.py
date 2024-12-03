@@ -11,7 +11,7 @@ because the abstract base class cannot be instantiated.
 
 See Also
 --------
-`core.coordinates.base_coord`: Tested module.
+`core.coordinates.base_coordinate`: Tested module.
 `core.coordinates.time`: Tested module.
 """
 
