@@ -7,10 +7,6 @@
 ## Current Status
 
 ## To Do
-- In coordinates, add interactions with attributes. Other subclasses are different data values.
-- Distinguish between data components and data structures.
-- Distinguish between builders and factories
-- Implement TypeDict for coordinate mappings in DataStructure
 - Implement a processor to gather folds, ensembles...
 - [ ] Refactor SpikesAligner to reduce conditionals: Create Task/Stimulus Subclasses PTDAligner and
   CLKAligner under a shared BaseAligner interface.
@@ -18,6 +14,7 @@
 - [ ] Update tests.
 - [ ] Update documentations in `__init__.py` files.
 - [ ] Start back geom-baseline analysis and subpopulation analysis once the interface is fixed.
+- Implement the __str__ method in the custom classes.
 
 ## Next steps
 - Add a `collect` method to the builder base class to gather all the required data for building the
