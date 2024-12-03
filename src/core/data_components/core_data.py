@@ -6,6 +6,8 @@
 Classes
 -------
 CoreData
+CoreIndices
+CoreRates
 """
 # DISABLED WARNINGS
 # --------------------------------------------------------------------------------------------------
@@ -14,8 +16,12 @@ CoreData
 # Reason: The methods `flip` and `rollaxis` are not implemented in the base class `DataComponent`.
 # --------------------------------------------------------------------------------------------------
 
-from core.data_components.core_dimensions import Dimensions
+from types import MappingProxyType
+
+import numpy as np
+
 from core.data_components.base_data_component import DataComponent
+from core.data_components.core_metadata import MetaDataField
 
 
 class CoreData(DataComponent):
@@ -43,5 +49,72 @@ class CoreData(DataComponent):
     `DataComponent` : Base class for all data components.
     """
 
-    # Declare custom attributes at the class level to specify type hints
-    dims: Dimensions
+
+class CoreIndices(CoreData):
+    """
+    Core component referencing bare indices (for events, trials...).
+
+    Attributes
+    ----------
+    scope : str
+        Frame of reference in which indices should be interpreted.
+
+    Examples
+    --------
+    Common values for the `scope` attribute:
+
+    - "experiment": Indices correspond to trials within an experimental session.
+    - "population": Indices correspond to units within a neural population.
+    - "dataset": Indices correspond to samples in a specific dataset.
+    """
+
+    DTYPE = np.dtype("int64")
+    SENTINEL = -1
+    METADATA = MappingProxyType({"scope": MetaDataField(str, "")})
+
+
+class CoreTimes(CoreData):
+    """
+    Core component containing time values.
+
+    Attributes
+    ----------
+    origin : str
+        Time origin relative to which time stamps should be interpreted.
+    unit : str, default="sec"
+        Time unit in which time stamps are expressed.
+
+    Examples
+    --------
+    Common values for the `reference` attribute:
+
+    - "block": Time stamps are relative to the beginning of each block of trials.
+    - "session": Time stamps are relative to the beginning of the session.
+    - "trial": Time stamps are relative to the beginning of each trial.
+
+    Common values for the `unit` attribute: "sec" (seconds), "msec" (milliseconds).
+    """
+
+    DTYPE = np.dtype("float64")
+    SENTINEL = np.nan
+    METADATA = MappingProxyType(
+        {
+            "origin": MetaDataField(str, ""),
+            "unit": MetaDataField(str, "sec"),
+        }
+    )
+
+
+class CoreRates(CoreData):
+    """
+    Core component containing firing rates.
+
+    Attributes
+    ----------
+    unit : str, default="spikes/sec"
+        Rate unit in which values are expressed.
+    """
+
+    DTYPE = np.dtype("float64")
+    SENTINEL = np.nan
+    METADATA = MappingProxyType({"unit": MetaDataField(str, "spikes/sec")})
