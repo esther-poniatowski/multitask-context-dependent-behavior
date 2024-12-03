@@ -63,7 +63,7 @@ class DataComponent(np.ndarray):
     validate
     propagate_dimensions
     propagate_metadata
-    cast_to_self
+    wrap
     from_shape
     get_dim   (delegate to the `dims` attribute)
     get_axis  (delegate to the `dims` attribute)
@@ -278,7 +278,7 @@ class DataComponent(np.ndarray):
             for attr in cls.METADATA:
                 setattr(child, attr, getattr(parent, attr, None))
 
-    def cast_to_self(self, obj: np.ndarray) -> Self:
+    def wrap(self, obj: np.ndarray) -> Self:
         """
         Cast a numpy array to a `DataComponent` object.
 
@@ -292,7 +292,9 @@ class DataComponent(np.ndarray):
         DataComponent
             Array cast to the current class.
         """
-        return obj.view(type(self))  # convert back to DataComponent
+        if isinstance(obj, np.ndarray):
+            return obj.view(type(self))
+        return obj
 
     @classmethod
     def from_shape(
@@ -371,7 +373,50 @@ class DataComponent(np.ndarray):
         """
         result = super().__getitem__(index)
         if isinstance(result, np.ndarray) and not isinstance(result, DataComponent):
-            result = self.cast_to_self(result)
+            result = self.wrap(result)
+            self.propagate_dimensions(result, self)
+            self.propagate_metadata(result, self)
+        return result
+
+    # TODO: Decide whether to keep this method
+    def __array_ufunc__(
+        self,
+        ufunc: np.ufunc,
+        method: str,
+        *inputs: np.ndarray,
+        **kwargs,
+    ):
+        """
+        Apply a universal function to the data.
+
+        Override the base numpy method to convert the result back to a `DataComponent` object.
+        Necessary for performing in-place operations without type checking errors.
+
+        Parameters
+        ----------
+        ufunc : np.ufunc
+            Universal function to apply.
+        method : str
+            Method to apply.
+        inputs : np.ndarray
+            Input arrays to process.
+        kwargs : Any
+            Additional keyword arguments for the ufunc.
+
+        Notes
+        -----
+        The `__array_ufunc__` is part of the NumPy protocol for overriding ufunc behavior in custom
+        array-like classes, but it is not implemented directly in numpy.ndarray.
+        """
+        # Convert DataComponent objects to numpy arrays
+        args = [i.view(np.ndarray) if isinstance(i, DataComponent) else i for i in inputs]
+        # Apply the ufunc to input arrays
+        result = getattr(ufunc, method)(*args, **kwargs)
+        # Convert the result back to a DataComponent object if necessary
+        if result is NotImplemented:
+            return NotImplemented
+        if isinstance(result, np.ndarray):
+            result = self.wrap(result)
             self.propagate_dimensions(result, self)
             self.propagate_metadata(result, self)
         return result
@@ -413,7 +458,7 @@ class DataComponent(np.ndarray):
         :meth:`np.ndarray.swapaxes`: Numpy method to swap two axes.
         """
         result = super().swapaxes(axis1, axis2)  # output: ndarray
-        result = self.cast_to_self(result)  # cast to the current class
+        result = self.wrap(result)  # cast to the current class
         result.dims = self.dims.swap(axis1, axis2)
         return result
 
@@ -433,7 +478,7 @@ class DataComponent(np.ndarray):
         :meth:`np.moveaxis`: Numpy method to move axes to new positions.
         """
         result = np.moveaxis(self, source, destination)  # output: ndarray
-        result = self.cast_to_self(result)  # cast to the current class
+        result = self.wrap(result)  # cast to the current class
         result.dims = self.dims.move(source, destination)
         return result
 
