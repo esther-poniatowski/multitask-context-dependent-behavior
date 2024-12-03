@@ -17,7 +17,7 @@ from core.coordinates.base_coord import Coordinate
 from core.attributes.trial_analysis_labels import Fold, TrialIndex
 
 
-class CoordFolds(Coordinate[np.int64, Fold]):
+class CoordFolds(Coordinate[Fold]):
     """
     Coordinate labels indicating the fold to which each trial belongs.
 
@@ -42,11 +42,11 @@ class CoordFolds(Coordinate[np.int64, Fold]):
     """
 
     ATTRIBUTE = Fold
-    DTYPE = np.int64
+    DTYPE = np.dtype("int64")
     SENTINEL = -1
 
 
-class CoordPseudoTrialsIdx(Coordinate[np.int64, TrialIndex]):
+class CoordPseudoTrialsIdx(Coordinate[TrialIndex]):
     """
     Coordinate labels for trial indices to pick from the raw data to form pseudo-trials.
 
@@ -73,5 +73,5 @@ class CoordPseudoTrialsIdx(Coordinate[np.int64, TrialIndex]):
     """
 
     ATTRIBUTE = TrialIndex
-    DTYPE = np.int64
+    DTYPE = np.dtype("int64")
     SENTINEL = -1
