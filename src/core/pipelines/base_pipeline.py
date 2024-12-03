@@ -5,7 +5,7 @@
 
 Classes
 -------
-`Pipeline`
+Pipeline
 
 Notes
 -----
