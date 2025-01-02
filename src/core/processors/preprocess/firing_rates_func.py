@@ -16,8 +16,7 @@ from core.constants import T_BIN
 
 Stim: TypeAlias = Literal["R", "T", "N"]
 Task: TypeAlias = Literal["PTD", "CLK"]
-NumpyArray: TypeAlias = npt.NDArray[np.float64]
-
+NumpyArray: TypeAlias = npt.NDArray[np.float64]  # TODO: Change to `np.ndarray`
 
 
 def align_timings(
@@ -30,7 +29,7 @@ def align_timings(
     t_on: float,
     t_off: float,
 ) -> tuple[float, float, float, float]:
-    
+
     t_start1 = t_on - d_pre
     if task == "PTD" or (task == "CLK" and stim == "N"):  # excise Click train
         t_end1 = t_on + d_stim

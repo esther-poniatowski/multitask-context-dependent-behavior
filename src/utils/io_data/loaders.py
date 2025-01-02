@@ -155,8 +155,7 @@ class LoaderCSVtoArray(Loader):
 
         Warning
         -------
-        The attribute :obj:`tpe` should specify not only ``npt.NDArray``, but also the precise *data
-        type* of the array contents.
+        The attribute `tpe` should specify the precise *data type* of the array contents:
 
         - For float data : np.ndarray[np.float64]
         - For integer data : np.ndarray[np.int64]
