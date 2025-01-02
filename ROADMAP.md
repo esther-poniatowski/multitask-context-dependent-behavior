@@ -7,31 +7,14 @@
 ## Current Status
 
 ## To Do
-- Implement a processor to gather folds, ensembles...
-- [ ] Refactor SpikesAligner to reduce conditionals: Create Task/Stimulus Subclasses PTDAligner and
-  CLKAligner under a shared BaseAligner interface.
-- [ ] Add a functionality in pipelines to flexibly select steps to run and restart on checkpoints
-- [ ] Update tests.
-- [ ] Update documentations in `__init__.py` files.
-- [ ] Start back geom-baseline analysis and subpopulation analysis once the interface is fixed.
-- Implement the __str__ method in the custom classes.
+- [ ]
+
 
 ## Next steps
-- Add a `collect` method to the builder base class to gather all the required data for building the
-  final object.
-- Implement a processor `TrialOrganizer` to extract the trials from the sessions' blocks.
- in the analysis.
-- Implement a `TrialSelector` class
+
 
 ## Open Questions
 
-Improvements:
-- Break down the execute method into smaller, more focused methods
-- Use a factory method for creating ExpCondition instances
-- Use a dataclass for attributes that define the pipeline configuration. This makes the code easier
-  to read and ensures type validation.
-- Configuration object
-- Use dependency injection for external dependencies like ExpCondition, Candidates, and UnitsContainer.
 
 ## Saveguard from `subpopulation_analysis`
 
