@@ -26,8 +26,8 @@ from core.data_structures.trials_properties import TrialsProperties
 
 class BuilderSpikeTrains(Builder[SpikeTrains]):
     """
-    Build the matrix gathering the spiking times of a single unit across all its recording sessions,
-    from the raw spike times and trials properties in multiple individual sessions.
+    Gather and format the spiking times of a single unit across all its recording sessions, from the
+    raw spike times and trials properties in multiple individual sessions.
 
     Product: `SpikeTrains`
 
