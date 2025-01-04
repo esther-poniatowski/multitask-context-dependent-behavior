@@ -75,6 +75,30 @@ in separate modules/classes within the `tasks/` directory. This way, the `ops/` 
 and execute these tasks without mingling the concerns of task execution and task definition.
 
 
+## Data
+
+### Storage
+
+```plaintext
+    data/
+    ├── samples/                    # Sample data for tests and examples
+    ├── raw/                        # Raw data (immutable)
+    │   ├── ath011b-c1/             # Data from one unit (neuron)
+    │   └── ...
+    ├── meta/                       # Metadata about experimental events, trials, units
+    ├── interim/                    # Intermediate data which has been transformed
+    └── processed/                  # Final data sets for modeling
+```
+
+### Data types
+
+Raw data consists of the following types:
+
+- `.spk.mat`: Spiking times (in seconds) of one unit in one recording session (MATLAB format).
+- `.csv`: Idem in CSV format.
+- `.m`: Metadata about a recording session (MATLAB format).
+
+
 ## Initializing the Workspace
 
 1. Clone the repository into a local directory:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`core.constants` [module]
+`core.constants` [module]
 
 Constants and global variables for the whole package.
 
@@ -11,9 +11,9 @@ Examples
 --------
 Access a constant in another module:
 
-.. code-block:: python
+>>> from core.constants import CONSTANT_NAME
+>>> print(CONSTANT_NAME)
 
-        from core.constants import CONSTANT_NAME
 """
 
 # --- Time and Durations ---
@@ -69,8 +69,12 @@ T_SHOCK = 1.75
 
 # --- Trials ---
 
-N_PSEUDO_MIN = 5
-"""Minimum number of pseudo-trials in a condition and fold."""
+N_TRIALS_MIN = 5
+"""Minimum number of required trials for a unit to be included in the analysis, in each experimental
+condition of interest and fold."""
 
-ALPHA_BOOTSTRAP = 0.5
-"""Variability factor to adjust the number of pseudo-trials to generate."""
+BOOTSTRAP_THRES_PERC = 0.3
+"""Threshold percentage of the number of trials to consider the bootstrap method."""
+
+N_FOLDS = 3
+"""Number of folds for cross-validation."""

@@ -3,6 +3,7 @@ Autocloaking
 debugpy
 esbonio
 hbenl
+ipykernel
 leonhard
 lextudio
 littlefoxteam

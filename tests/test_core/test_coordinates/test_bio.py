@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-:mod:`test_core.test_coordinates.test_bio` [module]
+`test_core.test_coordinates.test_bio` [module]
 
 See Also
 --------
-:mod:`core.coordinates.bio`: Tested module.
-:class:`core.entities.bio_data.Depth`
-:class:`core.entities.composites.Unit`
+`core.coordinates.bio`: Tested module.
+`core.attributes.bio_data.Depth`
+`core.attributes.composites.Unit`
 """
 
 import numpy as np
 import pytest
 
-from core.coordinates.bio import CoordUnit, CoordDepth
-from core.entities.bio import CorticalDepth
-from core.entities.composites import Unit
+from core.coordinates.brain_info_coord import CoordUnit, CoordDepth
+from core.attributes.brain_info import CorticalDepth
+from core.attributes.brain_info import Unit
 
 
 # Test values for CoordUnit
 UNITS_IDS = ["avo052a-d1", "daf035b-d2"]
 DEPTHS = ["a", "b"]  # letter after the first number in the unit ID
-POP = [Unit(unit_id) for unit_id in UNITS_IDS]
+POP = [Unit(unit) for unit in UNITS_IDS]
 
 
 def test_coord_unit_build_labels_valid():

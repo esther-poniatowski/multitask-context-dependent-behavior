@@ -7,26 +7,15 @@ Multi-Task Context-Dependent Behavior - Documentation
    :maxdepth: 2
    :caption: About the Project
 
-   about/background
    about/contributors
    about/license
 
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Results
-
-   results/baseline
-
-
 .. toctree::
    :maxdepth: 1
-   :caption: Code Guide & Usage
+   :caption: Analyses
 
-   code/prerequisites
-   code/usage
-   code/index
-   code/test_report
+   analyses/subpopulation_analysis
+   analyses/geom_baseline_analysis
 
 
 .. toctree::
@@ -36,6 +25,15 @@ Multi-Task Context-Dependent Behavior - Documentation
    data_recovery/index
    data_recovery/transfer
    data_recovery/extract_spikes
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Code Guide & Usage
+
+   code/prerequisites
+   code/index
+   code/test_report
+
 
 
 Indices and Tables

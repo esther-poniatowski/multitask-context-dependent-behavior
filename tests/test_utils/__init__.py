@@ -7,6 +7,7 @@ Sub-Packages
 ------------
 :mod:`tests_utils.test_misc`
 :mod:`tests_utils.test_io`
+:mod:`tests_utils.test_path_system`
 
 See Also
 --------
