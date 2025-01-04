@@ -1,8 +1,8 @@
-### gitignore file
-### Project multitask-context-dependent-behavior
+# gitignore file for multitask-context-dependent-behavior
+# -------------------------------------------------------
 
 # Confidential files
-**/credentials/*
+
 
 # Temporary files
 *.tmp
@@ -12,16 +12,16 @@
 .DS_Store
 
 # Jupyter Notebook
-**/.ipynb_checkpoints/
+.ipynb_checkpoints
 
 # Python Cache
-**/__pycache__
+__pycache__
 *.py[cod]
 .pytest_cache
-**/.mypy_cache
+.mypy_cache
 
-# Data Directory
+# Data Directory (in the root folder)
 data/
 
-# Archives
-**/archive/*
+# Archives Directory (in the root folder)
+# archive/
