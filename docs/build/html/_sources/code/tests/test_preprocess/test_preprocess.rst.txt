@@ -1,4 +1,0 @@
-.. automodule:: test_mtcdb.test_preprocess
-   :members:
-   :undoc-members:
-
