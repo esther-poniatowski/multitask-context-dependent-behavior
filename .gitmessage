@@ -2,9 +2,6 @@ pref():
 ###################################################
 
 ######################################################################
-
-Signed-off-by: Esther Poniatowski <eponiatowski@clipper.ens.psl.eu>
-
 # | Prefix    | Description                               |
 # | --------- | ----------------------------------------- |
 # | chore     | Initial setup or environmental tasks      |
