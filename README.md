@@ -1,6 +1,152 @@
 # Multi-Task Context-Dependent Decision Making
 
-[Documentation](https://esther-poniatowski.github.io/multitask-context-dependent-behavior/).
+- [Description](#description)
+- [Authors](#authors)
+- [Acknowledgments](#acknowledgments)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Contributing](#contributing)
+
+
+## Description
+
+...
+
+**Full Documentation**: [multitask-context-dependent-behavior](https://esther-poniatowski.github.io/multitask-context-dependent-behavior/)
+
+## Authors
+
+**Esther Poniatowski** | @esther-poniatowski | esther.poniatowski@ens.psl.eu
+
+
+## Acknowledgments
+
+...
+
+
+## Installation
+
+> [!TIP]
+> **Prerequisites**
+> Ensure that the following tools are available on the local machine:
+> - git
+> - conda
+
+To set up this project on a local machine, follow the steps below:
+
+### Initialize a local copy of the repository
+
+1. Navigate to the local directory where the root folder of the repository should reside.
+  
+2. Clone the repository:
+
+```bash
+$ git clone git@github.com:esther-poniatowski/multitask-context-dependent-behavior.git
+```
+
+The repository files are installed into a new directory named `multitask-context-dependent-behavior`.
+
+
+### Create a virtual environment
+
+1. Create an dedicated conda environment containing all the dependencies:
+
+```
+conda env create -f environment.yml
+```
+
+The new conda environment is named `mtcdb`. 
+
+2. (Optional) Register the packages in "editable mode":
+
+```
+conda activate mtcdb
+pip install -e /src/<package-name>
+```
+
+## Usage
+
+...
+
+
+## Contributing
+
+> [!IMPORTANT]
+> To contribute effectively, please conform to those guidelines and use the provided templates.
+
+### Configure the workspace (optional, for contributing)
+
+1. Ask the author to share the Personal Access Token of the repository.
+
+2. Navigate to the root directory of the local repository:
+
+```bash
+$ cd path/to/multitask-context-dependent-behavior
+```
+
+3. Add the authentication user name and token in the `.git/credentials` file:
+
+```bash
+https://<username>:<personal-access-token>@github.com
+```
+
+4. Configure the credential.helper to use the credentials file:
+
+```bash
+git config credential.helper store
+```
+
+5. Configure the user profile:
+
+```bash
+git config user.name "Example Name"
+git config user.email " exampleemail@domain.com"
+```
+
+6. Edit the commit message template `.gitmessage` with the corresponding user name and email.
+
+
+### Sumbitting Issues
+
+To submit a new issue:
+
+1. In the repository page, navigate to the "Issues" tab and click on "New Issue".
+2. Select and fill the issue template.
+3. Add relevant labels, assignees, and milestone if applicable.
+
+### Using the Commit Message Template
+
+1. Navigate inside the repository directory:
+```
+cd <repository-name>
+```
+   
+2. Edit the commit template (`.gitmessage`) to specify the author name.
+
+3. Configure `git` to use this file as a commite template:
+```
+git config commit.template .gitmessage
+```
+   
+4. Verify the configuration:
+```
+git config --get commit.template
+```
+
+> [!NOTE]
+> To write a commit message with this template, adhere to the following format:
+>
+> - Capitalize the subject, do not add a period at the end
+> - Limit the subject line to 50 characters
+> - Use the imperative mood in the subject line
+> - Separate subject from body with a blank line
+> - Wrap the body at 72 characters per line
+> - Use the body to explain what and why (not how)
+> - Add references to issues or other commits using [GitHub keywords](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/using-keywords-in-issues-and-pull-requests)
+
+
+---
+
 
 ## Directory Structure
 
@@ -90,36 +236,4 @@ and execute these tasks without mingling the concerns of task execution and task
     └── processed/                  # Final data sets for modeling
 ```
 
-### Data types
 
-Raw data consists of the following types:
-
-- `.spk.mat`: Spiking times (in seconds) of one unit in one recording session (MATLAB format).
-- `.csv`: Idem in CSV format.
-- `.m`: Metadata about a recording session (MATLAB format).
-
-
-## Initializing the Workspace
-
-1. Clone the repository into a local directory:
-
-```bash
-$ git clone git@github.com:esther-poniatowski/multitask-context-dependent-behavior.git
-```
-
-2. Navigate to the root directory of the workspace:
-
-```bash
-$ cd path/to/multitask-context-dependent-behavior
-```
-
-Example paths :
-
-- `cd ~/Documents/Projects/multitask-context-dependent-behavior`
-- `cd /Users/eresther/Documents/Work/multitask-context-dependent-behavior`
-
-3. Run the setup script:
-
-```bash
-$ bash setup/init.sh
-```
