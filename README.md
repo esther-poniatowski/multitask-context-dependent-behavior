@@ -38,9 +38,8 @@ To set up this project on a local machine, follow the steps below:
 1. Navigate to the local directory where the root folder of the repository should reside.
   
 2. Clone the repository:
-
 ```bash
-$ git clone git@github.com:esther-poniatowski/multitask-context-dependent-behavior.git
+git clone git@github.com:esther-poniatowski/multitask-context-dependent-behavior.git
 ```
 
 > [!NOTE]
@@ -50,7 +49,6 @@ $ git clone git@github.com:esther-poniatowski/multitask-context-dependent-behavi
 ### Create a virtual environment
 
 1. Create an dedicated conda environment including all the dependencies for using the project:
-
 ```
 conda env create -f environment.yml
 ```
@@ -65,13 +63,13 @@ a. Check and copy the path to the site-packages directory of the environment:
 conda activate mtcdb
 python -c "import site; print(site. getsitepackages ()[0])"
 ```
-
 Usually: `∼/miniconda3/envs/mtcdb/lib/pythonX.Y/site-packages`
 
 b. Register the source directory of the project in a `mtcdb.pth` file:
 ```bash
 echo "/path/to/mtcdb/src" > "path/to/conda/site-packages/mtcbd.pth"
 ```
+Replace `"/path/to/mtcdb"` and `"path/to/conda/site-packages"` by the actual paths.
 
 ## Usage
 
@@ -97,21 +95,16 @@ To submit an issue on the GitHub page of the repository:
 
 #### Configure the repository
 
-1. Navigate to the root directory of the local repository:
-
-```bash
-cd path/to/multitask-context-dependent-behavior
-```
-
+1. Navigate to the root directory of the local repository.
+  
 2. Specify the user profile (recorded in commits' metadata):
-
 ```bash
 git config user.name "Example Name"
-git config user.email " exampleemail@domain.com"
+git config user.email "exampleemail@domain.com"
 ```
+Replace `"Example Name"` and `"exampleemail@domain.com"` by the actual name and email corresponding to the GitHub user.
 
 3. Configure the commit template (`.gitmessage` file):
-
 ```
 git config commit.template .gitmessage
 ```
@@ -131,16 +124,17 @@ git config commit.template .gitmessage
 
 1. Ask the author to share the Personal Access Token of the repository.
 
-2. Add authentication data (user name and token) in the `.git/credentials` file:
+2. Create a plaintext file located at `.git/credentials`:
 
-```bash
+3. Add authentication data in this file under the form of a URL address:
+```plaintext
 https://<username>:<personal-access-token>@github.com
 ```
+Replace `<username>` and `<personal-access-token>` by the actual user name indicated before for the Git repository and the personal access token provided by the author.
 
-3. Configure the credential helper to use the credentials file:
-
+4. Configure the credential helper to use the credentials file:
 ```bash
-git config credential.helper store
+git config credential.helper 'store --file=.git/credentials'
 ```
 
 ---
