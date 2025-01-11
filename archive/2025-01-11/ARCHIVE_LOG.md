@@ -3,7 +3,9 @@
 ## Archive Details
 
 - Date of archival: 2025-01-11
-- Last commit hash on `main`: 3b79343c119c7e44b8d6d8eb14585958164c7fbd
+- Last commit hash on `main`: 
+  - For `setup/`: 3b79343c119c7e44b8d6d8eb14585958164c7fbd
+  - For `meta.env`, `path.env`, `NOTES.md`: 6576e357694648379cf5240698e8365e83a27bce
 
 ## Reason for Archival
 
