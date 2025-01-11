@@ -18,6 +18,30 @@ complex setup process in the future.
 `setup/`
 - Original Location: `./setup/`
 - Notes: The `setup` directory contained scripts and configurations that were used to initialize the
-  project workspace by running automated bash and conda commands. The `hub` subdirectory contained
-  hub-specific configurations to adapt the set up process with similar commands on the data server.
+  project workspace by running automated bash and conda commands. 
 
+`setup/init.sh`
+- Notes: Script to initialize a Conda environment for the workspace (run once).
+- Tasks:
+  - Create a new Conda environment with the required dependencies from the `environment.yml` file.
+  - Symlink the `post_activate.sh` script to the `activate.d` directory of the Conda environment.
+  - Symlink the root of the project in the `activate.d` directory of the Conda environment (used int
+    the post-activation script).
+
+`setup/post_activate.sh`
+- Notes: Script run automatically each time the Conda environment is activated. It was
+  symlinked in the Conda environment's `activate.d` directory by the `init.sh` script. 
+- Tasks:
+  - Navigate to the root directory of the project.
+  - Set up global environment variables for the paths to the key directories in the project and the
+    project's metadata (name...).
+  - Set path variables using the `setup/python.pth` and `setup/bin.pth` files.
+
+`setup/python.pth`
+- Notes: List of paths to add paths to the Python path environment variable (`PYTHONPATH`) to enable
+  importing modules from the project directory (`src/`, `tests/`...). It uses environment variables
+  to the project's key directories.
+
+`setup/bin.pth`
+- Notes: Path to the `ops` directory containing scripts to add to the system's binary path
+  environment variable (`PATH`) to enable executing custom scripts from the project directory.
