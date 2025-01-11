@@ -56,12 +56,12 @@ conda env create -f environment.yml
 > [!NOTE]
 > The new conda environment is named `mtcdb`. 
 
-2. Register the packages in the environment:
+2. Register the current packages in the environment:
 
 a. Check and copy the path to the site-packages directory of the environment:
 ```bash
 conda activate mtcdb
-python -c "import site; print(site. getsitepackages ()[0])"
+python -c "import site; print(site.getsitepackages()[0])"
 ```
 Usually: `∼/miniconda3/envs/mtcdb/lib/pythonX.Y/site-packages`
 
