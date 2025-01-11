@@ -47,3 +47,18 @@ complex setup process in the future.
 `setup/bin.pth`
 - Notes: Path to the `ops` directory containing scripts to add to the system's binary path
   environment variable (`PATH`) to enable executing custom scripts from the project directory.
+
+`meta.env`
+- Original Location: `./meta.env`
+- Notes: Environment variables used in the project to store metadata about the project (name, version,
+  author...).
+
+`path.env`
+- Original Location: `./path.env`
+- Notes: Environment variables used in the project to store paths to key directories in the project
+  (source code, tests, data...).
+
+`NOTES.md`
+- Original Location: `./NOTES.md`
+- Notes: Documentation about the project setup and configuration. It explains the distinction and
+  strategy for the `init.sh` and `post_activate.sh` scripts.
