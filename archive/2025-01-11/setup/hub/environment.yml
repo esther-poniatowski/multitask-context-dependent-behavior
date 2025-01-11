@@ -1,0 +1,13 @@
+name: mtcdb
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.9
+  - matplotlib
+  - numpy
+  - pandas
+  - pip
+  - python-dotenv
+  - pyyaml
+variables:
