@@ -1,0 +1,15 @@
+// Folder-Specific Settings - Source Code
+{
+    // Code Diagnosis with Pylance extension
+	"python.analysis.typeCheckingMode": "strict",
+
+ 
+    // Type Checking with MyPy extension
+    "mypy-type-checker.showNotifications": "always",
+	"mypy-type-checker.args": [
+        "--config-file", "../mypy.ini"
+    ],
+    
+
+
+}

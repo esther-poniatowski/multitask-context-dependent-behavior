@@ -1,0 +1,14 @@
+# Programming Words
+byobu
+configurer
+DEVNULL
+getcwd
+Liskov
+Multiton
+nargs
+POSIX
+realpath
+Redeclaration
+Statefulness
+subpackage
+Variadics

@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+# =================================================================================================
+# Script Name: deploy_to_hub.sh
+# Description: Deploy the directory structure and files on a remote hub.
+#
+# Variables
+# ---------
+# CREDENTIALS_HUB
+#   Path to the .env file containing the credentials for the remote hub.
+# DIR_DEPLOY_YML
+#   Path to the .yml file containing the directory structure for the deployment process.
+# MAP_DEPLOY_YML
+#   Path to the .yml file containing the sync map for the deployment process.
+# SETUPDIR_SCRIPT
+#   Path to the python script for setting up the directory structure on the remote hub.
+# TRANSFER_SCRIPT
+#   Path to the python script for transferring files and directories across the network.
+# =================================================================================================
+
+# Ensure required files exists
+if [ ! -f "$CREDENTIALS_HUB" ]; then
+  echo "[ERROR] Credential .env file not found at $CREDENTIALS_HUB"
+  exit 1
+fi
+
+if [ ! -f "$MAP_DEPLOY_YML" ]; then
+  echo "[ERROR] Sync map file not found at $MAP_DEPLOY_YML"
+  exit 1
+fi
+
+
+if [ ! -f "$SETUPDIR_SCRIPT" ]; then
+  echo "[ERROR] Setup directory script not found at $SETUPDIR_SCRIPT"
+  exit 1
+fi
+
+if [ ! -f "$TRANSFER_SCRIPT" ]; then
+  echo "[ERROR] Transfer script not found at $TRANSFER_SCRIPT"
+  exit 1
+fi
+
+# Execute the transfer script
+python "$SETUPDIR_SCRIPT" --yml-dirstruct-path "$DIR_DEPLOY_YML" --env-path "$CREDENTIALS_HUB"
+# python "$TRANSFER_SCRIPT" --env-path "$CREDENTIALS_HUB" --sync-map-path "$MAP_DEPLOY_YML" --direction upload
+# python "$TRANSFER_SCRIPT" --env-path "$CREDENTIALS_HUB" --sync-map-path "$MAP_DEPLOY_YML" --direction upload --dry-run
+
+# Check transfer success
+if [ $? -eq 0 ]; then
+  echo "[SUCCESS] Deployment to the remote hub."
+else
+  echo "[ERROR] Deployment failed."
+  exit 1
+fi

@@ -1,0 +1,27 @@
+# gitignore file for multitask-context-dependent-behavior
+# -------------------------------------------------------
+
+# Confidential files
+
+
+# Temporary files
+*.tmp
+*.temp
+
+# MacOS
+.DS_Store
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Python Cache
+__pycache__
+*.py[cod]
+.pytest_cache
+.mypy_cache
+
+# Data Directory (in the root folder)
+data/
+
+# Archives Directory (in the root folder)
+# archive/

@@ -1,0 +1,209 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+:mod:`core.data_structures` [subpackage]
+
+Classes representing data structures used in the analysis.
+
+Modules
+-------
+:mod:`core.data_structures.base_data_structure`
+
+Notes
+-----
+**Content and Functionalities of Data Structures**
+
+Data structures are designed to store and manipulate the data sets used in the analysis.
+
+- Each *class* represents one *family* of data structures, which corresponds to one milestone in the
+  analysis.
+  Examples: raw spikes, population firing rates, decoder models...
+- Each *instance* of such a class represents one *specific* data set within the family.
+  Examples: raw spikes of *one unit* in *one session*.
+
+Each data structure object encapsulates :
+
+- Schema metadata: Intrinsic properties of the data structure family, which define its structure and
+  organization. Examples: dimension names, types, mappings between coordinates and dimensions.
+- Identity metadata: Labels or names which jointly anf uniquely identify each data structure
+  instance within its family. Examples: session ID, unit ID.
+- Descriptive Metadata: Informative parameters which provide additional context about the data
+  structure, and can be shared across instances. They stored alongside with data since they can be
+  involved in common operations. Examples: time bin, smoothing window.
+- Core data: Actual values to analyze or process. Examples: spike times, firing rates.
+- Coordinates: Labels associated to the dimensions, used to index and access specific data values.
+  Examples: time stamps, experimental conditions for each trial (task, stimulus, attentional state).
+- Specific methods to manipulate data structures. Examples: methods for loading/saving data from/to
+  files, methods for selecting data based on coordinates.
+
+**Manipulating Data Structures**
+
+A data structure instance can be manipulated in several ways:
+
+Initialize a data structure with content
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Usage: to perform fast tests of the class with simple inputs.
+
+>>> data = DataStruct(id="session_1", data=spikes, time=CoordTime(time_values))
+
+Initialize an empty data structure with identity metadata
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Usage: to create a product progressively, within a builder pattern.
+
+>>> data = DataStruct(id="session_1")
+>>> print(data.id)
+session_1
+>>> print(data.has_content)
+False
+
+In this case, content can be added via several approaches:
+
+- Setting values via the custom setter methods of the data structure (for validation). Usage: to
+  create a product progressively, within a builder pattern.
+
+>>> data.set_data(spikes)
+>>> data.set_time(CoordTime(time_values))
+>>> data.save()
+
+- Loading content from a file. This operation constructs the path to the file from the metadata
+  passed during the instantiation of the data structure. Usage: to recover a previously saved data
+  structure (usually a fully constructed object).
+
+>>> data.load()
+
+
+Implementation
+--------------
+Uniform Interface for Data Structures
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+All data structures adhere to a *uniform* interface, which is used throughout the package to
+interact with data consistently. This interface is established though a combination of:
+
+- A metaclass :class:`DataStructMeta`, which sets *class-level* attributes related to the dimensions
+  and coordinates of any data structure.
+- An abstract base class :class:`DataStructure`, which defines methods and attributes shared by all
+  the data structures.
+
+Each *specific* data structure is implemented as a concrete subclass which inherits from
+:class:`DataStructure`.
+
+Interactions with Coordinates - Dependency Injection
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To store coordinates in a data structure, they have to be instantiated *outside* of the data
+constructor and passed as arguments. This constraint reduces coupling between
+:class:`DataStructure` and the specific :class:`Coordinate` classes.
+
+IO-Handling - Strategy Design Pattern
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Data structures delegate certain operations to external classes :
+
+- :class:`PathRuler` subclasses for path generation.
+- :class:`Loader` and :class:`Saver` subclasses for loading/saving data in specific file formats.
+
+To interact with those external classes, data classes store instances of the appropriate objects
+among their attributes.
+
+Implementing Specific Data Structures
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To be valid, each data structure subclass must perform the following steps:
+
+Define Intrinsic Dimensions and Coordinates
+...........................................
+
+- Specify two class-level attributes in the subclass body: :attr:`dim2coord` and :attr:`coord2type`.
+- Other class-level attributes (:attr:`dims`, :attr:`coords`, :attr:`coords_to_dims`) are automatically
+  generated by the metaclass to ensure consistency.
+
+Manage Paths specific to this Data Structure
+............................................
+
+- In the class-level attribute :attr:`path_ruler`, select the appropriate path manager among the
+  :class:`PathRuler` subclasses.
+- Implement the abstract property :meth:`path`accordingly. It should provide to this path
+  manager method :meth:`get_path` all the arguments it requires from the attributes of the data
+  structure.
+
+Customize Loading and Saving (Optional)
+.......................................
+
+- Change the attributes :attr:`loader` and :attr:`saver` if needed.
+- Override :meth:`load` and :meth:`save` methods to transform data into the format expected by the
+  loader or saver. To preserve the interface, the method :meth:`load` should not admit any
+  additional argument.
+
+By default, the data is handled with :mod:`pickle`, which allows to recover it as an instance of
+:class:`DataStructure` and to save it directly without any transformation.
+
+Implement a Custom Constructor
+..............................
+
+Responsibilities are shared between the base class and the subclass constructors.
+
+The base class constructor handles the assignment of data and coordinates. It ensures that the
+arguments are consistent and fulfill the constraints specified by the class attributes.
+
+Each subclass constructor extends the base class constructor. It should admit two types of
+arguments:
+
+1. *Required* arguments for *metadata*: minimal arguments for the path loader associated with the
+   data subclass. Those arguments are set as attributes by the *subclass constructor* itself.
+2. *Optional* arguments for *content*: data values (``data``) and coordinates (matching the names
+   defined in the class attributes). Those attributes are set as attributes by the *base class
+   constructor*. Coordinates have to be passed to this base class constructor as keyword arguments.
+
+Examples
+--------
+Define a data structure subclass with a time dimension and a trial dimension associated with three
+coordinates: task, attentional state and stimulus.
+
+.. code-block:: python
+
+    class ExampleData(Data):
+        dim2coord = MappingProxyType({
+        "time": frozenset(["time"]),
+        "trials": frozenset(['task', 'attn', 'categ'])
+        })
+        coord2type = MappingProxyType({
+            'time': CoordTime,
+            'task': CoordTask,
+            'attn': CoordAttention,
+            'categ': CoordCategory,
+        }
+        path_ruler = PathRulerExample
+
+        def __init__(self,
+                    id_: str,
+                    data: Optional[npt.NDArray] = None,
+                    time: Optional[CoordTime] = None,
+                    task: Optional[CoordTask] = None,
+                    attn: Optional[CoordAttention] = None,
+                    categ: Optional[CoordCategory] = None,
+                    **kwargs # to respect the signature of the base class constructor
+                    ) -> None:
+
+            # Assign subclass-specific metadata
+            self.id = id_
+            # Call the base class constructor to handle data and coordinates
+            super().__init__(data, time=time, task=task, attn=attn, categ=categ)
+
+        # Implement the path by calling the path manager method with the required arguments
+        @property
+        def path(self):
+            return self.path_ruler().get_path(self.id)
+
+
+
+See Also
+--------
+:mod:`core.coordinates`
+    Coordinate classes representing the dimensions of the data structures.
+:mod:`utils.storage_rulers`
+    PathRuler classes implementing path generation rules for each data class.
+:meth:`utils.io_data.loaders`
+    Loader classes used to load data from files in various formats.
+:meth:`utils.io_data.saver`
+    Saver classes used to save data to files in a format determined by the data type itself.
+"""
