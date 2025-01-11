@@ -1,3 +1,0 @@
-.. automodule:: test_mtcdb.test_utils
-   :members:
-   :undoc-members:

@@ -1,6 +1,0 @@
-# Mock data for testing sync_map.yml
-
-- source: /local/source/file.txt
-  destination: /remote/destination/file.txt
-- source: /local/source/dir/
-  destination: /remote/destination/dir/

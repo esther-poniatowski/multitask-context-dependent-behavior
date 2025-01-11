@@ -1,3 +1,0 @@
-.. automodule:: mtcdb.datasets
-   :members:
-   :undoc-members:
