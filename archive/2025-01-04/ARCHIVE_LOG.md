@@ -2,8 +2,8 @@
 
 ## Archive Details
 
-- Date of Archival: 2025-01-04
-- Last Active Commit Hash: 74927477635c8d623dd3d4958d8ee63bb15c5fbe
+- Date of archival: 2025-01-04
+- Last commit hash on `main`: 74927477635c8d623dd3d4958d8ee63bb15c5fbe
 
 ## Reason for Archival
 
