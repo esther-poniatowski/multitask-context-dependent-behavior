@@ -21,14 +21,21 @@
 
 		// File Explorer
 		"files.exclude": {
-			"**/.git": false,
+			"**/.git": false, // show .git folder
 			"**/.DS_Store": true,
+			"**/.pytest_cache": true,
+			"**/__pycache__": true,
+			"**/.mypy_cache": true
 		},
 
 		// Search
 		"search.exclude": {
 			"**/.git": true,
 			"**/.DS_Store": true,
+			"**/.pytest_cache": true,
+			"**/__pycache__": true,
+			"**/.mypy_cache": true,
+			"**/docs/build": true,
 		},
 	},
 }
