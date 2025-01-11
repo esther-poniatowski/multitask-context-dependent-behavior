@@ -25,7 +25,11 @@
 			"**/.DS_Store": true,
 			"**/.pytest_cache": true,
 			"**/__pycache__": true,
-			"**/.mypy_cache": true
+			"**/.mypy_cache": true,
+			// Exclude "empty-like" folders which contain untracked and hidden files
+			// but are preserved during branch switching (e.g. .pyc files)
+			"tests": true,
+			"reports": true,
 		},
 
 		// Search
@@ -36,6 +40,10 @@
 			"**/__pycache__": true,
 			"**/.mypy_cache": true,
 			"**/docs/build": true,
+			// Exclude "empty-like" folders which contain untracked and hidden files
+			// but are preserved during branch switching (e.g. .pyc files)
+			"tests": true,
+			"reports": true,
 		},
 	},
 }
