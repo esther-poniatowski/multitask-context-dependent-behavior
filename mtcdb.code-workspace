@@ -1,7 +1,46 @@
 {
     "folders": [
         {
+            "name": "mtcdb-etl",
             "path": "."
         }
-    ]
+    ],
+
+	// Workspace Settings
+	"settings": {
+		// Editor Guides and Wrapping
+		"editor.lineNumbers": "on",
+		"editor.rulers": [100],
+		"editor.wordWrap": "off", // avoid visual wrapping
+		"rewrap.wrappingColumn": 100,
+		"rewrap.wholeComment": false,
+		"rewrap.autoWrap.enabled": true,
+
+		// File Explorer
+		"files.exclude": {
+			"**/.git": false, // show .git folder
+			"**/.DS_Store": true,
+			"**/.pytest_cache": true,
+			"**/__pycache__": true,
+			"**/.mypy_cache": true,
+			// Exclude "empty-like" folders which contain untracked and hidden files
+			// but are preserved during branch switching (e.g. .pyc files)
+			"tests": true,
+			"reports": true,
+		},
+
+		// Search
+		"search.exclude": {
+			"**/.git": true,
+			"**/.DS_Store": true,
+			"**/.pytest_cache": true,
+			"**/__pycache__": true,
+			"**/.mypy_cache": true,
+			"**/docs/build": true,
+			// Exclude "empty-like" folders which contain untracked and hidden files
+			// but are preserved during branch switching (e.g. .pyc files)
+			"tests": true,
+			"reports": true,
+		},
+	},
 }
