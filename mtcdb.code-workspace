@@ -16,10 +16,6 @@
 		"python.terminal.activateEnvironment": true,
 		"terminal.integrated.inheritEnv": false, // user setting, here to remember if troubleshooting
 
-		// Environment Variables
-		//"dotenv.enableAutocloaking": true, // load .env files (and hide sensitive information)
-		//"python.envFile": ".env", // load environment variables from .env files
-
 		// View and Layout
 		"workbench.editor.closeEmptyGroups": false,
 		"workbench.editor.openSideBySideDirection": "right",
@@ -35,7 +31,7 @@
 
 		// File Explorer
 		"files.exclude": {
-			"**/.git": false,
+			"**/.git": false, // show .git folder
 			"**/.DS_Store": true,
 			"**/.pytest_cache": true,
 			"**/__pycache__": true,
@@ -77,16 +73,19 @@
 			"editor.defaultFormatter": "ms-python.black-formatter",
 			"editor.formatOnSave": true
 		},
+		// provide black configuration file
 		"black-formatter.args": ["--config", "./config/tools/black.toml"],
 
 		// Linting
 		"pylint.lintOnChange": true, // user setting, here to remember to activate
+		// provide pylint configuration file
 		"pylint.args": [
 			"--rcfile=config/tools/pylintrc.ini",
 			//"--load-plugins=pylint_configurer",
 		],
 
 		// Type Checking
+		// provide mypy configuration file
 		"mypy-type-checker.args": ["--config-file=./config/tools/mypy.ini"],
 		"mypy-type-checker.ignorePatterns": [
 			"**/docs/**",
