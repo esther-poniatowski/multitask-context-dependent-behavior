@@ -44,6 +44,16 @@ reference and potential reuse in future projects.
   - `test`: Script to run the tests. Not useful anymore since it can be performed from the VS Code
     interface.
 
+`config/`
+- Original Location: `./config/`
+- Notes: Configuration files for the deployment to the remote server.
+  - `dir_deploy.yml`: Directory structure to establish on the remote server.
+  - `map_deploy.yml`: Synchronization map used by the `transfer.py` script to transfer the scripts
+    and configuration files to the remote server.
+  - `map_retrieve.yml`: Synchronization map used by the `transfer.py` script to retrieve the data
+    files from the remote server.
+
+
 # Relevant Files
 
 To transfer to the `data-etl` branch:
