@@ -24,7 +24,7 @@ component in the project.
 - **Extraction**: Collects raw data from diverse sources (Maryland servers, personal transmission
   channels).
 - **Organization**: Arranges files in a logical directory tree.
-- **Transformation**: Converts relevent content from raw formats (MATLAB: `.m`, `.mat`, or
+- **Transformation**: Converts relevant content from raw formats (MATLAB: `.m`, `.mat`, or
   compressed archives: `.zip`, `.tar.gz`) to universal formats (`.csv`), that are compatible with
   Python.
 - **Storage**: Saves the formatted data locally for subsequent transfer to a different server were
