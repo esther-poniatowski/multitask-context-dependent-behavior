@@ -30,5 +30,8 @@ reference and potential reuse in future projects.
       directions, according to a configuration file ("sync-map"). TODO: Take inspiration from this
       file in the main branch to recover data from the remote server. 
     
+`test_tasks/`
+- Original Location: `tests/test_tasks/`
+- Notes: Test scripts for the tasks module.
     
 
