@@ -44,6 +44,7 @@ issubset
 iterdir
 itertools
 keepdims
+levelname
 loadtxt
 makedirs
 matplotlib
