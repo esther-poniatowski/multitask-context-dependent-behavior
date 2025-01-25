@@ -4,34 +4,39 @@ channels:
   - defaults
 dependencies:
   - python=3.12
-  - black
-  - doctest
-  - esbonio
-  - ipykernel
-  - jupyter
-  - matplotlib
-  - mypy
-  - mypy_extensions
-  - netCDF4 # for xarray
+  # Data manipulation and analysis
   - numpy
-  - pandas
-  - pip
-  - pylint
-  - pyright
+  - pandas                 # data frames
+  - xarray                 # labeled arrays and datasets
+  - netCDF4                # for saving data with xarray
+  - scipy                  # scientific computing
+  - scikit-learn           # machine learning algorithms
+  # Visualization
+  - matplotlib
+  # Development tools
+  - black                  # code formatting
+  - mypy                   # static type checking
+  - mypy_extensions
+  - pylint                 # code linting
+  - pyright                # code linting
+  # Testing
   - pytest
   - pytest-mock
-  - pytest-pylint
-  - python-dotenv
-  - pyyaml
-  - types-pyyaml # stubs for pyyaml
-  - scipy
-  - sphinx
-  - sphinxcontrib
-  - sphinx-needs
-  - sphinx_rtd_theme
-  - scikit-learn
-  - xarray
+  - pytest-pylint          # Pylint plugin for Pytest
+  # Documentation
+  - sphinx                 # documentation generator
+  - sphinxcontrib-napoleon # for numpydoc-style docstrings
+  - sphinx-rtd-theme       # ReadTheDocs theme
+  - sphinx-needs           # for requirements and specifications in Sphinx
+  - esbonio                # language server for Sphinx
+  # Configuration and file handling
+  - hydra-core             # configuration management and CLI
+  - pyyaml                 # YAML file handling
+  - types-pyyaml           # type stubs for Pyyaml
+  # Jupyter environment
+  - ipykernel              # Python kernel for Jupyter
+  - jupyter
+  # Dependencies only available in PyPI
   - pip:
-      - sphinx-test-reports
-      #- distutils
+    - sphinx-test-reports  # for test reports in Sphinx
 variables:
