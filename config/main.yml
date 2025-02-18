@@ -1,0 +1,10 @@
+# Main configuration file for running pipelines
+
+# Path to the `pipelines` directory from the root of the project
+pipeline_module_prefix: "core.pipelines"
+
+defaults:
+  - _self_ # in first position to define general parameters for all pipelines
+  - pipeline: null  # overridden by the CLI argument
+  - params: default
+  - paths: default

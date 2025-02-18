@@ -1,0 +1,4 @@
+# Pipeline-specific parameters
+pipeline:
+  name: ${pipeline} # interpolation (provided by the CLI)
+  _target_: ${pipeline_module_prefix}.${pipeline}.Pipeline # dynamic instantiation

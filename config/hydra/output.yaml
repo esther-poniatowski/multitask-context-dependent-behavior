@@ -1,0 +1,39 @@
+# ==================================================================================================
+# Configuration for hydra output
+# --------------------------------------------------------------------------------------------------
+# This file is loaded by Hydra when the application starts
+# It defines the output directories for the application
+# --------------------------------------------------------------------------------------------------
+# Syntax:
+# ```yml
+# hydra:
+#   run:
+#     dir: <path>
+#   sweep:
+#     dir: <path>
+#     subdir: <subdir>
+# ```
+#
+# Structure:
+# - Level 1 (hydra) : Configuration options for the Hydra application
+# - Level 2 (run, sweep) : Types of output directories
+# - Level 3 (dir, subdir) : Configuration options for the output directories
+#
+# The `run` directory is used to store the output of the current run.
+# The `sweep` directory is used to store the output of multiple runs (e.g. hyperparameter sweeps).
+# The `subdir` option is used to create subdirectories for each run (e.g. to store the output of
+# each run separately).
+# ==================================================================================================
+hydra:
+  run:
+    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    # Example output: outputs/2020-08-19/16-00-00
+  sweep:
+    dir: multirun/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    subdir: ${hydra.job.num}
+
+hydra:
+  run:
+    dir: ./outputs  # Forces Hydra to store logs in ./outputs instead of creating a new folder per run
+  sweep:
+    dir: ./multirun  # Stores multi-run experiments in ./multirun

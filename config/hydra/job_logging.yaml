@@ -1,0 +1,61 @@
+# ==================================================================================================
+# Logging configurations for the Hydra application
+# --------------------------------------------------------------------------------------------------
+# Purpose: Define formatters, handlers, and loggers used by the application.
+# This file is loaded by Hydra when the application starts.
+# WARNING: To be
+# Current components:
+# - Root logger: Top-level logger that all other loggers inherit from.
+# - Formatters:
+#   - "simple": Formats log messages with the timestamp, logger name, log level, and message.
+# - Handlers:
+#   - "console": Prints log messages to the console.
+# Add more components as needed (e.g. handlers to save logs to a file).
+# --------------------------------------------------------------------------------------------------
+# Syntax:
+# ```yml
+# formatters:
+#   <name>:
+#     format: <format string>
+#     # other options...
+# handlers:
+#   <name>:
+#     class: <handler class>
+#     formatter: <formatter name>
+#     # other options...
+# root:
+#   level: <level>
+#   handlers: [<handler name>, ...]
+# ```
+#
+# Structure:
+# - Level 1 (formatters, handlers) : Types of components used to configure logging
+# - Level 2 (<name>) : Name of the component
+# - Level 3 : Configuration options for the component
+#
+# This syntax is based on Python's logging configurations:
+# ```python
+# import logging
+# logging.basicConfig(level=logging.INFO)
+# logger = logging.getLogger(__name__)
+# logger.info("Hello, world!")
+# ```
+# ==================================================================================================
+
+version: 1 # version of the logging configuration schema (required)
+
+# Defines formatters used to format log messages
+formatters:
+  simple:
+    # Example output: [2020-08-19 16:00:00,123] - my_app - INFO - Some message
+    format: '%[%(asctime)s] - %(name)s - %(levelname)s - %(message)s'
+
+handlers:
+  console: # Console handler: prints log messages to the console
+    class: logging.StreamHandler
+    formatter: simple # attached formatter
+    level: INFO # minimum log level to handle
+
+root: # Root logger configuration
+  level: INFO
+  handlers: [console] # list of handlers to attach to the root logger

@@ -1,0 +1,6 @@
+# Default parameters for all pipelines
+areas:
+  - A1
+  - dPEG
+  - VPr
+  - PFC

@@ -55,6 +55,7 @@ ndim
 newaxis
 npt.NDArray
 Numpy
+omegaconf
 pathlib
 pylintrc
 pyproject
