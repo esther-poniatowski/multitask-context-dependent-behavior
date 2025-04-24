@@ -2,16 +2,10 @@
 
 ## Overview
 
-Extract, transform, and load (ETL) data from various sources into a structured format for subsequent
-analysis in the Multi-Task Context-Dependent Decision Making project.
+This `data-etl` branch is part of the Multi-Task Context-Dependent Decision Making project,
+dedicated to the extraction, transformation, and loading (ETL) stages, prior to analyses.
 
-This `data-etl` branch is part of a **component-based workflow** in the Multi-Task Context-Dependent
-Decision Making project.
-It contains all the scripts and configurations necessary to run the very first stage of the project
-related to the ETL process of the raw data.
-It operates on a secure data server owned by the laboratory's department.
-The output of this component serves as the input for subsequent analyses performed by the main
-component in the project. 
+Those actions operate on a secure data server owned by the laboratory's department. 
 
 > [!IMPORTANT]
 > This branch is developed and maintained on a separate branch of the project repository. It is not
@@ -21,14 +15,15 @@ component in the project.
 
 ## Workflow
 
-- **Extraction**: Collects raw data from diverse sources (Maryland servers, personal transmission
-  channels).
-- **Organization**: Arranges files in a logical directory tree.
-- **Transformation**: Converts relevant content from raw formats (MATLAB: `.m`, `.mat`, or
-  compressed archives: `.zip`, `.tar.gz`) to universal formats (`.csv`), that are compatible with
-  Python.
-- **Storage**: Saves the formatted data locally for subsequent transfer to a different server were
-  downstream analysis will be performed (main component of the project).
+Those early stages aim to:
+
+- Collect data from diverse sources and collaborators (Maryland servers, personal transmission
+  channels) and organize it on a central data server.
+- Organize files in a logical directory tree appropriate for the subsequent analyses.
+- Unpack specific content from raw files (MATLAB: `.m`, `.mat`, or compressed archives: `.zip`,
+  `.tar.gz`) and export it to universal formats (`.csv`), that are compatible with Python.
+- Transfer data to a different server were downstream analysis will be performed (main component of
+  the project).
 
 
 ## Installation
