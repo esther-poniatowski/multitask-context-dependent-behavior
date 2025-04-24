@@ -39,7 +39,7 @@ D_PRE = 0.6
 D_POST = 0.8
 """Duration after stimulus offset (in seconds) in pre-processed time courses."""
 
-D_STIM = 1.0
+D_STIM = 1.0 # why not 0.75, if it is set to the minimum duration D_CLK?
 """Duration of the stimulus (in seconds) in pre-processed time courses."""
 
 D_CLK = 0.75

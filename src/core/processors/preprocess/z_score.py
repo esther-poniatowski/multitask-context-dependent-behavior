@@ -111,7 +111,7 @@ class ZScorer(Processor):
     >>> z = zscorer.process(x=x)
     >>> print(z)
     array([[-1., -0.5, -1., -0.5],
-              [-1., -1., -1., -1.]])
+           [-1., -1., -1., -1.]])
 
     See Also
     --------
