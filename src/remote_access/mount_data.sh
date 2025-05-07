@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 
 # ==================================================================================================
-# Script Name:   mount_data.sh
-# Description:   Mount the data4 CIFS from the NAS to the local directory.
+# Script Name: `mount_data.sh`
+# Description: Mount the CIFS `data4` from the NAS to the local directory.
 #
 # Notes
 # -----
+# A CIFS stands for Common Internet File System, which is a protocol that allows sharing files and printers
+# over a network. It is commonly used in Windows environments but can also be used on Linux systems.
+# A NAS (Network Attached Storage) is a dedicated file storage device that provides local area network (LAN) users
+# with centralized, shared data storage through a standard Ethernet connection.
+# The CIFS protocol allows users to access files on the NAS as if they were on their local machine.
 # Syntax of the `mount` command:
 #
 # .. code-block:: bash
@@ -25,8 +30,7 @@
 #         iocharset=utf8 \
 #         //<host>/<share_name> <local_dir>
 #
-# Options
-# -------
+# Options used:
 # - `username`               : Username used to access the CIFS share.
 # - `domain`                 : Name of the computer where the CIFS share is located.
 # - `rw`                     : Mount with read and write permissions.
