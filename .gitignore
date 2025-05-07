@@ -1,9 +1,6 @@
 # gitignore file for multitask-context-dependent-behavior-etl
 # -----------------------------------------------------------
 
-# Confidential files
-
-
 # Temporary files
 *.tmp
 *.temp
@@ -23,5 +20,7 @@ __pycache__
 # Data Directory (in the root folder)
 data/
 
-# Archives Directory (in the root folder)
-# archive/
+# Credential files
+**/*.env
+**/!template.env 
+

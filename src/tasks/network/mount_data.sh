@@ -38,8 +38,8 @@
 # Syntax `//`: Indicate that the path is a *network* location (not a *local* file path).
 # ==================================================================================================
 
-# Load Variables from config file
-PATH_CONFIG="$ROOT/config/data4.sh"
+# Load Variables from credential file TODO: Make it an optional argument of the script
+PATH_CONFIG="$ROOT/config/data4.env"
 source $PATH_CONFIG
 
 # Mount command
