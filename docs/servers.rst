@@ -20,7 +20,7 @@ Each server is referenced under a specific name in this project.
   
   Two volumes are relevant for the project:
   
-  - `data4`: Destination location where all the raw data will be gathered.
+  - `data4`: Final location where all the raw data will be gathered.
   
   - `data1`: Source location which stores data from Bagur2018.
 
@@ -33,8 +33,9 @@ Each server is referenced under a specific name in this project.
 Credentials
 -----------
 
-The credentials to use to connect to each server have to be specified in `.env` files, named with
-the server nickname. The required format is indicated in the template file located at [`config/template.env`](config/template.env). 
+The credentials to use to connect to each server have to be specified in `.env` files, named by
+server. The required format is indicated in the template file located at
+[`config/template.env`](config/template.env). 
 
 Those actual credentials are encrypted in an archive located at
 [`config/credentials.tar`](config/credentials.tar). TODO: Create the archive.
@@ -47,6 +48,22 @@ Mount Points
 
 Connecting to Servers
 ---------------------
+
+The parts of the project that are related to the connection to the servers are located in the
+following directories and files:
+
+.. code-block:: tree
+
+    project-root/
+    ├── config/                    # Configuration files
+    │   ├── template.env           # Template for credential specification
+    │   └── credentials.env        # Actual credentials defining SSH_USER, SSH_HOST, SSH_PATH_KEY
+    ├── src/
+    │   └── remote_access/
+    │       ├── ssh_utils.sh          # SSH utility functions (already refactored)
+    │       └── ssh_connection.sh     # Main connection logic (to be refactored below)
+    └── main.sh                       # Main entry point                   
+
 
 The ETL steps have to be run from either 
 1. Share the SSH keys to the remote servers (if not already done):

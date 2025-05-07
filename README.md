@@ -41,6 +41,23 @@ The early stages of the project aim to:
 4. Transfer selected data to a server were downstream analysis will be performed:
    [data-transfer-guide](docs/data_transfer.rst)
 
+## Directory Structure
+
+### Top-Level
+
+```plaintext
+├── config/          
+├── data/
+├── docs/
+├── src/
+├── environment.yml
+├── LICENSE
+├── main.sh
+├── mtcdb.code-workspace
+├── README.md
+└── ROADMAP.md
+```
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
