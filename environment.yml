@@ -4,7 +4,23 @@ channels:
   - defaults
 dependencies:
   - python=3.12
+  - pip
+  # Data manipulation
   - numpy
   - pandas
-  - pip
-variables:
+  # Development tools
+  - black                  # code formatting
+  - mypy                   # static type checking
+  - mypy_extensions
+  - pylint                 # code linting
+  - pyright                # code linting
+  # Testing
+  - pytest
+  - pytest-mock
+  - pytest-pylint          # Pylint plugin for Pytest
+  # Documentation
+  - sphinx                 # documentation generator
+  - sphinxcontrib-napoleon # for numpydoc-style docstrings
+  - sphinx-rtd-theme       # ReadTheDocs theme
+  - sphinx-needs           # for requirements and specifications in Sphinx
+  - esbonio                # language server for Sphinx
