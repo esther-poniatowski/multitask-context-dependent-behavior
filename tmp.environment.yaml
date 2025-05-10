@@ -1,0 +1,20 @@
+# This file is created and managed by `unidep` 1.0.0.
+# For details see https://github.com/basnijholt/unidep
+# File generated with: `unidep conda-lock`
+
+name: myenv
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python >=3.12
+  - scipy
+  - numpy
+  - pandas
+  - paramiko
+  - typer
+  - pyyaml
+  - cryptography
+platforms:
+  - linux-64
+  - osx-arm64

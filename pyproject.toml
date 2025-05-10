@@ -1,0 +1,90 @@
+# === Package metadata ===
+
+[project]
+name = "mtcdb-etl"
+version = "0.1.0"
+description = "ETL utility for multi-task context-dependent decision making on secure data servers."
+authors = [{name = "Esther Poniatowski", email = "esther.poniatowski@ens.psl.eu"}]
+license = {text = "GPL"}
+readme = {file = "README.md", content-type = "text/markdown"}
+keywords = ["etl", "remote-access", "data-analysis"]
+classifiers = [
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: GNU General Public License (GPL)",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Environment :: Console",
+    "Environment :: Server",
+    "Typing :: TypeChecked"
+]
+
+[project.urls]
+Documentation = "https://github.com/esther-poniatowski/multitask-context-dependent-behavior/tree/data-etl"
+Source = "https://github.com/esther-poniatowski/multitask-context-dependent-behavior/tree/data-etl"
+
+
+# === Build system requirements ===
+
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=61", "unidep[toml]"]
+
+[tool.setuptools]
+py-modules = ["pyproject_toml_project"] # TODO: What is this for?
+
+
+# === Dependencies ===
+
+[tool.unidep]
+channels = ["conda-forge", "defaults"]
+platforms = ["linux-64", "osx-arm64"]   # used in conda-lock
+
+# --- Runtime dependencies ---
+
+dependencies = [ 
+    "python>=3.12",      # required Python version
+    "scipy",             # matlab files compatibility
+    "numpy",             # array manipulations
+    "pandas",            # data manipulation
+]
+
+# --- Local dependencies (other projects using unidep) ---
+
+local_dependencies = [
+    "./include/janux",
+   "./include/another-project"
+]
+
+# --- Optional development dependencies ---
+
+[tool.unidep.optional_dependencies]
+test = [
+    "pytest",
+    "pytest-mock",
+    "pytest-pylint",         # Pylint plugin for Pytest
+]
+lint = [
+    "black",                 # code formatter
+    "mypy",                  # type checking
+    "mypy_extensions",
+    "pylint",                # code linting
+    "pyright",               # code linting
+]
+docs = [
+    "sphinx",                 # documentation generator
+    "sphinxcontrib-napoleon", # for numpydoc-style docstrings
+    "sphinx-rtd-theme",       # ReadTheDocs theme
+    "sphinx-needs",           # for requirements and specifications in Sphinx
+    "esbonio"                 # language server for Sphinx
+]
+
+
+# === CLI entry points ===
+
+[project.scripts]
+# TODO: Add entry points when available
+
+
