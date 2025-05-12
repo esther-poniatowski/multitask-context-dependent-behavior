@@ -1,3 +1,0 @@
-[submodule "include/janux"]
-	path = include/janux
-	url = https://github.com/esther-poniatowski/janux.git
