@@ -11,6 +11,8 @@ Those actions operate on secure data servers owned by the laboratory's departmen
 > repository, to isolate the ETL code so that it can be downloaded and run independently of the main
 > project. It is not meant to be merged into the main branch.
 
+<!-- TODO: Move "Installation" to the dedicated section in docs/ -->
+
 ## Installation
 
 ### Runtime Environment
@@ -57,10 +59,6 @@ To synchronize those operations, the `data-etl` code has to be downloaded on bot
      TODO: specify the command when available
      ```
 
-> [!NOTE] Cloning the `data-etl` branch will automatically include the `janux` package as a Git
-> submodule in the `include/` folder (as specified in the `.gitmodules` file). This package is
-> responsible for setting up SSH connections between the local and remote servers.
-
 ### Development Environment
 
 > [!WARNING] This step requires the `unidep` tool to be installed.
@@ -76,7 +74,6 @@ To develop the ETL code, the `data-etl` branch:
    unidep merge
    unidep condalock
    ```
-
 
 ## Workflow
 
@@ -95,6 +92,8 @@ The early stages of the project aim to:
 
 4. Transfer selected data to a server were downstream analysis will be performed:
    [data-transfer-guide](docs/data_transfer.rst)
+
+<!-- TODO: Move "Directory Structure" to the dedicated section in docs/ -->
 
 ## Directory Structure
 
