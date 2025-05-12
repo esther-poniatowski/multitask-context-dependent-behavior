@@ -1,3 +1,5 @@
+
+
 Data Collection
 ===============
 
@@ -121,3 +123,41 @@ sudo mount /auto/data4
 
 
 
+
+
+---
+
+
+---
+
+## Recovery from Maryland Servers
+
+This process must be performed from "Marrsfreestyle" (see {ref}`data-servers`). <!-- TODO: Explain
+why -->
+
+1. **Set up VPN with Maryland server** 1. Launch Global Protect:  
+      ``` globalprotect launch-ui ``` - Webpage: <https://terpware.umd.edu/Linux/Title/4010> -
+      Portal: `access.umd.edu` <!-- TODO: Clarify Global Protect effects -->  
+   2. Use Shihab Shammah's credentials  
+   3. Wait for phone approval from Shihab  
+
+2. **Mount servers** 1. Mount Maryland server:  
+      ``` sudo mount -o username=yves //haka.isr.umd.edu/data /media/haka ``` Password: `abcd1234`  
+   2. Mount local NAS: ``` sudo mount /auto/data4 ```  
+
+3. **Data transfer** 1. Navigate to transfer codes:  
+      ``` cd ~/Documents/esther-transfer-MDdata  <!-- TODO: Verify path --> ```  
+   2. Launch persistent session: ``` byobu ```  
+   3. Run transfer pipeline: <!-- TODO: Specify code -->  
+   4. Detach with `F6` during copy  
+
+---
+
+## Data Transfer from Bagur to Local NAS
+
+:::{warning} Data is split across `auto/data/` and `data4/2018/Bagur/` :::
+
+1. **Preparation** a. Log into LSP computer b. Navigate to transfer codes:  
+      ``` cd ~/Documents/esther-transfer-MDdata ``` *Note: Requires mounted `data1` in `auto/`*
+
+**Step 1: Unpack Bagur data** 1. Enable STEP 2 in `TRANSFER_Bagur.py` 2. Execute script:  
