@@ -1,12 +1,33 @@
-# === Package metadata ===
+# === MTCDB-ETL Configuration ======================================================================
+#
+# Note: This `pyproject.toml` uses the `unidep` dependency manager to synchronize Conda and Pip
+# specifications.
+#
+# Consequences:
+#
+# - The `pyproject.toml` file is the central source of truth for all dependencies.
+# - The standard `[project.dependencies]` and `[project.optional-dependencies]` sections are not
+#   specified, but are mentionned in the `dynamic` field so that they are automatically populated by
+#   `unidep`.
+# - Core dependencies are specified in the `[tool.unidep]` section.
+# - Optional dependencies are specified in the `[tool.unidep.optional_dependencies]` section.
+#
+# Unidep documentation: https://unidep.readthedocs.io/en/latest/
+# For installation instructions, see the `README.md` file in the root directory.
+# For development instructions using this `pyproject.toml`, refer to `docs/developer_guide.md`.
+#
+# ==================================================================================================
+
+
+# === Package Metadata =============================================================================
 
 [project]
 name = "mtcdb-etl"
 version = "0.1.0"
 description = "ETL utility for multi-task context-dependent decision making on secure data servers."
 authors = [{name = "Esther Poniatowski", email = "esther.poniatowski@ens.psl.eu"}]
-license = {text = "GPL"}
-readme = {file = "README.md", content-type = "text/markdown"}
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
 keywords = ["etl", "remote-access", "data-analysis"]
 classifiers = [
     "Programming Language :: Python :: 3.12",
@@ -20,45 +41,55 @@ classifiers = [
     "Environment :: Server",
     "Typing :: TypeChecked"
 ]
+readme = {file = "README.md", content-type = "text/markdown"}
+urls = {
+    "Homepage": "https://github.com/esther-poniatowski/multitask-context-dependent-behavior/tree/data-etl"
+}
 
-[project.urls]
-Documentation = "https://github.com/esther-poniatowski/multitask-context-dependent-behavior/tree/data-etl"
-Source = "https://github.com/esther-poniatowski/multitask-context-dependent-behavior/tree/data-etl"
+requires-python = ">=3.12" # required Python version
+
+# --- Dynamic Fields -------------------------------------------------------------------------------
+
+dynamic = ["dependencies", "optional-dependencies"] # automatically populated by unidep
 
 
-# === Build system requirements ===
+# === Build System Requirements ====================================================================
 
 [build-system]
 build-backend = "setuptools.build_meta"
 requires = ["setuptools>=61", "unidep[toml]"]
 
+
+# === Package Code and Resources ===================================================================
+
+# --- Package Source Code --------------------------------------------------------------------------
+
 [tool.setuptools]
-py-modules = ["pyproject_toml_project"] # TODO: What is this for?
+package-dir = {"" = "src"}
+packages = ["mtcdb_etl"]
+
+# --- CLI Entry Points -----------------------------------------------------------------------------
+
+[project.scripts]
+mtcdb = "mtcdb_etl.cli:main" # TODO: Create this module and function
 
 
-# === Dependencies ===
+# === Dependencies =================================================================================
 
 [tool.unidep]
-channels = ["conda-forge", "defaults"]
-platforms = ["linux-64", "osx-arm64"]   # used in conda-lock
+channels = ["conda-forge", "defaults"] # for conda synchronization
+platforms = ["linux-64", "osx-arm64"]   
 
-# --- Runtime dependencies ---
+# --- Core Runtime Dependencies --------------------------------------------------------------------
 
 dependencies = [ 
-    "python>=3.12",      # required Python version
     "scipy",             # matlab files compatibility
     "numpy",             # array manipulations
     "pandas",            # data manipulation
+    { pip = "git+https://github.com/esther-poniatowski/janux.git" }, # secure SSH connections
 ]
 
-# --- Local dependencies (other projects using unidep) ---
-
-local_dependencies = [
-    "./include/janux",
-   "./include/another-project"
-]
-
-# --- Optional development dependencies ---
+# --- Optional Dependencies ------------------------------------------------------------------------
 
 [tool.unidep.optional_dependencies]
 test = [
@@ -75,16 +106,13 @@ lint = [
 ]
 docs = [
     "sphinx",                 # documentation generator
-    "sphinxcontrib-napoleon", # for numpydoc-style docstrings
+    "sphinxcontrib-napoleon", # numpydoc-style docstrings
     "sphinx-rtd-theme",       # ReadTheDocs theme
-    "sphinx-needs",           # for requirements and specifications in Sphinx
+    "sphinx-needs",           # requirements and specifications in Sphinx
+    "myst-parser",            # markdown support in Sphinx
     "esbonio"                 # language server for Sphinx
 ]
-
-
-# === CLI entry points ===
-
-[project.scripts]
-# TODO: Add entry points when available
-
-
+dev = [
+    "unidep",                   # dependency manager
+    "mtcdb_etl[test,lint,docs]" # all other development dependencies
+]
