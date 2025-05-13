@@ -78,11 +78,12 @@ mtcdb = "mtcdb_etl.cli:main" # TODO: Create this module and function
 
 [tool.unidep]
 channels = ["conda-forge", "defaults"] # for conda synchronization
-platforms = ["linux-64", "osx-arm64"]   
+platforms = ["linux-64", "osx-arm64"]
 
 # --- Core Runtime Dependencies --------------------------------------------------------------------
 
-dependencies = [ 
+dependencies = [
+    "pydantic",          # data validation and settings management
     "scipy",             # matlab files compatibility
     "numpy",             # array manipulations
     "pandas",            # data manipulation
@@ -113,6 +114,8 @@ docs = [
     "esbonio"                 # language server for Sphinx
 ]
 dev = [
+    "yaml",                     # YAML support for configuration parsing
+    "requests",                 # HTTP requests
     "unidep",                   # dependency manager
     "mtcdb_etl[test,lint,docs]" # all other development dependencies
 ]
