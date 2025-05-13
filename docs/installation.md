@@ -13,7 +13,8 @@ git clone https://github.com/esther-poniatowski/multitask-context-dependent-beha
 
 The project can be installed using several methods, depending on the user's needs.
 
-> [!NOTE] Is it recommended to create a dedicated virtual environment to install the project and its
+> [!NOTE]
+> Is it recommended to create a dedicated virtual environment to install the project and its
 > dependencies. In this guide, it is assumed that the project will be installed in a virtual
 > environment (either `conda` or `venv`) named `mtcdb-etl`.
 

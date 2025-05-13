@@ -7,7 +7,8 @@ dedicated to the extraction, transformation, and loading (ETL) stages, prior to 
 
 Those actions operate on secure data servers owned by the laboratory's department.
 
-> [!IMPORTANT] This branch is maintained separately from the `main` branch of the project
+> [!IMPORTANT]
+> This branch is maintained separately from the `main` branch of the project
 > repository, to isolate the ETL code so that it can be downloaded and run independently of the main
 > project. It is not meant to be merged into the main branch.
 
