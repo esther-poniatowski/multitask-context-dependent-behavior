@@ -42,5 +42,49 @@
 			"tests": true,
 			"reports": true,
 		},
+
+		// Copilot
+		"github.copilot.enable": {
+			"*": true,
+			"python": true,
+			"restructuredtext": true,
+			"makefile": true,
+			"plaintext": true,
+			"markdown": true,
+			"yaml": true,
+			"json": true,
+			"ini": true,
+			"shellscript": true,
+			"gitignore": true,
+			"git": true,
+		},
+
+		// Formatting
+		"files.trimTrailingWhitespace": true, // remove trailing white spaces on save
+		"files.insertFinalNewline": true, // at least one line at the end of the file
+		"files.trimFinalNewlines": true, // at most one line at the end of the file
+		"[python]": {
+			"editor.defaultFormatter": "ms-python.black-formatter",
+			"editor.formatOnSave": true
+		},
+		// provide black configuration file
+		"black-formatter.args": ["--config", "./config/tools/black.toml"],
+
+		// Linting
+		"pylint.lintOnChange": true, // user setting, here to remember to activate
+		// provide pylint configuration file
+		"pylint.args": [
+			"--rcfile=config/tools/pylintrc.ini",
+			//"--load-plugins=pylint_configurer",
+		],
+
+		// Type Checking
+		// provide mypy configuration file
+		"mypy-type-checker.args": ["--config-file=./config/tools/mypy.ini"],
+		"mypy-type-checker.ignorePatterns": [
+			"**/docs/**",
+			"**/docs/*.py",
+			"**/docs/**/*.py"
+		],
 	},
 }
