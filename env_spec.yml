@@ -1,0 +1,35 @@
+# --- Environment Specification File ---------------------------------------------------------------
+#
+# Specifies GitHub repository to include in distinct environments (e.g. development, production).
+#
+# This file is parsed by the script `compose_envs.py` to merge `pyproject.toml` files from the
+# specified repositories into a single `pyproject.toml` file for each environment.
+
+# Structure:
+#
+# ```yml
+# - name: <repo_name>:      # Name of the GitHub repository.
+#   user: <user>            # Name of the user who owns the repository.
+#   branch: <branch>        # Name of the branch to use (default: main).
+#   pyproject_path: <path>  # Path to the pyproject.toml file in the repository
+#   envs:                   # List of environments in which the repository is a dependency.
+#     - <env_name>
+# ```
+#
+# --------------------------------------------------------------------------------------------------
+
+- name: janux
+  user: esther-poniatowski
+  branch: main
+  pyproject_path: pyproject.toml
+  envs:
+    - etl-dev
+    - etl-prod
+
+- name: meandra
+  user: esther-poniatowski
+  branch: main
+  pyproject_path: pyproject.toml
+  envs:
+    - etl-dev
+    - etl-prod
