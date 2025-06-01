@@ -1,0 +1,121 @@
+# === MTCDB-ETL Configuration ======================================================================
+#
+# Note: This `pyproject.toml` uses the `unidep` dependency manager to synchronize Conda and Pip
+# specifications.
+#
+# Consequences:
+#
+# - The `pyproject.toml` file is the central source of truth for all dependencies.
+# - The standard `[project.dependencies]` and `[project.optional-dependencies]` sections are not
+#   specified, but are mentionned in the `dynamic` field so that they are automatically populated by
+#   `unidep`.
+# - Core dependencies are specified in the `[tool.unidep]` section.
+# - Optional dependencies are specified in the `[tool.unidep.optional_dependencies]` section.
+#
+# Unidep documentation: https://unidep.readthedocs.io/en/latest/
+# For installation instructions, see the `README.md` file in the root directory.
+# For development instructions using this `pyproject.toml`, refer to `docs/developer_guide.md`.
+#
+# ==================================================================================================
+
+
+# === Package Metadata =============================================================================
+
+[project]
+name = "mtcdb-etl"
+version = "0.1.0"
+description = "ETL utility for multi-task context-dependent decision making on secure data servers."
+authors = [{name = "Esther Poniatowski", email = "esther.poniatowski@ens.psl.eu"}]
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
+keywords = ["etl", "remote-access", "data-analysis"]
+classifiers = [
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: GNU General Public License (GPL)",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Environment :: Console",
+    "Environment :: Server",
+    "Typing :: TypeChecked"
+]
+readme = {file = "README.md", content-type = "text/markdown"}
+urls = {
+    "Homepage": "https://github.com/esther-poniatowski/multitask-context-dependent-behavior/tree/data-etl"
+}
+
+requires-python = ">=3.12" # required Python version
+
+# --- Dynamic Fields -------------------------------------------------------------------------------
+
+dynamic = ["dependencies", "optional-dependencies"] # automatically populated by unidep
+
+
+# === Build System Requirements ====================================================================
+
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=61", "unidep[toml]"]
+
+
+# === Package Code and Resources ===================================================================
+
+# --- Package Source Code --------------------------------------------------------------------------
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["mtcdb_etl"]
+
+# --- CLI Entry Points -----------------------------------------------------------------------------
+
+[project.scripts]
+mtcdb = "mtcdb_etl.cli:main" # TODO: Create this module and function
+
+
+# === Dependencies =================================================================================
+
+[tool.unidep]
+channels = ["conda-forge", "defaults"] # for conda synchronization
+platforms = ["linux-64", "osx-arm64"]
+
+# --- Core Runtime Dependencies --------------------------------------------------------------------
+
+dependencies = [
+    "pydantic",          # data validation and settings management
+    "scipy",             # matlab files compatibility
+    "numpy",             # array manipulations
+    "pandas",            # data manipulation
+    { pip = "git+https://github.com/esther-poniatowski/janux.git" }, # secure SSH connections
+]
+
+# --- Optional Dependencies ------------------------------------------------------------------------
+
+[tool.unidep.optional_dependencies]
+test = [
+    "pytest",
+    "pytest-mock",
+    "pytest-pylint",         # Pylint plugin for Pytest
+]
+lint = [
+    "black",                 # code formatter
+    "mypy",                  # type checking
+    "mypy_extensions",
+    "pylint",                # code linting
+    "pyright",               # code linting
+]
+docs = [
+    "sphinx",                 # documentation generator
+    "sphinxcontrib-napoleon", # numpydoc-style docstrings
+    "sphinx-rtd-theme",       # ReadTheDocs theme
+    "sphinx-needs",           # requirements and specifications in Sphinx
+    "myst-parser",            # markdown support in Sphinx
+    "esbonio"                 # language server for Sphinx
+]
+dev = [
+    "yaml",                     # YAML support for configuration parsing
+    "requests",                 # HTTP requests
+    "unidep",                   # dependency manager
+    "mtcdb_etl[test,lint,docs]" # all other development dependencies
+]

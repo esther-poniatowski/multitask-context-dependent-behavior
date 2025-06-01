@@ -1,9 +1,12 @@
 name: mtcdb
+
 channels:
   - conda-forge
   - defaults
+
 dependencies:
-  - python=3.12
+  - python>=3.12
+
   # Data manipulation and analysis
   - numpy
   - pandas                 # data frames
@@ -13,6 +16,15 @@ dependencies:
   - scikit-learn           # machine learning algorithms
   # Visualization
   - matplotlib
+  # Configuration and file handling
+  - hydra-core             # configuration management and CLI
+  - omegaconf              # configuration management used by Hydra
+  - pyyaml                 # YAML file handling
+  - types-pyyaml           # type stubs for Pyyaml
+  # Jupyter environment
+  - ipykernel              # Python kernel for Jupyter
+  - jupyter
+
   # Development tools
   - black                  # code formatting
   - mypy                   # static type checking
@@ -29,15 +41,9 @@ dependencies:
   - sphinx-rtd-theme       # ReadTheDocs theme
   - sphinx-needs           # for requirements and specifications in Sphinx
   - esbonio                # language server for Sphinx
-  # Configuration and file handling
-  - hydra-core             # configuration management and CLI
-  - omegaconf              # configuration management used by Hydra
-  - pyyaml                 # YAML file handling
-  - types-pyyaml           # type stubs for Pyyaml
-  # Jupyter environment
-  - ipykernel              # Python kernel for Jupyter
-  - jupyter
+
   # Dependencies only available in PyPI
   - pip:
     - sphinx-test-reports  # for test reports in Sphinx
+
 variables:
