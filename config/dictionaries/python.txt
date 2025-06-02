@@ -30,6 +30,7 @@ fftconvolve
 frozenset
 functools
 getattr
+getcwd
 getenv
 getfixturevalue
 gethostname
@@ -45,11 +46,13 @@ iterdir
 itertools
 keepdims
 levelname
+Liskov
 loadtxt
 makedirs
 matplotlib
 meshgrid
 moveaxis
+nargs
 ndarray
 ndim
 newaxis
@@ -63,6 +66,7 @@ pyright
 pytest
 PYTHONPATH
 pyyaml
+realpath
 reduceat
 repr
 returncode
