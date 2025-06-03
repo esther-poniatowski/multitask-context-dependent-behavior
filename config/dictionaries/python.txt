@@ -1,4 +1,9 @@
-# Words Used by Python
+# ======================================
+# Dictionary for CSpell Extension
+# Topics:
+# - Python names (functions, modules)
+# - Programming concepts
+# ======================================
 abspath
 abstractmethod
 allclose

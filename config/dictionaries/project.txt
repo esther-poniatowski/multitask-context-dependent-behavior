@@ -1,4 +1,9 @@
-# Words used in the experiment
+# ======================================
+# Dictionary for CSpell Extension
+# Topics:
+# - Project-specific names
+# - Project-specific concepts
+# ======================================
 Bagur
 behav
 Biggerguy
