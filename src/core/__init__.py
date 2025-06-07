@@ -97,5 +97,8 @@ See Also
 """
 # pylint: disable=unused-variable
 # pylint: disable=unused-wildcard-import
+from importlib.metadata import version
+
+__version__ = version(__package__)
 
 from core.constants import *

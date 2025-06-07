@@ -17,3 +17,6 @@ data_transfer
 ingest
     Prepares data for processing.
 """
+from importlib.metadata import version
+
+__version__ = version(__package__)
