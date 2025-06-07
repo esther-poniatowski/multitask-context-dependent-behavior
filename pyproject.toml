@@ -23,7 +23,7 @@
 
 [project]
 name = "mtcdb-etl"
-version = "0.1.0"
+version = "0.0.0"
 description = "ETL utility for multi-task context-dependent decision making on secure data servers."
 authors = [{name = "Esther Poniatowski", email = "esther.poniatowski@ens.psl.eu"}]
 license = "GPL-3.0-only"
