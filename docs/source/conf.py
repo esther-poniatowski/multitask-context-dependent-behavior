@@ -37,8 +37,8 @@ rst_prolog = f"""
 project = 'Multi-Task Context-Dependent Behavior'
 copyright = '2025, Esther Poniatowski'
 author = 'Esther Poniatowski'
-release = '0.1.0'
-version = '0.1.0'
+release = '0.0.0'
+version = '0.0.0'
 language = 'en'
 
 
