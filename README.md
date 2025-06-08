@@ -1,7 +1,7 @@
 # MTCDB
 
 [![Maintenance](https://img.shields.io/maintenance/yes/2025)]()
-[![Last Commit](https://img.shields.io/github/last-commit/esther-poniatowski/architekta)](https://github.com/esther-poniatowski/architekta/commits/main)
+[![Last Commit](https://img.shields.io/github/last-commit/esther-poniatowski/mtcdb)](https://github.com/esther-poniatowski/mtcdb/commits/main)
 [![Python](https://img.shields.io/badge/python-supported-blue)](https://www.python.org/)
 [![License: GPL](https://img.shields.io/badge/License-GPL-yellow.svg)](https://opensource.org/licenses/GPL-3.0)
 
