@@ -59,7 +59,7 @@ actual format of the `.pylintrc` file (INI format).
 
 Command:
 ```bash
-$ pylint --rcfile=config/tools/pylint.ini src/ tests/
+$ pylint --rcfile=${workspaceFolder}/configtools/pylint.ini src/ tests/
 ```
 
 Specific configurations for different parts of the workspace are obtained through a Pylint plugin to
