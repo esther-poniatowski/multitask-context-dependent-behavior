@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 :mod:`test_core.test_preprocess.test_hierarchical_bootstrap` [module]
 

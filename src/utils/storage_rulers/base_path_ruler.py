@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 `utils.storage_rulers.base_path_ruler` [module]
 

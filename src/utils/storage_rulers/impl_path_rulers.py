@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 :mod:`utils.storage_rulers.impl_path_rulers` [module]
 

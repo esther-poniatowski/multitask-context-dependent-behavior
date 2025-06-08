@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 `test_utils.test_io.test_savers_loaders_impl` [module]
 

@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 `test_core.test_io_data.test_loaders_base` [module]
 
