@@ -1,16 +1,16 @@
 """
-Command-line entry point for the `mtcdb` package.
+Entry point for the `mtcdb` package, invoked as a module.
 
 Usage
 -----
-To invoke the package::
+To launch the command-line interface, execute::
 
     python -m mtcdb
 
 
 See Also
 --------
-mtcdb.cli: Command-line interface module for the package.
+mtcdb.cli: Module implementing the application's command-line interface.
 """
 from .cli import app
 
