@@ -16,7 +16,7 @@ The project can be installed using several methods, depending on the user's need
 > [!NOTE]
 > Is it recommended to create a dedicated virtual environment to install the project and its
 > dependencies. In this guide, it is assumed that the project will be installed in a virtual
-> environment (either `conda` or `venv`) named `mtcdb-etl`.
+> environment (either `conda` or `venv`) named `mtcdb`.
 
 ### Using Pip
 
@@ -45,7 +45,7 @@ it can be installed in two steps:
     For runtime usage:
 
     ```sh
-    conda env create -name mtcdb-etl -file environment.yml
+    conda env create -name mtcdb -file environment.yml
     ```
 
     For development, select the `environment-dev.yml` file instead.
@@ -57,14 +57,14 @@ it can be installed in two steps:
     For runtime usage:
 
     ```sh
-    conda activate mtcdb-etl
-    echo "$(pwd)/src" > $(python -c "import site; print(site.getsitepackages()[0])")/mtcdb-etl.pth
+    conda activate mtcdb
+    echo "$(pwd)/src" > $(python -c "import site; print(site.getsitepackages()[0])")/mtcdb.pth
     ```
 
     For development, also register the test directory in the environment:
 
     ```sh
-    echo "$(pwd)/tests" >> $(python -c "import site; print(site.getsitepackages()[0])")/mtcdb-etl.pth
+    echo "$(pwd)/tests" >> $(python -c "import site; print(site.getsitepackages()[0])")/mtcdb.pth
     ```
 
 ### Using Unidep
@@ -88,7 +88,7 @@ the project, it facilitates the creation of a conda environment.
 2. Create the conda environment with all the dependencies:
 
     ```sh
-    unidep install . --name mtcdb-etl --file environment.yml
+    unidep install . --name mtcdb --file environment.yml
     ```
 
 This command performs the following actions in sequence:
